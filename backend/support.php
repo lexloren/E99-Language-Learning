@@ -40,48 +40,64 @@ function validate_password($string_in_question)
 		&& !!preg_match("/^(.*[^\d].*[^A-Za-z].*)|(.*[^A-Za-z].*[^\d].*)$/", $string_in_question);
 }
 
-//  Formats an error as a PHP associative array.
-function error_assoc($title, $description)
+//  Returns new PHP associative array for returning to front end.
+function new_return_template()
 {
 	return array(
-		"isError" => true,
-		"errorTitle" => $title,
-		"errorDescription" => $description
+		"isError" => false,
+		"errorTitle" => NULL,
+		"errorDescription" => NULL,
+		"result" => NULL,
+		"resultInformation" => NULL
 	);
 }
 
-//  Outputs a JSON representation of an error.
-function echo_error($title, $contents)
+//  Formats an error as a PHP associative array.
+function error_assoc($title, $description)
 {
-	echo json_encode(error_assoc($title, $contents));
+	$return = new_return_template();
+	
+	$return["isError"] = true;
+	$return["errorTitle"] = $title;
+	$return["errorDescription"] = $description;
+	
+	return $return;
+}
+
+//  Outputs a JSON representation of an error.
+function echo_error($title, $description)
+{
+	echo json_encode(error_assoc($title, $description));
 }
 
 //  Exits the executing script, outputting an error formatted in JSON.
-function exit_with_error($title, $contents)
+function exit_with_error($title, $description)
 {
-	echo_error($title, $contents);
+	echo_error($title, $description);
 	exit;
 }
 
 //  Formats a result as a PHP associative array.
-function result_assoc($contents)
+function result_assoc($result, $result_information = NULL)
 {
-	return array(
-		"isError" => false,
-		"contents" => $contents
-	);
+	$return = new_return_template();
+	
+	$return["result"] = $result;
+	$return["resultInformation"] = $result_information;
+	
+	return $return;
 }
 
 //  Outputs a JSON representation of a result.
-function echo_result($contents)
+function echo_result($result, $result_information = NULL)
 {
-	echo json_encode(result_assoc($contents));
+	echo json_encode(result_assoc($result, $result_information));
 }
 
 //  Exits the executing script, outputting a result formatted in JSON.
-function exit_with_result($contents)
+function exit_with_result($result, $result_information = NULL)
 {
-	echo_result($contents);
+	echo_result($result, $result_information);
 	exit;
 }
 

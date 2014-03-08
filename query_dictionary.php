@@ -70,8 +70,13 @@ if (isset ($_GET["query"]))
 	//      First, decode the query and make sure it's safe
 	$query = $mysqli->escape_string(urldecode($_GET["query"]));
 	
+	//  If the query contains three characters or fewer,
+	//      then should we require exact matches to limit the results?
+	$exact_matches_only = false; //strlen(urldecode($_GET["query"])) > 3;
+	$wildcard = $exact_matches_only ? "" : "%%";
+	
 	//      Second, take all the pieces created above and run the SQL query
-	$query = sprintf("SELECT %s FROM $join2 WHERE (lang_known LIKE '%%%s%%' OR lang_unknw LIKE '%%%s%%') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s')) LIMIT 16",
+	$query = sprintf("SELECT %s FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s'))",
 		implode(", ", $columnsSelected),
 		$query,
 		$query,
@@ -86,7 +91,11 @@ if (isset ($_GET["query"]))
 	}
 	
 	//      Finally, format the query results and send them to the front end
-	exit_with_result(mysqli_fetch_all_assocs($result));
+	exit_with_result(mysqli_fetch_all_assocs($result),
+		array( "exactMatchesOnly" => $exact_matches_only )
+	);
 }
+
+exit_with_result(NULL);
 
 ?>
