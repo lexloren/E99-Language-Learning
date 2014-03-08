@@ -40,6 +40,7 @@ function validate_password($string_in_question)
 		&& !!preg_match("/^(.*[^\d].*[^A-Za-z].*)|(.*[^A-Za-z].*[^\d].*)$/", $string_in_question);
 }
 
+//  Formats an error as a PHP associative array.
 function error_assoc($title, $description)
 {
 	return array(
@@ -49,17 +50,20 @@ function error_assoc($title, $description)
 	);
 }
 
+//  Outputs a JSON representation of an error.
 function echo_error($title, $contents)
 {
 	echo json_encode(error_assoc($title, $contents));
 }
 
+//  Exits the executing script, outputting an error formatted in JSON.
 function exit_with_error($title, $contents)
 {
 	echo_error($title, $contents);
 	exit;
 }
 
+//  Formats a result as a PHP associative array.
 function result_assoc($contents)
 {
 	return array(
@@ -68,11 +72,13 @@ function result_assoc($contents)
 	);
 }
 
+//  Outputs a JSON representation of a result.
 function echo_result($contents)
 {
 	echo json_encode(result_assoc($contents));
 }
 
+//  Exits the executing script, outputting a result formatted in JSON.
 function exit_with_result($contents)
 {
 	echo_result($contents);
