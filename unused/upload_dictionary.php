@@ -67,6 +67,7 @@ foreach ($dictionary_file_names as $dictionary_file_name)
 						mysql_query($query);
 					}
 				}
+				//  Have to keep track for Chinese because sometimes traditional and simplified are identical.
 				array_push($inserted, $index);
 			}
 			echo ".";
