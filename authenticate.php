@@ -37,6 +37,8 @@ if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 		
 		$user_assoc["id"] = intval($user_assoc["id"]);
 		
+		$_SESSION["handle"] = $user_assoc["handle"];
+		
 		//  Start a PHP session (using cookies), and update the database accordingly
 		$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
 			$mysqli->escape_string($session),
