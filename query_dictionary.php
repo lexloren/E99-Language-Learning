@@ -8,8 +8,7 @@ require "backend/support.php";
 $result = $mysqli->query("SELECT * FROM languages");
 if (!$result)
 {
-	echo $mysqli->error;
-	exit;
+	exit_with_error("Database Error", $mysqli->error);
 }
 $languages_available = mysqli_fetch_all_assocs($result);
 $result->close();
@@ -83,14 +82,11 @@ if (isset ($_GET["query"]))
 	$result = $mysqli->query($query);
 	if (!$result)
 	{
-		echo $mysqli->error;
-		exit;
+		exit_with_error("Database Error", $mysqli->error);
 	}
 	
 	//      Finally, format the query results and send them to the front end
-	$json = json_encode(mysqli_fetch_all_assocs($result));
-	$result->close();
-	echo $json;
+	exit_with_result(mysqli_fetch_all_assocs($result));
 }
 
 ?>
