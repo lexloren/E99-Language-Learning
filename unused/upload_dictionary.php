@@ -38,21 +38,10 @@ foreach ($dictionary_file_names as $dictionary_file_name)
 			$inserted = array();
 			foreach ($indices as $index)
 			{
-				if (in_array($index, $inserted))
+				if (!in_array($index, $inserted))
 				{
 					foreach ($definitions as $definition)
 					{
-						/*array_push($values,
-							sprintf("(%d, %d, '%s', '%s', '%s')",
-								intval($language_known["lang_code"], 10),
-								intval($language_unknw["lang_code"], 10),
-								mysql_real_escape_string(trim($definition)),
-								mysql_real_escape_string(trim($index)),
-								mysql_real_escape_string($pronunciation)
-							)
-						);*/
-					
-					
 						$query = sprintf("INSERT INTO dictionary (lang_id_known, lang_id_unknw, lang_known, lang_unknw, pronunciation) VALUES %s",
 								sprintf("(%d, %d, '%s', '%s', '%s')",
 									intval($language_known["lang_id"], 10),
@@ -63,7 +52,6 @@ foreach ($dictionary_file_names as $dictionary_file_name)
 								)
 							);
 						
-						//echo "$query\n";
 						mysql_query($query);
 					}
 				}
@@ -72,10 +60,7 @@ foreach ($dictionary_file_names as $dictionary_file_name)
 			}
 			echo ".";
 		}
-		/*mysql_perform_query(sprintf("INSERT INTO entries (lang_id_known, lang_id_unknw, lang_known, lang_unknw, pronunciation) VALUES %s", implode(",",$values)));*/
 	}
 }
-
-//session_adjourn();
 
 ?>
