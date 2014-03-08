@@ -10,10 +10,10 @@ if (!!session_id() && strlen(session_id()) > 0)
 	session_unset();
 }
 
-if (isset ($_GET["handle"]) && isset ($_GET["password"]))
+if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 {
-	$handle = strtolower(urldecode($_GET["handle"]));
-	$password = urldecode($_GET["password"]);
+	$handle = strtolower(urldecode($_POST["handle"]));
+	$password = urldecode($_POST["password"]);
 	
 	if (!validate_password($password))
 	{
