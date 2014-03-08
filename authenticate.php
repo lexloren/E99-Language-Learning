@@ -4,11 +4,7 @@ require "backend/connect.php";
 require "backend/headers.php";
 require "backend/support.php";
 
-if (!!session_id() && strlen(session_id()) > 0)
-{
-	session_destroy();
-	session_unset();
-}
+require "deauthenticate.php";
 
 if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 {
