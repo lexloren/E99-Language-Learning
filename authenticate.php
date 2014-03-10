@@ -23,9 +23,9 @@ if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 	}
 	
 	//  See whether we can authenticate with the handle and password posted
-	$result = $mysqli->query(sprintf("SELECT user_id AS id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s' AND pswd_hash = '%s'",
+	$result = $mysqli->query(sprintf("SELECT user_id AS id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
 		$mysqli->escape_string($handle),
-		$mysqli->escape_string(crypt($password, $password))
+		$mysqli->escape_string($password)
 	));
 	
 	if ($user_assoc = $result->fetch_assoc())

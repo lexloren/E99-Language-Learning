@@ -41,10 +41,10 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	
 	
 	//  Good to go, so insert the new user
-	$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash) VALUES ('%s', '%s', '%s')",
+	$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash) VALUES ('%s', '%s', PASSWORD('%s'))",
 		$mysqli->escape_string($handle),
 		$mysqli->escape_string($email),
-		$mysqli->escape_string(crypt($password, $password))
+		$mysqli->escape_string($password)
 	));
 	
 	$result = $mysqli->query(sprintf("SELECT user_id AS id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s'",
