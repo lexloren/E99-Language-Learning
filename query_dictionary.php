@@ -45,6 +45,10 @@ if (isset ($_GET["query"]))
 		$lang_codes_requested = array_keys($lang_codes_dictionary);
 	}
 	
+	//  Now perform the query
+	//      First, decode the query and make sure it's safe
+	$query = $mysqli->escape_string(urldecode($_GET["query"]));
+	
 	//  To make the SQL easier to read, I construct it piece by piece
 	$join1 = "(dictionary LEFT JOIN languages AS language_known ON dictionary.lang_id_known = language_known.lang_id)";
 	$join2 = "$join1 LEFT JOIN languages AS language_unknw ON dictionary.lang_id_unknw = language_unknw.lang_id";
@@ -57,7 +61,10 @@ if (isset ($_GET["query"]))
 		"language_unknw.lang_code" => "langCodeUnknown",
 		"dictionary.lang_known" => "languageKnown",
 		"dictionary.lang_unknw" => "languageUnknown",
-		"dictionary.pronunciation" => "languageUnknownPronunciation"
+		"dictionary.pronunciation" => "languageUnknownPronunciation",
+		"CHAR_LENGTH(lang_unknw)" => "languageUnknownLength",
+		"CHAR_LENGTH(lang_known)" => "languageKnownLength",
+		"(lang_unknw != '$query' AND lang_known != '$query')" => "isNotExact"
 	);
 	
 	$columnsSelected = array();
@@ -66,17 +73,13 @@ if (isset ($_GET["query"]))
 		array_push($columnsSelected, "$old AS $new");
 	}
 
-	//  Now perform the query
-	//      First, decode the query and make sure it's safe
-	$query = $mysqli->escape_string(urldecode($_GET["query"]));
-	
 	//  If the query contains three characters or fewer,
 	//      then should we require exact matches to limit the results?
 	$exact_matches_only = false; //strlen(urldecode($_GET["query"])) > 3;
 	$wildcard = $exact_matches_only ? "" : "%%";
 	
 	//      Second, take all the pieces created above and run the SQL query
-	$query = sprintf("SELECT %s, CHAR_LENGTH(lang_unknw) AS lang_unknw_len, CHAR_LENGTH(lang_known) AS lang_known_len FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s')) ORDER BY lang_unknw_len, lang_known_len",
+	$query = sprintf("SELECT %s FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s')) ORDER BY isNotExact, languageUnknownLength, languageKnownLength",
 		implode(", ", $columnsSelected),
 		$query,
 		$query,
