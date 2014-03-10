@@ -32,12 +32,15 @@ function validate_handle($string_in_question)
 }
 
 //  Valid password consists of between 6 and 31 (inclusive) characters
-//      and contains at least one non-alphanumeric character.
+//      and contains at least one letter, one number, and one non-alphanumeric character.
 function validate_password($string_in_question)
 {
 	return strlen($string_in_question) >= 6
 		&& strlen($string_in_question) < 32
-		&& !!preg_match("/^(.*[^\d].*[^A-Za-z].*)|(.*[^A-Za-z].*[^\d].*)$/", $string_in_question);
+		&& !!preg_match("/[\d]/", $string_in_question)
+		&& !!preg_match("/[A-Za-z]/", $string_in_question)
+		&& !!preg_match("/[^\dA-Za-z]/", $string_in_question)
+		&& !!preg_match("/^.*$/", $string_in_question);
 }
 
 //  Returns new PHP associative array for returning to front end.

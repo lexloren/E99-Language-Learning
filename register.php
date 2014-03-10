@@ -20,7 +20,7 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	
 	if (!validate_password($password))
 	{
-		exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
+		exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 	}
 	
 	if (!validate_handle($handle))
