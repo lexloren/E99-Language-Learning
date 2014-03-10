@@ -76,7 +76,7 @@ if (isset ($_GET["query"]))
 	$wildcard = $exact_matches_only ? "" : "%%";
 	
 	//      Second, take all the pieces created above and run the SQL query
-	$query = sprintf("SELECT %s FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s'))",
+	$query = sprintf("SELECT %s, CHAR_LENGTH(lang_unknw) AS lang_unknw_len, CHAR_LENGTH(lang_known) AS lang_known_len FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s')) ORDER BY lang_unknw_len, lang_known_len",
 		implode(", ", $columnsSelected),
 		$query,
 		$query,
