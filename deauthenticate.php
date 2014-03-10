@@ -6,7 +6,7 @@ require "backend/headers.php";
 if (!!session_id() && strlen(session_id()) > 0)
 {
 	$mysqli->query(sprintf("UPDATE users SET session = '' WHERE session = '%s'",
-		$mysqli->escape_string(session_id()),
+		$mysqli->escape_string(session_id())
 	));
 
 	session_destroy();
