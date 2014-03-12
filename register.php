@@ -1,7 +1,6 @@
 <?php
 
 require "backend/connect.php";
-require "backend/headers.php";
 require "backend/support.php";
 
 require "deauthenticate.php";

@@ -1,7 +1,6 @@
 <?php
 
-require "backend/connect.php";
-require "backend/headers.php";
+require_once "backend/connect.php";
 
 if (!!session_id() && strlen(session_id()) > 0)
 {

@@ -1,8 +1,7 @@
 <?php
 
-require "backend/connect.php";
-require "backend/headers.php";
-require "backend/support.php";
+require_once "backend/connect.php";
+require_once "backend/support.php";
 
 if (!!session_id() && isset ($_SESSION["handle"]))
 {

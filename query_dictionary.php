@@ -1,7 +1,6 @@
 <?php
 
 require "backend/connect.php";
-require "backend/headers.php";
 require "backend/support.php";
 
 //  Get all the languages available in the application
