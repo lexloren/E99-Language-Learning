@@ -12,6 +12,8 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	$email = strtolower(urldecode($_POST["email"]));
 	$handle = strtolower(urldecode($_POST["handle"]));
 	$password = urldecode($_POST["password"]);
+	//$name_given =
+	//$name_family =
 	
 	if (!validate_email($email))
 	{
