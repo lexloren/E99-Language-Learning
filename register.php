@@ -1,9 +1,16 @@
 <?php
 
+/*
+//  SESSION MANAGEMENT MOVED INTO "./BACKEND/CLASSES/SESSION.PHP"
+
 require "backend/connect.php";
 require "backend/support.php";
 
 require "deauthenticate.php";
+*/
+
+/*
+//  FUNCTIONALITY MOVED INTO "./BACKEND/CLASSES/USER.PHP"
 
 if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
 {
@@ -62,6 +69,26 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	
 	//  Finally, send the user information to the front end
 	exit_with_result($user_assoc);
+}
+
+exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+*/
+
+require_once "backend/connect.php";
+require_once "backend/support.php";
+require_once "backend/classes.php";
+
+if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
+{
+	//  Validate the posted data
+	$email = strtolower(urldecode($_POST["email"]));
+	$handle = strtolower(urldecode($_POST["handle"]));
+	$password = urldecode($_POST["password"]);
+	
+	$new_user = User::insert($email, $handle, $password);
+	
+	//  Finally, send the user information to the front end
+	exit_with_result($new_user->assoc_for_json());
 }
 
 exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
