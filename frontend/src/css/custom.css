@@ -1,1 +1,38 @@
-/* This will contain our customized CSS */
+/* xenogloss background */
+.xgblue {
+  background-color: #84d6d6;
+}
+/* xenogloss block */
+.xgblock {
+  background-color: #ffffff;
+  border-radius:10px;
+}
+
+.xgheader {
+  width: 170px;
+  height: 70px;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 70px;
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 1px;
+}
+
+.xgform {
+  width: 500px;
+  padding: 20px;
+}
+
+.center {
+  margin: 0 auto;
+}
+
+.container {
+  width: 600px;
+}
+
+/* Custom .help-block font */
+.help-block-small {
+  font-size: 12px;
+}

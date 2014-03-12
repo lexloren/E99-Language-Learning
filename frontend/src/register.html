@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register Prototype</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/register.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script>
+      $(document).ready(function(){
+        $("#success").hide();
+        $("#failure").hide();
+      });
+    </script>
+  </head>
+  <body class="xgblue">
+    <br /><br /><br />
+    <div class="center container">
+    <div class="xgblock xgheader">
+      Register
+    </div><br />
+    <div class="xgblock xgform">
+      <div id="success" class="alert alert-success">
+      </div>
+      <div id="failure" class="alert alert-danger">
+      </div>
+      <form id="regForm" role="form">
+	      <div class="form-group">
+		      <label for="registerEmail">Email address</label>
+		      <input type="email" class="form-control" id="registerEmail" placeholder="Enter email">
+	      </div>
+	      <div class="form-group">
+		      <label for="registerHandle">Handle</label>
+		      <input type="text" class="form-control" id="registerHandle" placeholder="Enter desired handle">
+        </div>
+	      <div class="form-group">
+		      <label for="registerPassword">Password</label>
+		      <input type="password" class="form-control" id="registerPassword" placeholder="Password">
+	        <p class="help-block help-block-small">Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.</p> 
+        </div>
+	      <button type="button" class="btn btn-default" onclick="submitRegForm();">Submit</button>
+	    </form>
+	  </div>
+  </body>
+</html>
