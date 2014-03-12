@@ -1,7 +1,7 @@
 <?php
 
-require_once "backend/connect.php";
-require_once "backend/support.php";
+/*
+//  SESSION MANAGEMENT MOVED INTO "./BACKEND/CLASSES/SESSION.PHP"
 
 if (!!session_id() && isset ($_SESSION["handle"]))
 {
@@ -26,5 +26,11 @@ else
 {
 	exit_with_error("No Session", "The user is not logged in. Please authenticate.");
 }
+*/
+
+//  Should be calling Session::reauthenticate() directly;
+//      if we're still calling this script,
+//      then something is wrong with the back-end setup.
+exit;
 
 ?>

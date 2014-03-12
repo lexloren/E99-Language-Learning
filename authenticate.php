@@ -1,5 +1,8 @@
 <?php
 
+/*
+//  SESSION MANAGEMENT MOVED INTO "./BACKEND/CLASSES/SESSION.PHP"
+
 require "backend/connect.php";
 require "backend/support.php";
 
@@ -51,6 +54,21 @@ if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 	{
 		exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
 	}
+}
+
+exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+*/
+
+require_once "backend/connect.php";
+require_once "backend/support.php";
+require_once "backend/classes.php";
+
+if (isset ($_POST["handle"]) && isset ($_POST["password"]))
+{
+	Session::authenticate(
+		strtolower(urldecode($_POST["handle"])),
+		urldecode($_POST["password"])
+	);
 }
 
 exit_with_error("Invalid Post", "Authentication post must include handle and password.");

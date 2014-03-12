@@ -1,6 +1,7 @@
 <?php
 
-require_once "backend/connect.php";
+/*
+//  SESSION MANAGEMENT MOVED INTO "./BACKEND/CLASSES/SESSION.PHP"
 
 if (!!session_id() && strlen(session_id()) > 0)
 {
@@ -11,5 +12,13 @@ if (!!session_id() && strlen(session_id()) > 0)
 	session_destroy();
 	session_unset();
 }
+*/
+
+require_once "backend/support.php";
+require_once "backend/connect.php";
+require_once "backend/classes.php";
+
+Session::deauthenticate();
+exit_with_result("Deauthentication", "The current session has ended.");
 
 ?>
