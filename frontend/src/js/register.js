@@ -4,7 +4,7 @@ function submitRegForm(){
     var password = $("#registerPassword").val();
 
     if(email == "" || handle == "" || password == ""){
-        $("#failure").html("Please enter email address, desired handle, and password.");
+        $("#failure").html("Please enter email address, desired username, and password.");
         displayAlert("#failure");
         return;
     }
@@ -13,7 +13,6 @@ function submitRegForm(){
         { email: email, handle: handle, password: password })
         .done(function(data){
             if(data.isError){
-                console.log(data);
                 $("#failure").html("Your account could not be created: " + data.errorDescription);
                 displayAlert("#failure");
             }
