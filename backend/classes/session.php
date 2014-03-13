@@ -9,7 +9,7 @@ class Session
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end with either the authentication result or an error.
-	public static authenticate($email, $password)
+	public static authenticate($handle, $password)
 	{
 		global $mysqli;
 		
