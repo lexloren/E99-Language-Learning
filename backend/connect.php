@@ -1,5 +1,7 @@
 <?php
 
+if (isset ($mysqli)) exit;
+
 //  Global variable for getting access to the database.
 $mysqli = new mysqli("68.178.216.146", "cscie99", "Ina28@Waffle", "cscie99");
 

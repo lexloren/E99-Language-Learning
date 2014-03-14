@@ -1,5 +1,8 @@
 <?php
 
+if (isset ($support)) exit;
+$support = true;
+
 //  Returns a numerical array of associtive arrays for all results from a mysqli query.
 function mysqli_fetch_all_assocs($inputs)
 {
@@ -76,6 +79,9 @@ function echo_error($title, $description)
 //  Exits the executing script, outputting an error formatted in JSON.
 function exit_with_error($title, $description)
 {
+	global $headers;
+	if (!isset ($headers)) require_once "headers.php";
+	
 	echo_error($title, $description);
 	exit;
 }
@@ -100,6 +106,9 @@ function echo_result($result, $result_information = NULL)
 //  Exits the executing script, outputting a result formatted in JSON.
 function exit_with_result($result, $result_information = NULL)
 {
+	global $headers;
+	if (!isset ($headers)) require_once "headers.php";
+	
 	echo_result($result, $result_information);
 	exit;
 }

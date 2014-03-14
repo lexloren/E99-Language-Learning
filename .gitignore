@@ -149,6 +149,9 @@ develop-eggs
 # Installer logs
 pip-log.txt
 
+# Other logs
+*.log
+
 # Unit test / coverage reports
 .coverage
 .tox

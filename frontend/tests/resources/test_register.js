@@ -43,7 +43,7 @@ test("invalid email notification", function(){
 		responseText: invalidemailJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(data.isError){
 			$("#result").html(regErr + data.errorDescription);	
 		}
@@ -62,7 +62,7 @@ test("invalid handle notification", function(){
 		responseText: invalidhandleJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(data.isError){
 			$("#result").html(regErr + data.errorDescription);	
 		}
@@ -81,7 +81,7 @@ test("invalid password notification", function(){
 		responseText: invalidpasswordJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(data.isError){
 			$("#result").html(regErr + data.errorDescription);	
 		}
@@ -100,7 +100,7 @@ test("handle conflict notification", function(){
 		responseText: handleconflictJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(data.isError){
 			$("#result").html(regErr + data.errorDescription);	
 		}
@@ -119,7 +119,7 @@ test("unknown error notification", function(){
 		responseText: unknownJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(data.isError){
 			$("#result").html(unknownErr);	
 		}
@@ -138,7 +138,7 @@ test("account creation notification", function(){
 		responseText: validparamJSON
   	});
 
-	$.getJSON(testURL, function(data){
+	$.post(testURL, function(data){
 		if(!data.isError){
 			$("#result").html(validparamMsg);	
 		}

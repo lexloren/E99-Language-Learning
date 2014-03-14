@@ -4,27 +4,29 @@ function submitRegForm(){
     var password = $("#registerPassword").val();
 
     if(email == "" || handle == "" || password == ""){
-        $("#failure").html("Please enter email address, desired handle, and password.");
+        $("#failure").html("Please enter email address, desired username, and password.");
         displayAlert("#failure");
         return;
     }
 	
-    $.getJSON('http://cscie99.fictio.us/register.php', 
-        { email: email, handle: handle, password: password},
-        function(data){
+    $.post('http://cscie99.fictio.us/register.php', 
+        { email: email, handle: handle, password: password })
+        .done(function(data){
             if(data.isError){
                 $("#failure").html("Your account could not be created: " + data.errorDescription);
                 displayAlert("#failure");
             }
             else{
                 $("#success").html('Your account has been successfully created. You can now <a href="login.html" class="alert-link">login</a>.');
-                displayAlert("#failure");
+                displayAlert("#success");
             }
     });
     return; 
 }
 
 function displayAlert(div){
+    $("#failure").hide();
+    $("#success").hide();
     $(div).show();
     if($("#failure").is(":visible")){
         $("#success").hide();

@@ -1,7 +1,9 @@
 <?php
 
+/*
+//  SESSION MANAGEMENT MOVED INTO "./BACKEND/CLASSES/SESSION.PHP"
+
 require "backend/connect.php";
-require "backend/headers.php";
 require "backend/support.php";
 
 require "deauthenticate.php";
@@ -54,6 +56,23 @@ if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 	}
 }
 
+exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+*/
+
+require_once "backend/connect.php";
+require_once "backend/support.php";
+require_once "backend/classes.php";
+
+if (isset ($_POST["handle"]) && isset ($_POST["password"]))
+{
+	//  Should exit the script in either success or failure.
+	Session::authenticate(
+		strtolower(urldecode($_POST["handle"])),
+		urldecode($_POST["password"])
+	);
+}
+
+//  If we've gotten this far, it means one of the required POST fields wasn't set.
 exit_with_error("Invalid Post", "Authentication post must include handle and password.");
 
 ?>
