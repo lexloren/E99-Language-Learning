@@ -22,7 +22,7 @@ class Router
 			self::__404();
 		}
 			
-		$class = $segments[0];
+		$class = 'API'.$segments[0];
 		$method = $segments[1];
 		
 		self::invoke($class, $method);

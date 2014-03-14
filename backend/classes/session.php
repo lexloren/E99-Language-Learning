@@ -1,7 +1,7 @@
 <?php
 
-require_once "../connect.php";
-require_once "../support.php";
+require_once $_SERVER['DOCUMENT_ROOT'].'/backend/connect.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
 
 class Session
 {
@@ -9,7 +9,7 @@ class Session
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end with either the authentication result or an error.
-	public static authenticate($handle, $password)
+	public static function authenticate($handle, $password)
 	{
 		global $mysqli;
 		
@@ -59,7 +59,7 @@ class Session
 	//  Reauthenticates the current session and refreshes the timestamp.
 	//!!!!  If authentication fails, exits the script with an error.
 	//!!!!  Must be called before starting into any script that requires a session.
-	public static reauthenticate()
+	public static function reauthenticate()
 	{
 		global $mysqli;
 		
@@ -89,7 +89,7 @@ class Session
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
-	public static deauthenticate()
+	public static function deauthenticate()
 	{
 		global $mysqli;
 		

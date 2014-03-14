@@ -1,7 +1,7 @@
 <?php
 
-require_once "../connect.php";
-require_once "../support.php";
+require_once $_SERVER['DOCUMENT_ROOT'].'/backend/connect.php';
+require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
 
 class User
 {
@@ -20,7 +20,7 @@ class User
 		$this->name_given = $name_given;
 	}
 	
-	public static insert($email, $handle, $password, $name_family = "", $name_given = "")
+	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
 		global $mysqli;
 		
