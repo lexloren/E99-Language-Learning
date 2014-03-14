@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss: Student Edition</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+    <link href="css/starter-template.css" rel="stylesheet">
+	<style>
+		.flashcard {
+			font-size: 24px;
+			text-align: center;
+		}
+	</style>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Xenogloss</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#practice">Practice</a></li>
+            <li><a href="#review">Review</a></li>
+			<li><a href="#tests">Tests</a></li>
+			<li><a href="#progress">Progress</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classes <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+			  <li class="dropdown-header">Current classes</li>
+                <li><a href="#">Chinese 101</a></li>
+                <li><a href="#">Chinese 102</a></li>
+                <li><a href="#">Chinese Literature</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Other</li>
+                <li><a href="#">Search for Classes</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container role="main">
+
+	<!-- The "introductory section, where  student selectes which decks they would like to practice. -->
+	<div id="deck-selection-container">
+	<h1>Hello, Student!</h1>
+	<form role="form">
+	<div class="form-group">
+		<h4>Select which decks you would like to practice:</h4>
+		<div class="checkbox">
+    <label>
+      <input type="checkbox"> Lesson 1: Family
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox"> Lesson 2: Animals
+    </label>
+  </div>
+  <div class="form-group">
+  <h4>I want to see _______ and guess the rest:</h4>
+    <div class="checkbox">
+    <label>
+      <input type="checkbox"> Words
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox"> Pronunciations
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox"> Translations
+    </label>
+  </div>
+  </div>
+  <button type="submit" class="btn btn-default" id="get-cards">Get Cards</button>
+</form>
+</div>
+	
+	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
+		<div class="row" id="flashcard-container">
+			<div class="col-md-3 panel panel-default flashcard" id="flashcard-word">
+				<div class="panel-heading">Word</div>
+				<div class="panel-body">阿姨</div>
+				<div class="panel-footer">
+					<button type="button" class="btn btn-default">show</button>
+				</div>
+			</div>
+			<div class="col-md-3 panel panel-default flashcard" id="flashcard-pronounce">
+				<div class="panel-heading">Pronunciation</div>
+				<div class="panel-body">ā yí</div>
+				<div class="panel-footer">
+					<button type="button" class="btn btn-default">show</button>
+				</div>
+			</div>
+			<div class="col-md-3 panel panel-default flashcard" id="flashcard-trans">
+				<div class="panel-heading">Translation</div>
+				<div class="panel-body">mother's sister</div>
+				<div class="panel-footer">
+					<button type="button" class="btn btn-default">show</button>
+				</div>
+			</div>
+		</div>
+		
+		<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
+		<div id="card-followup-container">
+		<h4>How well did you know this word?</h4>
+		<div class="btn-group">
+			<button type="button" class="btn btn-default" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
+		</div>
+		</div>
+		<div>
+		<br/>
+		<button type="button" class="btn btn-default btn-lg">Next Card</button>
+		</div>
+	</div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="./tests/resources/jquery.mockjax.js"></script>
+  </body>
+</html>
