@@ -1,6 +1,7 @@
 body {
   padding-top: 50px;
 }
+
 .starter-template {
   padding: 40px 15px;
   text-align: center;
@@ -9,5 +10,15 @@ body {
 .form-signin {
   max-width: 330px;
   margin: auto;
+}
+
+.form-register {
+  max-width: 450px;
+  margin: auto;
+}
+
+/* Custom .help-block font */
+.help-block-small {
+  font-size: 12px;
 }
 
