@@ -47,21 +47,18 @@ class Entry
 	{
 		if (!Session::$user) return null;
 		
+		if ($this->user_id === Session::$user->user_id) return $this;
+		
 		global $mysqli;
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id = %d"
+		$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)"
 			Session::$user->user_id,
 			$this->entry_id
 		));
 		
-		if (!$result || !($result_assoc = $result->fetch_assoc()))
-		{
-			$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)"
-				Session::$user->user_id,
-				$this->entry_id
-			));
-		}
-		
+		//  JUST A STUB RIGHT NOW!
+		//      We should implement user-customization of entries, but later;
+		//      for now, this method just makes sure that the user has a copy of the entry.
 		return $this;
 	}
 	
