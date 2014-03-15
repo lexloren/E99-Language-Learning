@@ -16,7 +16,7 @@ class EntryList
 		$this->list_id = intval($list_id, 10);
 		$this->list_name = $list_name;
 		$this->shared_public = $share_public;
-		$this->list_name = list_name
+		$this->list_name = list_name;
 		$this->user_id = $user_id;
 	}
 	

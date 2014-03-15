@@ -88,7 +88,7 @@ class User
 			$mysqli->escape_string($password)
 		));
 		
-		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s'",
+		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s'",
 			$mysqli->escape_string($handle)
 		));
 		

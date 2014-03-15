@@ -6,8 +6,8 @@ require_once './backend/classes/list.php';
 
 class APIList extends APIBase
 {
-	public function __construct() {	
-		parent::__construct();
+	public function __construct($user, $mysqli) {	
+		parent::__construct($user, $mysqli);
 	}
 	
 	public function insert()
@@ -29,7 +29,7 @@ class APIList extends APIBase
 	{
 		self::exit_if_not_authenticated();
 
-		if (isset $_POST["list_id"]))
+		if (isset ($_POST["list_id"]))
 		{
 			$list = EntryList::select($_POST["list_id"]);
 			if (!$list)
@@ -52,7 +52,7 @@ class APIList extends APIBase
 	public function describe()
 	{
 		self::exit_if_not_authenticated();
-		if (isset $_GET["list_id"]))
+		if (isset ($_GET["list_id"]))
 		{
 			$list = EntryList::select($_POST["list_id"]);
 			if (!$list)

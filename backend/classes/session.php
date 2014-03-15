@@ -15,7 +15,7 @@ class Session
 	{
 		$mysqli = Connect::get();
 		
-		deauthenticate();
+		self::deauthenticate();
 		
 		if (!validate_password($password))
 		{
@@ -28,7 +28,7 @@ class Session
 		}
 		
 		//  See whether we can authenticate with the handle and password posted
-		$result = $mysqli->query(sprintf("SELECT user_id AS id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
+		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
 			$mysqli->escape_string($handle),
 			$mysqli->escape_string($password)
 		));
@@ -40,14 +40,14 @@ class Session
 			session_start();
 			$session = session_id();
 			
-			$user_assoc["id"] = intval($user_assoc["id"]);
+			$user_assoc["user_id"] = intval($user_assoc["user_id"]);
 			
 			$_SESSION["handle"] = $user_assoc["handle"];
 			
 			//  Start a PHP session (using cookies), and update the database accordingly
 			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
 				$mysqli->escape_string($session),
-				$user_assoc["id"]
+				$user_assoc["user_id"]
 			));
 			
 			self::$user = User::from_mysql_result_assoc($user_assoc);
