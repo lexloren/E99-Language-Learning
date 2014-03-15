@@ -1,15 +1,25 @@
 <?php
 
-if (isset ($apibase)) exit;
-$apibase = true;
+//Do we need this for a class? Getting some error, so commented
+//if (isset ($apibase)) exit;
+//$apibase = true;
 
 class APIBase
 {
+	protected $mysqli = null;
+	protected $user = null;
 	
-	public function __construct() 
+	public function __construct($user, $mysqli) 
 	{
-		//TODO: Authenticate user from COOKIE
-	}	
+		$this->user = $user;
+		$this->mysqli = $mysqli;
+	}
+	
+	protected function exit_if_not_authenticated()
+	{
+		if (!isset($this->user))
+			exit_with_error("Authentication Needed", "User must authenticate for this recourse");
+	}
 }
 
 ?>

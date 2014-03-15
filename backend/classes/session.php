@@ -13,7 +13,7 @@ class Session
 	//!!!!  Exits the current script, returning to the front end in case of error.
 	public static function authenticate($handle, $password)
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		deauthenticate();
 		
@@ -65,7 +65,7 @@ class Session
 	//!!!!  Must be called before starting into any script that requires a session.
 	public static function reauthenticate()
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		if (!!session_id() && isset ($_SESSION["handle"]))
 		{
@@ -99,7 +99,7 @@ class Session
 	//  Destroys the current session both in the browser and on the server.
 	public static function deauthenticate()
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		if (!!session_id() && strlen(session_id()) > 0)
 		{

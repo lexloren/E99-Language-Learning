@@ -1,5 +1,7 @@
 <?php
 
+require_once "./backend/connect.php";
+
 // Simple router routes url XXX/YYY to XXX class's YYY method
 class Router 
 {
@@ -41,8 +43,16 @@ class Router
 			self::__404();
 		}
 
-		$instance = $class->newInstance();
-
+		//find the user
+		$user = null;
+		if (!!session_id() && isset ($_SESSION["handle"]))
+		{
+			Session::reauthenticate();
+			$user = Session::user;
+		}
+		$link = Connect::get();
+		$instance = $class->newInstance($user, $link);
+		
 		try 
 		{
 			$method = $class->getMethod($methodName);

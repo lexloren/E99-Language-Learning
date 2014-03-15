@@ -35,7 +35,7 @@ class User
 	//  Creates a User object by selecting from the database
 	public static function select($user_id)
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE user_id = %d",
 			intval($user_id)
@@ -52,7 +52,7 @@ class User
 	//  Inserts a row into users table and returns corresponding User object
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		if (!validate_email($email))
 		{
@@ -88,7 +88,7 @@ class User
 			$mysqli->escape_string($password)
 		));
 		
-		$result = $mysqli->query(sprintf("SELECT user_id AS id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s'",
+		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given AS nameGiven, name_family AS nameFamily FROM users WHERE handle = '%s'",
 			$mysqli->escape_string($handle)
 		));
 		

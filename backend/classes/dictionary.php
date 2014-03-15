@@ -26,7 +26,7 @@ class Dictionary
 	
 	public static function look_up($word, $lang_codes, $pagination = null)
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		//  Now perform the query
 		//      First, decode the query and make sure it's safe
@@ -93,7 +93,7 @@ class Dictionary
 	//  Gets an entry from the dictionary by entry_id
 	public static function select_entry($entry_id)
 	{
-		global $mysqli;
+		$mysqli = Connect::get();
 		
 		$result = $mysqli->query(sprintf("SELECT %s FROM %s WHERE entry_id = %d",
 			self::default_columns(),

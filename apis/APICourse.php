@@ -5,9 +5,9 @@ require_once "./backend/support.php";
 
 class APICourse  extends APIBase
 {
-	public function __construct()
+	public function __construct($user, $mysqli)
 	{	
-		parent::__construct();
+		parent::__construct($user, $mysqli);
 	}
 	
 	public function describe()
