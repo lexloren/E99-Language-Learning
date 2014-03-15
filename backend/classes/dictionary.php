@@ -10,17 +10,20 @@ class Dictionary
 	
 	public static $look_up_last_count = null;
 	
-	private static function default_columns()
-	{
-		return "dictionary.*, language_0.lang_code AS lang_code_0, language_1.lang_code AS lang_code_1";
-	}
-	
+	//  Returns the join of the dictionary on the languages table
+	//      so that we can include language codes (which exist only in the languages table)
 	private static function join()
 	{
 		$join_dict_lang_0 = "(dictionary LEFT JOIN languages AS language_0 ON dictionary.lang_id_0 = language_0.lang_id)";
 		return "$join_dict_lang_0 LEFT JOIN languages AS language_1 ON dictionary.lang_id_1 = language_1.lang_id";
 	}
 
+	//  Returns the default columns that result from join()
+	private static function default_columns()
+	{
+		return "dictionary.*, language_0.lang_code AS lang_code_0, language_1.lang_code AS lang_code_1";
+	}
+	
 	public static function look_up($word, $lang_codes, $pagination = null)
 	{
 		global $mysqli;
@@ -56,19 +59,23 @@ class Dictionary
 			exit_with_error("Database Error", $mysqli->error);
 		}
 		
+		//  Save information about query results in static properties
 		self::$look_up_last_count = $result->num_rows;
 		self::$page_size = self::$look_up_last_count;
 		self::$page_num = 1;
 		
+		//  Use pagination only if we have both page size and page number
 		if (isset ($pagination["size"]) && isset ($pagination["num"]))
 		{
 			self::$page_size = intval($pagination["size"]);
 			self::$page_num = intval($pagination["num"]);
 		}
 		
+		//  Compute the minimum and maximum entries to return
 		$entry_min = (self::$page_num - 1) * self::$page_size;
 		$entry_max = $entry_min + self::$page_size - 1;
 		
+		//  Convert the mysql_result associative arrays to Entry objects
 		$entries_returnable = array ();
 		$entry_num = 0;
 		while (($result_assoc = $result->fetch_assoc()))
@@ -83,6 +90,7 @@ class Dictionary
 		return $entries_returnable;
 	}
 	
+	//  Gets an entry from the dictionary by entry_id
 	public static function select_entry($entry_id)
 	{
 		global $mysqli;
