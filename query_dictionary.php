@@ -49,21 +49,21 @@ if (isset ($_GET["query"]))
 	$query = $mysqli->escape_string(urldecode($_GET["query"]));
 	
 	//  To make the SQL easier to read, I construct it piece by piece
-	$join1 = "(dictionary LEFT JOIN languages AS language_known ON dictionary.lang_id_known = language_known.lang_id)";
-	$join2 = "$join1 LEFT JOIN languages AS language_unknw ON dictionary.lang_id_unknw = language_unknw.lang_id";
+	$join_dict_lang_0 = "(dictionary LEFT JOIN languages AS language_0 ON dictionary.lang_id_0 = language_0.lang_id)";
+	$join_dict_langs = "$join_dict_lang_0 LEFT JOIN languages AS language_1 ON dictionary.lang_id_1 = language_1.lang_id";
 
 	//  We will convert the database columns to the proper format for sending JSON to the front end
 	$columns = array(
 		"dictionary.entry_id" => "entryId",
 		"dictionary.user_id" => "userId",
-		"language_known.lang_code" => "langCodeKnown",
-		"language_unknw.lang_code" => "langCodeUnknown",
-		"dictionary.lang_known" => "languageKnown",
-		"dictionary.lang_unknw" => "languageUnknown",
+		"language_0.lang_code" => "langCodeKnown",
+		"language_1.lang_code" => "langCodeUnknown",
+		"dictionary.lang_0" => "languageKnown",
+		"dictionary.lang_1" => "languageUnknown",
 		"dictionary.pronunciation" => "languageUnknownPronunciation",
-		"CHAR_LENGTH(lang_unknw)" => "languageUnknownLength",
-		"CHAR_LENGTH(lang_known)" => "languageKnownLength",
-		"(lang_unknw != '$query' AND lang_known != '$query')" => "isNotExact"
+		"CHAR_LENGTH(lang_1)" => "languageUnknownLength",
+		"CHAR_LENGTH(lang_0)" => "languageKnownLength",
+		"(lang_1 != '$query' AND lang_0 != '$query')" => "isNotExact"
 	);
 	
 	$columnsSelected = array();
@@ -78,7 +78,7 @@ if (isset ($_GET["query"]))
 	$wildcard = $exact_matches_only ? "" : "%%";
 	
 	//      Second, take all the pieces created above and run the SQL query
-	$query = sprintf("SELECT %s FROM $join2 WHERE (lang_known LIKE '$wildcard%s$wildcard' OR lang_unknw LIKE '$wildcard%s$wildcard') AND (language_known.lang_code IN ('%s') AND language_unknw.lang_code IN ('%s')) ORDER BY isNotExact, languageUnknownLength, languageKnownLength",
+	$query = sprintf("SELECT %s FROM $join_dict_langs WHERE (lang_0 LIKE '$wildcard%s$wildcard' OR lang_1 LIKE '$wildcard%s$wildcard') AND (language_0.lang_code IN ('%s') AND language_1.lang_code IN ('%s')) ORDER BY isNotExact, languageUnknownLength, languageKnownLength",
 		implode(", ", $columnsSelected),
 		$query,
 		$query,
