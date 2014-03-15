@@ -11,7 +11,7 @@ class Entry
 	public $user_id = null;
 	
 	public function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation, $user_id = null)
+		$word_0, $word_1, $pronunciation = null, $user_id = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
 		$this->words = array (
@@ -33,7 +33,7 @@ class Entry
 			$result["lang_code_1"],
 			$result["word_0"],
 			$result["word_1"],
-			$result["word_1_pronun"],
+			!!$result["word_1_pronun"] && strlen($result["word_1_pronun"]) > 0 ? $result["word_1_pronun"] : null,
 			$result["user_id"]
 		);
 	}
