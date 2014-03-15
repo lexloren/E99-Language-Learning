@@ -5,11 +5,11 @@ require_once "./backend/support.php";
 
 class User
 {
-	public $user_id = null;
-	public $handle = null;
-	public $email = null;
-	public $name_family = null;
-	public $name_given = null;
+	private $user_id = null;
+	private $handle = null;
+	private $email = null;
+	private $name_family = null;
+	private $name_given = null;
 	
 	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
 	{

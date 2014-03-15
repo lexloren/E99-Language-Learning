@@ -5,10 +5,10 @@ require_once "./backend/support.php";
 
 class Entry
 {
-	public $entry_id = null;
-	public $words = null; //Associative array from language codes to word values
-	public $pronunciations = null;
-	public $user_id = null;
+	private $entry_id = null;
+	private $words = null; //Associative array from language codes to word values
+	private $pronunciations = null;
+	private $user_id = null;
 	
 	public function __construct($entry_id, $lang_code_0, $lang_code_1,
 		$word_0, $word_1, $pronunciation = null, $user_id = null)
