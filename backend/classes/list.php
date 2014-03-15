@@ -1,9 +1,9 @@
 <?php
 
-require_once "../connect.php";
-require_once "../support.php";
+require_once "./backend/connect.php";
+require_once "./backend/support.php";
 
-class List
+class EntryList
 {
 	//  Adds an entry to this list
 	//      Returns this list
