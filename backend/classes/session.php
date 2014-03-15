@@ -10,7 +10,7 @@ class Session
 	public static $user;
 	
 	//  Opens a session.
-	//!!!!  Exits the current script, returning to the front end with either the authentication result or an error.
+	//!!!!  Exits the current script, returning to the front end in case of error.
 	public static function authenticate($handle, $password)
 	{
 		global $mysqli;
