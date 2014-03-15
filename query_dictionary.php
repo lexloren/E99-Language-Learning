@@ -1,6 +1,6 @@
 <?php
 
-require_once "./backend/connect.php";
+require_once "./backend/connection.php";
 require_once "./backend/support.php";
 require_once "./backend/classes.php";
 

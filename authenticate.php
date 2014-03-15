@@ -59,7 +59,7 @@ if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 exit_with_error("Invalid Post", "Authentication post must include handle and password.");
 */
 
-require_once "./backend/connect.php";
+require_once "./backend/connection.php";
 require_once "./backend/support.php";
 require_once "./backend/classes.php";
 
