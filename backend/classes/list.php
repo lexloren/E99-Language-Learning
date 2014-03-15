@@ -136,27 +136,7 @@ class EntryList
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
-		$result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id = %d",
-			Session::$user->user_id,
-			$entry_to_add->entry_id
-		));
-		
-		if (!$result || !($result_assoc = $result->fetch_assoc()))
-		{
-			$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)",
-				Session::$user->user_id,
-				$entry_to_add->entry_id
-			));
-
-			$result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id = %d",
-				Session::$user->user_id,
-				$entry_to_add->entry_id
-			));
-			
-			$result_assoc = $result->fetch_assoc();
-		}
-		
-		$entry_added = Entry::from_mysql_result_assoc($result_assoc);
+		$entry_added = $entry_to_add->copy_for_session_user();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
