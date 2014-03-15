@@ -5,9 +5,9 @@ require_once "./backend/support.php";
 
 class Session
 {
-	private static $shared_instance;
+	private static $shared_instance = null;
 	
-	public static $user;
+	public static $user = null;
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end in case of error.
