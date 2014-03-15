@@ -10,7 +10,7 @@ class Entry
 	private $pronunciations = null;
 	private $user_id = null;
 	
-	public function __construct($entry_id, $lang_code_0, $lang_code_1,
+	private function __construct($entry_id, $lang_code_0, $lang_code_1,
 		$word_0, $word_1, $pronunciation = null, $user_id = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
@@ -22,6 +22,11 @@ class Entry
 			$lang_code_1 => $pronunciation
 		);
 		$this->user_id = $user_id;
+	}
+	
+	public static function select($entry_id)
+	{
+		return Dictionary::select_entry($entry_id);
 	}
 	
 	public static function from_mysql_result_assoc($result)
