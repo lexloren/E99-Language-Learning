@@ -32,7 +32,6 @@ test("blank parameters not accepted", function(){
 	}
 	var check = $("#result").html();
 	ok(check === blankparamErr, "User notified of blank parameters.");
-    $.mockjaxClear();
 });
 
 test("invalid email notification", function(){
