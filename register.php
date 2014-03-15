@@ -74,9 +74,9 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
 */
 
-require_once "backend/connect.php";
-require_once "backend/support.php";
-require_once "backend/classes.php";
+require_once "./backend/connect.php";
+require_once "./backend/support.php";
+require_once "./backend/classes.php";
 
 if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
 {
