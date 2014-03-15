@@ -1,7 +1,7 @@
 <?php
 
-require_once "../connect.php";
-require_once "../support.php";
+require_once "./backend/connect.php";
+require_once "./backend/support.php";
 
 class Course
 {

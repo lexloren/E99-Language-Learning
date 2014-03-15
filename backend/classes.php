@@ -3,13 +3,11 @@
 if (isset ($classes)) exit;
 $classes = true;
 
-require_once "classes/session.php";
-/*
-require_once "classes/entry.php";
-require_once "classes/course.php";
-require_once "classes/user.php";
-require_once "classes/list.php";
-require_once "classes/test.php";
-*/
+require_once "./backend/classes/session.php";
+require_once "./backend/classes/entry.php";
+require_once "./backend/classes/course.php";
+require_once "./backend/classes/user.php";
+require_once "./backend/classes/list.php";
+require_once "./backend/classes/test.php";
 
 ?>
