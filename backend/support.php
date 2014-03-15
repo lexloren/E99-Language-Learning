@@ -4,6 +4,7 @@ if (isset ($support)) exit;
 $support = true;
 
 //  Returns a numerical array of associtive arrays for all results from a mysqli query.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function mysqli_fetch_all_assocs($inputs)
 {
 	$outputs = array();
