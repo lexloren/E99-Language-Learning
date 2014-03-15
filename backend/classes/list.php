@@ -8,14 +8,14 @@ class EntryList
 	private $list_id;
 	private $list_name;
 	private $entries;
-	private $shared_public;
+	private $share_public;
 	private $user_id;
 	
-	private function __construct($list_id, $shared_public = false, $title = null, $user_id = null)
+	private function __construct($list_id, $share_public, $title = null, $user_id = null)
 	{
 		$this->list_id = intval($list_id, 10);
 		$this->list_name = $list_name;
-		$this->shared_public = $shared_public;
+		$this->shared_public = $share_public;
 		$this->title = title
 		$this->user_id = $user_id;
 	}
@@ -32,6 +32,7 @@ class EntryList
 	private function session_user_can_read_via_course_sharing()
 	{
 		//  Stub...
+		//      Will depend on implementing Course
 		return false;
 	}
 	
@@ -88,6 +89,7 @@ class EntryList
 	{
 		return new EntryList(
 			$result_assoc["list_id"],
+			$result_assoc["share_public"],
 			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
 			$result_assoc["user_id"]
 		);
