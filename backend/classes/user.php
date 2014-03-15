@@ -104,8 +104,9 @@ class User
 		);
 	}
 	
-	public function assoc_for_json($privacy = false)
+	public function assoc_for_json()
 	{
+		$privacy = ($this != Session::$user);
 		return array(
 			"userId" => $this->user_id,
 			"handle" => $this->handle,
