@@ -7,6 +7,8 @@ class Session
 {
 	private static $shared_instance;
 	
+	public static $user;
+	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end with either the authentication result or an error.
 	public static function authenticate($handle, $password)
@@ -48,7 +50,9 @@ class Session
 				$user_assoc["id"]
 			));
 			
-			exit_with_result($user_assoc);
+			self::$user = User::from_mysql_result_assoc($user_assoc);
+			
+			return self::$user;
 		}
 		else
 		{
@@ -70,7 +74,7 @@ class Session
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
-			if (!$result || !($result->fetch_assoc()))
+			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
 				session_destroy();
 				session_unset();
@@ -81,6 +85,10 @@ class Session
 				$mysqli->escape_string(session_id()),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
+			
+			self::$user = User::from_mysql_result_assoc($result_assoc);
+			
+			return self::$user;
 		}
 		else
 		{
@@ -102,6 +110,8 @@ class Session
 			session_destroy();
 			session_unset();
 		}
+		
+		return null;
 	}
 }
 
