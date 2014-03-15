@@ -20,6 +20,7 @@ class User
 		$this->name_given = $name_given;
 	}
 	
+	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
 		return new User(
@@ -31,6 +32,7 @@ class User
 		);
 	}
 	
+	//  Creates a User object by selecting from the database
 	public static function select($user_id)
 	{
 		global $mysqli;
@@ -47,6 +49,7 @@ class User
 		return null;
 	}
 	
+	//  Inserts a row into users table and returns corresponding User object
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
 		global $mysqli;
