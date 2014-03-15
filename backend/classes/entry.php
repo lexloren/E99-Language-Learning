@@ -43,6 +43,28 @@ class Entry
 		);
 	}
 	
+	public function copy_for_session_user()
+	{
+		if (!Session::$user) return null;
+		
+		global $mysqli;
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id = %d"
+			Session::$user->user_id,
+			$this->entry_id
+		));
+		
+		if (!$result || !($result_assoc = $result->fetch_assoc()))
+		{
+			$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)"
+				Session::$user->user_id,
+				$this->entry_id
+			));
+		}
+		
+		return $this;
+	}
+	
 	public function assoc_for_json()
 	{
 		return array(
