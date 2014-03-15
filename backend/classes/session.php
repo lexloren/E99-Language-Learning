@@ -1,7 +1,7 @@
 <?php
 
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/connect.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
+require_once "../connect.php";
+require_once "../support.php";
 
 class Session
 {
