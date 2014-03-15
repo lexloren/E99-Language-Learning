@@ -44,7 +44,7 @@ class EntryList
 	
 	public function delete()
 	{
-		$mysqli = Connect::get();
+		$mysqli = Connection::get_shared_instance();
 		
 		if (!Session::$user) return null;
 		
@@ -58,7 +58,7 @@ class EntryList
 	
 	public function get_entries()
 	{
-		$mysqli = Connect::get();
+		$mysqli = Connection::get_shared_instance();
 		
 		//  Need to add privileges here, based on public sharing and course-wide sharing
 		
@@ -81,7 +81,7 @@ class EntryList
 	
 	public static function insert($list_name = null)
 	{
-		$mysqli = Connect::get();
+		$mysqli = Connection::get_shared_instance();
 		
 		if (!Session::$user) return null;
 		
@@ -95,7 +95,7 @@ class EntryList
 	
 	public static function select($list_id)
 	{
-		$mysqli = Connect::get();
+		$mysqli = Connection::get_shared_instance();
 		
 		//  Need to add privileges here, based on public sharing and course-wide sharing
 		

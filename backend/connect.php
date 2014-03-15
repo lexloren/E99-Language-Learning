@@ -1,12 +1,12 @@
 <?php
 
-class Connect
+class Connection
 {
 	private static $mysqli = null;
-	public static function get()
+	
+	public static function get_shared_instance()
 	{
-		if (isset (self::$mysqli))
-			return self::$mysqli;
+		if (isset (self::$mysqli)) return self::$mysqli;
 
 		//  Global variable for getting access to the database.
 		self::$mysqli = new mysqli("68.178.216.146", "cscie99", "Ina28@Waffle", "cscie99");

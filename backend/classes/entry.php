@@ -49,7 +49,7 @@ class Entry
 		
 		if ($this->user_id === Session::$user->user_id) return $this;
 		
-		$mysqli = Connect::get();
+		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)"
 			Session::$user->user_id,
