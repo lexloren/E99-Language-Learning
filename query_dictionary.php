@@ -45,6 +45,7 @@ if (isset ($_GET["query"]))
 		$lang_codes_requested = array_keys($lang_codes_dictionary);
 	}
 	
+	//  Use pagination only if GET includes both page size and page number
 	$pagination = null;
 	if (isset ($_GET["page_size"]) && isset ($_GET["page_num"]))
 	{
@@ -54,12 +55,14 @@ if (isset ($_GET["query"]))
 		);
 	}
 	
+	//  Perform the database query
 	$entries_matching = Dictionary::look_up(
 		urldecode($_GET["query"]),
 		$lang_codes_requested,
 		$pagination
 	);
 	
+	//  Convert the objects to associative arrays for returning JSON to the front end
 	$entries_returnable = array();
 	while (($entry = array_shift($entries_matching)))
 	{
