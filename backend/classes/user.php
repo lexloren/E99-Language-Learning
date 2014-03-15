@@ -109,7 +109,7 @@ class User
 	
 	public function assoc_for_json()
 	{
-		$privacy = ($this != Session::$user);
+		$privacy = ($this != Session::get_user());
 		return array(
 			"userId" => $this->user_id,
 			"handle" => $this->handle,

@@ -45,14 +45,14 @@ class Entry
 	
 	public function copy_for_session_user()
 	{
-		if (!Session::$user) return null;
+		if (!Session::get_user()) return null;
 		
-		if ($this->user_id === Session::$user->user_id) return $this;
+		if ($this->user_id === Session::get_user()->user_id) return $this;
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id) VALUES (%d, %d)"
-			Session::$user->user_id,
+			Session::get_user()->user_id,
 			$this->entry_id
 		));
 		

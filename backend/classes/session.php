@@ -7,7 +7,12 @@ class Session
 {
 	private static $shared_instance = null;
 	
-	public static $user = null;
+	private static $user = null;
+	
+	public static function get_user()
+	{
+		return self::$user;
+	}
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end in case of error.

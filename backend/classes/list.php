@@ -20,7 +20,7 @@ class EntryList
 		$this->user_id = $user_id;
 	}
 	
-	//  Returns true iff Session::$user can read this list for any reason
+	//  Returns true iff Session::get_user() can read this list for any reason
 	private function session_user_can_read()
 	{
 		return session_user_can_write()
@@ -28,7 +28,7 @@ class EntryList
 			|| !!$this->shared_public;
 	}
 	
-	//  Returns true iff Session::$user is in any course in which this list is shared
+	//  Returns true iff Session::get_user() is in any course in which this list is shared
 	private function session_user_can_read_via_course_sharing()
 	{
 		//  Stub...
@@ -36,20 +36,20 @@ class EntryList
 		return false;
 	}
 	
-	//  Returns true iff Session::$user owns this list
+	//  Returns true iff Session::get_user() owns this list
 	private function session_user_can_write()
 	{
-		return !!Session::$user && (Session::$user->user_id === $this->user_id);
+		return !!Session::get_user() && (Session::get_user()->user_id === $this->user_id);
 	}
 	
 	public function delete()
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		if (!Session::$user) return null;
+		if (!Session::get_user()) return null;
 		
 		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
-			Session::$user->user_id,
+			Session::get_user()->user_id,
 			$this->list_id
 		));
 		
@@ -83,10 +83,10 @@ class EntryList
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		if (!Session::$user) return null;
+		if (!Session::get_user()) return null;
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
-			Session::$user->user_id,
+			Session::get_user()->user_id,
 			$mysqli->escape_string($list_name)
 		));
 		
@@ -105,7 +105,7 @@ class EntryList
 		
 		if (!!$result && !!($result_assoc = $result->fetch_assoc()))
 		{
-			//  Return the list iff Session::$user can read it
+			//  Return the list iff Session::get_user() can read it
 			$list = EntryList::from_mysql_result_assoc($result_assoc);
 			return $list->session_user_can_read() ? $list : null;
 		}
@@ -175,8 +175,8 @@ class EntryList
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::$user || !session_user_can_read()) return null;
-		//  Create a copy of the list with Session::$user as the owner
+		if (!Session::get_user() || !session_user_can_read()) return null;
+		//  Create a copy of the list with Session::get_user() as the owner
 		
 		return null;
 	}
