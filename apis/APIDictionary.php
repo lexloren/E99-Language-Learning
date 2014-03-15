@@ -1,9 +1,9 @@
 <?php
 
-require_once './APIBase.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/classes/session.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/classes/user.php';
+require_once "./APIBase.php";
+require_once "./backend/support.php";
+require_once "./backend/classes/session.php";
+require_once "./backend/classes/user.php";
 
 class APIDictionary extends APIBase
 {

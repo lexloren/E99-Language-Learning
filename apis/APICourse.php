@@ -1,7 +1,7 @@
 <?php
 
-require_once './APIBase.php';
-require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
+require_once "./APIBase.php";
+require_once "./backend/support.php";
 
 class APICourse  extends APIBase
 {
