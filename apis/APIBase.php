@@ -1,6 +1,10 @@
 <?php
 
-class APIBase{
+if (isset ($apibase)) exit;
+$apibase = true;
+
+class APIBase
+{
 	
 	public function __construct() 
 	{
