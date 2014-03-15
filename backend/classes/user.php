@@ -31,6 +31,22 @@ class User
 		);
 	}
 	
+	public static function select($user_id)
+	{
+		global $mysqli;
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE user_id = %d",
+			intval($user_id)
+		));
+		
+		if (!!($result_assoc = $result->fetch_assoc()))
+		{
+			return User::from_mysql_result_assoc($result_assoc);
+		}
+		
+		return null;
+	}
+	
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
 		global $mysqli;
