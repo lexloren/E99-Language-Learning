@@ -1,13 +1,14 @@
 <?php
 
-require_once 'APIBase.php';
+require_once './APIBase.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/backend/support.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/backend/classes/session.php';
 require_once $_SERVER['DOCUMENT_ROOT'].'/backend/classes/user.php';
 
 class APIUser extends APIBase
 {
-	public function __construct() {	
+	public function __construct()
+	{	
 		parent::__construct();
 	}
 
@@ -22,6 +23,7 @@ class APIUser extends APIBase
 			);
 		}
 	}
+	
 	public function register()
 	{
 		if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
@@ -37,7 +39,9 @@ class APIUser extends APIBase
 			exit_with_result($new_user->assoc_for_json());
 		}
 		else
+		{
 			exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+		}
 	}
 	
 	public function activate() 
