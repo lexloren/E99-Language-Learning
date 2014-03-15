@@ -74,6 +74,6 @@ if (isset ($_GET["query"]))
 	));
 }
 
-exit_with_result(NULL);
+exit_with_error("Missing Query", "The call specified no query.");
 
 ?>
