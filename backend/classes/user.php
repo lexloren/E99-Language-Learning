@@ -20,6 +20,17 @@ class User
 		$this->name_given = $name_given;
 	}
 	
+	public static function from_mysql_result_assoc($result_assoc)
+	{
+		return new User(
+			$result_assoc["user_id"],
+			$result_assoc["handle"],
+			$result_assoc["email"],
+			$result_assoc["name_family"],
+			$result_assoc["name_given"]
+		);
+	}
+	
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
 		global $mysqli;
@@ -77,14 +88,14 @@ class User
 		);
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = false)
 	{
 		return array(
 			"userId" => $this->user_id,
 			"handle" => $this->handle,
-			"email" => $this->email,
-			"nameGiven" => $this->name_given,
-			"nameFamily" => $this->name_family
+			"email" => $privacy ? null : $this->email,
+			"nameGiven" => $privacy ? null : $this->name_given,
+			"nameFamily" => $privacy ? null : $this->name_family
 		);
 	}
 }
