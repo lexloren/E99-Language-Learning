@@ -1,9 +1,7 @@
 <?php
 
 require_once "./apis/APIBase.php";
-require_once "./backend/support.php";
-require_once "./backend/classes/session.php";
-require_once "./backend/classes/user.php";
+require_once "./backend/classes.php";
 
 class APIDictionary extends APIBase
 {

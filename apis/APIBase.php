@@ -8,6 +8,8 @@
 //if (isset ($apibase)) exit;
 //$apibase = true;
 
+require_once "./backend/classes.php";
+
 class APIBase
 {
 	protected $mysqli = null;
@@ -22,7 +24,7 @@ class APIBase
 	protected function exit_if_not_authenticated()
 	{
 		if (!isset($this->user))
-			exit_with_error("Authentication Needed", "User must authenticate for this resource");
+			Session::exit_with_error("Authentication Needed", "User must authenticate for this resource");
 	}
 }
 

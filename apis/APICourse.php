@@ -1,7 +1,7 @@
 <?php
 
 require_once "./APIBase.php";
-require_once "./backend/support.php";
+require_once "./backend/classes.php";
 
 class APICourse  extends APIBase
 {
@@ -12,7 +12,7 @@ class APICourse  extends APIBase
 	
 	public function describe()
 	{
-		exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
 	}	
 }
 

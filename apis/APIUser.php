@@ -1,9 +1,7 @@
 <?php
 
 require_once "./apis/APIBase.php";
-require_once "./backend/support.php";
-require_once "./backend/classes/session.php";
-require_once "./backend/classes/user.php";
+require_once "./backend/classes.php";
 
 class APIUser extends APIBase
 {
@@ -36,22 +34,22 @@ class APIUser extends APIBase
 			$new_user = User::insert($email, $handle, $password);
 			
 			//  Finally, send the user information to the front end
-			exit_with_result($new_user->assoc_for_json());
+			Session::exit_with_result($new_user->assoc_for_json());
 		}
 		else
 		{
-			exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+			Session::exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
 		}
 	}
 	
 	public function activate() 
 	{
-		exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function reset_password() 
 	{
-		exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function deauthenticate() 
