@@ -6,10 +6,43 @@ require_once "./backend/support.php";
 class User
 {
 	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	
 	private $handle = null;
+	public function get_handle()
+	{
+		return $this->handle;
+	}
+	
 	private $email = null;
+	public function get_email()
+	{
+		return $this->email;
+	}
+	
 	private $name_family = null;
+	public function get_name_family()
+	{
+		return $this->name_family;
+	}
+	
 	private $name_given = null;
+	public function get_name_given()
+	{
+		return $this->name_given;
+	}
+	
+	//  Returns the full name, formatted with given/family names in the right places
+	public function get_name_full($family_first = false)
+	{
+		return sprintf("%s %s",
+			$family_first ? $this->get_name_family() : $this->get_name_given(),
+			$family_first ? $this->get_name_given() : $this->get_name_family()
+		);
+	}
 	
 	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
 	{
@@ -19,10 +52,7 @@ class User
 		$this->name_family = $name_family;
 		$this->name_given = $name_given;
 	}
-	public function get_user_id()
-	{
-		return $this->user_id;
-	}
+	
 	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
