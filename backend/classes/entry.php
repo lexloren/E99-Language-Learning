@@ -28,6 +28,32 @@ class Entry
 	
 	private $words = null; //Associative array from language codes to word values
 	private $pronunciations = null;
+	private $annotations = null;
+	public function get_annotations()
+	{
+		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
+		if (!Session::get_user()) return array ();
+		
+		if (!$this->annotations)
+		{
+			$this->annotations = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+		
+			$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations WHERE user_id = %d AND entry_id = %d",
+				Session::get_user()->get_user_id(),
+				$this->get_entry_id()
+			));
+			
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->annotations, Annotation::from_mysql_result_assoc($result_assoc));
+			}
+		}
+		
+		return $this->annotations;
+	}
+	
 	private $user_id = null;
 	public function get_user_id()
 	{
@@ -115,6 +141,18 @@ class Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
+	public function add_annotation($annotation)
+	{
+		//  Stub
+		return null;
+	}
+	
+	public function remove_annotation($annotation_id)
+	{
+		//  Stub
+		return null;
+	}
+	
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
@@ -166,11 +204,18 @@ class Entry
 	
 	public function assoc_for_json()
 	{
+		$annotations_returnable = array ();
+		foreach ($this->get_annotations() as $annotation)
+		{
+			array_push($annotations_returnable, $annotation->assoc_for_json());
+		}
+		
 		return array(
 			"entryId" => $this->entry_id,
 			"words" => $this->words,
 			"pronuncations" => $this->pronunciations,
-			"userId" => $this->user_id
+			"userId" => $this->user_id,
+			"annotations" => $annotations_returnable
 		);
 	}
 }
