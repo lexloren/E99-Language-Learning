@@ -44,7 +44,7 @@ class Dictionary
 		$wildcard = $exact_matches_only ? "" : "%%";
 		
 		//      Second, take all the pieces created above and run the SQL query
-		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 LIKE '$wildcard%s$wildcard' OR word_1 LIKE '$wildcard%s$wildcard') AND (lang_code_0 IN ('%s') AND lang_code_1 IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
+		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 LIKE '$wildcard%s$wildcard' OR word_1 LIKE '$wildcard%s$wildcard') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
 			self::default_columns(),
 			self::join(),
 			$query,
