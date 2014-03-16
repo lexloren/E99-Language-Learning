@@ -163,9 +163,9 @@ class User
 		return $lists;
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
-		$privacy = ($this != Session::get_user());
+		if ($privacy === null) $privacy = ($this != Session::get_user());
 		return array(
 			"userId" => $this->user_id,
 			"handle" => $this->handle,
