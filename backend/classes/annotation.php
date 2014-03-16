@@ -17,9 +17,17 @@ class Annotation
 		return $this->annotation_id;
 	}
 	
-	//  Not sure we will ever need to get direct access to these private properties
 	private $entry_id;
+	public function get_entry_id()
+	{
+		return $this->entry_id;
+	}
+	
 	private $user_id;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
 	
 	private function __construct($annotation_id, $entry_id, $user_id, $contents)
 	{
@@ -37,6 +45,20 @@ class Annotation
 			$result_assoc["user_id"],
 			$result_assoc["contents"]
 		);
+	}
+	
+	public function delete()
+	{
+		if (!Session::get_user()) return null;
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("DELETE FROM user_entry_annotations WHERE user_id = %d AND annotation_id = %d",
+			Session::get_user()->get_user_id(),
+			$this->get_annotation_id()
+		));
+		
+		return null;
 	}
 	
 	public function assoc_for_json()

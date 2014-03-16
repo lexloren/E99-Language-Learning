@@ -141,16 +141,44 @@ class Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
-	public function add_annotation($annotation)
+	public function add_annotation($annotation_contents)
 	{
-		//  Stub
+		if (!session_user_can_write()) return null;
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_id, entry_id, contents) VALUES (%d, %d, '%s'",
+			$this->user_id,
+			$this->entry_id,
+			$mysqli->escape_string($annotation_contents)
+		));
+		
+		$result = $mysqli->query("SELECT * FROM user_entry_annotations WHERE annotation_id = %d", $mysqli->insert_id);
+		
+		if ($result && !!($result_assoc = $result->fetch_assoc()))
+		{
+			$this->get_annotations();
+			array_push($this->annotations, Annotation::from_mysql_result_assoc($result_assoc));
+		
+			return $this;
+		}
+		
 		return null;
 	}
 	
-	public function remove_annotation($annotation_id)
+	public function remove_annotation($annotation)
 	{
-		//  Stub
-		return null;
+		if (!in_array($this->get_annotations(), $annotation)
+			|| $annotation->get_entry_id() !== $this->get_entry_id())
+		{
+			return null;
+		}
+		
+		$annotation->delete();
+		
+		$this->annotations = array_diff($this->annotations, array ($annotation));
+		
+		return $this;
 	}
 	
 	//  Returns a copy of $this owned and editable by the Session User
