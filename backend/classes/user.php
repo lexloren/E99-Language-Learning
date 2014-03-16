@@ -142,6 +142,7 @@ class User
 	
 	public function get_lists()
 	{
+		//  Don't let the session user get lists for other users
 		if (!Session::get_user() || Session::get_user()->get_user_id() !== $this->get_user_id()) return null;
 		
 		$mysqli = Connection::get_shared_instance();
