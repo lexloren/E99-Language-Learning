@@ -4,6 +4,7 @@ require_once "./backend/connection.php";
 require_once "./backend/support.php";
 require_once "./backend/classes.php";
 
+$mysqli = Connection::get_shared_instance();
 //  Get all the languages available in the application
 $result = $mysqli->query("SELECT * FROM languages");
 if (!$result)
