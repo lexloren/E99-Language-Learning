@@ -5,7 +5,7 @@ function submitRegForm(){
 
     if(email == "" || handle == "" || password == ""){
         $("#failure").html("Please enter email address, desired username, and password.");
-        displayAlert("#failure");
+        displayAlert("#failure", "#regForm");
         return;
     }
 	
@@ -24,7 +24,7 @@ function submitRegForm(){
     return; 
 }
 
-function displayAlert(div){
+function displayAlert(div, frm){
     $("#failure").hide();
     $("#success").hide();
     $(div).show();
@@ -33,7 +33,7 @@ function displayAlert(div){
     }
     else{
         $("#failure").hide();   
-        $("#regForm")[0].reset();   
+        $(frm)[0].reset();   
     }
     return;
 }
@@ -65,6 +65,61 @@ function submitLoginForm(){
             }
             else{
                 window.location.replace("http://cscie99.fictio.us/welcome.html");
+            }
+    });
+    return; 
+}
+
+function submitResetForm(){
+    var newpass1 = $("#pw1").val();
+    var newpass2 = $("#pw2").val();
+
+    if(newpass1 == "" || newpass2 == ""){
+        $("#failure").html("Please enter new password.");
+        displayAlert("#failure", "#resetForm");
+        return;
+    }
+
+    if(newpass1 != newpass2){
+        $("#failure").html("Passwords do not match. Please re-enter.");
+        displayAlert("#failure", "#resetForm");
+        return;
+    }
+	
+    $.post('http://cscie99.fictio.us/resetpassword.php', 
+        { password1: newpass1, password2: newpass2 }) // need to pass user info
+        .done(function(data){
+            if(data.isError){
+                $("#failure").html("This password does not meet the criteria. Please try again.");
+                displayAlert("#failure", "#resetForm");
+            }
+            else{
+                $("#success").html('Your password has been successfully reset.');
+                displayAlert("#success", "#resetForm");
+            }
+    });
+    return; 
+}
+
+function submitPwRequestForm(){
+    var handle = $("#inputUsername").val();
+	
+    if(handle == ""){
+        $("#failure").html("Please enter username.");
+        displayAlert("#failure", "#pwRequestForm");
+        return;
+    }
+
+    $.post('http://cscie99.fictio.us/resetpassword.php', 
+        { handle: handle }) 
+        .done(function(data){
+            if(data.isError){
+                $("#failure").html("There is no account associated with that username. Please try again.");
+                displayAlert("#failure", "#pwRequestForm");
+            }
+            else{
+                $("#success").html('A new password has been emailed to you. Please reset your password once you are able to sign in.');
+                displayAlert("#success", "#pwRequestForm");
             }
     });
     return; 
