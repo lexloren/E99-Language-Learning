@@ -33,7 +33,8 @@ class Entry
 	{
 		if (!$result) return null;
 		
-		return new Entry($result["entry_id"],
+		return new Entry(
+			$result["entry_id"],
 			$result["lang_code_0"],
 			$result["lang_code_1"],
 			$result["word_0"],
