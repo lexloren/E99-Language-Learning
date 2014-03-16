@@ -22,7 +22,7 @@ class APIBase
 	protected function exit_if_not_authenticated()
 	{
 		if (!isset($this->user))
-			exit_with_error("Authentication Needed", "User must authenticate for this recourse");
+			exit_with_error("Authentication Needed", "User must authenticate for this resource");
 	}
 }
 

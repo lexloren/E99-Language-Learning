@@ -1,6 +1,7 @@
 <?php
 
-require_once "./backend/connect.php";
+require_once "./backend/connection.php";
+require_once "./backend/classes/session.php";
 
 // Simple router routes url XXX/YYY to XXX class's YYY method
 class Router 
@@ -8,6 +9,11 @@ class Router
 	public static function route() 
 	{
 		$uri = $_SERVER['REQUEST_URI'];
+		
+		// remove query string from URI
+		if (strpos($uri, '?') != false) 
+			$uri = strtok($uri,'?');
+		
 		$uri = trim($uri, '/');
 		$uri = trim($uri, ' ');
 		
@@ -44,13 +50,9 @@ class Router
 		}
 
 		//find the user
-		$user = null;
-		if (!!session_id() && isset ($_SESSION["handle"]))
-		{
-			Session::reauthenticate();
-			$user = Session::user;
-		}
-		$link = Connect::get();
+		$user = Session::reauthenticate();
+		$link = Connection::get_shared_instance();
+
 		$instance = $class->newInstance($user, $link);
 		
 		try 

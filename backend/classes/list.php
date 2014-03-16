@@ -16,15 +16,15 @@ class EntryList
 		$this->list_id = intval($list_id, 10);
 		$this->list_name = $list_name;
 		$this->shared_public = $share_public;
-		$this->list_name = list_name;
+		$this->list_name = $list_name;
 		$this->user_id = $user_id;
 	}
 	
 	//  Returns true iff Session::get_user() can read this list for any reason
 	private function session_user_can_read()
 	{
-		return session_user_can_write()
-			|| session_user_can_read_via_course_sharing()
+		return $this->session_user_can_write()
+			|| $this->session_user_can_read_via_course_sharing()
 			|| !!$this->shared_public;
 	}
 	
@@ -39,7 +39,7 @@ class EntryList
 	//  Returns true iff Session::get_user() owns this list
 	private function session_user_can_write()
 	{
-		return !!Session::get_user() && (Session::get_user()->user_id === $this->user_id);
+		return !!Session::get_user() && (Session::get_user()->get_user_id() == $this->user_id);
 	}
 	
 	public function delete()
@@ -49,7 +49,7 @@ class EntryList
 		if (!Session::get_user()) return null;
 		
 		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
-			Session::get_user()->user_id,
+			Session::get_user()->get_user_id(),
 			$this->list_id
 		));
 		
@@ -68,9 +68,9 @@ class EntryList
 				intval($this->list_id)
 			));
 			
-			if (!result) return null;
-			
 			$this->entries = array();
+			if (!$result) return $this->entries;
+
 			while (($entry_assoc = $result->fetch_assoc()))
 			{
 				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
@@ -86,7 +86,7 @@ class EntryList
 		if (!Session::get_user()) return null;
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
-			Session::get_user()->user_id,
+			Session::get_user()->get_user_id(),
 			$mysqli->escape_string($list_name)
 		));
 		

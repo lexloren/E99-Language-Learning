@@ -2,6 +2,7 @@
 
 require_once "./backend/connection.php";
 require_once "./backend/support.php";
+require_once "./backend/classes/user.php";
 
 class Session
 {
@@ -71,6 +72,7 @@ class Session
 	public static function reauthenticate()
 	{
 		$mysqli = Connection::get_shared_instance();
+		session_start();
 		
 		if (!!session_id() && isset ($_SESSION["handle"]))
 		{
@@ -97,7 +99,7 @@ class Session
 		}
 		else
 		{
-			exit_with_error("No Session", "The user is not logged in. Please authenticate.");
+			return null;
 		}
 	}
 	

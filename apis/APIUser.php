@@ -56,7 +56,7 @@ class APIUser extends APIBase
 	
 	public function deauthenticate() 
 	{
-		exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::deauthenticate();
 	}
 }
 ?>

@@ -19,7 +19,10 @@ class User
 		$this->name_family = $name_family;
 		$this->name_given = $name_given;
 	}
-	
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
 	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
