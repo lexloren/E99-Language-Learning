@@ -11,6 +11,8 @@ class EntryList
 	private $share_public;
 	private $user_id;
 	
+	private static $lists_by_id = array ();
+	
 	private function __construct($list_id, $share_public, $list_name = null, $user_id = null)
 	{
 		$this->list_id = intval($list_id, 10);
@@ -18,6 +20,8 @@ class EntryList
 		$this->shared_public = $share_public;
 		$this->list_name = $list_name;
 		$this->user_id = $user_id;
+		
+		EntryList::$lists_by_id[$this->list_id] = $this;
 	}
 	
 	//  Returns true iff Session::get_user() can read this list for any reason
@@ -95,20 +99,28 @@ class EntryList
 	
 	public static function select($list_id)
 	{
-		$mysqli = Connection::get_shared_instance();
+		$list_id = intval($list_id, 10);
 		
-		//  Need to add privileges here, based on public sharing and course-wide sharing
-		
-		$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE list_id = %d",
-			intval($list_id)
-		));
-		
-		if (!!$result && !!($result_assoc = $result->fetch_assoc()))
+		if (!in_array(array_keys(self::$lists_by_id), $list_id)
 		{
-			//  Return the list iff Session::get_user() can read it
-			$list = EntryList::from_mysql_result_assoc($result_assoc);
-			return $list->session_user_can_read() ? $list : null;
+			$mysqli = Connection::get_shared_instance();
+			
+			//  Need to add privileges here, based on public sharing and course-wide sharing
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE list_id = %d",
+				intval($list_id)
+			));
+			
+			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
+			{
+				//  Return the list iff Session::get_user() can read it
+				$list = EntryList::from_mysql_result_assoc($result_assoc);
+			}
 		}
+		
+		$list = self::$lists_by_id[$list_id];
+		
+		if (!!$list && $list->session_user_can_read()) return $list;
 		
 		return null;
 	}
