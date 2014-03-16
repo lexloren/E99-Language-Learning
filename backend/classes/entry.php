@@ -17,7 +17,7 @@ class Entry
 			$user_entries_by_id[$user_id] = array ();
 		}
 		
-		return &$user_entries_by_id[$user_id];
+		return $user_entries_by_id[$user_id];
 	}
 
 	private $entry_id = null;
@@ -76,7 +76,8 @@ class Entry
 		//  Register $this in the appropriate member of Entry::$user_entries_by_id
 		if (!!$this->user_id)
 		{
-			Entry::entries_by_id_for_user($this->user_id)[$this->entry_id] = $this;
+			$entries_by_id_for_user = Entry::entries_by_id_for_user($this->user_id);
+			$entries_by_id_for_user[$this->entry_id] = $this;
 		}
 	}
 	
@@ -118,7 +119,7 @@ class Entry
 			$this->entry_id
 		));
 		
-		&$variable = $value;
+		$variable = $value;
 		
 		return $this;
 	}
@@ -188,8 +189,9 @@ class Entry
 		
 		if ($this->user_id === Session::get_user()->user_id)
 		{
+			$entries_by_id_for_user = Entry::entries_by_id_for_user(Session::get_user());
 			//  Just make sure that this Entry object has been appropriately registered
-			return (Entry::entries_by_id_for_user(Session::get_user())[$this->entry_id] = $this);
+			return ($entries_by_id_for_user[$this->entry_id] = $this);
 		}
 		else
 		{
@@ -208,7 +210,7 @@ class Entry
 				"user_entries.entry_id" => "entry_id",
 				"user_entries.word_0" => "word_0",
 				"user_entries.word_1" => "word_1",
-				"user_entries.word_1_pronun" = "word_1_pronun"
+				"user_entries.word_1_pronun" => "word_1_pronun"
 			);
 			$user_columns = array ();
 			foreach ($column_conversions as $old => $new)
