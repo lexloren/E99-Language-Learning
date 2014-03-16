@@ -53,7 +53,7 @@ class EntryList
 			$this->list_id
 		));
 		
-		return self::select($mysqli->insert_id);
+		return null;
 	}
 	
 	public function get_entries()
