@@ -48,6 +48,7 @@ function validate_password($string_in_question)
 }
 
 //  Returns new PHP associative array for returning to front end.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function new_return_template()
 {
 	return array(
@@ -60,6 +61,7 @@ function new_return_template()
 }
 
 //  Formats an error as a PHP associative array.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function error_assoc($title, $description)
 {
 	$return = new_return_template();
@@ -72,12 +74,14 @@ function error_assoc($title, $description)
 }
 
 //  Outputs a JSON representation of an error.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function echo_error($title, $description)
 {
 	echo json_encode(error_assoc($title, $description));
 }
 
 //  Exits the executing script, outputting an error formatted in JSON.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function exit_with_error($title, $description)
 {
 	global $headers;
@@ -88,6 +92,7 @@ function exit_with_error($title, $description)
 }
 
 //  Formats a result as a PHP associative array.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function result_assoc($result, $result_information = NULL)
 {
 	$return = new_return_template();
@@ -99,12 +104,14 @@ function result_assoc($result, $result_information = NULL)
 }
 
 //  Outputs a JSON representation of a result.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function echo_result($result, $result_information = NULL)
 {
 	echo json_encode(result_assoc($result, $result_information));
 }
 
 //  Exits the executing script, outputting a result formatted in JSON.
+//!!!!  DEPRECATED SINCE MOVING TO OBJECT ORIENTATION
 function exit_with_result($result, $result_information = NULL)
 {
 	global $headers;
