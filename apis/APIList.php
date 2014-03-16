@@ -16,8 +16,11 @@ class APIList extends APIBase
 		
 		if (isset ($_POST["title"]))
 		{
-			$list = EntryList::insert($_POST["title"]);
-			exit_with_result($list->assoc_for_json());
+			$entry_list = EntryList::insert($_POST["title"]);
+			if (isset($entry_list))
+				exit_with_result($entry_list->assoc_for_json());
+			else
+				exit_with_error("Insert failed", "list/lnsert failed to create a list.");
 		}
 		else 
 		{
@@ -54,7 +57,7 @@ class APIList extends APIBase
 		self::exit_if_not_authenticated();
 		if (isset ($_GET["list_id"]))
 		{
-			$list = EntryList::select($_POST["list_id"]);
+			$list = EntryList::select($_GET["list_id"]);
 			if (!$list)
 				exit_with_error("Invalid describe", "Please make sure the lits id is correct.");
 				
