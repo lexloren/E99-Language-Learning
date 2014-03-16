@@ -21,9 +21,18 @@ class Entry
 	}
 
 	private $entry_id = null;
+	public function get_entry_id()
+	{
+		return $this->entry_id;
+	}
+	
 	private $words = null; //Associative array from language codes to word values
 	private $pronunciations = null;
 	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
 	
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
 		$word_0, $word_1, $pronunciation = null, $user_id = null)
