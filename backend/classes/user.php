@@ -140,6 +140,28 @@ class User
 		);
 	}
 	
+	public function get_lists()
+	{
+		if (!Session::get_user() || Session::get_user()->get_user_id() !== $this->get_user_id()) return null;
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
+			$this->get_user_id()
+		));
+		
+		//  Unknown error
+		if (!$result) return null;
+		
+		$lists = array ();
+		while (!!($result_assoc = $result->fetch_assoc()))
+		{
+			if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+		}
+		
+		return $lists;
+	}
+	
 	public function assoc_for_json()
 	{
 		$privacy = ($this != Session::get_user());
