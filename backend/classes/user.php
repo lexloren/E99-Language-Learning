@@ -89,17 +89,17 @@ class User
 		
 		if (!validate_email($email))
 		{
-			exit_with_error("Invalid Email", "Email must conform to the standard pattern.");
+			Session::exit_with_error("Invalid Email", "Email must conform to the standard pattern.");
 		}
 		
 		if (!validate_password($password))
 		{
-			exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			Session::exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		
 		if (!validate_handle($handle))
 		{
-			exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			Session::exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 		
 		//  Check whether requested handle conflicts with any existing handle
@@ -109,7 +109,7 @@ class User
 		
 		if ($existing_user = $result->fetch_assoc())
 		{
-			exit_with_error("Handle Conflict", "The requested handle is already taken.");
+			Session::exit_with_error("Handle Conflict", "The requested handle is already taken.");
 		}
 		$result->close();
 		
@@ -128,7 +128,7 @@ class User
 		//  Just make sure we actually created the user
 		if (!$result)
 		{
-			exit_with_error("Unknown Error", "The back end unexpectedly failed to create the user.");
+			Session::exit_with_error("Unknown Error", "The back end unexpectedly failed to create the user.");
 		}
 		$user_assoc = $result->fetch_assoc();
 		$result->close();

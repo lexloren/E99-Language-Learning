@@ -19,6 +19,6 @@ require_once "./backend/support.php";
 require_once "./backend/classes.php";
 
 Session::deauthenticate();
-exit_with_result("Deauthentication", "The current session has ended.");
+Session::exit_with_result("Deauthentication", "The current session has ended.");
 
 ?>

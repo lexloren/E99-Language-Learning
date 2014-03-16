@@ -14,7 +14,7 @@ if (!!session_id() && isset ($_SESSION["handle"]))
 	{
 		session_destroy();
 		session_unset();
-		exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
+		Session::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
 	}
 	
 	$mysqli->query(sprintf("UPDATE users SET last_activity = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
@@ -24,7 +24,7 @@ if (!!session_id() && isset ($_SESSION["handle"]))
 }
 else
 {
-	exit_with_error("No Session", "The user is not logged in. Please authenticate.");
+	Session::exit_with_error("No Session", "The user is not logged in. Please authenticate.");
 }
 */
 

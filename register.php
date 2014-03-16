@@ -23,17 +23,17 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	
 	if (!validate_email($email))
 	{
-		exit_with_error("Invalid Email", "Email must conform to the standard pattern.");
+		Session::exit_with_error("Invalid Email", "Email must conform to the standard pattern.");
 	}
 	
 	if (!validate_password($password))
 	{
-		exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+		Session::exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 	}
 	
 	if (!validate_handle($handle))
 	{
-		exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+		Session::exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 	}
 	
 	//  Check whether requested handle conflicts with any existing handle
@@ -43,7 +43,7 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	
 	if ($existing_user = $result->fetch_assoc())
 	{
-		exit_with_error("Handle Conflict", "The requested handle is already taken.");
+		Session::exit_with_error("Handle Conflict", "The requested handle is already taken.");
 	}
 	$result->close();
 	
@@ -62,16 +62,16 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	//  Just make sure we actually created the user
 	if (!$result)
 	{
-		exit_with_error("Unknown Error", "The back end unexpectedly failed to create the user.");
+		Session::exit_with_error("Unknown Error", "The back end unexpectedly failed to create the user.");
 	}
 	$user_assoc = $result->fetch_assoc();
 	$result->close();
 	
 	//  Finally, send the user information to the front end
-	exit_with_result($user_assoc);
+	Session::exit_with_result($user_assoc);
 }
 
-exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+Session::exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
 */
 
 require_once "./backend/connection.php";
@@ -88,9 +88,9 @@ if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["passwo
 	$new_user = User::insert($email, $handle, $password);
 	
 	//  Finally, send the user information to the front end
-	exit_with_result($new_user->assoc_for_json());
+	Session::exit_with_result($new_user->assoc_for_json());
 }
 
-exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+Session::exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
 
 ?>

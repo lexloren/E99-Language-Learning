@@ -25,12 +25,12 @@ class Session
 		
 		if (!validate_password($password))
 		{
-			exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
+			self::exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
 		}
 		
 		if (!validate_handle($handle))
 		{
-			exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			self::exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 		
 		//  See whether we can authenticate with the handle and password posted
@@ -62,7 +62,7 @@ class Session
 		}
 		else
 		{
-			exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
+			self::exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
 		}
 	}
 	
@@ -85,7 +85,7 @@ class Session
 			{
 				session_destroy();
 				session_unset();
-				exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
+				self::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
 			}
 			
 			$mysqli->query(sprintf("UPDATE users SET last_activity = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
@@ -119,6 +119,73 @@ class Session
 		}
 		
 		return null;
+	}
+	
+	//  Returns new PHP associative array for returning to front end.
+	private static function new_return_template()
+	{
+		return array(
+			"isError" => false,
+			"errorTitle" => NULL,
+			"errorDescription" => NULL,
+			"result" => NULL,
+			"resultInformation" => NULL
+		);
+	}
+
+	//  Formats an error as a PHP associative array.
+	private static function error_assoc($title, $description)
+	{
+		$return = new_return_template();
+		
+		$return["isError"] = true;
+		$return["errorTitle"] = $title;
+		$return["errorDescription"] = $description;
+		
+		return $return;
+	}
+
+	//  Formats a result as a PHP associative array.
+	private static function result_assoc($result, $result_information = NULL)
+	{
+		$return = new_return_template();
+		
+		$return["result"] = $result;
+		$return["resultInformation"] = $result_information;
+		
+		return $return;
+	}
+
+	//  Outputs a JSON representation of an error.
+	private static function echo_error($title, $description)
+	{
+		echo json_encode(error_assoc($title, $description));
+	}
+
+	//  Outputs a JSON representation of a result.
+	private static function echo_result($result, $result_information = NULL)
+	{
+		echo json_encode(result_assoc($result, $result_information));
+	}
+
+	//  Exits the executing script, outputting an error formatted in JSON.
+	public static function exit_with_error($title, $description)
+	{
+		global $headers;
+		if (!isset ($headers)) require_once "./backend/headers.php";
+		
+		echo_error($title, $description);
+		exit;
+	}
+
+	//  Exits the executing script, outputting a result formatted in JSON.
+	public static function exit_with_result($result, $result_information = NULL)
+	{
+		global $headers;
+		if (!isset ($headers)) require_once "./backend/headers.php";
+		
+		echo_result($result, $result_information);
+		exit;
 	}
 }
 

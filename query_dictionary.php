@@ -8,7 +8,7 @@ require_once "./backend/classes.php";
 $result = $mysqli->query("SELECT * FROM languages");
 if (!$result)
 {
-	exit_with_error("Database Error", $mysqli->error);
+	Session::exit_with_error("Database Error", $mysqli->error);
 }
 $languages_available = mysqli_fetch_all_assocs($result);
 $result->close();
@@ -70,13 +70,13 @@ if (isset ($_GET["query"]))
 	}
 	
 	//      Finally, format the query results and send them to the front end
-	exit_with_result($entries_returnable, array (
+	Session::exit_with_result($entries_returnable, array (
 		"entriesCount" => Dictionary::$look_up_last_count,
 		"pageSize" => Dictionary::$page_size,
 		"pageNum" => Dictionary::$page_num
 	));
 }
 
-exit_with_error("Missing Query", "The call specified no query.");
+Session::exit_with_error("Missing Query", "The call specified no query.");
 
 ?>
