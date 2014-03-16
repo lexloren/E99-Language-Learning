@@ -74,6 +74,48 @@ class Entry
 		);
 	}
 	
+	public function session_user_can_write()
+	{
+		return Session::get_user() && Session::get_user()->get_user_id() === $this->user_id;
+	}
+	
+	//  Sets both some object property and the corresponding spot in the database
+	private function set(&$variable, $column, $value)
+	{
+		if (!session_user_can_write()) return null;
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE user_entries SET $column = '%s' WHERE user_id = %d AND entry_id = %d",
+			$mysqli->escape_string($value),
+			$this->user_id,
+			$this->entry_id
+		));
+		
+		&$variable = $value;
+		
+		return $this;
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_0
+	public function set_word_0($word_0)
+	{
+		return $this->set($this->word_0, "word_0", $word_0);
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_1
+	public function set_word_1($word_1)
+	{
+		return $this->set($this->word_1, "word_1", $word_1);
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_1_pronun
+	public function set_word_1_pronunciation($word_1_pronun)
+	{
+		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
+	}
+	
+	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
 		if (!Session::get_user()) return null;
