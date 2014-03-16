@@ -101,7 +101,7 @@ class EntryList
 	{
 		$list_id = intval($list_id, 10);
 		
-		if (!in_array(array_keys(self::$lists_by_id), $list_id)
+		if (!in_array(array_keys(self::$lists_by_id), $list_id))
 		{
 			$mysqli = Connection::get_shared_instance();
 			
