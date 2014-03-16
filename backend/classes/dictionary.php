@@ -12,16 +12,16 @@ class Dictionary
 	
 	//  Returns the join of the dictionary on the languages table
 	//      so that we can include language codes (which exist only in the languages table)
-	private static function join()
+	public static function join()
 	{
-		$join_dict_lang_0 = "(dictionary LEFT JOIN languages AS language_0 ON dictionary.lang_id_0 = language_0.lang_id)";
-		return "$join_dict_lang_0 LEFT JOIN languages AS language_1 ON dictionary.lang_id_1 = language_1.lang_id";
+		$join_dict_lang_0 = "dictionary LEFT JOIN languages AS languages_0 ON dictionary.lang_id_0 = languages_0.lang_id";
+		return "($join_dict_lang_0) LEFT JOIN languages AS languages_1 ON dictionary.lang_id_1 = languages_1.lang_id";
 	}
 
 	//  Returns the default columns that result from join()
 	private static function default_columns()
 	{
-		return "dictionary.*, language_0.lang_code AS lang_code_0, language_1.lang_code AS lang_code_1";
+		return "dictionary.*, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1";
 	}
 	
 	public static function look_up($word, $lang_codes, $pagination = null)
@@ -44,7 +44,7 @@ class Dictionary
 		$wildcard = $exact_matches_only ? "" : "%%";
 		
 		//      Second, take all the pieces created above and run the SQL query
-		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 LIKE '$wildcard%s$wildcard' OR word_1 LIKE '$wildcard%s$wildcard') AND (language_0.lang_code IN ('%s') AND language_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
+		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 LIKE '$wildcard%s$wildcard' OR word_1 LIKE '$wildcard%s$wildcard') AND (lang_code_0 IN ('%s') AND lang_code_1 IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
 			self::default_columns(),
 			self::join(),
 			$query,

@@ -129,17 +129,12 @@ class EntryList
 	{
 		if (!session_user_can_write()) return null;
 		
-		//  Make sure $this->get_entries() doesn't already contain an entry whose entry_id === $entry->entry_id
-		foreach ($this->get_entries() as $entry)
-		{
-			if ($entry->entry_id === $entry_to_add->entry_id) return null;
-		}
-		
 		//  Insert into user_entries from dictionary, if necessary
 		$entry_added = $entry_to_add->copy_for_session_user();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
+		//      If this entry already exists in the list, then ignore the error
+		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
 			$this->list_id,
 			$entry_added->entry_id
 		));
@@ -168,6 +163,7 @@ class EntryList
 			}
 		}
 		
+		//  Tried to remove an entry that's apparently not in this list
 		return null;
 	}
 	
