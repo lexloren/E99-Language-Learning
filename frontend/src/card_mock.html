@@ -23,6 +23,14 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+	
+	    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="../tests/resources/jquery.mockjax.js"></script>
+	<script src="js/card_mock.js"></script>
+	
   </head>
   <body role="document">
 
@@ -64,22 +72,12 @@
 
     <div class="container role="main">
 
-	<!-- The "introductory section, where  student selectes which decks they would like to practice. -->
+	<!-- The "introductory section, where  student selects which decks they would like to practice. -->
 	<div id="deck-selection-container">
-	<h1>Hello, Student!</h1>
 	<form role="form">
-	<div class="form-group">
-		<h4>Select which decks you would like to practice:</h4>
-		<div class="checkbox">
-    <label>
-      <input type="checkbox"> Lesson 1: Family
-    </label>
-  </div>
-  <div class="checkbox">
-    <label>
-      <input type="checkbox"> Lesson 2: Animals
-    </label>
-  </div>
+	<h4>Select which decks you would like to practice:</h4>
+	<div class="form-group"id="deck-selection-form">
+	</div>
   <div class="form-group">
   <h4>I want to see _______ and guess the rest:</h4>
     <div class="checkbox">
@@ -104,25 +102,26 @@
 	
 	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
 		<div class="row" id="flashcard-container">
+		<h4>Test your knowledge:</h4>
 			<div class="col-md-3 panel panel-default flashcard" id="flashcard-word">
 				<div class="panel-heading">Word</div>
-				<div class="panel-body">阿姨</div>
+				<div class="panel-body" id="flashcard-word-panel"></div>
 				<div class="panel-footer">
-					<button type="button" class="btn btn-default">show</button>
+					<button type="button" class="btn btn-default" id="flashcard-word-button">show</button>
 				</div>
 			</div>
 			<div class="col-md-3 panel panel-default flashcard" id="flashcard-pronounce">
 				<div class="panel-heading">Pronunciation</div>
-				<div class="panel-body">ā yí</div>
+				<div class="panel-body" id="flashcard-pronounce-panel"></div>
 				<div class="panel-footer">
-					<button type="button" class="btn btn-default">show</button>
+					<button type="button" class="btn btn-default" id="flashcard-pronounce-button">show</button>
 				</div>
 			</div>
 			<div class="col-md-3 panel panel-default flashcard" id="flashcard-trans">
 				<div class="panel-heading">Translation</div>
-				<div class="panel-body">mother's sister</div>
+				<div class="panel-body" id="flashcard-trans-panel"></div>
 				<div class="panel-footer">
-					<button type="button" class="btn btn-default">show</button>
+					<button type="button" class="btn btn-default" id="flashcard-trans-button">show</button>
 				</div>
 			</div>
 		</div>
@@ -137,17 +136,10 @@
 			<button type="button" class="btn btn-default" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
 		</div>
-		</div>
-		<div>
 		<br/>
 		<button type="button" class="btn btn-default btn-lg">Next Card</button>
 		</div>
 	</div>
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="js/bootstrap.min.js"></script>
-	<script src="./tests/resources/jquery.mockjax.js"></script>
+	
   </body>
 </html>
