@@ -62,5 +62,6 @@ class APIUser extends APIBase
 		Session::deauthenticate();
 	}
 }
-?>
 
+
+?>
