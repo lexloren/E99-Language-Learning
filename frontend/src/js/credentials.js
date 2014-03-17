@@ -14,11 +14,11 @@ function submitRegForm(){
         .done(function(data){
             if(data.isError){
                 $("#failure").html("Your account could not be created: " + data.errorDescription);
-                displayAlert("#failure");
+                displayAlert("#failure", "#regForm");
             }
             else{
                 $("#success").html('Your account has been successfully created. You can now <a href="login.html" class="alert-link">login</a>.');
-                displayAlert("#success");
+                displayAlert("#success", "#regForm");
             }
     });
     return; 
@@ -64,7 +64,7 @@ function submitLoginForm(){
                 $("#failure").show();
             }
             else{
-                window.location.replace("http://cscie99.fictio.us/welcome.html");
+                window.location.replace("welcome.html");
             }
     });
     return; 
