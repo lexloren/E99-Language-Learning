@@ -5,6 +5,8 @@ require_once "./backend/support.php";
 
 class Dictionary
 {
+	private static $entries_by_id = array ();
+
 	public static $page_size = null;
 	public static $page_num = null;
 	
@@ -80,9 +82,12 @@ class Dictionary
 		$entry_num = 0;
 		while (($result_assoc = $result->fetch_assoc()))
 		{
+			$entry = Entry::from_mysql_result_assoc($result_assoc);
+			self::$entries_by_id[$entry->get_entry_id()] = $entry;
+			
 			if (!self::$page_size || !self::$page_num || ($entry_num >= $entry_min && $entry_num <= $entry_max))
 			{
-				array_push($entries_returnable, Entry::from_mysql_result_assoc($result_assoc));
+				array_push($entries_returnable, $entry);
 			}
 			$entry_num ++;
 		}
@@ -93,20 +98,24 @@ class Dictionary
 	//  Gets an entry from the dictionary by entry_id
 	public static function select_entry($entry_id)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query(sprintf("SELECT %s FROM %s WHERE entry_id = %d",
-			self::default_columns(),
-			self::join(),
-			intval($entry_id)
-		));
-		
-		if (!!($result_assoc = $result->fetch_assoc()))
+		if (!in_array(($entry_id = intval($entry_id)), array_keys(self::$entries_by_id)))
 		{
-			return Entry::from_mysql_result_assoc($result_assoc);
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT %s FROM %s WHERE entry_id = $entry_id",
+				self::default_columns(),
+				self::join()
+			));
+			
+			if (!($result_assoc = $result->fetch_assoc()))
+			{
+				return null;
+			}
+			
+			self::$entries_by_id[$entry_id] = Entry::from_mysql_result_assoc($result_assoc);
 		}
 		
-		return null;
+		return self::$entries_by_id[$entry_id];
 	}
 }
 
