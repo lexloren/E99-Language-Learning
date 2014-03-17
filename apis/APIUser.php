@@ -15,11 +15,16 @@ class APIUser extends APIBase
 		if (isset ($_POST["handle"]) && isset ($_POST["password"]))
 		{
 			//  Should exit the script in either success or failure.
-			Session::authenticate(
-				strtolower(urldecode($_POST["handle"])),
-				urldecode($_POST["password"])
-			);
+			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
 		}
+		else
+			Session::exit_with_error("No Input", "User's handle and password are needed.");
+			
+		$user = Session::get_user();
+		if (!!$user)
+			Session::exit_with_result($user->assoc_for_json());
+		else
+			Session::exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
 	}
 	
 	public function register()
