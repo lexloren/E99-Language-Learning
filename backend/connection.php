@@ -26,6 +26,15 @@ class Connection
 
 		return self::$mysqli;
 	}
+	
+	//Used for testing with a local db
+	public static function set_shared_instance($mysqli_new)
+	{
+		if (isset(self::$mysqli))
+			self::$mysqli->close();
+			
+		self::$mysqli = $mysqli_new;
+	}
 }
 
 ?>
