@@ -115,10 +115,12 @@ class User
 		
 		
 		//  Good to go, so insert the new user
-		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash) VALUES ('%s', '%s', PASSWORD('%s'))",
+		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
 			$mysqli->escape_string($handle),
 			$mysqli->escape_string($email),
-			$mysqli->escape_string($password)
+			$mysqli->escape_string($password),
+			$mysqli->escape_string($name_given),
+			$mysqli->escape_string($name_family)
 		));
 		
 		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s'",
@@ -133,11 +135,7 @@ class User
 		$user_assoc = $result->fetch_assoc();
 		$result->close();
 		
-		return new User(
-			$user_assoc["user_id"],
-			$user_assoc["handle"],
-			$user_assoc["email"]
-		);
+		return User::from_mysql_result_assoc($user_assoc);
 	}
 	
 	public function get_lists()

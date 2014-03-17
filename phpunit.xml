@@ -1,5 +1,5 @@
 <!-- phpunit config file -->
-<phpunit>
+<phpunit verbose="true">
   <testsuites>
     <testsuite name="php tests">
       <directory>phptests</directory>

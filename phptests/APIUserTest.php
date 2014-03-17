@@ -4,7 +4,7 @@ require_once './apis/APIUser.php';
 require_once './backend/connection.php';
 require_once './tools/database.php';
 
-class APIUserTest extends PHPUnit_Framework_TestCase
+class APIUserTest //extends PHPUnit_Framework_TestCase
 {
 	private $link;
 	private $obj;
