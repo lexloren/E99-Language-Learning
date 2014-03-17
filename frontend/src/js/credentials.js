@@ -9,7 +9,7 @@ function submitRegForm(){
         return;
     }
 	
-    $.post('http://cscie99.fictio.us/register.php', 
+    $.post('../../user/register', 
         { email: email, handle: handle, password: password })
         .done(function(data){
             if(data.isError){
@@ -48,7 +48,7 @@ function submitLoginForm(){
         return;
     }
 	
-    $.post('http://cscie99.fictio.us/authenticate.php', 
+    $.post('../../user/authenticate', 
         { handle: handle, password: password })
         .done(function(data){
             if(data.isError){
@@ -86,7 +86,7 @@ function submitResetForm(){
         return;
     }
 	
-    $.post('http://cscie99.fictio.us/resetpassword.php', 
+    $.post('../../resetpassword', // script doesn't exist yet 
         { password1: newpass1, password2: newpass2 }) // need to pass user info
         .done(function(data){
             if(data.isError){
@@ -110,7 +110,7 @@ function submitPwRequestForm(){
         return;
     }
 
-    $.post('http://cscie99.fictio.us/resetpassword.php', 
+    $.post('../../resetpassword', // script doesn't exist yet 
         { handle: handle }) 
         .done(function(data){
             if(data.isError){
