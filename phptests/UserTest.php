@@ -8,7 +8,6 @@ require_once './tools/database.php';
 class UserTest extends PHPUnit_Framework_TestCase
 {
 	private $link;
-	private $obj;
 
 	public function setup()
 	{
@@ -17,9 +16,6 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->link, "No database connection");
 
 		Connection::set_shared_instance($this->link);
-
-		$this->obj = new APIUser(null, $this->link);
-		$this->assertNotNull($this->obj, "Null APIUser");
 	}
 	
 	public function tearDown()

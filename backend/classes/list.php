@@ -139,16 +139,18 @@ class EntryList
 	//      Returns this list
 	public function add_entry($entry_to_add)
 	{
-		if (!session_user_can_write()) return null;
+		if (!self::session_user_can_write()) return null;
 		
 		//  Insert into user_entries from dictionary, if necessary
 		$entry_added = $entry_to_add->copy_for_session_user();
+		
+		$mysqli = Connection::get_shared_instance();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
 		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
 			$this->list_id,
-			$entry_added->entry_id
+			$entry_added->get_entry_id()
 		));
 		
 		return $this;
@@ -158,7 +160,7 @@ class EntryList
 	//      Returns this list
 	public function remove_entry($entry_to_remove)
 	{
-		if (!session_user_can_write()) return null;
+		if (!self::session_user_can_write()) return null;
 		
 		foreach ($this->get_entries() as $entry_removed)
 		{

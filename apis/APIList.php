@@ -13,17 +13,27 @@ class APIList extends APIBase
 	{
 		self::exit_if_not_authenticated();
 		
-		if (isset ($_POST["title"]))
+		if (isset ($_POST["title"]) && isset ($_POST["entry_ids"]))
 		{
+			$entry_ids = json_decode($_POST["entry_ids"], true);
 			$entry_list = EntryList::insert($_POST["title"]);
 			if (isset($entry_list))
+			{
+				foreach($entry_ids as $entry_id)
+				{
+					$entry = Entry::select(intval($entry_id));
+					if (isset($entry))
+						$entry_list->add_entry($entry);
+				}
+				
 				Session::exit_with_result($entry_list->assoc_for_json());
+			}
 			else
 				Session::exit_with_error("Insert failed", "list/lnsert failed to create a list.");
 		}
 		else 
 		{
-			Session::exit_with_error("Invalid insert", "list/lnsert must include title.");
+			Session::exit_with_error("Invalid insert", "list/lnsert must include title and entry ids.");
 		}
 	}
 	
@@ -45,10 +55,20 @@ class APIList extends APIBase
 		}
 	}
 	
-	public function enumerate()
+	public function lists()
 	{
 		self::exit_if_not_authenticated();
-		Session::exit_with_error("TODO", "Yet to be implemented");
+		
+		$user = Session::get_user();
+		$lists = $user->get_lists();
+		
+		$lists_returnable = array ();
+		foreach ($lists as $list)
+		{
+			array_push($lists_returnable, $list->assoc_for_json());
+		}
+		
+		Session::exit_with_result($lists_returnable);
 	}
 	
 	public function describe()

@@ -187,7 +187,7 @@ class Entry
 	{
 		if (!Session::get_user()) return null;
 		
-		if ($this->user_id === Session::get_user()->user_id)
+		if ($this->user_id === Session::get_user()->get_user_id())
 		{
 			$entries_by_id_for_user = Entry::entries_by_id_for_user(Session::get_user());
 			//  Just make sure that this Entry object has been appropriately registered
@@ -200,7 +200,7 @@ class Entry
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
 			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE dictionary.entry_id = %d",
-				Session::get_user()->user_id,
+				Session::get_user()->get_user_id(),
 				$this->entry_id
 			));
 			
