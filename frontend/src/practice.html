@@ -29,7 +29,7 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
 	<script src="../tests/resources/jquery.mockjax.js"></script>
-	<script src="js/card_mock.js"></script>
+	<script src="js/practice.js"></script>
 	
   </head>
   <body role="document">
@@ -82,17 +82,17 @@
   <h4>I want to see _______ and guess the rest:</h4>
     <div class="checkbox">
     <label>
-      <input type="checkbox"> Words
+      <input type="checkbox" id="show-word"> Words
     </label>
   </div>
   <div class="checkbox">
     <label>
-      <input type="checkbox"> Pronunciations
+      <input type="checkbox" id="show-pronounce"> Pronunciations
     </label>
   </div>
   <div class="checkbox">
     <label>
-      <input type="checkbox"> Translations
+      <input type="checkbox" id="show-trans"> Translations
     </label>
   </div>
   </div>
@@ -128,16 +128,20 @@
 		
 		<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
 		<div id="card-followup-container">
-		<h4>How well did you know this word?</h4>
+		<h4>Rate your knowledge:</h4>
 		<div class="btn-group">
-			<button type="button" class="btn btn-default" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
-			<button type="button" class="btn btn-default" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
-			<button type="button" class="btn btn-default" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
-			<button type="button" class="btn btn-default" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
-			<button type="button" class="btn btn-default" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="3" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
 		</div>
 		<br/>
-		<button type="button" class="btn btn-default btn-lg">Next Card</button>
+		<br/>
+		<button type="button" class="btn btn-default btn-lg" id="button-get-next">Next Card</button>
+		<br/>
+		<br/>
+		<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>
 		</div>
 	</div>
 	
