@@ -5,65 +5,7 @@ require_once "./backend/support.php";
 
 class User
 {
-	private $user_id = null;
-	public function get_user_id()
-	{
-		return $this->user_id;
-	}
-	
-	private $handle = null;
-	public function get_handle()
-	{
-		return $this->handle;
-	}
-	
-	private $email = null;
-	public function get_email()
-	{
-		return $this->email;
-	}
-	
-	private $name_family = null;
-	public function get_name_family()
-	{
-		return $this->name_family;
-	}
-	
-	private $name_given = null;
-	public function get_name_given()
-	{
-		return $this->name_given;
-	}
-	
-	//  Returns the full name, formatted with given/family names in the right places
-	public function get_name_full($family_first = false)
-	{
-		return sprintf("%s %s",
-			$family_first ? $this->get_name_family() : $this->get_name_given(),
-			$family_first ? $this->get_name_given() : $this->get_name_family()
-		);
-	}
-	
-	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
-	{
-		$this->user_id = intval($user_id, 10);
-		$this->handle = $handle;
-		$this->email = $email;
-		$this->name_family = $name_family;
-		$this->name_given = $name_given;
-	}
-	
-	//  Creates a User object from an associative array fetched from a mysql_result
-	public static function from_mysql_result_assoc($result_assoc)
-	{
-		return new User(
-			$result_assoc["user_id"],
-			$result_assoc["handle"],
-			$result_assoc["email"],
-			$result_assoc["name_family"],
-			$result_assoc["name_given"]
-		);
-	}
+	/***    CLASS/STATIC    ***/
 	
 	//  Creates a User object by selecting from the database
 	public static function select($user_id)
@@ -138,10 +80,80 @@ class User
 		return User::from_mysql_result_assoc($user_assoc);
 	}
 	
+	/***    INSTANCE    ***/
+	
+	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	
+	private $handle = null;
+	public function get_handle()
+	{
+		return $this->handle;
+	}
+	
+	private $email = null;
+	public function get_email()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->email;
+	}
+	
+	private $name_family = null;
+	public function get_name_family()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->name_family;
+	}
+	
+	private $name_given = null;
+	public function get_name_given()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->name_given;
+	}
+	
+	//  Returns the full name, formatted with given/family names in the right places
+	public function get_name_full($family_first = false)
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return sprintf("%s %s",
+			$family_first ? $this->get_name_family() : $this->get_name_given(),
+			$family_first ? $this->get_name_given() : $this->get_name_family()
+		);
+	}
+	
+	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
+	{
+		$this->user_id = intval($user_id, 10);
+		$this->handle = $handle;
+		$this->email = $email;
+		$this->name_family = $name_family;
+		$this->name_given = $name_given;
+	}
+	
+	//  Creates a User object from an associative array fetched from a mysql_result
+	public static function from_mysql_result_assoc($result_assoc)
+	{
+		return new User(
+			$result_assoc["user_id"],
+			$result_assoc["handle"],
+			$result_assoc["email"],
+			$result_assoc["name_family"],
+			$result_assoc["name_given"]
+		);
+	}
+	
 	public function get_lists()
 	{
 		//  Don't let the session user get lists for other users
-		if (!Session::get_user() || Session::get_user()->get_user_id() !== $this->get_user_id()) return null;
+		if (!($this->is_session_user())) return null;
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -161,9 +173,17 @@ class User
 		return $lists;
 	}
 	
+	public function is_session_user()
+	{
+		return !!Session::get_user()
+			&& (Session::get_user() === $this
+				|| Session::get_user()->get_user_id() === $this->get_user_id());
+	}
+	
 	public function assoc_for_json($privacy = null)
 	{
-		if ($privacy === null) $privacy = ($this != Session::get_user());
+		if ($privacy === null) $privacy = !($this->is_session_user());
+		
 		return array(
 			"userId" => $this->user_id,
 			"handle" => $this->handle,

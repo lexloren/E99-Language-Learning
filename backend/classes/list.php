@@ -5,13 +5,59 @@ require_once "./backend/support.php";
 
 class EntryList
 {
+	/***    STATIC/CLASS    ***/
+	
+	private static $lists_by_id = array ();
+	
+	public static function insert($list_name = null)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		if (!Session::get_user()) return null;
+		
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+			Session::get_user()->get_user_id(),
+			$mysqli->escape_string($list_name)
+		));
+		
+		return self::select($mysqli->insert_id);
+	}
+	
+	public static function select($list_id)
+	{
+		$list_id = intval($list_id, 10);
+		
+		if (!in_array($list_id, array_keys(self::$lists_by_id)))
+		{
+			$mysqli = Connection::get_shared_instance();
+			
+			//  Need to add privileges here, based on public sharing and course-wide sharing
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE list_id = %d",
+				intval($list_id)
+			));
+			
+			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
+			{
+				//  Return the list iff Session::get_user() can read it
+				$list = EntryList::from_mysql_result_assoc($result_assoc);
+			}
+		}
+		
+		$list = self::$lists_by_id[$list_id];
+		
+		if (!!$list && $list->session_user_can_read()) return $list;
+		
+		return null;
+	}
+	
+	/***    INSTANCE    ***/
+
 	private $list_id;
 	private $list_name;
 	private $entries;
 	private $share_public;
 	private $user_id;
-	
-	private static $lists_by_id = array ();
 	
 	private function __construct($list_id, $share_public, $list_name = null, $user_id = null)
 	{
@@ -22,6 +68,16 @@ class EntryList
 		$this->user_id = $user_id;
 		
 		EntryList::$lists_by_id[$this->list_id] = $this;
+	}
+	
+	public static function from_mysql_result_assoc($result_assoc)
+	{
+		return new EntryList(
+			$result_assoc["list_id"],
+			$result_assoc["share_public"],
+			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
+			$result_assoc["user_id"]
+		);
 	}
 	
 	//  Returns true iff Session::get_user() can read this list for any reason
@@ -81,58 +137,6 @@ class EntryList
 			}
 		}
 		return $this->entries;
-	}
-	
-	public static function insert($list_name = null)
-	{
-		$mysqli = Connection::get_shared_instance();
-		
-		if (!Session::get_user()) return null;
-		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
-			Session::get_user()->get_user_id(),
-			$mysqli->escape_string($list_name)
-		));
-		
-		return self::select($mysqli->insert_id);
-	}
-	
-	public static function select($list_id)
-	{
-		$list_id = intval($list_id, 10);
-		
-		if (!in_array($list_id, array_keys(self::$lists_by_id)))
-		{
-			$mysqli = Connection::get_shared_instance();
-			
-			//  Need to add privileges here, based on public sharing and course-wide sharing
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE list_id = %d",
-				intval($list_id)
-			));
-			
-			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
-			{
-				//  Return the list iff Session::get_user() can read it
-				$list = EntryList::from_mysql_result_assoc($result_assoc);
-			}
-		}
-		
-		$list = self::$lists_by_id[$list_id];
-		
-		if (!!$list && $list->session_user_can_read()) return $list;
-		
-		return null;
-	}
-	
-	public static function from_mysql_result_assoc($result_assoc)
-	{
-		return new EntryList(
-			$result_assoc["list_id"],
-			$result_assoc["share_public"],
-			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
-			$result_assoc["user_id"]
-		);
 	}
 	
 	//  Adds an entry to this list

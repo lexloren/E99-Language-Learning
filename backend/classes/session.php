@@ -6,13 +6,10 @@ require_once "./backend/classes/user.php";
 
 class Session
 {
-	private static $shared_instance = null;
-	
 	private static $user = null;
-	
 	public static function get_user()
 	{
-		return self::$user;
+		return $this->user;
 	}
 	
 	//  Opens a session.
