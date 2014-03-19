@@ -6,22 +6,25 @@ require_once "./backend/classes/user.php";
 
 class Session
 {
-	private static $shared_instance = null;
-	
 	private static $user = null;
-	
 	public static function get_user()
 	{
 		return self::$user;
+	}
+	
+	//Used by unit tests
+	public static function set_user($user)
+	{
+		self::$user = $user;
 	}
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end in case of error.
 	public static function authenticate($handle, $password)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		self::deauthenticate();
+		
+		$mysqli = Connection::get_shared_instance();
 		
 		if (!validate_password($password))
 		{
@@ -58,7 +61,7 @@ class Session
 			
 			self::$user = User::from_mysql_result_assoc($user_assoc);
 			
-			return self::$user;
+			Session::exit_with_result(self::$user->assoc_for_json());
 		}
 		else
 		{
@@ -71,11 +74,12 @@ class Session
 	//!!!!  Must be called before starting into any script that requires a session.
 	public static function reauthenticate()
 	{
-		$mysqli = Connection::get_shared_instance();
 		session_start();
 		
 		if (!!session_id() && isset ($_SESSION["handle"]))
 		{
+			$mysqli = Connection::get_shared_instance();
+			
 			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s'",
 				$mysqli->escape_string(session_id()),
 				$mysqli->escape_string($_SESSION["handle"])
@@ -97,10 +101,8 @@ class Session
 			
 			return self::$user;
 		}
-		else
-		{
-			return null;
-		}
+		
+		self::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
@@ -117,14 +119,12 @@ class Session
 			session_destroy();
 			session_unset();
 		}
-		
-		return null;
 	}
 	
 	//  Returns new PHP associative array for returning to front end.
 	private static function new_return_template()
 	{
-		return array(
+		return array (
 			"isError" => false,
 			"errorTitle" => NULL,
 			"errorDescription" => NULL,
@@ -132,11 +132,20 @@ class Session
 			"resultInformation" => NULL
 		);
 	}
+	
+	private static function new_database_result_template()
+	{
+		return array (
+			"didInsert" => false,
+			"didDelete" => false,
+			"didUpdate" => false
+		);
+	}
 
 	//  Formats an error as a PHP associative array.
 	private static function error_assoc($title, $description)
 	{
-		$return = new_return_template();
+		$return = self::new_return_template();
 		
 		$return["isError"] = true;
 		$return["errorTitle"] = $title;
@@ -148,10 +157,24 @@ class Session
 	//  Formats a result as a PHP associative array.
 	private static function result_assoc($result, $result_information = NULL)
 	{
-		$return = new_return_template();
+		$return = self::new_return_template();
 		
 		$return["result"] = $result;
 		$return["resultInformation"] = $result_information;
+		
+		return $return;
+	}
+	
+	public static function database_result_assoc($database_result_assoc)
+	{
+		$return = self::new_database_result_template();
+		foreach (array_keys($return) as $key)
+		{
+			if (isset ($database_result_assoc[$key]) && $database_result_assoc[$key] !== null)
+			{
+				$return[$key] = !!$database_result_assoc[$key];
+			}
+		}
 		
 		return $return;
 	}

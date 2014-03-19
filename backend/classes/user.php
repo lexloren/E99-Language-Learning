@@ -5,76 +5,18 @@ require_once "./backend/support.php";
 
 class User
 {
-	private $user_id = null;
-	public function get_user_id()
-	{
-		return $this->user_id;
-	}
-	
-	private $handle = null;
-	public function get_handle()
-	{
-		return $this->handle;
-	}
-	
-	private $email = null;
-	public function get_email()
-	{
-		return $this->email;
-	}
-	
-	private $name_family = null;
-	public function get_name_family()
-	{
-		return $this->name_family;
-	}
-	
-	private $name_given = null;
-	public function get_name_given()
-	{
-		return $this->name_given;
-	}
-	
-	//  Returns the full name, formatted with given/family names in the right places
-	public function get_name_full($family_first = false)
-	{
-		return sprintf("%s %s",
-			$family_first ? $this->get_name_family() : $this->get_name_given(),
-			$family_first ? $this->get_name_given() : $this->get_name_family()
-		);
-	}
-	
-	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
-	{
-		$this->user_id = intval($user_id, 10);
-		$this->handle = $handle;
-		$this->email = $email;
-		$this->name_family = $name_family;
-		$this->name_given = $name_given;
-	}
-	
-	//  Creates a User object from an associative array fetched from a mysql_result
-	public static function from_mysql_result_assoc($result_assoc)
-	{
-		return new User(
-			$result_assoc["user_id"],
-			$result_assoc["handle"],
-			$result_assoc["email"],
-			$result_assoc["name_family"],
-			$result_assoc["name_given"]
-		);
-	}
+	/***    CLASS/STATIC    ***/
 	
 	//  Creates a User object by selecting from the database
 	public static function select($user_id)
 	{
+		$user_id = intval($user_id, 10);
+		
 		$mysqli = Connection::get_shared_instance();
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE user_id = %d",
-			intval($user_id)
-		));
+		$result = $mysqli->query("SELECT * FROM users WHERE user_id = $user_id");
 		
-		if (!!($result_assoc = $result->fetch_assoc()))
+		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return User::from_mysql_result_assoc($result_assoc);
 		}
@@ -111,8 +53,6 @@ class User
 		{
 			Session::exit_with_error("Handle Conflict", "The requested handle is already taken.");
 		}
-		$result->close();
-		
 		
 		//  Good to go, so insert the new user
 		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
@@ -138,33 +78,146 @@ class User
 		return User::from_mysql_result_assoc($user_assoc);
 	}
 	
+	/***    INSTANCE    ***/
+	
+	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	
+	private $handle = null;
+	public function get_handle()
+	{
+		return $this->handle;
+	}
+	
+	private $email = null;
+	public function get_email()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->email;
+	}
+	
+	private $name_family = null;
+	public function get_name_family()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->name_family;
+	}
+	
+	private $name_given = null;
+	public function get_name_given()
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return $this->name_given;
+	}
+	
+	//  Returns the full name, formatted with given/family names in the right places
+	public function get_name_full($family_first = false)
+	{
+		if (!($this->is_session_user())) return null;
+		
+		return sprintf("%s %s",
+			$family_first ? $this->get_name_family() : $this->get_name_given(),
+			$family_first ? $this->get_name_given() : $this->get_name_family()
+		);
+	}
+	
+	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
+	{
+		$this->user_id = intval($user_id, 10);
+		$this->handle = $handle;
+		$this->email = $email;
+		$this->name_family = $name_family;
+		$this->name_given = $name_given;
+	}
+	
+	//  Creates a User object from an associative array fetched from a mysql_result
+	public static function from_mysql_result_assoc($result_assoc)
+	{
+		if (!$result_assoc) return null;
+		
+		return new User(
+			$result_assoc["user_id"],
+			$result_assoc["handle"],
+			$result_assoc["email"],
+			$result_assoc["name_family"],
+			$result_assoc["name_given"]
+		);
+	}
+	
+	private $lists;
 	public function get_lists()
 	{
 		//  Don't let the session user get lists for other users
-		if (!Session::get_user() || Session::get_user()->get_user_id() !== $this->get_user_id()) return null;
+		if (!($this->is_session_user())) return null;
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
-			$this->get_user_id()
-		));
-		
-		//  Unknown error
-		if (!$result) return null;
-		
-		$lists = array ();
-		while (!!($result_assoc = $result->fetch_assoc()))
+		if (!isset ($this->lists))
 		{
-			if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
+				$this->get_user_id()
+			));
+			
+			//  Unknown error
+			if (!$result) return null;
+			
+			$lists = array ();
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+			}
+			
+			$this->lists = $lists;
 		}
 		
-		return $lists;
+		return $this->lists;
+	}
+	
+	private $instructor_courses;
+	public function get_instructor_courses()
+	{
+		//  STUB
+		return array ();
+	}
+	
+	private $student_courses;
+	public function get_student_courses()
+	{
+		//  STUB
+		return array ();
+	}
+	
+	public function in_array($array)
+	{
+		foreach ($array as $user)
+		{
+			if ($user->equals($this)) return true;
+		}
+		
+		return false;
+	}
+	
+	public function equals($user)
+	{
+		return $this === $user || (!!$user && $user->get_user_id() === $this->get_user_id());
+	}
+	
+	public function is_session_user()
+	{
+		return $this->equals(Session::get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
-		if ($privacy === null) $privacy = ($this != Session::get_user());
-		return array(
+		if ($privacy === null) $privacy = !($this->is_session_user());
+		
+		return array (
 			"userId" => $this->user_id,
 			"handle" => $this->handle,
 			"email" => $privacy ? null : $this->email,

@@ -5,8 +5,6 @@
 //      and that means we have an error elsewhere in the application.
 
 //Do we need this for a class? Getting some error, so commented
-if (isset ($apibase)) exit;
-	$apibase = true;
 
 require_once "./backend/classes.php";
 
@@ -21,10 +19,11 @@ class APIBase
 		$this->mysqli = $mysqli;
 	}
 	
+	//  DEPRECATED
+	//      Call instead Session::reauthenticate()
 	protected function exit_if_not_authenticated()
 	{
-		if (!isset($this->user))
-			Session::exit_with_error("Authentication Needed", "User must authenticate for this resource");
+		//Session::reauthenticate();
 	}
 }
 

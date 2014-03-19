@@ -1,8 +1,5 @@
 <?php
 
-if (isset ($classes)) exit;
-$classes = true;
-
 require_once "./backend/classes/session.php";
 require_once "./backend/classes/entry.php";
 require_once "./backend/classes/course.php";

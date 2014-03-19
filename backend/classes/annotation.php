@@ -39,6 +39,8 @@ class Annotation
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
+		if (!$result) return null;
+		
 		return new Annotation(
 			$result_assoc["annotation_id"],
 			$result_assoc["entry_id"],

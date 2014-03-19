@@ -18,13 +18,9 @@ class APIUser extends APIBase
 			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
 		}
 		else
-			Session::exit_with_error("No Input", "User's handle and password are needed.");
-			
-		$user = Session::get_user();
-		if (!!$user)
-			Session::exit_with_result($user->assoc_for_json());
-		else
-			Session::exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
+		{
+			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+		}
 	}
 	
 	public function register()
@@ -47,6 +43,21 @@ class APIUser extends APIBase
 		}
 	}
 	
+	public function lists()
+	{
+		Session::reauthenticate();
+		
+		$lists = Session::get_user()->get_lists();
+		
+		$lists_returnable = array ();
+		foreach ($lists as $list)
+		{
+			array_push($lists_returnable, $list->assoc_for_json());
+		}
+		
+		Session::exit_with_result($lists_returnable);
+	}
+	
 	public function activate() 
 	{
 		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
@@ -60,6 +71,7 @@ class APIUser extends APIBase
 	public function deauthenticate() 
 	{
 		Session::deauthenticate();
+		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 }
 
