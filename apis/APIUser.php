@@ -18,13 +18,19 @@ class APIUser extends APIBase
 			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
 		}
 		else
-			Session::exit_with_error("No Input", "User's handle and password are needed.");
+		{
+			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+		}
 			
 		$user = Session::get_user();
 		if (!!$user)
+		{
 			Session::exit_with_result($user->assoc_for_json());
+		}
 		else
-			Session::exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
+		{
+			Session::exit_with_error("Invalid Credentials", "Handle and password posted match no users in the database.");
+		}
 	}
 	
 	public function register()
