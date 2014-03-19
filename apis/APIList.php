@@ -11,6 +11,8 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
+		Session::reauthenticate();
+		
 		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
 			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list.");
@@ -19,7 +21,7 @@ class APIList extends APIBase
 	
 	public function delete()
 	{
-		self::exit_if_not_authenticated();
+		Session::reauthenticate();
 
 		if (isset ($_POST["list_id"]))
 		{
@@ -37,7 +39,7 @@ class APIList extends APIBase
 	
 	public function lists()
 	{
-		self::exit_if_not_authenticated();
+		Session::reauthenticate();
 		
 		$user = Session::get_user();
 		$lists = $user->get_lists();
@@ -53,7 +55,8 @@ class APIList extends APIBase
 	
 	public function describe()
 	{
-		self::exit_if_not_authenticated();
+		Session::reauthenticate();
+		
 		if (isset ($_GET["list_id"]))
 		{
 			$list = EntryList::select($_GET["list_id"]);

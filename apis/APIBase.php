@@ -19,10 +19,11 @@ class APIBase
 		$this->mysqli = $mysqli;
 	}
 	
+	//  DEPRECATED
+	//      Call instead Session::reauthenticate()
 	protected function exit_if_not_authenticated()
 	{
-		if (!isset($this->user))
-			Session::exit_with_error("Authentication Needed", "User must authenticate for this resource");
+		//Session::reauthenticate();
 	}
 }
 
