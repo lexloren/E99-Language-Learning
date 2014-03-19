@@ -9,7 +9,7 @@ class Session
 	private static $user = null;
 	public static function get_user()
 	{
-		return $this->user;
+		return self::$user;
 	}
 	
 	//  Opens a session.
