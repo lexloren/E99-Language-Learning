@@ -5,6 +5,8 @@ require_once "./backend/support.php";
 
 class Entry
 {
+	/***    CLASS/STATIC    ***/
+
 	//  Associative array, keyed by user_id,
 	//      of associative arrays of Entry objects keyed by entry_id
 	private static $user_entries_by_id = array ();
@@ -12,6 +14,8 @@ class Entry
 	//  Gets the associative array of Entry objects, keyed by entry_id, for some user_id
 	private static function entries_by_id_for_user($user_id)
 	{
+		$user_id = intval($user_id, 10);
+		
 		if (!in_array(array_keys($user_entries_by_id), $user_id))
 		{
 			$user_entries_by_id[$user_id] = array ();
@@ -19,6 +23,13 @@ class Entry
 		
 		return $user_entries_by_id[$user_id];
 	}
+	
+	public static function select($entry_id)
+	{
+		return Dictionary::select_entry($entry_id);
+	}
+	
+	/***    INSTANCE    ***/
 
 	private $entry_id = null;
 	public function get_entry_id()
@@ -60,6 +71,11 @@ class Entry
 		return $this->user_id;
 	}
 	
+	public function get_owner()
+	{
+		return !!$this->user_id ? User::select($this->user_id) : null;
+	}
+	
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
 		$word_0, $word_1, $pronunciation = null, $user_id = null)
 	{
@@ -81,11 +97,6 @@ class Entry
 		}
 	}
 	
-	public static function select($entry_id)
-	{
-		return Dictionary::select_entry($entry_id);
-	}
-	
 	public static function from_mysql_result_assoc($result)
 	{
 		if (!$result) return null;
@@ -103,7 +114,7 @@ class Entry
 	
 	public function session_user_can_write()
 	{
-		return Session::get_user() && Session::get_user()->get_user_id() === $this->user_id;
+		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->user_id);
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -242,9 +253,9 @@ class Entry
 		
 		return array(
 			"entryId" => $this->entry_id,
+			"owner" => $this->get_owner()->assoc_for_json(),
 			"words" => $this->words,
 			"pronuncations" => $this->pronunciations,
-			"userId" => $this->user_id,
 			"annotations" => $annotations_returnable
 		);
 	}
