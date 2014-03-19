@@ -205,21 +205,19 @@ class User
 	
 	public function equals($user)
 	{
-		return !!$user && $user->get_user_id() === $this->get_user_id();
+		return $this === $user || (!!$user && $user->get_user_id() === $this->get_user_id());
 	}
 	
 	public function is_session_user()
 	{
-		return !!Session::get_user()
-			&& (Session::get_user() === $this
-				|| Session::get_user()->get_user_id() === $this->get_user_id());
+		return $this->equals(Session::get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
 		if ($privacy === null) $privacy = !($this->is_session_user());
 		
-		return array(
+		return array (
 			"userId" => $this->user_id,
 			"handle" => $this->handle,
 			"email" => $privacy ? null : $this->email,
