@@ -43,6 +43,21 @@ class APIUser extends APIBase
 		}
 	}
 	
+	public function lists()
+	{
+		Session::reauthenticate();
+		
+		$lists = Session::get_user()->get_lists();
+		
+		$lists_returnable = array ();
+		foreach ($lists as $list)
+		{
+			array_push($lists_returnable, $list->assoc_for_json());
+		}
+		
+		Session::exit_with_result($lists_returnable);
+	}
+	
 	public function activate() 
 	{
 		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);

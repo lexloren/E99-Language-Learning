@@ -40,22 +40,6 @@ class APIList extends APIBase
 		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didDelete" => true)));
 	}
 	
-	public function lists()
-	{
-		Session::reauthenticate();
-		
-		$user = Session::get_user();
-		$lists = $user->get_lists();
-		
-		$lists_returnable = array ();
-		foreach ($lists as $list)
-		{
-			array_push($lists_returnable, $list->assoc_for_json());
-		}
-		
-		Session::exit_with_result($lists_returnable);
-	}
-	
 	public function describe()
 	{
 		Session::reauthenticate();
