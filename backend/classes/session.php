@@ -124,7 +124,7 @@ class Session
 	//  Returns new PHP associative array for returning to front end.
 	private static function new_return_template()
 	{
-		return array(
+		return array (
 			"isError" => false,
 			"errorTitle" => NULL,
 			"errorDescription" => NULL,
@@ -132,11 +132,20 @@ class Session
 			"resultInformation" => NULL
 		);
 	}
+	
+	private static function new_database_result_template()
+	{
+		return array (
+			"didInsert" => false,
+			"didDelete" => false,
+			"didUpdate" => false
+		);
+	}
 
 	//  Formats an error as a PHP associative array.
 	private static function error_assoc($title, $description)
 	{
-		$return = new_return_template();
+		$return = self::new_return_template();
 		
 		$return["isError"] = true;
 		$return["errorTitle"] = $title;
@@ -148,10 +157,24 @@ class Session
 	//  Formats a result as a PHP associative array.
 	private static function result_assoc($result, $result_information = NULL)
 	{
-		$return = new_return_template();
+		$return = self::new_return_template();
 		
 		$return["result"] = $result;
 		$return["resultInformation"] = $result_information;
+		
+		return $return;
+	}
+	
+	public static function database_result_assoc($database_result_assoc)
+	{
+		$return = self::new_database_result_template();
+		foreach (array_keys($return) as $key)
+		{
+			if (isset ($database_result_assoc[$key]) && $database_result_assoc[$key] !== null)
+			{
+				$return[$key] = !!$database_result_assoc[$key];
+			}
+		}
 		
 		return $return;
 	}

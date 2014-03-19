@@ -9,6 +9,17 @@ class EntryList
 	
 	private static $lists_by_id = array ();
 	
+	private static $error_description = null;
+	private static function set_error_description($error_description)
+	{
+		self::$error_description = $error_description;
+		return null;
+	}
+	public static function get_error_description()
+	{
+		return self::$error_description;
+	}
+	
 	public static function insert($list_name = null)
 	{
 		$mysqli = Connection::get_shared_instance();
@@ -33,21 +44,24 @@ class EntryList
 			
 			//  Need to add privileges here, based on public sharing and course-wide sharing
 			
-			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE list_id = %d",
-				intval($list_id)
-			));
+			$result = $mysqli->query("SELECT * FROM lists WHERE list_id = $list_id");
 			
 			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
 			{
 				EntryList::from_mysql_result_assoc($result_assoc);
 			}
+			else
+			{
+				return EntryList::set_error_description("Failed to select list where list_id = $list_id.");
+			}
 		}
 		
-		$list = self::$lists_by_id[$list_id];
+		if (in_array($list_id, array_keys(self::$lists_by_id)))
+		{
+			if (!!($list = self::$lists_by_id[$list_id]) && $list->session_user_can_read()) return $list;
+		}
 		
-		if (!!$list && $list->session_user_can_read()) return $list;
-		
-		return null;
+		return EntryList::set_error_description("Failed to select list where list_id = $list_id.");
 	}
 	
 	/***    INSTANCE    ***/
@@ -62,6 +76,10 @@ class EntryList
 	public function get_user_id()
 	{
 		return $this->user_id;
+	}
+	public function get_owner()
+	{
+		return User::select($this->get_user_id());
 	}
 	
 	private $list_name;
@@ -81,14 +99,15 @@ class EntryList
 	{
 		if (!isset ($this->entries))
 		{
+			$this->entries = array();
+			
 			$mysqli = Connection::get_shared_instance();
 			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN dictionary ON entry_id WHERE list_id = %d",
 				intval($this->list_id)
 			));
 			
-			$this->entries = array();
-			if (!$result) return $this->entries;
-
+			if (!$result || $result->num_rows === 0) return $this->entries;
+			
 			while (($entry_assoc = $result->fetch_assoc()))
 			{
 				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
@@ -109,7 +128,7 @@ class EntryList
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result) return null;
+		if (!$result_assoc) return null;
 		
 		return new EntryList(
 			$result_assoc["list_id"],

@@ -15,26 +15,29 @@ class APIList extends APIBase
 		
 		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
-			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list.");
+			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list" . !!EntryList::get_error_description() ? ": ".EntryList::get_error_description() : ".");
 		}
+		
+		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
 	}
 	
 	public function delete()
 	{
 		Session::reauthenticate();
 
-		if (isset ($_POST["list_id"]))
+		if (!isset ($_POST["list_id"]))
 		{
-			$list = EntryList::select($_POST["list_id"]);
-			if (!$list)
-				Session::exit_with_error("Invalid delete", "Please make sure the lits id is correct.");
-				
-			$list->delete();
+			Session::exit_with_error("Invalid Post", "List-deletion post must include list_id.");
 		}
-		else 
+		
+		if (!($list = EntryList::select(($list_id = intval($_POST["list_id"])))))
 		{
-			Session::exit_with_error("Invalid insert", "List/delete must include an id.");
+			Session::exit_with_error("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
 		}
+		
+		$list->delete();
+		
+		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didDelete" => true)));
 	}
 	
 	public function lists()
