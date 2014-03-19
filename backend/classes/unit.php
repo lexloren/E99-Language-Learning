@@ -1,19 +1,12 @@
 <?php
 
-class Unit
+require_once "./backend/connection.php";
+require_once "./backend/support.php";
+require_once "./backend/classes.php";
+
+class Unit extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-	
-	private static $error_description = null;
-	private static function set_error_description($error_description)
-	{
-		self::$error_description = $error_description;
-		return null;
-	}
-	public static function get_error_description()
-	{
-		return self::$error_description;
-	}
 	
 	private static $units_by_id = array ();
 	

@@ -2,23 +2,13 @@
 
 require_once "./backend/connection.php";
 require_once "./backend/support.php";
+require_once "./backend/classes.php";
 
-class EntryList
+class EntryList extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 	
 	private static $lists_by_id = array ();
-	
-	private static $error_description = null;
-	private static function set_error_description($error_description)
-	{
-		self::$error_description = $error_description;
-		return null;
-	}
-	public static function get_error_description()
-	{
-		return self::$error_description;
-	}
 	
 	public static function insert($list_name = null)
 	{

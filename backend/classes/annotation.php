@@ -2,8 +2,9 @@
 
 require_once "./backend/connection.php";
 require_once "./backend/support.php";
+require_once "./backend/classes.php";
 
-class Annotation
+class Annotation extends DatabaseRow
 {
 	private $contents;
 	public function get_contents()
@@ -39,7 +40,7 @@ class Annotation
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result) return null;
+		if (!$result_assoc) return null;
 		
 		return new Annotation(
 			$result_assoc["annotation_id"],

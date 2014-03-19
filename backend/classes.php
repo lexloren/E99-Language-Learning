@@ -1,5 +1,6 @@
 <?php
 
+require_once "./backend/classes/database_row.php";
 require_once "./backend/classes/session.php";
 require_once "./backend/classes/entry.php";
 require_once "./backend/classes/course.php";
