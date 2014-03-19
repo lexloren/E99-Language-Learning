@@ -138,15 +138,25 @@ class EntryList extends DatabaseRow
 	private function session_user_can_read()
 	{
 		return $this->session_user_can_write()
-			|| $this->session_user_can_read_via_course_sharing()
+			|| $this->session_user_can_read_via_course()
 			|| $this->is_public();
 	}
 	
 	//  Returns true iff Session::get_user() is in any course in which this list is shared
-	private function session_user_can_read_via_course_sharing()
+	private function session_user_can_read_via_course()
 	{
-		//  Stub...
-		//      Will depend on implementing Course
+		foreach ($this->get_owner()->get_student_courses() as $student_course)
+		{
+			foreach ($student_course->get_lists() as $list)
+			{
+				if ($list->list_id === $this->list_id
+					&& in_array($list->get_owner(), $student_course->get_instructors())
+				{
+					return true;
+				}
+			}
+		}
+		
 		return false;
 	}
 	
@@ -206,6 +216,8 @@ class EntryList extends DatabaseRow
 			return EntryList::set_error_description("Session user cannot edit list.");
 		}
 		
+		$mysqli = Connection::get_shared_instance();
+		
 		foreach ($this->get_entries() as $entry_removed)
 		{
 			if ($entry_removed->entry_id === $entry_to_remove->entry_id)
@@ -228,10 +240,31 @@ class EntryList extends DatabaseRow
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::get_user() || !session_user_can_read()) return null;
-		//  Create a copy of the list with Session::get_user() as the owner
+		if (!Session::get_user() || !$this->session_user_can_read())
+		{
+			return EntryList::set_error_description("Session user cannot read list.");
+		}
 		
-		return null;
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) SELECT %d, list_name FROM lists WHERE list_id = %d",
+			Session::get_user()->get_user_id(),
+			$this->get_list_id()
+		));
+		
+		$copy_id = $mysqli->insert_id;
+		
+		foreach ($this->get_entries() as $entry)
+		{
+			$entry->copy_for_session_user();
+		}
+		
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, entry_id) SELECT %d, entry_id FROM list_entries WHERE list_id = %d",
+			$copy_id,
+			$this->get_list_id()
+		));
+		
+		return EntryList::select($copy_id);
 	}
 	
 	public function assoc_for_json()
