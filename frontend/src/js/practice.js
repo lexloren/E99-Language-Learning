@@ -44,12 +44,47 @@ $.mockjax({
 	"resultInformation":{"entriesCount":2,"pageSize":2,"pageNum":1}} 
 });
 
+$.mockjax({
+  url: 'query_dictionary.php',
+  responseText: {
+	"isError":false,
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[{
+		"entryId":"5",
+		"word":"Word 5",
+		"translation":"Translation 5",
+		"pronunciation":"Pronunciation 5",},
+		{"entryId":"6",
+		"word":"Word 6",
+		"translation":"Translation 6",
+		"pronunciation":"Pronunciation 6",},
+		{"entryId":"7",
+		"word":"Word 7",
+		"translation":"Translation 7",
+		"pronunciation":"Pronunciation 7",}],
+	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
+});
+
+
 /* prepare */
 $( document ).ready(function() {
 	setupDoc();
 	getLists();
 	handleClicks();
 });
+
+
+	/* split the word into individual characters */
+	function getWord(word) {
+		var myarray = word.split('');
+		var newWord = '';
+		$.each(myarray, function() {
+			wordspan = '<span class="char-of-word">' + this + '</span>';
+			newWord = newWord.concat(wordspan);
+		});
+		return newWord;
+	};
 
 
 /* setup document */
@@ -68,24 +103,32 @@ function handleClicks() {
 	});
 	
 	/* rating buttons */
-	$('.rating-button').click(function(event) {
+	$(".rating-button").click(function(event) {
 		event.preventDefault();
 		send_rating(this.value);
+	});
+	
+	/* char/word lookup */
+	$(document).on('click', '.char-of-word', function () {
+		console.log(this.innerHTML);
+		get_dictionary(this.name);
 	});
 	
 	/* show hidden cards */
 	$('#flashcard-word-button').click(function(event) {
 		event.preventDefault();
-		$('#flashcard-word-panel').html(wordList[0].word);
+		$('#flashcard-word-panel').html(getWord(wordList[0].word));
 	});
 	$('#flashcard-pronounce-button').click(function(event) {
 		event.preventDefault();
-		$('#flashcard-pronounce-panel').html(wordList[0].translation);
+		$('#flashcard-pronounce-panel').html(wordList[0].pronunciation);
 	});
 	$('#flashcard-trans-button').click(function(event) {
 		event.preventDefault();
-		$('#flashcard-trans-panel').html(wordList[0].pronunciation);
+		$('#flashcard-trans-panel').html(wordList[0].translation);
 	});
+	
+
 	
 	/* shift the array and get the next card */
 	$('#button-get-next').click(function(event) {
@@ -117,6 +160,21 @@ function getLists() {
 		});
 	});
 };
+
+
+/*  */
+function get_dictionary(word) {
+	$('#translation-panel').show();
+	$('#translation-panel').html('');
+	$.getJSON( 'query_dictionary.php', {query : word }, function( data ) {
+		console.log(data);
+		$.each( data.result, function() {
+		$('#translation-panel').append('<div>' + this.word + ' : ' + this.translation +
+			' : ' + this.pronunciation + '</div>');
+		});
+	});
+};
+
 
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
@@ -161,7 +219,7 @@ function getCards() {
 /* use the first card to populate the "flashcard view", using view preferences that the user specified earlier */
 function nextCard() {
 	if (showWord) {
-		$('#flashcard-word-panel').html(wordList[0].word);
+		$('#flashcard-word-panel').html(getWord(wordList[0].word));
 	} else {
 		$('#flashcard-word-panel').html('');
 	}
