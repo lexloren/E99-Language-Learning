@@ -12,6 +12,12 @@ class Session
 		return self::$user;
 	}
 	
+	//Used by unit tests
+	public static function set_user($user)
+	{
+		self::$user = $user;
+	}
+	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end in case of error.
 	public static function authenticate($handle, $password)
