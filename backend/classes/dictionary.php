@@ -98,7 +98,9 @@ class Dictionary
 	//  Gets an entry from the dictionary by entry_id
 	public static function select_entry($entry_id)
 	{
-		if (!in_array(($entry_id = intval($entry_id)), array_keys(self::$entries_by_id)))
+		$entry_id = intval($entry_id, 10);
+		
+		if (!in_array($entry_id, array_keys(self::$entries_by_id)))
 		{
 			$mysqli = Connection::get_shared_instance();
 			
