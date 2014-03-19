@@ -11,7 +11,7 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
-		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"]) : null))
+		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
 			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list.");
 		}
@@ -69,7 +69,3 @@ class APIList extends APIBase
 	}
 }
 ?>
-
-
-
-
