@@ -10,13 +10,13 @@ class User
 	//  Creates a User object by selecting from the database
 	public static function select($user_id)
 	{
+		$user_id = intval($user_id, 10);
+		
 		$mysqli = Connection::get_shared_instance();
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE user_id = %d",
-			intval($user_id)
-		));
+		$result = $mysqli->query("SELECT * FROM users WHERE user_id = $user_id");
 		
-		if (!!($result_assoc = $result->fetch_assoc()))
+		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return User::from_mysql_result_assoc($result_assoc);
 		}
@@ -53,8 +53,6 @@ class User
 		{
 			Session::exit_with_error("Handle Conflict", "The requested handle is already taken.");
 		}
-		$result->close();
-		
 		
 		//  Good to go, so insert the new user
 		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
@@ -150,27 +148,47 @@ class User
 		);
 	}
 	
+	private $lists;
 	public function get_lists()
 	{
 		//  Don't let the session user get lists for other users
 		if (!($this->is_session_user())) return null;
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
-			$this->get_user_id()
-		));
-		
-		//  Unknown error
-		if (!$result) return null;
-		
-		$lists = array ();
-		while (!!($result_assoc = $result->fetch_assoc()))
+		if (!isset ($this->lists))
 		{
-			if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
+				$this->get_user_id()
+			));
+			
+			//  Unknown error
+			if (!$result) return null;
+			
+			$lists = array ();
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+			}
+			
+			$this->lists = $lists;
 		}
 		
-		return $lists;
+		return $this->lists;
+	}
+	
+	private $instructor_courses;
+	public function get_instructor_courses()
+	{
+		//  STUB
+		return array ();
+	}
+	
+	private $student_courses;
+	public function get_student_courses()
+	{
+		//  STUB
+		return array ();
 	}
 	
 	public function is_session_user()

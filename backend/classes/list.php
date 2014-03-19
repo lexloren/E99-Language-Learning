@@ -54,18 +54,56 @@ class EntryList
 	/***    INSTANCE    ***/
 
 	private $list_id;
-	private $list_name;
-	private $entries;
-	private $share_public;
-	private $user_id;
+	public function get_list_id()
+	{
+		return $this->list_id;
+	}
 	
-	private function __construct($list_id, $share_public, $list_name = null, $user_id = null)
+	private $user_id;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	
+	private $list_name;
+	public function get_list_name()
+	{
+		return $this->list_name;
+	}
+	
+	private $public;
+	public function is_public()
+	{
+		return !!$this->public;
+	}
+	
+	private $entries;
+	public function get_entries()
+	{
+		if (!isset ($this->entries))
+		{
+			$mysqli = Connection::get_shared_instance();
+			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN dictionary ON entry_id WHERE list_id = %d",
+				intval($this->list_id)
+			));
+			
+			$this->entries = array();
+			if (!$result) return $this->entries;
+
+			while (($entry_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
+			}
+		}
+		return $this->entries;
+	}
+	
+	private function __construct($list_id, $user_id, $list_name = null, $public = false)
 	{
 		$this->list_id = intval($list_id, 10);
+		$this->user_id = intval($user_id, 10);
 		$this->list_name = $list_name;
-		$this->shared_public = $share_public;
-		$this->list_name = $list_name;
-		$this->user_id = $user_id;
+		$this->public = !!$public;
 		
 		EntryList::$lists_by_id[$this->list_id] = $this;
 	}
@@ -74,9 +112,9 @@ class EntryList
 	{
 		return new EntryList(
 			$result_assoc["list_id"],
-			$result_assoc["share_public"],
+			$result_assoc["user_id"],
 			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
-			$result_assoc["user_id"]
+			$result_assoc["public"]
 		);
 	}
 	
@@ -85,7 +123,7 @@ class EntryList
 	{
 		return $this->session_user_can_write()
 			|| $this->session_user_can_read_via_course_sharing()
-			|| !!$this->shared_public;
+			|| $this->is_public();
 	}
 	
 	//  Returns true iff Session::get_user() is in any course in which this list is shared
@@ -99,7 +137,7 @@ class EntryList
 	//  Returns true iff Session::get_user() owns this list
 	private function session_user_can_write()
 	{
-		return !!Session::get_user() && (Session::get_user()->get_user_id() == $this->user_id);
+		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->user_id);
 	}
 	
 	public function delete()
@@ -114,29 +152,6 @@ class EntryList
 		));
 		
 		return null;
-	}
-	
-	public function get_entries()
-	{
-		$mysqli = Connection::get_shared_instance();
-		
-		//  Need to add privileges here, based on public sharing and course-wide sharing
-		
-		if (!isset ($this->entries))
-		{
-			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN dictionary ON entry_id WHERE list_id = %d",
-				intval($this->list_id)
-			));
-			
-			$this->entries = array();
-			if (!$result) return $this->entries;
-
-			while (($entry_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
-			}
-		}
-		return $this->entries;
 	}
 	
 	//  Adds an entry to this list
@@ -205,8 +220,9 @@ class EntryList
 		
 		return array (
 			"listId" => $this->list_id,
-			"privileges" => null,
 			"listName" => $this->list_name,
+			"owner" => $this->get_owner()->assoc_for_json(),
+			"isPublic" => $this->is_public(),
 			"entries" => $entries_returnable
 		);
 	}
