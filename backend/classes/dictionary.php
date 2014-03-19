@@ -119,6 +119,18 @@ class Dictionary
 		
 		return self::$entries_by_id[$entry_id];
 	}
+	
+	public static function get_lang_code($lang_id)
+	{
+		$lang_id = intval($lang_id, 10);
+		$result = $mysqli->query("SELECT * FROM languages WHERE lang_id = $lang_id");
+		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			return $result_assoc["lang_code"];
+		}
+		
+		return null;
+	}
 }
 
 ?>
