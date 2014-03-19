@@ -1,6 +1,7 @@
 <?php
 
 //Tests class User
+require_once './backend/classes/session.php';
 require_once './backend/classes/user.php';
 require_once './backend/connection.php';
 require_once './tools/database.php';
@@ -33,7 +34,8 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$given = 'SomeGiven1';
 
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
-		
+		session::set_user($user_obj);
+				
 		//Check database
 		$result = $this->link->query(sprintf("SELECT * FROM users WHERE handle = '%s'", $this->link->escape_string($handle)));
 		$this->assertNotNull($result, "Null result");
@@ -76,6 +78,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		
 		
 		$user_obj = User::select($user_assoc['user_id']);
+		session::set_user($user_obj);
 		
 		$this->assertEquals($user_obj->get_user_id(), $user_assoc['user_id']);
 		$this->assertEquals($user_obj->get_email(), $email);
