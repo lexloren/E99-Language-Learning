@@ -191,6 +191,21 @@ class User
 		return array ();
 	}
 	
+	public function in_array($array)
+	{
+		foreach ($array as $user)
+		{
+			if ($user->equals($this)) return true;
+		}
+		
+		return false;
+	}
+	
+	public function equals($user)
+	{
+		return $user->get_user_id() === $this->get_user_id();
+	}
+	
 	public function is_session_user()
 	{
 		return !!Session::get_user()
