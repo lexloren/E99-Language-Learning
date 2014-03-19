@@ -55,7 +55,7 @@ class Session
 			
 			self::$user = User::from_mysql_result_assoc($user_assoc);
 			
-			return self::$user;
+			Session::exit_with_result(self::$user->assoc_for_json());
 		}
 		else
 		{
@@ -94,10 +94,8 @@ class Session
 			
 			return self::$user;
 		}
-		else
-		{
-			return null;
-		}
+		
+		self::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
@@ -115,7 +113,7 @@ class Session
 			session_unset();
 		}
 		
-		return null;
+		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 	
 	//  Returns new PHP associative array for returning to front end.

@@ -21,16 +21,6 @@ class APIUser extends APIBase
 		{
 			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
 		}
-			
-		$user = Session::get_user();
-		if (!!$user)
-		{
-			Session::exit_with_result($user->assoc_for_json());
-		}
-		else
-		{
-			Session::exit_with_error("Invalid Credentials", "Handle and password posted match no users in the database.");
-		}
 	}
 	
 	public function register()
