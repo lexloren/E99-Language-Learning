@@ -16,7 +16,7 @@ class Entry
 	{
 		$user_id = intval($user_id, 10);
 		
-		if (!in_array(array_keys($user_entries_by_id), $user_id))
+		if (!in_array($user_id, array_keys($user_entries_by_id)))
 		{
 			$user_entries_by_id[$user_id] = array ();
 		}
@@ -173,7 +173,7 @@ class Entry
 	
 	public function remove_annotation($annotation)
 	{
-		if (!in_array($this->get_annotations(), $annotation)
+		if (!in_array($annotation, $this->get_annotations())
 			|| $annotation->get_entry_id() !== $this->get_entry_id()) return;
 		
 		$annotation->delete();
