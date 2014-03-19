@@ -5,8 +5,6 @@
 //      and that means we have an error elsewhere in the application.
 
 //Do we need this for a class? Getting some error, so commented
-if (isset ($apibase)) exit;
-	$apibase = true;
 
 require_once "./backend/classes.php";
 

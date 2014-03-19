@@ -139,7 +139,7 @@ class User
 	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result) return null;
+		if (!$result_assoc) return null;
 		
 		return new User(
 			$result_assoc["user_id"],
