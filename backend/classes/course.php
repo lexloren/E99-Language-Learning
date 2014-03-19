@@ -7,11 +7,25 @@ class Course
 {
 	/***    STATIC/CLASS    ***/
 	
+	private static $error_description = null;
+	private static function set_error_description($error_description)
+	{
+		self::$error_description = $error_description;
+		return null;
+	}
+	public static function get_error_description()
+	{
+		return self::$error_description;
+	}
+	
 	private static $courses_by_id = array ();
 	
 	public static function insert($lang_code_0, $lang_code_1, $course_name = null)
 	{
-		if (!Session::get_user()) return null;
+		if (!Session::get_user())
+		{
+			return Course::set_error_description("Session user has not reauthenticated.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -58,7 +72,7 @@ class Course
 			return Course::from_mysql_result_assoc($result_assoc);
 		}
 		
-		return null;
+		return Course::set_error_description("Failed to select course where course_id = $course_id.");
 	}
 	
 	/***    INSTANCE    ***/
@@ -190,7 +204,7 @@ class Course
 	
 	private function __construct($course_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
 	{
-		$this->$course_id = intval($course_id, 10);
+		$this->course_id = intval($course_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
 		$this->course_name = $course_name;
@@ -201,7 +215,10 @@ class Course
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result) return null;
+		if (!$result_assoc)
+		{
+			return Course::set_error_description("Invalid result_assoc.");
+		}
 		
 		return new Course(
 			$result_assoc["course_id"],
@@ -214,7 +231,10 @@ class Course
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_instructor()) return null;
+		if (!$this->session_user_is_instructor())
+		{
+			return Course::set_error_description("Session user is not instructor of course.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -222,12 +242,15 @@ class Course
 			$this->get_course_id()
 		));
 		
-		return null;
+		return $this;
 	}
 	
 	private function add_user(&$array, $table, $user)
 	{
-		if (!$this->session_user_is_instructor() || $user->in_array($array)) return null;
+		if (!$this->session_user_is_instructor() || $user->in_array($array))
+		{
+			return Course::set_error_description("Course cannot add user.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -253,7 +276,10 @@ class Course
 	
 	private function remove_user(&$array, $table, $user)
 	{
-		if (!$this->session_user_is_instructor()) return null;
+		if (!$this->session_user_is_instructor())
+		{
+			return Course::set_error_description("Session user is not instructor of course.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -281,12 +307,6 @@ class Course
 	public function remove_student($user)
 	{
 		return $this->remove_user($this->get_students(), "course_students", $user);
-	}
-	
-	public function insert_unit($unit_name)
-	{
-		//  ...
-		return null;
 	}
 	
 	public function assoc_for_json($privacy = null)

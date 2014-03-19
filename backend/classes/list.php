@@ -22,9 +22,12 @@ class EntryList
 	
 	public static function insert($list_name = null)
 	{
-		$mysqli = Connection::get_shared_instance();
+		if (!Session::get_user())
+		{
+			return EntryList::set_error_description("Session user has not reauthenticated.");
+		}
 		
-		if (!Session::get_user()) return null;
+		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
 			Session::get_user()->get_user_id(),
@@ -128,7 +131,10 @@ class EntryList
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc) return null;
+		if (!$result_assoc)
+		{
+			return EntryList::set_error_description("Invalid result_assoc.");
+		}
 		
 		return new EntryList(
 			$result_assoc["list_id"],
@@ -162,23 +168,29 @@ class EntryList
 	
 	public function delete()
 	{
-		$mysqli = Connection::get_shared_instance();
+		if (!Session::get_user())
+		{
+			return EntryList::set_error_description("Session user has not reauthenticated.");
+		}
 		
-		if (!Session::get_user()) return null;
+		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
 			Session::get_user()->get_user_id(),
 			$this->list_id
 		));
 		
-		return null;
+		return $this;
 	}
 	
 	//  Adds an entry to this list
 	//      Returns this list
 	public function add_entry($entry_to_add)
 	{
-		if (!$this->session_user_can_write()) return null;
+		if (!$this->session_user_can_write())
+		{
+			return EntryList::set_error_description("Session user cannot edit list.");
+		}
 		
 		//  Insert into user_entries from dictionary, if necessary
 		$entry_added = $entry_to_add->copy_for_session_user();
@@ -199,7 +211,10 @@ class EntryList
 	//      Returns this list
 	public function remove_entry($entry_to_remove)
 	{
-		if (!$this->session_user_can_write()) return null;
+		if (!$this->session_user_can_write())
+		{
+			return EntryList::set_error_description("Session user cannot edit list.");
+		}
 		
 		foreach ($this->get_entries() as $entry_removed)
 		{
@@ -216,8 +231,7 @@ class EntryList
 			}
 		}
 		
-		//  Tried to remove an entry that's apparently not in this list
-		return null;
+		return EntryList::set_error_description("List failed to remove entry.");
 	}
 	
 	//  Copies this list, setting the copy's owner to some other user
