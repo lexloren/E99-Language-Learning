@@ -15,7 +15,10 @@ class APIList extends APIBase
 		
 		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
-			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list" . !!EntryList::get_error_description() ? ": ".EntryList::get_error_description() : ".");
+			$error_description = sprintf("Back end unexpectedly failed to insert list%s",
+				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
+			);
+			Session::exit_with_error("List Insertion", $error_description);
 		}
 		
 		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
@@ -44,18 +47,21 @@ class APIList extends APIBase
 	{
 		Session::reauthenticate();
 		
-		if (isset ($_GET["list_id"]))
+		if (!isset ($_GET["list_id"]))
 		{
-			$list = EntryList::select($_GET["list_id"]);
-			if (!$list)
-				Session::exit_with_error("Invalid describe", "Please make sure the lits id is correct.");
-				
-			Session::exit_with_result($list->assoc_for_json());
+			Session::exit_with_error("Invalid Get", "List-description get must include list_id.");
 		}
-		else 
+		
+		if (!($list = EntryList::select($_GET["list_id"])))
 		{
-			Session::exit_with_error("Invalid describe", "List/describe must include an id.");
+			$error_description = sprintf("Back end failed to describe list%s",
+				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
+			);
+			
+			Session::exit_with_error("List Description", $error_description);
 		}
+		
+		Session::exit_with_result($list->assoc_for_json());
 	}
 }
 ?>
