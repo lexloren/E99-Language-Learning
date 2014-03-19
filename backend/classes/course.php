@@ -61,66 +61,6 @@ class Course
 		return null;
 	}
 	
-	/*
-	public static function select($course_id)
-	{
-		$course_id = intval($course_id, 10);
-		
-		if (!in_array($course_id, array_keys(self::$courses_by_id)))
-		{
-			$mysqli = Connection::get_shared_instance();
-			
-			
-			
-			//  First, try to get a course for which the session user is an instructor or student
-			if (!!Session::get_user())
-			{
-				$course_matches = sprintf("user_id = %d AND course_id = %d",
-					Session::get_user()->get_user_id(),
-					$course_id
-				);
-				
-				$courses_join_instructors = "course_instructors LEFT JOIN courses USING course_id";
-				$result = $mysqli->query("SELECT courses.* FROM $courses_join_instructors WHERE $course_matches");
-				
-				//  If we didn't find a course for which the session user is an instructor,
-				//      then check for a course for which the session user is a student
-				if (!$result || $result->num_rows === 0)
-				{
-					$courses_join_students = "course_students LEFT JOIN courses USING course_id";
-					$result = $mysqli->query("SELECT courses.* FROM $courses_join_students WHERE $course_matches");
-				}
-				
-				if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-				{
-					$course = Course::from_mysql_result_assoc($result_assoc);
-				}
-			}
-			
-			//  If still no result, then check for a public course
-			if (!isset ($course))
-			{
-				$result = $mysqli->query("SELECT * FROM courses WHERE course_id = %d AND public");
-				if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-				{
-					$course = Course::from_mysql_result_assoc($result_assoc);
-				}
-			}
-			
-			//  If we found a course, make sure it's registered in the cache
-			if (isset ($course))
-			{
-				self::$courses_by_id[$course_id] = $course;
-			}
-		}
-		
-		//  If we found a course or had already cached a course, then return it.
-		return in_array($course_id, array_keys(self::$courses_by_id))
-			? self::$courses_by_id[$course_id]
-			: null;
-	}
-	*/
-	
 	/***    INSTANCE    ***/
 
 	private $course_id;
@@ -187,7 +127,7 @@ class Course
 		
 		foreach ($this->get_instructors() as $instructor)
 		{
-			if (Session::get_user()->get_user_id() === $instructor->get_user_id()) return true;
+			if (Session::get_user()->equals($instructor)) return true;
 		}
 		
 		return false;
@@ -220,7 +160,7 @@ class Course
 		
 		foreach ($this->get_students() as $student)
 		{
-			if (Session::get_user()->get_user_id() === $student->get_user_id()) return true;
+			if (Session::get_user()->equals($student)) return true;
 		}
 		
 		return false;
@@ -283,56 +223,67 @@ class Course
 		return null;
 	}
 	
-	private function add(&$variable, $table, $keyed_values)
+	private function add_user(&$array, $table, $user)
 	{
-		$columns = implode(", ", array_keys($keyed_values));
-		$values = implode(", ", array_values($keyed_values));
-		
-	}
-	
-	//  Adds an entry to this list
-	//      Returns this list
-	public function add_instructor($instructor_to_add)
-	{
-		if (!self::session_user_can_write()) return null;
-		
-		//  Insert into user_entries from dictionary, if necessary
-		$entry_added = $entry_to_add->copy_for_session_user();
+		if (!$this->session_user_is_instructor() || $user->in_array($array)) return null;
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		//  Insert into list_entries for $this->list_id and $entry->entry_id
-		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
-			$this->list_id,
-			$entry_added->get_entry_id()
+		$mysqli->query(sprintf("INSERT IGNORE INTO $table (course_id, user_id) VALUES (%d, %d)",
+			$this->get_course_id(),
+			$user->get_user_id()
 		));
+		
+		array_push($array, $user);
 		
 		return $this;
 	}
 	
-	//  Adds an entry to this list
-	//      Returns this list
-	public function remove_instructor($instructor_to_remove)
+	public function add_instructor($user)
 	{
-		if (!self::session_user_can_write()) return null;
+		return $this->add_user($this->get_instructors(), "course_instructors", $user);
+	}
+	
+	public function add_student($user)
+	{
+		return $this->add_user($this->get_students(), "course_students", $user);
+	}
+	
+	private function remove_user(&$array, $table, $user)
+	{
+		if (!$this->session_user_is_instructor()) return null;
 		
-		foreach ($this->get_entries() as $entry_removed)
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("DELETE FROM $table WHERE course_id = %d AND user_id = %d",
+			$this->get_course_id(),
+			$user->get_user_id()
+		));
+		
+		$array_new = array ();
+		foreach ($array as $item)
 		{
-			if ($entry_removed->entry_id === $entry_to_remove->entry_id)
-			{
-				$mysqli->query(sprintf("DELETE FROM list_entries (list_id, entry_id) VALUES (%d, %d)",
-					$this->list_id,
-					$entry_removed->entry_id
-				));
-				
-				$this->entries = array_diff($this->entries, array ($entry_removed));
-				
-				return $this;
-			}
+			if (!$array->equals($user)) array_push($array_new, $item);
 		}
 		
-		//  Tried to remove an entry that's apparently not in this list
+		$array = $array_new;
+		
+		return $this;
+	}
+	
+	public function remove_instructor($user)
+	{
+		return $this->remove_user($this->get_instructors(), "course_instructors", $user);
+	}
+	
+	public function remove_student($user)
+	{
+		return $this->remove_user($this->get_students(), "course_students", $user);
+	}
+	
+	public function insert_unit($unit_name)
+	{
+		//  ...
 		return null;
 	}
 	
