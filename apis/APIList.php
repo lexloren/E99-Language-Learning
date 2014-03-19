@@ -24,6 +24,32 @@ class APIList extends APIBase
 		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
 	}
 	
+	//  Arunabha, please expose this functionality to the front end.
+	public function add_entries()
+	{
+		Session::reauthenticate();
+		
+		if (!isset ($_POST["list_id"]) || !isset ($_POST["entry_ids"]))
+		{
+			Session::exit_with_error("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
+		}
+		
+		$list = EntryList::select($_POST["list_id"]);
+		foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+		{
+			$list->add_entry(Entry::select($entry_id));
+		}
+		
+		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
+	}
+	
+	public function remove_entries()
+	{
+		Session::reauthenticate();
+		
+		//  Arunabha, please implement this method.
+	}
+	
 	public function delete()
 	{
 		Session::reauthenticate();
