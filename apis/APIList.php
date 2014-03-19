@@ -11,29 +11,9 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
-		self::exit_if_not_authenticated();
-		
-		if (isset ($_POST["title"]) && isset ($_POST["entry_ids"]))
+		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"]) : null))
 		{
-			$entry_ids = json_decode($_POST["entry_ids"], true);
-			$entry_list = EntryList::insert($_POST["title"]);
-			if (isset($entry_list))
-			{
-				foreach($entry_ids as $entry_id)
-				{
-					$entry = Entry::select(intval($entry_id));
-					if (isset($entry))
-						$entry_list->add_entry($entry);
-				}
-				
-				Session::exit_with_result($entry_list->assoc_for_json());
-			}
-			else
-				Session::exit_with_error("Insert failed", "list/lnsert failed to create a list.");
-		}
-		else 
-		{
-			Session::exit_with_error("Invalid insert", "list/lnsert must include title and entry ids.");
+			Session::exit_with_error("List Insertion", "Back end unexpectedly failed to insert list.");
 		}
 	}
 	
