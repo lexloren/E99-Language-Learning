@@ -74,11 +74,12 @@ class Session
 	//!!!!  Must be called before starting into any script that requires a session.
 	public static function reauthenticate()
 	{
-		$mysqli = Connection::get_shared_instance();
 		session_start();
 		
 		if (!!session_id() && isset ($_SESSION["handle"]))
 		{
+			$mysqli = Connection::get_shared_instance();
+			
 			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s'",
 				$mysqli->escape_string(session_id()),
 				$mysqli->escape_string($_SESSION["handle"])
