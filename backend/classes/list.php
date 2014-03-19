@@ -39,8 +39,7 @@ class EntryList
 			
 			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
 			{
-				//  Return the list iff Session::get_user() can read it
-				$list = EntryList::from_mysql_result_assoc($result_assoc);
+				EntryList::from_mysql_result_assoc($result_assoc);
 			}
 		}
 		
@@ -139,7 +138,7 @@ class EntryList
 	//  Returns true iff Session::get_user() owns this list
 	private function session_user_can_write()
 	{
-		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->user_id);
+		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->get_user_id());
 	}
 	
 	public function delete()
