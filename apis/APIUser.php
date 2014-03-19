@@ -56,6 +56,7 @@ class APIUser extends APIBase
 	public function deauthenticate() 
 	{
 		Session::deauthenticate();
+		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 }
 

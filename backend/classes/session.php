@@ -22,9 +22,9 @@ class Session
 	//!!!!  Exits the current script, returning to the front end in case of error.
 	public static function authenticate($handle, $password)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		self::deauthenticate();
+		
+		$mysqli = Connection::get_shared_instance();
 		
 		if (!validate_password($password))
 		{
@@ -119,8 +119,6 @@ class Session
 			session_destroy();
 			session_unset();
 		}
-		
-		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 	
 	//  Returns new PHP associative array for returning to front end.
