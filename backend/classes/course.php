@@ -142,7 +142,7 @@ class Course
 	}
 	public function get_lang_code_0()
 	{
-		
+		return Dictionary::get_lang_code($this->get_lang_id_0());
 	}
 	
 	private $lang_id_1;
@@ -152,7 +152,7 @@ class Course
 	}
 	public function get_lang_code_1()
 	{
-		
+		return Dictionary::get_lang_code($this->get_lang_id_1());
 	}
 	
 	private $public;
@@ -166,9 +166,31 @@ class Course
 	{
 		if (!isset ($this->instructors))
 		{
+			$this->instructors = array ();
 			
+			$mysqli = Connection::get_shared_instance();
+		
+			$result = $mysqli->query(sprintf("SELECT * FROM course_instructors WHERE course_id = %d",
+				$this->get_course_id()
+			));
+			
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->instructors, User::from_mysql_result_assoc($result_assoc));
+			}
 		}
 		return $this->instructors;
+	}
+	public function session_user_is_instructor()
+	{
+		if (!Session::get_user()) return false;
+		
+		foreach ($this->get_instructors() as $instructor)
+		{
+			if (Session::get_user()->get_user_id() === $instructor->get_user_id()) return true;
+		}
+		
+		return false;
 	}
 	
 	private $students;
@@ -176,10 +198,54 @@ class Course
 	{
 		if (!isset ($this->students))
 		{
+			$this->students = array ();
 			
+			$mysqli = Connection::get_shared_instance();
+		
+			$result = $mysqli->query(sprintf("SELECT * FROM course_students WHERE course_id = %d",
+				$this->get_course_id()
+			));
+			
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->students, User::from_mysql_result_assoc($result_assoc));
+			}
 		}
 		
 		return $this->students;
+	}
+	public function session_user_is_student()
+	{
+		if (!Session::get_user()) return false;
+		
+		foreach ($this->get_students() as $student)
+		{
+			if (Session::get_user()->get_user_id() === $student->get_user_id()) return true;
+		}
+		
+		return false;
+	}
+	
+	private $units;
+	public function get_units()
+	{
+		if (!isset ($this->units))
+		{
+			$this->units = array();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM course_units WHERE course_id = %d",
+				intval($this->get_course_id())
+			));
+
+			while (($unit_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->units, Unit::from_mysql_result_assoc($unit_assoc["unit_id"]));
+			}
+		}
+		
+		return $this->units;
 	}
 	
 	private function __construct($course_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
@@ -204,68 +270,29 @@ class Course
 		);
 	}
 	
-	//  Returns true iff Session::get_user() can read this list for any reason
-	private function session_user_can_read()
-	{
-		return $this->session_user_can_write()
-			|| $this->session_user_can_read_via_course_sharing()
-			|| !!$this->public;
-	}
-	
-	//  Returns true iff Session::get_user() is in any course in which this list is shared
-	private function session_user_can_read_via_course_sharing()
-	{
-		//  Stub...
-		//      Will depend on implementing Course
-		return false;
-	}
-	
-	//  Returns true iff Session::get_user() owns this list
-	private function session_user_can_write()
-	{
-		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->user_id);
-	}
-	
 	public function delete()
 	{
+		if (!$this->session_user_is_instructor()) return null;
+		
 		$mysqli = Connection::get_shared_instance();
 		
-		if (!Session::get_user()) return null;
-		
-		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
-			Session::get_user()->get_user_id(),
-			$this->list_id
+		$mysqli->query(sprintf("DELETE FROM courses WHERE course_id = %d",
+			$this->get_course_id()
 		));
 		
 		return null;
 	}
 	
-	public function get_entries()
+	private function add(&$variable, $table, $keyed_values)
 	{
-		$mysqli = Connection::get_shared_instance();
+		$columns = implode(", ", array_keys($keyed_values));
+		$values = implode(", ", array_values($keyed_values));
 		
-		//  Need to add privileges here, based on public sharing and course-wide sharing
-		
-		if (!isset ($this->entries))
-		{
-			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN dictionary ON entry_id WHERE list_id = %d",
-				intval($this->list_id)
-			));
-			
-			$this->entries = array();
-			if (!$result) return $this->entries;
-
-			while (($entry_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
-			}
-		}
-		return $this->entries;
 	}
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function add_entry($entry_to_add)
+	public function add_instructor($instructor_to_add)
 	{
 		if (!self::session_user_can_write()) return null;
 		
@@ -286,7 +313,7 @@ class Course
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function remove_entry($entry_to_remove)
+	public function remove_instructor($instructor_to_remove)
 	{
 		if (!self::session_user_can_write()) return null;
 		
@@ -306,16 +333,6 @@ class Course
 		}
 		
 		//  Tried to remove an entry that's apparently not in this list
-		return null;
-	}
-	
-	//  Copies this list, setting the copy's owner to some other user
-	//      Returns the copy
-	public function copy_for_session_user()
-	{
-		if (!Session::get_user() || !session_user_can_read()) return null;
-		//  Create a copy of the list with Session::get_user() as the owner
-		
 		return null;
 	}
 	
