@@ -2,8 +2,9 @@
 
 require_once "./backend/connection.php";
 require_once "./backend/support.php";
+require_once "./backend/classes.php";
 
-class Entry
+class Entry extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
 
@@ -43,7 +44,10 @@ class Entry
 	public function get_annotations()
 	{
 		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
-		if (!Session::get_user()) return array ();
+		if (!Session::get_user())
+		{
+			return Entry::set_error_description("Session user has not reauthenticated.");
+		}
 		
 		if (!$this->annotations)
 		{
@@ -97,18 +101,21 @@ class Entry
 		}
 	}
 	
-	public static function from_mysql_result_assoc($result)
+	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result) return null;
+		if (!$result_assoc)
+		{
+			return Entry::set_error_description("Invalid result_assoc.");
+		}
 		
 		return new Entry(
-			$result["entry_id"],
-			$result["lang_code_0"],
-			$result["lang_code_1"],
-			$result["word_0"],
-			$result["word_1"],
-			!!$result["word_1_pronun"] && strlen($result["word_1_pronun"]) > 0 ? $result["word_1_pronun"] : null,
-			$result["user_id"]
+			$result_assoc["entry_id"],
+			$result_assoc["lang_code_0"],
+			$result_assoc["lang_code_1"],
+			$result_assoc["word_0"],
+			$result_assoc["word_1"],
+			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
+			$result_assoc["user_id"]
 		);
 	}
 	
@@ -120,7 +127,10 @@ class Entry
 	//  Sets both some object property and the corresponding spot in the database
 	private function set(&$variable, $column, $value)
 	{
-		if (!session_user_can_write()) return;
+		if (!$this->session_user_can_write())
+		{
+			return Entry::set_error_description("Session user cannot edit entry.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -131,29 +141,34 @@ class Entry
 		));
 		
 		$variable = $value;
+		
+		return $this;
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_0
 	public function set_word_0($word_0)
 	{
-		$this->set($this->word_0, "word_0", $word_0);
+		return $this->set($this->word_0, "word_0", $word_0);
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_1
 	public function set_word_1($word_1)
 	{
-		$this->set($this->word_1, "word_1", $word_1);
+		return $this->set($this->word_1, "word_1", $word_1);
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_1_pronun
 	public function set_word_1_pronunciation($word_1_pronun)
 	{
-		$this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
+		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
 	public function add_annotation($annotation_contents)
 	{
-		if (!session_user_can_write()) return;
+		if (!$this->session_user_can_write())
+		{
+			return Entry::set_error_description("Session user cannot edit entry.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -169,22 +184,32 @@ class Entry
 		{
 			array_push($this->get_annotations(), Annotation::from_mysql_result_assoc($result_assoc));
 		}
+		
+		return $this;
 	}
 	
 	public function remove_annotation($annotation)
 	{
 		if (!in_array($annotation, $this->get_annotations())
-			|| $annotation->get_entry_id() !== $this->get_entry_id()) return;
+			|| $annotation->get_entry_id() !== $this->get_entry_id())
+		{
+			return Entry::set_error_description("Cannot delete annotation.");
+		}
 		
 		$annotation->delete();
 		
 		$this->annotations = array_diff($this->annotations, array ($annotation));
+		
+		return $this;
 	}
 	
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
-		if (!Session::get_user()) return null;
+		if (!Session::get_user())
+		{
+			return Entry::set_error_description("Session user has not reauthenticated.");
+		}
 		
 		if ($this->user_id === Session::get_user()->get_user_id())
 		{
@@ -225,7 +250,10 @@ class Entry
 				$this->entry_id
 			));
 			
-			if (!$result || !($result_assoc = $result->fetch_assoc())) return null;
+			if (!$result || !($result_assoc = $result->fetch_assoc()))
+			{
+				return Entry::set_error_description("Entry failed to copy for session user.");
+			}
 			
 			return Entry::from_mysql_result_assoc($result_assoc);
 		}

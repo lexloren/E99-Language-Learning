@@ -191,6 +191,15 @@ class Course extends DatabaseRow
 		
 		return $this->units;
 	}
+	public function get_lists()
+	{
+		$lists = array ();
+		foreach ($this->get_units() as $unit)
+		{
+			$lists = array_merge(array_diff($unit->get_lists(), $lists));
+		}
+		return $lists;
+	}
 	
 	private function __construct($course_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
 	{
