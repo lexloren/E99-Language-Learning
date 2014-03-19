@@ -160,7 +160,7 @@ class EntryList
 	//      Returns this list
 	public function add_entry($entry_to_add)
 	{
-		if (!self::session_user_can_write()) return null;
+		if (!$this->session_user_can_write()) return null;
 		
 		//  Insert into user_entries from dictionary, if necessary
 		$entry_added = $entry_to_add->copy_for_session_user();
@@ -181,7 +181,7 @@ class EntryList
 	//      Returns this list
 	public function remove_entry($entry_to_remove)
 	{
-		if (!self::session_user_can_write()) return null;
+		if (!$this->session_user_can_write()) return null;
 		
 		foreach ($this->get_entries() as $entry_removed)
 		{
