@@ -36,6 +36,37 @@ class Router
 		self::invoke($class, $method);
 	}
 
+	public static function route2() 
+	{
+		$uri = $_SERVER['REQUEST_URI'];
+		
+		// remove query string from URI
+		if (strpos($uri, '?') != false) 
+			$uri = strtok($uri,'?');
+		
+		$uri = trim($uri, '/');
+		$uri = trim($uri, ' ');
+		$uri = trim($uri, '.php');
+		
+		if(empty($uri))
+			return;
+	
+		$segments = explode('_', $uri);
+		
+		if (sizeof($segments) == 0 || !isset($segments[0]))
+			return;
+			
+		if (sizeof($segments) != 2)
+		{
+			self::__404();
+		}
+			
+		$class = 'API'.$segments[0];
+		$method = $segments[1];
+		
+		self::invoke($class, $method);
+	}
+	
 	private static function invoke($className, $methodName) 
 	{
 		include(__DIR__ . "/apis/" . $className . ".php");
