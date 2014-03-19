@@ -110,6 +110,8 @@ class EntryList
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
+		if (!$result) return null;
+		
 		return new EntryList(
 			$result_assoc["list_id"],
 			$result_assoc["user_id"],

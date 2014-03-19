@@ -12,7 +12,7 @@ class Entry
 	private static $user_entries_by_id = array ();
 	
 	//  Gets the associative array of Entry objects, keyed by entry_id, for some user_id
-	private static function entries_by_id_for_user($user_id)
+	private static function entries_by_id_for_user_id($user_id)
 	{
 		$user_id = intval($user_id, 10);
 		
@@ -92,8 +92,8 @@ class Entry
 		//  Register $this in the appropriate member of Entry::$user_entries_by_id
 		if (!!$this->user_id)
 		{
-			$entries_by_id_for_user = Entry::entries_by_id_for_user($this->user_id);
-			$entries_by_id_for_user[$this->entry_id] = $this;
+			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id($this->user_id);
+			$entries_by_id_for_user_id[$this->entry_id] = $this;
 		}
 	}
 	
@@ -120,7 +120,7 @@ class Entry
 	//  Sets both some object property and the corresponding spot in the database
 	private function set(&$variable, $column, $value)
 	{
-		if (!session_user_can_write()) return null;
+		if (!session_user_can_write()) return;
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -131,31 +131,29 @@ class Entry
 		));
 		
 		$variable = $value;
-		
-		return $this;
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_0
 	public function set_word_0($word_0)
 	{
-		return $this->set($this->word_0, "word_0", $word_0);
+		$this->set($this->word_0, "word_0", $word_0);
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_1
 	public function set_word_1($word_1)
 	{
-		return $this->set($this->word_1, "word_1", $word_1);
+		$this->set($this->word_1, "word_1", $word_1);
 	}
 	
 	//  Sets a new user-specific value for this Entry's word_1_pronun
 	public function set_word_1_pronunciation($word_1_pronun)
 	{
-		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
+		$this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
 	public function add_annotation($annotation_contents)
 	{
-		if (!session_user_can_write()) return null;
+		if (!session_user_can_write()) return;
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -167,30 +165,20 @@ class Entry
 		
 		$result = $mysqli->query("SELECT * FROM user_entry_annotations WHERE annotation_id = %d", $mysqli->insert_id);
 		
-		if ($result && !!($result_assoc = $result->fetch_assoc()))
+		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
-			$this->get_annotations();
-			array_push($this->annotations, Annotation::from_mysql_result_assoc($result_assoc));
-		
-			return $this;
+			array_push($this->get_annotations(), Annotation::from_mysql_result_assoc($result_assoc));
 		}
-		
-		return null;
 	}
 	
 	public function remove_annotation($annotation)
 	{
 		if (!in_array($this->get_annotations(), $annotation)
-			|| $annotation->get_entry_id() !== $this->get_entry_id())
-		{
-			return null;
-		}
+			|| $annotation->get_entry_id() !== $this->get_entry_id()) return;
 		
 		$annotation->delete();
 		
 		$this->annotations = array_diff($this->annotations, array ($annotation));
-		
-		return $this;
 	}
 	
 	//  Returns a copy of $this owned and editable by the Session User
@@ -200,9 +188,9 @@ class Entry
 		
 		if ($this->user_id === Session::get_user()->get_user_id())
 		{
-			$entries_by_id_for_user = Entry::entries_by_id_for_user(Session::get_user());
+			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get_user());
 			//  Just make sure that this Entry object has been appropriately registered
-			return ($entries_by_id_for_user[$this->entry_id] = $this);
+			return ($entries_by_id_for_user_id[$this->entry_id] = $this);
 		}
 		else
 		{
@@ -210,7 +198,7 @@ class Entry
 			
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
-			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE dictionary.entry_id = %d",
+			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
 				Session::get_user()->get_user_id(),
 				$this->entry_id
 			));
@@ -245,17 +233,20 @@ class Entry
 	
 	public function assoc_for_json()
 	{
+		$privacy = !!$this->get_owner() && !$this->get_owner()->equals(Session::get_user());
+		
+		$entry = !$privacy ? $this : Dictionary::select_entry($this->entry_id);
+		
 		$annotations_returnable = array ();
-		foreach ($this->get_annotations() as $annotation)
+		foreach ($entry->get_annotations() as $annotation)
 		{
 			array_push($annotations_returnable, $annotation->assoc_for_json());
 		}
 		
-		return array(
-			"entryId" => $this->entry_id,
-			"owner" => $this->get_owner()->assoc_for_json(),
-			"words" => $this->words,
-			"pronuncations" => $this->pronunciations,
+		return array (
+			"entryId" => $entry->entry_id,
+			"words" => $entry->words,
+			"pronuncations" => $entry->pronunciations,
 			"annotations" => $annotations_returnable
 		);
 	}

@@ -63,19 +63,19 @@ class Course
 	
 	/***    INSTANCE    ***/
 
-	private $course_id;
+	private $course_id = null;
 	public function get_course_id()
 	{
 		return $this->course_id;
 	}
 	
-	private $course_name;
+	private $course_name = null;
 	public function get_course_name()
 	{
 		return $this->course_name;
 	}
 	
-	private $lang_id_0;
+	private $lang_id_0 = null;
 	public function get_lang_id_0()
 	{
 		return $this->lang_id_0;
@@ -85,7 +85,7 @@ class Course
 		return Dictionary::get_lang_code($this->get_lang_id_0());
 	}
 	
-	private $lang_id_1;
+	private $lang_id_1 = null;
 	public function get_lang_id_1()
 	{
 		return $this->lang_id_1;
@@ -95,16 +95,16 @@ class Course
 		return Dictionary::get_lang_code($this->get_lang_id_1());
 	}
 	
-	private $public;
+	private $public = null;
 	public function is_public()
 	{
 		return !!$this->public;
 	}
 	
-	private $instructors;
+	private $instructors = null;
 	public function get_instructors()
 	{
-		if (!isset ($this->instructors))
+		if (!$this->instructors)
 		{
 			$this->instructors = array ();
 			
@@ -133,10 +133,10 @@ class Course
 		return false;
 	}
 	
-	private $students;
+	private $students = null;
 	public function get_students()
 	{
-		if (!isset ($this->students))
+		if (!$this->students)
 		{
 			$this->students = array ();
 			
@@ -166,10 +166,10 @@ class Course
 		return false;
 	}
 	
-	private $units;
+	private $units = null;
 	public function get_units()
 	{
-		if (!isset ($this->units))
+		if (!$this->units)
 		{
 			$this->units = array();
 			
@@ -201,6 +201,8 @@ class Course
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
+		if (!$result) return null;
+		
 		return new Course(
 			$result_assoc["course_id"],
 			$result_assoc["lang_id_0"],

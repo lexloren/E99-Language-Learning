@@ -139,6 +139,8 @@ class User
 	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
+		if (!$result) return null;
+		
 		return new User(
 			$result_assoc["user_id"],
 			$result_assoc["handle"],
@@ -203,7 +205,7 @@ class User
 	
 	public function equals($user)
 	{
-		return $user->get_user_id() === $this->get_user_id();
+		return !!$user && $user->get_user_id() === $this->get_user_id();
 	}
 	
 	public function is_session_user()
