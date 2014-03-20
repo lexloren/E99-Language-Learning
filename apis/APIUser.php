@@ -10,19 +10,6 @@ class APIUser extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 
-	public function authenticate()
-	{
-		if (isset ($_POST["handle"]) && isset ($_POST["password"]))
-		{
-			//  Should exit the script in either success or failure.
-			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
-		}
-		else
-		{
-			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
-		}
-	}
-	
 	public function register()
 	{
 		if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
@@ -43,6 +30,35 @@ class APIUser extends APIBase
 		}
 	}
 	
+	public function authenticate()
+	{
+		if (isset ($_POST["handle"]) && isset ($_POST["password"]))
+		{
+			//  Should exit the script in either success or failure.
+			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
+		}
+		else
+		{
+			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+		}
+	}
+	
+	public function activate()
+	{
+		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+	}
+	
+	public function password_reset()
+	{
+		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+	}
+	
+	public function deauthenticate() 
+	{
+		Session::deauthenticate();
+		self::exit_with_result("Deauthentication", "The current session has ended.");
+	}
+	
 	public function lists()
 	{
 		Session::reauthenticate();
@@ -56,22 +72,6 @@ class APIUser extends APIBase
 		}
 		
 		Session::exit_with_result($lists_returnable);
-	}
-	
-	public function activate() 
-	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
-	}
-	
-	public function reset_password() 
-	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
-	}
-	
-	public function deauthenticate() 
-	{
-		Session::deauthenticate();
-		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 }
 
