@@ -17,12 +17,17 @@ class APIEntry extends APIBase
 		// word_1_pronun
 	}
 	
-	public function add_annotation()
+	public function annotations()
 	{
 	
 	}
 	
-	public function remove_annotation()
+	public function annotations_add()
+	{
+	
+	}
+	
+	public function annotations_remove()
 	{
 	
 	}

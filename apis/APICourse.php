@@ -20,6 +20,30 @@ class APICourse  extends APIBase
 	
 	}
 	
+	public function lists()
+	{
+	
+	}
+	
+	public function units()
+	{
+	
+	}
+	
+	//  Maybe just call APIUnit.insert from here (?)
+	public function units_add()
+	{
+	
+	}
+	
+	//  Maybe just call APIUnit.delete from here (?)
+	public function units_remove()
+	{
+	
+	}
+	
+	//  DEPRECATED (?)
+	//      I'm not sure whether we actually need this method.
 	public function describe()
 	{
 		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);

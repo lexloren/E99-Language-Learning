@@ -9,5 +9,10 @@ class APIDictionary extends APIBase
 	{	
 		parent::__construct($user, $mysqli);
 	}
+	
+	public function query()
+	{
+	
+	}
 }
 ?>

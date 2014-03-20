@@ -20,36 +20,68 @@ class APIUnit  extends APIBase
 	
 	}
 	
-	public function add_instructor()
+	public function instructors()
 	{
 	
 	}
 	
-	public function add_student()
+	public function instructors_add()
 	{
 	
 	}
 	
-	public function remove_instructor()
+	public function instructors_remove()
 	{
 	
 	}
 	
-	public function remove_student()
+	public function students()
 	{
 	
 	}
 	
-	public function add_list()
+	public function students_add()
 	{
 	
 	}
 	
-	public function remove_list()
+	public function students_remove()
 	{
 	
 	}
 	
+	public function lists()
+	{
+	
+	}
+	
+	public function lists_add()
+	{
+	
+	}
+	
+	public function lists_remove()
+	{
+	
+	}
+	
+	public function tests()
+	{
+	
+	}
+	
+	public function tests_add()
+	{
+	
+	}
+	
+	public function tests_remove()
+	{
+	
+	}
+	
+	//  DEPRECATED (?)
+	//      I'm not sure whether we actually need this method.
 	public function describe()
 	{
 		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
