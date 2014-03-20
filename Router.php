@@ -83,7 +83,7 @@ class Router
 		//find the user
 		//$user = Session::reauthenticate();
 		$link = Connection::get_shared_instance();
-
+		$user = null;
 		$instance = $class->newInstance($user, $link);
 		
 		try 
