@@ -1,3 +1,8 @@
+/* practice.js: scripts for practising with flashcards.
+ * 
+ * 
+ */
+
 var URL = "/";
 var showWord = true;
 var showPronun = false;
@@ -5,6 +10,7 @@ var showTrans = false;
 var wordList = [];
 
 /* mockjax for testing */
+
 $.mockjax({
   url: 'enumerate_lists.php',
   responseText: {
@@ -66,28 +72,18 @@ $.mockjax({
 	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
 });
 
+/* end mockjax */
 
 /* prepare */
+
 $( document ).ready(function() {
 	setupDoc();
 	getLists();
 	handleClicks();
 });
 
+/* set up document for first use. */
 
-	/* split the word into individual characters */
-	function getWord(word) {
-		var myarray = word.split('');
-		var newWord = '';
-		$.each(myarray, function() {
-			wordspan = '<span class="char-of-word">' + this + '</span>';
-			newWord = newWord.concat(wordspan);
-		});
-		return newWord;
-	};
-
-
-/* setup document */
 function setupDoc() {
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
@@ -127,9 +123,7 @@ function handleClicks() {
 		event.preventDefault();
 		$('#flashcard-trans-panel').html(wordList[0].translation);
 	});
-	
 
-	
 	/* shift the array and get the next card */
 	$('#button-get-next').click(function(event) {
 		event.preventDefault();
@@ -142,6 +136,20 @@ function handleClicks() {
 		setupDoc();
 	});
 };
+
+/* split the word into individual characters */
+function getWord(word) {
+	var myarray = word.split('');
+	var newWord = '';
+	$.each(myarray, function() {
+		wordspan = '<span class="char-of-word">' + this + '</span>';
+		newWord = newWord.concat(wordspan);
+	});
+	return newWord;
+};
+
+
+
 
 function shiftCards() {
 	var temp = wordList[0];
