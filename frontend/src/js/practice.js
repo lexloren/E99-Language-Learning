@@ -106,9 +106,15 @@ function handleClicks() {
 	
 	/* char/word lookup */
 	$(document).on('click', '.char-of-word', function () {
-		console.log(this.innerHTML);
 		get_dictionary(this.name);
 	});
+	
+	/* hide lookup panel */
+	$(document).on('click', '.dictionary-close', function () {
+		$('#translation-panel').hide();
+	});	
+	
+	
 	
 	/* show hidden cards */
 	$('#flashcard-word-button').click(function(event) {
@@ -128,6 +134,7 @@ function handleClicks() {
 	$('#button-get-next').click(function(event) {
 		event.preventDefault();
 		shiftCards();
+		nextCard();
 	});
 	
 	/* open menu to select a new deck */
@@ -148,14 +155,10 @@ function getWord(word) {
 	return newWord;
 };
 
-
-
-
 function shiftCards() {
 	var temp = wordList[0];
 	wordList.shift();
 	wordList.push(temp);
-	nextCard();
 };
 
 /* request a list of the user's decks from the backend and populate the "select
@@ -169,15 +172,14 @@ function getLists() {
 	});
 };
 
-
 /*  */
 function get_dictionary(word) {
 	$('#translation-panel').show();
-	$('#translation-panel').html('');
+	$('#translation-panel-inner').html('');
 	$.getJSON( 'query_dictionary.php', {query : word }, function( data ) {
 		console.log(data);
 		$.each( data.result, function() {
-		$('#translation-panel').append('<div>' + this.word + ' : ' + this.translation +
+		$('#translation-panel-inner').append('<div>' + this.word + ' : ' + this.translation +
 			' : ' + this.pronunciation + '</div>');
 		});
 	});
