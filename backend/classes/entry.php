@@ -16,12 +16,12 @@ class Entry extends DatabaseRow
 	{
 		$user_id = intval($user_id, 10);
 		
-		if (!in_array($user_id, array_keys($user_entries_by_id)))
+		if (!in_array($user_id, array_keys(self::$user_entries_by_id)))
 		{
-			$user_entries_by_id[$user_id] = array ();
+			self::$user_entries_by_id[$user_id] = array ();
 		}
 		
-		return $user_entries_by_id[$user_id];
+		return self::$user_entries_by_id[$user_id];
 	}
 	
 	public static function select($entry_id)
@@ -123,15 +123,15 @@ class Entry extends DatabaseRow
 		}
 		
 		return new Entry(
-			$result["entry_id"],
-			$result["lang_code_0"],
-			$result["lang_code_1"],
-			$result["word_0"],
-			$result["word_1"],
-			!!$result["word_1_pronun"] && strlen($result["word_1_pronun"]) > 0 ? $result["word_1_pronun"] : null,
-			$result["interval"],
-			$result["efactor"],
-			$result["user_id"]
+			$result_assoc["entry_id"],
+			$result_assoc["lang_code_0"],
+			$result_assoc["lang_code_1"],
+			$result_assoc["word_0"],
+			$result_assoc["word_1"],
+			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
+			$result_assoc["interval"],
+			$result_assoc["efactor"],
+			$result_assoc["user_id"]
 		);
 	}
 	

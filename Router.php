@@ -6,7 +6,7 @@ require_once "./backend/classes/session.php";
 // Simple router routes url XXX/YYY to XXX class's YYY method
 class Router
 {
-	private static urldecode()
+	private static function prepare_http_request()
 	{
 		foreach ($_GET as $key => $value)
 		{
@@ -79,7 +79,7 @@ class Router
 	
 	private static function invoke($className, $methodName)
 	{
-		self::urldecode();
+		self::prepare_http_request();
 
 		include(__DIR__ . "/apis/" . $className . ".php");
 		

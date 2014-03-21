@@ -94,11 +94,15 @@ class EntryList extends DatabaseRow
 			$this->entries = array();
 			
 			$mysqli = Connection::get_shared_instance();
-			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN dictionary ON entry_id WHERE list_id = %d",
-				intval($this->list_id)
-			));
 			
-			if (!$result || $result->num_rows === 0) return $this->entries;
+			$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
+				Dictionary::join(),
+				Session::get_user()->get_user_id()
+			);
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN ($user_entries) AS user_entries USING (entry_id) WHERE list_id = %d",
+				$this->get_list_id()
+			));
 			
 			while (($entry_assoc = $result->fetch_assoc()))
 			{

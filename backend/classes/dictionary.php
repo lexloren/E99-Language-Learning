@@ -110,7 +110,7 @@ class Dictionary
 				self::join()
 			));
 			
-			if (!($result_assoc = $result->fetch_assoc()))
+			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
 				return null;
 			}
