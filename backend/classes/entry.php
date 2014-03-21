@@ -269,7 +269,7 @@ class Entry
 			return Entry::set_error_description("Couldn't update spaced interval details!! ".$mysqli->error);
                 }
                 $this->next_session_interval = $new_interval;
-                $this->efactor $new_efactor;
+                $this->efactor = $new_efactor;
         }
 
 	public function assoc_for_json()
