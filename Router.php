@@ -100,7 +100,7 @@ class Router
 			self::__404();
 		}
 		$method->invoke($instance);
-		exit;
+		Session::echo_result_assoc();
 	}
 	
 	private static function __404() 
