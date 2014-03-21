@@ -39,6 +39,9 @@ class Session
 	//This will be called from router.php
 	public static function echo_result_assoc()
 	{
+		global $headers;
+		if (!isset ($headers)) require_once "./backend/headers.php";
+		
 		echo json_encode(self::$result_assoc);
 	}
 	
@@ -115,6 +118,7 @@ class Session
 				session_destroy();
 				session_unset();
 				self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
+				return null;
 			}
 			
 			$mysqli->query(sprintf("UPDATE users SET last_activity = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",

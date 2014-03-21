@@ -101,7 +101,8 @@
 </div>
 	
 	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
-		<div class="row" id="flashcard-container">
+		<div id="flashcard-container">
+		<div class="row">
 		<h4>Test your knowledge:</h4>
 			<div class="col-md-3 panel panel-default flashcard" id="flashcard-word">
 				<div class="panel-heading">Word</div>
@@ -123,6 +124,11 @@
 				<div class="panel-footer">
 					<button type="button" class="btn btn-default" id="flashcard-trans-button">show</button>
 				</div>
+			</div>
+			</div>
+			<div class="alert alert-info" id="translation-panel">
+			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
+				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
 			</div>
 		</div>
 		

@@ -51,18 +51,14 @@ class Router
 		if(empty($uri))
 			return;
 	
-		$segments = explode('_', $uri);
-		
-		if (sizeof($segments) == 0 || !isset($segments[0]))
-			return;
-			
-		if (sizeof($segments) != 2)
+		$pos = strpos($uri, '_');
+		if ($pos == false)
 		{
 			self::__404();
 		}
-			
-		$class = 'API'.ucfirst($segments[0]);
-		$method = $segments[1];
+	
+		$class = 'API'.ucfirst(substr($uri, 0, $pos));
+		$method = substr($uri, $pos+1);
 		
 		self::invoke($class, $method);
 	}
