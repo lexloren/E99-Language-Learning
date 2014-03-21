@@ -50,11 +50,11 @@ class Session
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		if (!validate_password($password))
+		if (!User::validate_password($password))
 		{
 			self::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
 		}
-		else if (!validate_handle($handle))
+		else if (!User::validate_handle($handle))
 		{
 			self::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}

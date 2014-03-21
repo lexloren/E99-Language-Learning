@@ -7,7 +7,7 @@ class User extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
 	
-	private static function validate_email($string_in_question)
+	public static function validate_email($string_in_question)
 	{
 		$string_in_question = strtolower($string_in_question);
 		return strlen($string_in_question) < 64
@@ -16,7 +16,7 @@ class User extends DatabaseRow
 
 	//  Valid handle consists of between 4 and 63 (inclusive) alphanumeric characters
 	//      beginning with a letter.
-	private static function validate_handle($string_in_question)
+	public static function validate_handle($string_in_question)
 	{
 		$string_in_question = strtolower($string_in_question);
 		return strlen($string_in_question) >= 4
@@ -26,7 +26,7 @@ class User extends DatabaseRow
 
 	//  Valid password consists of between 6 and 31 (inclusive) characters
 	//      and contains at least one letter, one number, and one non-alphanumeric character.
-	private static function validate_password($string_in_question)
+	public static function validate_password($string_in_question)
 	{
 		return strlen($string_in_question) >= 6
 			&& strlen($string_in_question) < 32
