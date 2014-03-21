@@ -1,12 +1,40 @@
 <?php
 
 require_once "./backend/connection.php";
-require_once "./backend/support.php";
 require_once "./backend/classes.php";
 
 class User extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
+	
+	private static function validate_email($string_in_question)
+	{
+		$string_in_question = strtolower($string_in_question);
+		return strlen($string_in_question) < 64
+			&& !!preg_match("/^[a-z](\+|-|_|\.)?([a-z\d]+(\+|-|_|\.)?)*@([a-z][a-z\d]*\.){1,3}[a-z]{2,3}$/", $string_in_question);
+	}
+
+	//  Valid handle consists of between 4 and 63 (inclusive) alphanumeric characters
+	//      beginning with a letter.
+	private static function validate_handle($string_in_question)
+	{
+		$string_in_question = strtolower($string_in_question);
+		return strlen($string_in_question) >= 4
+			&& strlen($string_in_question) < 64
+			&& !!preg_match("/^[a-z]+[a-z\d]*$/", $string_in_question);
+	}
+
+	//  Valid password consists of between 6 and 31 (inclusive) characters
+	//      and contains at least one letter, one number, and one non-alphanumeric character.
+	private static function validate_password($string_in_question)
+	{
+		return strlen($string_in_question) >= 6
+			&& strlen($string_in_question) < 32
+			&& !!preg_match("/[\d]/", $string_in_question)
+			&& !!preg_match("/[A-Za-z]/", $string_in_question)
+			&& !!preg_match("/[^\dA-Za-z]/", $string_in_question)
+			&& !!preg_match("/^.*$/", $string_in_question);
+	}
 	
 	//  Creates a User object by selecting from the database
 	public static function select($user_id)
@@ -30,15 +58,15 @@ class User extends DatabaseRow
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		if (!validate_email($email))
+		if (!self::validate_email($email))
 		{
 			Session::set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
 		}
-		else if (!validate_password($password))
+		else if (!self::validate_password($password))
 		{
 			Session::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
-		else if (!validate_handle($handle))
+		else if (!self::validate_handle($handle))
 		{
 			Session::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
