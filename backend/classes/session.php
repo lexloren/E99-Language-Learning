@@ -118,7 +118,7 @@ class Session
 				return null;
 			}
 			
-			$mysqli->query(sprintf("UPDATE users SET last_activity = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
+			$mysqli->query(sprintf("UPDATE users SET `timestamp` = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
 				$mysqli->escape_string(session_id()),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
