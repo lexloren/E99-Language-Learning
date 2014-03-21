@@ -26,13 +26,13 @@ class Session
 	// Sets result_assoc
 	public static function set_error_assoc($title, $description)
 	{
-		self::$result_assoc = error_assoc($title, $description);
+		self::$result_assoc = self::error_assoc($title, $description);
 	}
 
 	//  Sets result_assoc
 	public static function set_result_assoc($result, $result_information = null)
 	{
-		self::$result_assoc = result_assoc($result, $result_information);
+		self::$result_assoc = self::result_assoc($result, $result_information);
 	}
 	
 	//This will be called from router.php
