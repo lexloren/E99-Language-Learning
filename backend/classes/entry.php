@@ -80,20 +80,20 @@ class Entry extends DatabaseRow
 		return !!$this->user_id ? User::select($this->user_id) : null;
 	}
 	
-	private $next_session_interval = null;
-        public function get_next_session_interval()
-        {
-                return $this->next_session_interval;
-        }
+	private $interval = null;
+	public function get_interval()
+	{
+			return $this->interval;
+	}
 
-        private $efactor = null;
-        public function get_efactor()
-        {
-                return $this->efactor;
-        }
+	private $efactor = null;
+	public function get_efactor()
+	{
+			return $this->efactor;
+	}
 
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation = null, $next_session_interval = null,
+		$word_0, $word_1, $pronunciation = null, $interval = null,
 		$efactor = null, $user_id = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
@@ -104,7 +104,7 @@ class Entry extends DatabaseRow
 		$this->pronunciations = array (
 			$lang_code_1 => $pronunciation
 		);
-		$this->next_session_interval = intval($next_session_interval, 10);
+		$this->interval = intval($interval, 10);
 		$this->efactor = floatval($efactor);
 		$this->user_id = $user_id;
 		
@@ -130,7 +130,7 @@ class Entry extends DatabaseRow
 			$result["word_0"],
 			$result["word_1"],
 			!!$result["word_1_pronun"] && strlen($result["word_1_pronun"]) > 0 ? $result["word_1_pronun"] : null,
-			$result["next_session_interval"],
+			$result["interval"],
 			$result["efactor"],
 			$result["user_id"]
 		);
@@ -252,7 +252,7 @@ class Entry extends DatabaseRow
 				"user_entries.word_0" => "word_0",
 				"user_entries.word_1" => "word_1",
 				"user_entries.word_1_pronun" => "word_1_pronun",
-				"user_entries.next_session_interval" => "next_session_interval",
+				"user_entries.interval" => "interval",
 				"user_entries.efactor" => "efactor"
 			);
 			$user_columns = array ();
@@ -279,26 +279,29 @@ class Entry extends DatabaseRow
 	}
 	
 	public function update_repetition_details($point)
-        {
-                if (!$this->session_user_can_write())
-                {
-                        return Entry::set_error_description("Session user cannot edit entry.");
-                }
+	{
+		if (!$this->session_user_can_write())
+		{
+			return Entry::set_error_description("Session user cannot edit entry.");
+		}
 		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$new_interval = $this->next_session_interval * $new_efactor;
-                $is_updated = $mysqli->query(sprintf(
-                        "UPDATE user_entries SET next_session_interval = %d, efactor = %f ".
-                        "WHERE user_id = %d AND entry_id = %d",
-                        $new_interval, $new_efactor,
-                        $this->user_id, $this->entry_id
-                ));
-                if (!$is_updated) {
-			return Entry::set_error_description("Couldn't update spaced interval details!! ".$mysqli->error);
-                }
-                $this->next_session_interval = $new_interval;
-                $this->efactor = $new_efactor;
-        }
+		$new_interval = $this->interval * $new_efactor;
+		$is_updated = $mysqli->query(sprintf(
+			"UPDATE user_entries SET interval = %d, efactor = %f ".
+			"WHERE user_id = %d AND entry_id = %d",
+			$new_interval, $new_efactor,
+			$this->user_id, $this->entry_id
+		));
+		
+		if (!$is_updated)
+		{
+			return Entry::set_error_description("Failed to update interval details: " . $mysqli->error);
+		}
+		
+		$this->interval = $new_interval;
+		$this->efactor = $new_efactor;
+	}
 
 	public function assoc_for_json()
 	{
