@@ -244,33 +244,19 @@ class Entry extends DatabaseRow
 				$this->entry_id
 			));
 			
-			//  Prepare to convert the columns from user_entries
-			$column_conversions = array (
-				"user_entries.user_id" => "user_id",
-				"user_entries.entry_id" => "entry_id",
-				"user_entries.word_0" => "word_0",
-				"user_entries.word_1" => "word_1",
-				"user_entries.word_1_pronun" => "word_1_pronun",
-				"user_entries.interval" => "interval",
-				"user_entries.efactor" => "efactor"
+			$query = sprintf("SELECT * FROM (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
+				Dictionary::join(),
+				$this->entry_id,
+				Session::get_user()->get_user_id()
 			);
-			$user_columns = array ();
-			foreach ($column_conversions as $old => $new)
-			{
-				array_push($user_columns, "$old AS $new");
-			}
 			
-			//  Construct a joined table with all the columns, including lang_code_0 and lang_code_1
-			$dictionary_join = Dictionary::join();
-			$join = "user_entries LEFT JOIN ($dictionary_join) USING entry_id";
-			
-			$result = $mysqli->query(sprintf("SELECT $user_columns, lang_code_0, lang_code_1 FROM $join WHERE entry_id = %d",
-				$this->entry_id
-			));
+			$result = $mysqli->query($query);
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				return Entry::set_error_description("Entry failed to copy for session user.");
+				return Entry::set_error_description("Entry failed to copy for session user: " .
+					(!!$mysqli->error ? $mysqli->error : $query)
+				);
 			}
 			
 			return Entry::from_mysql_result_assoc($result_assoc);

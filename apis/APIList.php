@@ -87,7 +87,11 @@ class APIList extends APIBase
 		{
 			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 			{
-				$list->add_entry(Entry::select($entry_id));
+				if (!$list->add_entry(Entry::select($entry_id)))
+				{
+					Session::set_error_assoc("List-Entries Addition", EntryList::get_error_description());
+					return;
+				}
 			}
 			
 			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));

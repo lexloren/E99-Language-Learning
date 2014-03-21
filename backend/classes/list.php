@@ -194,6 +194,11 @@ class EntryList extends DatabaseRow
 		//  Insert into user_entries from dictionary, if necessary
 		$entry_added = $entry_to_add->copy_for_session_user();
 		
+		if (!$entry_added)
+		{
+			return EntryList::set_error_description(Entry::get_error_description());
+		}
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id

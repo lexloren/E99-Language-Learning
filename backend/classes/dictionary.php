@@ -21,7 +21,7 @@ class Dictionary
 	}
 
 	//  Returns the default columns that result from join()
-	private static function default_columns()
+	public static function default_columns()
 	{
 		return "dictionary.*, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1";
 	}

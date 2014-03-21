@@ -6,6 +6,19 @@ require_once "./backend/classes/session.php";
 // Simple router routes url XXX/YYY to XXX class's YYY method
 class Router
 {
+	private static urldecode()
+	{
+		foreach ($_GET as $key => $value)
+		{
+			$_GET[$key] = urldecode($value);
+		}
+		
+		foreach ($_POST as $key => $value)
+		{
+			$_POST[$key] = urldecode($value);
+		}
+	}
+
 	public static function route()
 	{
 		$uri = $_SERVER['REQUEST_URI'];
@@ -66,6 +79,8 @@ class Router
 	
 	private static function invoke($className, $methodName)
 	{
+		self::urldecode();
+
 		include(__DIR__ . "/apis/" . $className . ".php");
 		
 		try

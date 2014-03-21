@@ -57,7 +57,7 @@ if (isset($_GET["query"]))
 	
 	//  Perform the database query
 	$entries_matching = Dictionary::look_up(
-		urldecode($_GET["query"]),
+		$_GET["query"],
 		$lang_codes_requested,
 		$pagination
 	);

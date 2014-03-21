@@ -15,9 +15,9 @@ class APIUser extends APIBase
 		if (isset($_POST["email"]) && isset($_POST["handle"]) && isset($_POST["password"]))
 		{
 			//  Validate the posted data
-			$email = strtolower(urldecode($_POST["email"]));
-			$handle = strtolower(urldecode($_POST["handle"]));
-			$password = urldecode($_POST["password"]);
+			$email = strtolower($_POST["email"]);
+			$handle = strtolower($_POST["handle"]);
+			$password = $_POST["password"];
 			
 			//  Finally, send the user information to the front end
 			if (!!($new_user = User::insert($email, $handle, $password)))
@@ -36,7 +36,7 @@ class APIUser extends APIBase
 		if (isset($_POST["handle"]) && isset($_POST["password"]))
 		{
 			//  Should exit the script in either success or failure.
-			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
+			Session::authenticate(strtolower($_POST["handle"]), $_POST["password"]);
 		}
 		else
 		{
