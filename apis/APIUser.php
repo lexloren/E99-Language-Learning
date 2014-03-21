@@ -42,7 +42,7 @@ class APIUser extends APIBase
 		}
 		else
 		{
-			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+			Session::set_error_assoc("Invalid Post", "Authentication post must include handle and password.");
 		}
 	}
 	
