@@ -11,10 +11,10 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
-		if(!Session::reauthenticate())
+		if (!Session::reauthenticate())
 			return;
 		
-		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
+		if (!($list = EntryList::insert(isset($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
 			$error_description = sprintf("Back end unexpectedly failed to insert list%s",
 				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
@@ -29,7 +29,7 @@ class APIList extends APIBase
 	{
 		if (!Session::reauthenticate()) return;
 
-		if (!isset ($_POST["list_id"]))
+		if (!isset($_POST["list_id"]))
 		{
 			Session::set_error_assoc("Invalid Post", "List-deletion post must include list_id.");
 		}
@@ -46,7 +46,32 @@ class APIList extends APIBase
 	
 	public function entries()
 	{
-		//  Because we're getting rid of the entries from List.assoc_for_json, we need a new function to get a list's entries
+		if (!Session::reauthenticate()) return;
+		
+		if (!isset($_GET["list_id"]))
+		{
+			Session::set_error_assoc("Invalid Get", "List-entries get must include list_id.");
+		}
+		else if (!($list = EntryList::select($_GET["list_id"])) || !$list->session_user_can_read())
+		{
+			$error_description = sprintf("Back end failed to get entries for list%s",
+				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
+			);
+			
+			Session::set_error_assoc("List Description", $error_description);
+		}
+		else
+		{
+			$entries = $list->get_entries();
+		
+			$entries_returnable = array ();
+			foreach ($entries as $entry)
+			{
+				array_push($entries_returnable, $entry->assoc_for_json());
+			}
+			
+			Session::set_result_assoc($entries_returnable);
+		}
 	}
 	
 	//  Arunabha, please expose this functionality to the front end.
@@ -54,23 +79,22 @@ class APIList extends APIBase
 	{
 		if (!Session::reauthenticate()) return;
 		
-		if (!isset ($_POST["list_id"]) || !isset ($_POST["entry_ids"]))
+		if (!isset($_POST["list_id"]) || !isset($_POST["entry_ids"]))
 		{
 			Session::set_error_assoc("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
 		}
+		else if (!!($list = EntryList::select($_POST["list_id"])) && $list->session_user_can_write())
+		{
+			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			{
+				$list->add_entry(Entry::select($entry_id));
+			}
+			
+			Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
+		}
 		else
 		{
-			$list = EntryList::select($_POST["list_id"]);
-			
-			if (isset($list))
-			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-				{
-					$list->add_entry(Entry::select($entry_id));
-				}
-				
-				Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
-			}
+			Session::set_error_assoc("List Edit", "Back end failed to add entries to list.");
 		}
 	}
 	
@@ -81,12 +105,14 @@ class APIList extends APIBase
 		//  Arunabha, please implement this method.
 	}
 	
+	/*
+	//  Functionality moved to list_entries()
 	//  Do we actually need this method? I'm not sure anymore...
 	public function describe()
 	{
 		if (!Session::reauthenticate()) return;
 		
-		if (!isset ($_GET["list_id"]))
+		if (!isset($_GET["list_id"]))
 		{
 			Session::set_error_assoc("Invalid Get", "List-description get must include list_id.");
 		}
@@ -103,5 +129,6 @@ class APIList extends APIBase
 			Session::set_result_assoc($list->assoc_for_json());
 		}
 	}
+	*/
 }
 ?>

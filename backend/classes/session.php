@@ -21,7 +21,7 @@ class Session
 	
 	public static function has_error()
 	{
-		return isset(self::$result_assoc) && self::$result_assoc['isError'];
+		return !!self::$result_assoc && !!self::$result_assoc["isError"];
 	}
 	
 	// Sets result_assoc
@@ -31,17 +31,15 @@ class Session
 	}
 
 	//  Sets result_assoc
-	public static function set_result_assoc($result, $result_information = NULL)
+	public static function set_result_assoc($result, $result_information = null)
 	{
 		self::$result_assoc = result_assoc($result, $result_information);
 	}
 	
 	//This will be called from router.php
-	public static function echo_result_assoc()
+	public static function echo_json()
 	{
-		global $headers;
-		if (!isset ($headers)) require_once "./backend/headers.php";
-		
+		require_once "./backend/headers.php";
 		echo json_encode(self::$result_assoc);
 	}
 	
@@ -104,7 +102,7 @@ class Session
 	{
 		session_start();
 		
-		if (!!session_id() && isset ($_SESSION["handle"]))
+		if (!!session_id() && isset($_SESSION["handle"]))
 		{
 			$mysqli = Connection::get_shared_instance();
 			
@@ -196,60 +194,15 @@ class Session
 	
 	public static function database_result_assoc($database_result_assoc)
 	{
-		$return = self::new_database_result_template();
-		foreach (array_keys($return) as $key)
+		foreach (array_keys(($return = self::new_database_result_template())) as $key)
 		{
-			if (isset ($database_result_assoc[$key]) && $database_result_assoc[$key] !== null)
+			if (isset($database_result_assoc[$key]) && $database_result_assoc[$key] !== null)
 			{
 				$return[$key] = !!$database_result_assoc[$key];
 			}
 		}
 		
 		return $return;
-	}
-
-	//  Outputs a JSON representation of an error.
-	private static function echo_error($title, $description)
-	{
-		echo json_encode(error_assoc($title, $description));
-	}
-
-	//  Outputs a JSON representation of a result.
-	private static function echo_result($result, $result_information = NULL)
-	{
-		echo json_encode(result_assoc($result, $result_information));
-	}
-	
-	//  Outputs a JSON representation of an error.
-	public static function set_error($title, $description)
-	{
-		echo json_encode(error_assoc($title, $description));
-	}
-
-	//  Outputs a JSON representation of a result.
-	public static function set_result($result, $result_information = NULL)
-	{
-		echo json_encode(result_assoc($result, $result_information));
-	}
-
-	//  Exits the executing script, outputting an error formatted in JSON.
-	public static function exit_with_error($title, $description)
-	{
-		global $headers;
-		if (!isset ($headers)) require_once "./backend/headers.php";
-		
-		echo_error($title, $description);
-		exit;
-	}
-
-	//  Exits the executing script, outputting a result formatted in JSON.
-	public static function exit_with_result($result, $result_information = NULL)
-	{
-		global $headers;
-		if (!isset ($headers)) require_once "./backend/headers.php";
-		
-		echo_result($result, $result_information);
-		exit;
 	}
 }
 

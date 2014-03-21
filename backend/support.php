@@ -1,6 +1,6 @@
 <?php
 
-if (isset ($support)) exit;
+if (isset($support)) exit;
 $support = true;
 
 //  Returns a numerical array of associtive arrays for all results from a mysqli query.
@@ -85,7 +85,7 @@ function echo_error($title, $description)
 function exit_with_error($title, $description)
 {
 	global $headers;
-	if (!isset ($headers)) require_once "headers.php";
+	if (!isset($headers)) require_once "headers.php";
 	
 	echo_error($title, $description);
 	exit;
@@ -115,7 +115,7 @@ function echo_result($result, $result_information = NULL)
 function exit_with_result($result, $result_information = NULL)
 {
 	global $headers;
-	if (!isset ($headers)) require_once "headers.php";
+	if (!isset($headers)) require_once "headers.php";
 	
 	echo_result($result, $result_information);
 	exit;

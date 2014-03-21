@@ -12,14 +12,12 @@ class APICourse  extends APIBase
 	
 	public function insert()
 	{
-		if(!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 	}
 	
 	public function delete()
 	{
-		if(!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 	}
 	
 	public function lists()
@@ -32,6 +30,7 @@ class APICourse  extends APIBase
 	
 	}
 	
+	/*
 	//  Maybe just call APIUnit.insert from here (?)
 	public function units_add()
 	{
@@ -48,10 +47,11 @@ class APICourse  extends APIBase
 	//      I'm not sure whether we actually need this method.
 	public function describe()
 	{
-		if(!Session::reauthenticate())
+		if (!Session::reauthenticate())
 			return;
 		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
-	}	
+	}
+	*/
 }
 
 ?>

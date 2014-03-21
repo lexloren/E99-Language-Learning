@@ -22,14 +22,17 @@ class APIEntry extends APIBase
 	
 	}
 	
+	/*
+	//  For consistency, let's move these to
+	//      annotation/insert and annotation/remove
 	public function annotations_add()
 	{
-	
+		
 	}
 	
 	public function annotations_remove()
 	{
-	
-	}
+		
+	}*/
 }
 ?>

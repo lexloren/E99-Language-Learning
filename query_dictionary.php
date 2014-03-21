@@ -22,10 +22,10 @@ foreach ($languages_available as $language_available)
 }
 
 //  Perform the dictionary search, if requested
-if (isset ($_GET["query"]))
+if (isset($_GET["query"]))
 {
 	//  Limit the search to certain languages, if requested
-	if (isset ($_GET["langs"]))
+	if (isset($_GET["langs"]))
 	{
 		$lang_codes_requested = array();
 		
@@ -48,7 +48,7 @@ if (isset ($_GET["query"]))
 	
 	//  Use pagination only if GET includes both page size and page number
 	$pagination = null;
-	if (isset ($_GET["page_size"]) && isset ($_GET["page_num"]))
+	if (isset($_GET["page_size"]) && isset($_GET["page_num"]))
 	{
 		$pagination = array(
 			"size" => intval($_GET["page_size"]),

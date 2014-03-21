@@ -6,7 +6,7 @@ class Connection
 	
 	public static function get_shared_instance()
 	{
-		if (isset (self::$mysqli)) return self::$mysqli;
+		if (!!self::$mysqli) return self::$mysqli;
 
 		//  Global variable for getting access to the database.
 		self::$mysqli = new mysqli("68.178.216.146", "cscie99", "Ina28@Waffle", "cscie99");
@@ -30,9 +30,7 @@ class Connection
 	//Used for testing with a local db
 	public static function set_shared_instance($mysqli_new)
 	{
-		if (isset(self::$mysqli))
-			self::$mysqli->close();
-			
+		if (!!self::$mysqli) self::$mysqli->close();
 		self::$mysqli = $mysqli_new;
 	}
 }

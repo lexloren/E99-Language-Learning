@@ -159,7 +159,7 @@ class User extends DatabaseRow
 		//  Don't let the session user get lists for other users
 		if (!($this->is_session_user())) return null;
 		
-		if (!isset ($this->lists))
+		if (!isset($this->lists))
 		{
 			$mysqli = Connection::get_shared_instance();
 			

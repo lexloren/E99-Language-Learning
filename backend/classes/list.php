@@ -90,7 +90,7 @@ class EntryList extends DatabaseRow
 	private $entries;
 	public function get_entries()
 	{
-		if (!isset ($this->entries))
+		if (!isset($this->entries))
 		{
 			$this->entries = array();
 			

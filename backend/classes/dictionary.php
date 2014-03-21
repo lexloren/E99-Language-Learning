@@ -69,7 +69,7 @@ class Dictionary
 		self::$page_num = 1;
 		
 		//  Use pagination only if we have both page size and page number
-		if (isset ($pagination["size"]) && isset ($pagination["num"]))
+		if (isset($pagination["size"]) && isset($pagination["num"]))
 		{
 			self::$page_size = intval($pagination["size"]);
 			self::$page_num = intval($pagination["num"]);

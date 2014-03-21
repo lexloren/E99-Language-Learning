@@ -18,13 +18,6 @@ class APIBase
 		$this->user = $user;
 		$this->mysqli = $mysqli;
 	}
-	
-	//  DEPRECATED
-	//      Call instead Session::reauthenticate()
-	protected function exit_if_not_authenticated()
-	{
-		//Session::reauthenticate();
-	}
 }
 
 ?>

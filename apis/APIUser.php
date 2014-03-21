@@ -12,17 +12,15 @@ class APIUser extends APIBase
 
 	public function register()
 	{
-		if (isset ($_POST["email"]) && isset ($_POST["handle"]) && isset ($_POST["password"]))
+		if (isset($_POST["email"]) && isset($_POST["handle"]) && isset($_POST["password"]))
 		{
 			//  Validate the posted data
 			$email = strtolower(urldecode($_POST["email"]));
 			$handle = strtolower(urldecode($_POST["handle"]));
 			$password = urldecode($_POST["password"]);
 			
-			$new_user = User::insert($email, $handle, $password);
-			
 			//  Finally, send the user information to the front end
-			if (isset($new_user))
+			if (!!($new_user = User::insert($email, $handle, $password)))
 			{	
 				Session::set_result_assoc($new_user->assoc_for_json());
 			}
@@ -35,7 +33,7 @@ class APIUser extends APIBase
 	
 	public function authenticate()
 	{
-		if (isset ($_POST["handle"]) && isset ($_POST["password"]))
+		if (isset($_POST["handle"]) && isset($_POST["password"]))
 		{
 			//  Should exit the script in either success or failure.
 			Session::authenticate(strtolower(urldecode($_POST["handle"])), urldecode($_POST["password"]) );
@@ -64,7 +62,7 @@ class APIUser extends APIBase
 	
 	public function lists()
 	{
-		Session::reauthenticate();
+		if (!Session::reauthenticate()) return;
 		
 		$lists = Session::get_user()->get_lists();
 		
@@ -75,6 +73,26 @@ class APIUser extends APIBase
 		}
 		
 		Session::set_result_assoc($lists_returnable);
+	}
+	
+	public function student_courses()
+	{
+		if (!Session::reauthenticate()) return;
+		
+		$lists = Session::get_user()->get_lists();
+		
+		$lists_returnable = array ();
+		foreach ($lists as $list)
+		{
+			array_push($lists_returnable, $list->assoc_for_json());
+		}
+		
+		Session::set_result_assoc($lists_returnable);
+	}
+	
+	public function instructor_courses()
+	{
+		
 	}
 }
 

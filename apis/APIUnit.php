@@ -70,6 +70,8 @@ class APIUnit  extends APIBase
 	
 	}
 	
+	/*
+	//  Move these to test/insert and test/delete
 	public function tests_add()
 	{
 	
@@ -79,13 +81,16 @@ class APIUnit  extends APIBase
 	{
 	
 	}
+	*/
 	
+	/*
 	//  DEPRECATED (?)
 	//      I'm not sure whether we actually need this method.
 	public function describe()
 	{
 		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
-	}	
+	}
+	*/
 }
 
 ?>
