@@ -230,7 +230,7 @@ class EntryList extends DatabaseRow
 		{
 			if ($entry_removed->entry_id === $entry_to_remove->entry_id)
 			{
-				$mysqli->query(sprintf("DELETE FROM list_entries (list_id, entry_id) VALUES (%d, %d)",
+				$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND entry_id = %d",
 					$this->list_id,
 					$entry_removed->entry_id
 				));

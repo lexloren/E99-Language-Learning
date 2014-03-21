@@ -203,7 +203,7 @@ class Unit extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("DELETE FROM course_unit_lists (unit_id, list_id) VALUES (%d, $list_id)",
+		$mysqli->query(sprintf("DELETE FROM course_unit_lists WHERE unit_id = %d AND list_id = $list_id",
 			$this->get_unit_id()
 		));
 		
