@@ -27,7 +27,7 @@ class APIList extends APIBase
 	
 	public function delete()
 	{
-		Session::reauthenticate();
+		if (!Session::reauthenticate()) return;
 
 		if (!isset ($_POST["list_id"]))
 		{
@@ -52,8 +52,7 @@ class APIList extends APIBase
 	//  Arunabha, please expose this functionality to the front end.
 	public function entries_add()
 	{
-		if(!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 		
 		if (!isset ($_POST["list_id"]) || !isset ($_POST["entry_ids"]))
 		{
@@ -77,8 +76,7 @@ class APIList extends APIBase
 	
 	public function entries_remove()
 	{
-		if(!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 		
 		//  Arunabha, please implement this method.
 	}
@@ -86,8 +84,7 @@ class APIList extends APIBase
 	//  Do we actually need this method? I'm not sure anymore...
 	public function describe()
 	{
-		if(!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 		
 		if (!isset ($_GET["list_id"]))
 		{

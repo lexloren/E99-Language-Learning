@@ -59,6 +59,7 @@ class APIUser extends APIBase
 	public function deauthenticate() 
 	{
 		Session::deauthenticate();
+		Session::set_result_assoc("Deauthentication", "The current session has ended.");
 	}
 	
 	public function lists()

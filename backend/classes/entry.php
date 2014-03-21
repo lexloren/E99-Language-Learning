@@ -124,13 +124,15 @@ class Entry extends DatabaseRow
 		}
 		
 		return new Entry(
-			$result_assoc["entry_id"],
-			$result_assoc["lang_code_0"],
-			$result_assoc["lang_code_1"],
-			$result_assoc["word_0"],
-			$result_assoc["word_1"],
-			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
-			$result_assoc["user_id"]
+			$result["entry_id"],
+			$result["lang_code_0"],
+			$result["lang_code_1"],
+			$result["word_0"],
+			$result["word_1"],
+			!!$result["word_1_pronun"] && strlen($result["word_1_pronun"]) > 0 ? $result["word_1_pronun"] : null,
+			$result["next_session_interval"],
+			$result["efactor"],
+			$result["user_id"]
 		);
 	}
 	
