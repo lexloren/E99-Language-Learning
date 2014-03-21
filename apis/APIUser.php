@@ -19,7 +19,7 @@ class APIUser extends APIBase
 		}
 		else
 		{
-			Session::exit_with_error("Invalid Post", "Authentication post must include handle and password.");
+			Session::set_error_assoc("Invalid Post", "Authentication post must include handle and password.");
 		}
 	}
 	
@@ -35,17 +35,21 @@ class APIUser extends APIBase
 			$new_user = User::insert($email, $handle, $password);
 			
 			//  Finally, send the user information to the front end
-			Session::exit_with_result($new_user->assoc_for_json());
+			if (isset($new_user))
+			{	
+				Session::set_result_assoc($new_user->assoc_for_json());
+			}
 		}
 		else
 		{
-			Session::exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+			Session::set_error_assoc("Invalid Post", "Registration post must include email, handle, and password.");
 		}
 	}
 	
 	public function lists()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		$lists = Session::get_user()->get_lists();
 		
@@ -55,23 +59,22 @@ class APIUser extends APIBase
 			array_push($lists_returnable, $list->assoc_for_json());
 		}
 		
-		Session::exit_with_result($lists_returnable);
+		Session::set_result_assoc($lists_returnable);
 	}
 	
 	public function activate() 
 	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function reset_password() 
 	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function deauthenticate() 
 	{
 		Session::deauthenticate();
-		self::exit_with_result("Deauthentication", "The current session has ended.");
 	}
 }
 

@@ -51,18 +51,14 @@ class Router
 		if(empty($uri))
 			return;
 	
-		$segments = explode('_', $uri);
-		
-		if (sizeof($segments) == 0 || !isset($segments[0]))
-			return;
-			
-		if (sizeof($segments) != 2)
+		$pos = strpos($uri, '_');
+		if ($pos == false)
 		{
 			self::__404();
 		}
-			
-		$class = 'API'.ucfirst($segments[0]);
-		$method = $segments[1];
+	
+		$class = 'API'.ucfirst(substr($uri, 0, $pos));
+		$method = substr($uri, $pos+1);
 		
 		self::invoke($class, $method);
 	}
@@ -83,7 +79,7 @@ class Router
 		//find the user
 		//$user = Session::reauthenticate();
 		$link = Connection::get_shared_instance();
-
+		$user = null;
 		$instance = $class->newInstance($user, $link);
 		
 		try 
@@ -100,7 +96,7 @@ class Router
 			self::__404();
 		}
 		$method->invoke($instance);
-		exit;
+		Session::echo_result_assoc();
 	}
 	
 	private static function __404() 
