@@ -191,7 +191,7 @@ class Session
 		return $return;
 	}
 	
-	public static function database_result_assoc($database_result_assoc)
+	private static function database_result_assoc($database_result_assoc)
 	{
 		foreach (array_keys(($return = self::new_database_result_template())) as $key)
 		{

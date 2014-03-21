@@ -108,7 +108,7 @@ class APIList extends APIBase
 	/*
 	//  Functionality moved to list_entries()
 	//  Do we actually need this method? I'm not sure anymore...
-	public function describe()
+	public function select()
 	{
 		if (!Session::reauthenticate()) return;
 		

@@ -45,7 +45,7 @@ class APICourse  extends APIBase
 	
 	//  DEPRECATED (?)
 	//      I'm not sure whether we actually need this method.
-	public function describe()
+	public function select()
 	{
 		if (!Session::reauthenticate())
 			return;

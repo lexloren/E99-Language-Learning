@@ -86,7 +86,7 @@ class APIUnit  extends APIBase
 	/*
 	//  DEPRECATED (?)
 	//      I'm not sure whether we actually need this method.
-	public function describe()
+	public function select()
 	{
 		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}

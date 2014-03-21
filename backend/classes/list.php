@@ -134,7 +134,7 @@ class EntryList extends DatabaseRow
 	}
 	
 	//  Returns true iff Session::get_user() can read this list for any reason
-	private function session_user_can_read()
+	public function session_user_can_read()
 	{
 		return $this->session_user_can_write()
 			|| $this->session_user_can_read_via_course()
