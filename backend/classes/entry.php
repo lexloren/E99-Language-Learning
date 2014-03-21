@@ -89,8 +89,8 @@ class Entry
         }
 
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation = null, $next_session_interval,
-		$efactor, $user_id = null)
+		$word_0, $word_1, $pronunciation = null, $next_session_interval = null,
+		$efactor = null, $user_id = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
 		$this->words = array (
