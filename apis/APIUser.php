@@ -32,13 +32,11 @@ class APIUser extends APIBase
 			$handle = strtolower(urldecode($_POST["handle"]));
 			$password = urldecode($_POST["password"]);
 			
-				echo 'here1';
 			$new_user = User::insert($email, $handle, $password);
 			
 			//  Finally, send the user information to the front end
 			if (isset($new_user))
 			{	
-				echo 'here2';
 				Session::set_result_assoc($new_user->assoc_for_json());
 			}
 		}
