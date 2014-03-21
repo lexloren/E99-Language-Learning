@@ -316,7 +316,9 @@ class Course extends DatabaseRow
 		
 		return array (
 			"courseId" => $this->get_course_id(),
-			"courseName" => !$privacy ? $this->get_course_name() : null
+			"courseName" => !$privacy ? $this->get_course_name() : null,
+			"isPublic" => !$privacy ? $this->is_public() : null,
+			"timeframe" => null // Not yet implemented
 		);
 	}
 }

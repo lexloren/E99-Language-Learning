@@ -236,7 +236,8 @@ class Unit extends DatabaseRow
 		
 		return array (
 			"unitId" => $this->get_unit_id(),
-			"unitName" => !$privacy ? $this->get_unit_name() : null
+			"unitName" => !$privacy ? $this->get_unit_name() : null,
+			"timeframe" => null // Not yet implemented
 		);
 	}
 }
