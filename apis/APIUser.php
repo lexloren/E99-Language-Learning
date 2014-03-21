@@ -74,7 +74,7 @@ class APIUser extends APIBase
 			array_push($lists_returnable, $list->assoc_for_json());
 		}
 		
-		Session::exit_with_result($lists_returnable);
+		Session::set_result_assoc($lists_returnable);
 	}
 }
 

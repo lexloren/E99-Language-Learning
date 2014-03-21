@@ -30,17 +30,17 @@ class APIList extends APIBase
 
 		if (!isset ($_POST["list_id"]))
 		{
-			Session::exit_with_error("Invalid Post", "List-deletion post must include list_id.");
+			Session::set_error_assoc("Invalid Post", "List-deletion post must include list_id.");
 		}
-		
-		if (!($list = EntryList::select(($list_id = intval($_POST["list_id"])))))
+		else if (!($list = EntryList::select(($list_id = intval($_POST["list_id"])))))
 		{
-			Session::exit_with_error("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
+			Session::set_error_assoc("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
 		}
-		
-		$list->delete();
-		
-		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didDelete" => true)));
+		else
+		{
+			$list->delete();		
+			Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didDelete" => true)));
+		}
 	}
 	
 	public function entries()
@@ -55,16 +55,22 @@ class APIList extends APIBase
 		
 		if (!isset ($_POST["list_id"]) || !isset ($_POST["entry_ids"]))
 		{
-			Session::exit_with_error("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
+			Session::set_error_assoc("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
 		}
-		
-		$list = EntryList::select($_POST["list_id"]);
-		foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+		else
 		{
-			$list->add_entry(Entry::select($entry_id));
+			$list = EntryList::select($_POST["list_id"]);
+			
+			if (isset($list))
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					$list->add_entry(Entry::select($entry_id));
+				}
+				
+				Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
+			}
 		}
-		
-		Session::exit_with_result($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
 	}
 	
 	public function entries_remove()
@@ -92,7 +98,9 @@ class APIList extends APIBase
 			Session::set_error_assoc("List Description", $error_description);
 		}
 		else
+		{
 			Session::set_result_assoc($list->assoc_for_json());
+		}
 	}
 }
 ?>
