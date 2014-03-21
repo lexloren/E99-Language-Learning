@@ -228,14 +228,14 @@ class EntryList extends DatabaseRow
 		
 		foreach ($this->get_entries() as $entry_removed)
 		{
-			if ($entry_removed->entry_id === $entry_to_remove->entry_id)
+			if ($entry_removed->get_entry_id() === $entry_to_remove->get_entry_id())
 			{
 				$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND entry_id = %d",
 					$this->list_id,
-					$entry_removed->entry_id
+					$entry_removed->get_entry_id()
 				));
 				
-				$this->entries = array_diff($this->entries, array ($entry_removed));
+				unset ($this->entries);
 				
 				return $this;
 			}

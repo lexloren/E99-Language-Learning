@@ -207,7 +207,7 @@ class Unit extends DatabaseRow
 			$this->get_unit_id()
 		));
 		
-		$this->lists = array_diff($this->get_lists(), array (EntryList::select($list_id)));
+		unset ($this->lists);
 		
 		return $this;
 	}

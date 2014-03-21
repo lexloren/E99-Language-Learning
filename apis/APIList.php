@@ -106,7 +106,27 @@ class APIList extends APIBase
 	{
 		if (!Session::reauthenticate()) return;
 		
-		//  Arunabha, please implement this method.
+		if (!isset($_POST["list_id"]) || !isset($_POST["entry_ids"]))
+		{
+			Session::set_error_assoc("Invalid Post", "List–remove-entries post must include list_id and entry_ids.");
+		}
+		else if (!!($list = EntryList::select($_POST["list_id"])) && $list->session_user_can_write())
+		{
+			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			{
+				if (!$list->remove_entry(Entry::select($entry_id)))
+				{
+					Session::set_error_assoc("List-Entries Removal", EntryList::get_error_description());
+					return;
+				}
+			}
+			
+			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));
+		}
+		else
+		{
+			Session::set_error_assoc("List Edit", "Back end failed to add entries to list.");
+		}
 	}
 	
 	/*

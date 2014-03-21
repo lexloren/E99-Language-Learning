@@ -214,7 +214,7 @@ class Entry extends DatabaseRow
 		
 		$annotation->delete();
 		
-		$this->annotations = array_diff($this->annotations, array ($annotation));
+		unset ($this->annotations);
 		
 		return $this;
 	}
