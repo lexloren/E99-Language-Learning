@@ -7,7 +7,7 @@ require_once "./backend/classes.php";
 class DatabaseRow
 {
 	private static $error_description = null;
-	private static function set_error_description($error_description)
+	protected static function set_error_description($error_description)
 	{
 		self::$error_description = $error_description;
 		return null;
