@@ -11,7 +11,8 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		if (!($list = EntryList::insert(isset ($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
@@ -27,7 +28,8 @@ class APIList extends APIBase
 	//  Arunabha, please expose this functionality to the front end.
 	public function add_entries()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		if (!isset ($_POST["list_id"]) || !isset ($_POST["entry_ids"]))
 		{
@@ -51,14 +53,16 @@ class APIList extends APIBase
 	
 	public function remove_entries()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		//  Arunabha, please implement this method.
 	}
 	
 	public function delete()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 
 		if (!isset ($_POST["list_id"]))
 		{
@@ -77,7 +81,8 @@ class APIList extends APIBase
 	
 	public function describe()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		if (!isset ($_GET["list_id"]))
 		{

@@ -12,16 +12,20 @@ class APICourse  extends APIBase
 	
 	public function insert()
 	{
-	
+		if(!Session::reauthenticate())
+			return;
 	}
 	
 	public function delete()
 	{
-	
+		if(!Session::reauthenticate())
+			return;
 	}
 	
 	public function describe()
 	{
+		if(!Session::reauthenticate())
+			return;
 		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}	
 }

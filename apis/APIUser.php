@@ -48,7 +48,8 @@ class APIUser extends APIBase
 	
 	public function lists()
 	{
-		Session::reauthenticate();
+		if(!Session::reauthenticate())
+			return;
 		
 		$lists = Session::get_user()->get_lists();
 		
