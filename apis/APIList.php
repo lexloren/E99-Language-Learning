@@ -22,7 +22,7 @@ class APIList extends APIBase
 			Session::set_error_assoc("List Insertion", $error_description);
 		}
 		else
-			Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
+			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));
 	}
 	
 	public function delete()
@@ -40,7 +40,7 @@ class APIList extends APIBase
 		else
 		{
 			$list->delete();		
-			Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didDelete" => true)));
+			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didDelete" => true)));
 		}
 	}
 	
@@ -90,7 +90,7 @@ class APIList extends APIBase
 				$list->add_entry(Entry::select($entry_id));
 			}
 			
-			Session::set_result_assoc($list->assoc_for_json(), Session::database_result_assoc(array ("didInsert" => true)));
+			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));
 		}
 		else
 		{
