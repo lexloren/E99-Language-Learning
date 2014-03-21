@@ -80,9 +80,8 @@ class Router
 			self::__404();
 		}
 
-		//find the user
-		//$user = Session::reauthenticate();
 		$link = Connection::get_shared_instance();
+		//  Why assign null to a variable then pass as an argument?
 		$user = null;
 		$instance = $class->newInstance($user, $link);
 		
