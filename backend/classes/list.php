@@ -160,7 +160,7 @@ class EntryList extends DatabaseRow
 	}
 	
 	//  Returns true iff Session::get_user() owns this list
-	private function session_user_can_write()
+	public function session_user_can_write()
 	{
 		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->get_user_id());
 	}
