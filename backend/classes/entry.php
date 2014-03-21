@@ -93,8 +93,8 @@ class Entry extends DatabaseRow
         }
 
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation = null, $next_session_interval,
-		$efactor, $user_id = null)
+		$word_0, $word_1, $pronunciation = null, $next_session_interval = null,
+		$efactor = null, $user_id = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
 		$this->words = array (
@@ -297,7 +297,7 @@ class Entry extends DatabaseRow
 			return Entry::set_error_description("Couldn't update spaced interval details!! ".$mysqli->error);
                 }
                 $this->next_session_interval = $new_interval;
-                $this->efactor $new_efactor;
+                $this->efactor = $new_efactor;
         }
 
 	public function assoc_for_json()
