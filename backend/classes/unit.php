@@ -236,10 +236,7 @@ class Unit extends DatabaseRow
 		
 		return array (
 			"unitId" => $this->get_unit_id(),
-			"courseId" => $this->get_course_id(),
-			"unitName" => !$privacy ? $this->get_unit_name() : null,
-			"lists" => !$privacy ? $lists_returnable : null,
-			"tests" => !$privacy ? $tests_returnable : null
+			"unitName" => !$privacy ? $this->get_unit_name() : null
 		);
 	}
 }

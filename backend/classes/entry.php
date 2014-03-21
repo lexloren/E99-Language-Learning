@@ -308,17 +308,10 @@ class Entry extends DatabaseRow
 		
 		$entry = !$privacy ? $this : Dictionary::select_entry($this->entry_id);
 		
-		$annotations_returnable = array ();
-		foreach ($entry->get_annotations() as $annotation)
-		{
-			array_push($annotations_returnable, $annotation->assoc_for_json());
-		}
-		
 		return array (
 			"entryId" => $entry->entry_id,
 			"words" => $entry->words,
-			"pronuncations" => $entry->pronunciations,
-			"annotations" => $annotations_returnable
+			"pronuncations" => $entry->pronunciations
 		);
 	}
 }

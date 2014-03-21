@@ -314,30 +314,9 @@ class Course extends DatabaseRow
 		if ($omniscience) $privacy = false;
 		else if ($privacy === null) $privacy = !$this->session_user_is_student();
 		
-		if (!$privacy)
-		{
-			$instructors_returnable = array ();
-			foreach ($this->get_instructors() as $instructor)
-			{
-				array_push($instructors_returnable, $instructor->assoc_for_json(!$omniscience));
-			}
-			
-			$students_returnable = array ();
-			foreach ($this->get_students() as $student)
-			{
-				array_push($students_returnable, $student->assoc_for_json(!$omniscience));
-			}
-			
-			$units_returnable = array ();
-			// ...
-		}
-		
 		return array (
 			"courseId" => $this->get_course_id(),
-			"courseName" => !$privacy ? $this->get_course_name() : null,
-			"instructors" => !$privacy ? $instructors_returnable : null,
-			"students" => !$privacy ? $students_returnable : null,
-			"units" => !$privacy ? $units_returnable : null
+			"courseName" => !$privacy ? $this->get_course_name() : null
 		);
 	}
 }

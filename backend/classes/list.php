@@ -268,18 +268,11 @@ class EntryList extends DatabaseRow
 	
 	public function assoc_for_json()
 	{
-		$entries_returnable = array ();
-		foreach ($this->get_entries() as $entry)
-		{
-			array_push($entries_returnable, $entry->assoc_for_json());
-		}
-		
 		return array (
 			"listId" => $this->list_id,
 			"listName" => $this->list_name,
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => $this->is_public(),
-			"entries" => $entries_returnable
+			"isPublic" => $this->is_public()
 		);
 	}
 }
