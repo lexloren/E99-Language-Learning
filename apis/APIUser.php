@@ -22,11 +22,14 @@ class APIUser extends APIBase
 			$new_user = User::insert($email, $handle, $password);
 			
 			//  Finally, send the user information to the front end
-			Session::exit_with_result($new_user->assoc_for_json());
+			if (isset($new_user))
+			{	
+				Session::set_result_assoc($new_user->assoc_for_json());
+			}
 		}
 		else
 		{
-			Session::exit_with_error("Invalid Post", "Registration post must include email, handle, and password.");
+			Session::set_error_assoc("Invalid Post", "Registration post must include email, handle, and password.");
 		}
 	}
 	
@@ -45,18 +48,18 @@ class APIUser extends APIBase
 	
 	public function activate()
 	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function password_reset()
 	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	
 	public function deauthenticate() 
 	{
 		Session::deauthenticate();
-		self::exit_with_result("Deauthentication", "The current session has ended.");
+		self::set_result_assoc("Deauthentication", "The current session has ended.");
 	}
 	
 	public function lists()

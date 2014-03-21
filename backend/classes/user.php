@@ -32,51 +32,53 @@ class User extends DatabaseRow
 		
 		if (!validate_email($email))
 		{
-			Session::exit_with_error("Invalid Email", "Email must conform to the standard pattern.");
+			Session::set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
 		}
-		
-		if (!validate_password($password))
+		else if (!validate_password($password))
 		{
-			Session::exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			Session::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
-		
-		if (!validate_handle($handle))
+		else if (!validate_handle($handle))
 		{
-			Session::exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			Session::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
-		
-		//  Check whether requested handle conflicts with any existing handle
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE handle = '%s'",
-			$mysqli->escape_string($handle)
-		));
-		
-		if ($existing_user = $result->fetch_assoc())
+		else
 		{
-			Session::exit_with_error("Handle Conflict", "The requested handle is already taken.");
+			//  Check whether requested handle conflicts with any existing handle
+			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE handle = '%s'",
+				$mysqli->escape_string($handle)
+			));
+			
+			if ($existing_user = $result->fetch_assoc())
+			{
+				Session::set_error_assoc("Handle Conflict", "The requested handle is already taken.");
+				return null;
+			}
+			
+			//  Good to go, so insert the new user
+			$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
+				$mysqli->escape_string($handle),
+				$mysqli->escape_string($email),
+				$mysqli->escape_string($password),
+				$mysqli->escape_string($name_given),
+				$mysqli->escape_string($name_family)
+			));
+			
+			$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s'",
+				$mysqli->escape_string($handle)
+			));
+			
+			//  Just make sure we actually created the user
+			if (!$result)
+			{
+				Session::set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
+				return null;
+			}
+			$user_assoc = $result->fetch_assoc();
+			$result->close();
+			
+			return User::from_mysql_result_assoc($user_assoc);
 		}
-		
-		//  Good to go, so insert the new user
-		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
-			$mysqli->escape_string($handle),
-			$mysqli->escape_string($email),
-			$mysqli->escape_string($password),
-			$mysqli->escape_string($name_given),
-			$mysqli->escape_string($name_family)
-		));
-		
-		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s'",
-			$mysqli->escape_string($handle)
-		));
-		
-		//  Just make sure we actually created the user
-		if (!$result)
-		{
-			Session::exit_with_error("Unknown Error", "The back end unexpectedly failed to create the user.");
-		}
-		$user_assoc = $result->fetch_assoc();
-		$result->close();
-		
-		return User::from_mysql_result_assoc($user_assoc);
 	}
 	
 	/***    INSTANCE    ***/

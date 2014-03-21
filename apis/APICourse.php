@@ -46,7 +46,7 @@ class APICourse  extends APIBase
 	//      I'm not sure whether we actually need this method.
 	public function describe()
 	{
-		Session::exit_with_error("TODO", __CLASS__."::".__FUNCTION__);
+		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}	
 }
 

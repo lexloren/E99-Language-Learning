@@ -59,7 +59,8 @@ class Dictionary
 		$result = $mysqli->query($query);
 		if (!$result)
 		{
-			Session::exit_with_error("Database Error", $mysqli->error);
+			Session::set_error_assoc("Database Error", $mysqli->error);
+			return null;
 		}
 		
 		//  Save information about query results in static properties

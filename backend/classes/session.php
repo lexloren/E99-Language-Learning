@@ -7,6 +7,7 @@ require_once "./backend/classes.php";
 class Session
 {
 	private static $user = null;
+	private static $result_assoc = null;
 	public static function get_user()
 	{
 		return self::$user;
@@ -16,6 +17,29 @@ class Session
 	public static function set_user($user)
 	{
 		self::$user = $user;
+	}
+	
+	public static function has_error()
+	{
+		return isset(self::$result_assoc) && self::$result_assoc['isError'];
+	}
+	
+	// Sets result_assoc
+	public static function set_error_assoc($title, $description)
+	{
+		self::$result_assoc = error_assoc($title, $description);
+	}
+
+	//  Sets result_assoc
+	public static function set_result_assoc($result, $result_information = NULL)
+	{
+		self::$result_assoc = result_assoc($result, $result_information);
+	}
+	
+	//This will be called from router.php
+	public static function echo_result_assoc()
+	{
+		echo json_encode(self::$result_assoc);
 	}
 	
 	//  Opens a session.
@@ -28,44 +52,45 @@ class Session
 		
 		if (!validate_password($password))
 		{
-			self::exit_with_error("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
+			self::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
 		}
-		
-		if (!validate_handle($handle))
+		else if (!validate_handle($handle))
 		{
-			self::exit_with_error("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
-		}
-		
-		//  See whether we can authenticate with the handle and password posted
-		$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
-			$mysqli->escape_string($handle),
-			$mysqli->escape_string($password)
-		));
-		
-		if (($user_assoc = $result->fetch_assoc()))
-		{
-			$result->close();
-			
-			session_start();
-			$session = session_id();
-			
-			$user_assoc["user_id"] = intval($user_assoc["user_id"]);
-			
-			$_SESSION["handle"] = $user_assoc["handle"];
-			
-			//  Start a PHP session (using cookies), and update the database accordingly
-			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
-				$mysqli->escape_string($session),
-				$user_assoc["user_id"]
-			));
-			
-			self::$user = User::from_mysql_result_assoc($user_assoc);
-			
-			Session::exit_with_result(self::$user->assoc_for_json());
+			self::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 		else
 		{
-			self::exit_with_error("Invalid Credentials", "The handle and password entered match no users in the database.");
+			//  See whether we can authenticate with the handle and password posted
+			$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
+				$mysqli->escape_string($handle),
+				$mysqli->escape_string($password)
+			));
+			
+			if (($user_assoc = $result->fetch_assoc()))
+			{
+				$result->close();
+				
+				session_start();
+				$session = session_id();
+				
+				$user_assoc["user_id"] = intval($user_assoc["user_id"]);
+				
+				$_SESSION["handle"] = $user_assoc["handle"];
+				
+				//  Start a PHP session (using cookies), and update the database accordingly
+				$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
+					$mysqli->escape_string($session),
+					$user_assoc["user_id"]
+				));
+				
+				self::$user = User::from_mysql_result_assoc($user_assoc);
+				
+				Session::set_result_assoc(self::$user->assoc_for_json());
+			}
+			else
+			{
+				self::set_error_assoc("Invalid Credentials", "The handle and password entered match no users in the database.");
+			}
 		}
 	}
 	
@@ -89,7 +114,7 @@ class Session
 			{
 				session_destroy();
 				session_unset();
-				self::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
+				self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 			}
 			
 			$mysqli->query(sprintf("UPDATE users SET last_activity = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
@@ -102,7 +127,7 @@ class Session
 			return self::$user;
 		}
 		
-		self::exit_with_error("Invalid Session", "The user session is not valid. Please authenticate.");
+		self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
@@ -187,6 +212,18 @@ class Session
 
 	//  Outputs a JSON representation of a result.
 	private static function echo_result($result, $result_information = NULL)
+	{
+		echo json_encode(result_assoc($result, $result_information));
+	}
+	
+	//  Outputs a JSON representation of an error.
+	public static function set_error($title, $description)
+	{
+		echo json_encode(error_assoc($title, $description));
+	}
+
+	//  Outputs a JSON representation of a result.
+	public static function set_result($result, $result_information = NULL)
 	{
 		echo json_encode(result_assoc($result, $result_information));
 	}
