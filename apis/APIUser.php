@@ -60,21 +60,17 @@ class APIUser extends APIBase
 		Session::set_result_assoc("Deauthentication", "The current session has ended.");
 	}
 	
-	private function return_array_as_assoc_for_json($array)
-	{
-		$returnable = array ();
-		foreach ($array as $item)
-		{
-			array_push($returnable, $item->assoc_for_json());
-		}
-		
-		Session::set_result_assoc($returnable);
-	}
-	
 	public function lists()
 	{
 		if (!Session::reauthenticate()) return;
 		$this->return_array_as_assoc_for_json(Session::get_user()->get_lists());
+	}
+	
+	//  Courses owned by the user
+	public function courses()
+	{
+		if (!Session::reauthenticate()) return;
+		$this->return_array_as_assoc_for_json(Session::get_user()->get_courses());
 	}
 	
 	public function student_courses()

@@ -42,19 +42,26 @@ class APICourse  extends APIBase
 		}
 	}
 	
+	private function validate_course_id($course_id)
+	{
+		$course = null;
+		if (!isset($course_id))
+		{
+			Session::set_error_assoc("Invalid Post", "Post must include course_id.");
+		}
+		else if (!($course = Course::select(($course_id = intval($course_id, 10)))))
+		{
+			Session::set_error_assoc("Unknown Course", "Back end failed to select course with posted course_id = $course_id.");
+		}
+		
+		return $course;
+	}
+	
 	public function delete()
 	{
 		if (!Session::reauthenticate()) return;
-
-		if (!isset($_POST["course_id"]))
-		{
-			Session::set_error_assoc("Invalid Post", "Course-deletion post must include list_id.");
-		}
-		else if (!($course = Course::select(($course_id = intval($_POST["course_id"], 10)))))
-		{
-			Session::set_error_assoc("Unknown Course", "Back end failed to select course for deletion with posted course_id = $course_id.");
-		}
-		else
+		
+		if (($course = $this->validate_course_id($_POST["course_id"])))
 		{
 			$course->delete();
 			Session::set_result_assoc($course->assoc_for_json());//, Session::database_result_assoc(array ("didDelete" => true)));
@@ -63,17 +70,27 @@ class APICourse  extends APIBase
 	
 	public function lists()
 	{
-	
+		if (!Session::reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_GET["course_id"])))
+		{
+			$this->return_array_as_assoc_for_json($course->get_lists());
+		}
 	}
 	
 	public function units()
 	{
-	
+		if (!Session::reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_GET["course_id"])))
+		{
+			$this->return_array_as_assoc_for_json($course->get_units());
+		}
 	}
 	
 	public function timeframe_update()
 	{
-	
+		
 	}
 	
 	public function name_update()
@@ -83,17 +100,16 @@ class APICourse  extends APIBase
 	
 	public function students_add()
 	{
-	
+		
 	}
 	
 	public function instructors_add()
 	{
-	
+		
 	}
 	
 	public function students_remove()
 	{
-	
 	
 	}
 	

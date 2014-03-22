@@ -52,9 +52,7 @@ class Session
 	public static function authenticate($handle, $password)
 	{
 		self::deauthenticate();
-		
-		$mysqli = Connection::get_shared_instance();
-		
+				
 		if (!User::validate_password($password))
 		{
 			self::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
@@ -65,6 +63,8 @@ class Session
 		}
 		else
 		{
+			$mysqli = Connection::get_shared_instance();
+			
 			//  See whether we can authenticate with the handle and password posted
 			$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
 				$mysqli->escape_string($handle),
@@ -139,11 +139,12 @@ class Session
 	//  Destroys the current session both in the browser and on the server.
 	public static function deauthenticate()
 	{
-		$mysqli = Connection::get_shared_instance();
+		session_start();
 		
 		if (!!session_id() && strlen(session_id()) > 0)
 		{
-			$mysqli->query(sprintf("UPDATE users SET session = '' WHERE session = '%s'",
+			$mysqli = Connection::get_shared_instance();
+			$mysqli->query(sprintf("UPDATE users SET session = NULL WHERE session = '%s'",
 				$mysqli->escape_string(session_id())
 			));
 

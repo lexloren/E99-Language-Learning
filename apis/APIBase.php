@@ -18,6 +18,19 @@ class APIBase
 		$this->user = $user;
 		$this->mysqli = $mysqli;
 	}
+	
+	protected function return_array_as_assoc_for_json($array)
+	{
+		if (!$array) return null;
+		
+		$returnable = array ();
+		foreach ($array as $item)
+		{
+			array_push($returnable, $item->assoc_for_json());
+		}
+		
+		Session::set_result_assoc($returnable);
+	}
 }
 
 ?>

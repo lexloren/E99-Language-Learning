@@ -190,6 +190,8 @@ class User extends DatabaseRow
 		
 		if (!isset($collection))
 		{
+			$collection = array ();
+			
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query("SELECT $table_informative.* FROM $table_relational LEFT JOIN $table_informative USING ($id_column) WHERE $table_relational.user_id = " . $this->get_user_id());
@@ -197,7 +199,6 @@ class User extends DatabaseRow
 			//  Unknown error
 			if (!$result) return null;
 			
-			$collection = array ();
 			while (!!($result_assoc = $result->fetch_assoc()))
 			{
 				if (!!($instance = $class::from_mysql_result_assoc($result_assoc)))
@@ -220,16 +221,14 @@ class User extends DatabaseRow
 		
 		if (!isset($this->lists))
 		{
+			$this->lists = array ();
+			
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
 				$this->get_user_id()
 			));
 			
-			//  Unknown error
-			if (!$result) return null;
-			
-			$this->lists = array ();
 			while (!!($result_assoc = $result->fetch_assoc()))
 			{
 				if (!!($list = EntryList::from_mysql_result_assoc($result_assoc)))
@@ -242,6 +241,36 @@ class User extends DatabaseRow
 		return $this->lists;
 	}
 	
+	private $courses;
+	public function get_courses()
+	{
+		//  return $this->populate($this->instructor_courses, Course, "course_instructors", "courses", "course_id");
+		
+		if (!($this->is_session_user())) return null;
+		
+		if (!isset($this->courses))
+		{
+			$this->courses = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM courses WHERE user_id = %d",
+				$this->get_user_id()
+			));
+			
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($this->courses, $course);
+				}
+			}
+		}
+		
+		return $this->courses;
+	}
+	
+	
 	private $instructor_courses;
 	public function get_instructor_courses()
 	{
@@ -251,16 +280,14 @@ class User extends DatabaseRow
 		
 		if (!isset($this->instructor_courses))
 		{
+			$this->instructor_courses = array ();
+			
 			$mysqli = Connection::get_shared_instance();
 			
-			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_instructors LEFT JOIN courses USING (course_id) WHERE user_id = %d",
+			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_instructors LEFT JOIN courses USING (course_id) WHERE course_instructors.user_id = %d",
 				$this->get_user_id()
 			));
 			
-			//  Unknown error
-			if (!$result) return null;
-			
-			$this->instructor_courses = array ();
 			while (!!($result_assoc = $result->fetch_assoc()))
 			{
 				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
@@ -282,16 +309,14 @@ class User extends DatabaseRow
 		
 		if (!isset($this->student_courses))
 		{
+			$this->student_courses = array ();
+			
 			$mysqli = Connection::get_shared_instance();
 			
-			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_students LEFT JOIN courses USING (course_id) WHERE user_id = %d",
+			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_students LEFT JOIN courses USING (course_id) WHERE course_students.user_id = %d",
 				$this->get_user_id()
 			));
 			
-			//  Unknown error
-			if (!$result) return null;
-			
-			$this->student_courses = array ();
 			while (!!($result_assoc = $result->fetch_assoc()))
 			{
 				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
