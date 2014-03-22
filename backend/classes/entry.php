@@ -296,6 +296,7 @@ class Entry extends DatabaseRow
 		
 		return array (
 			"entryId" => $entry->entry_id,
+			"owner" => $this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
 			"words" => $entry->words,
 			"pronuncations" => $entry->pronunciations
 		);
