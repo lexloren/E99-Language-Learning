@@ -1,6 +1,6 @@
 <?php
 
-require_once "./APIBase.php";
+require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
 class APICourse  extends APIBase
@@ -47,7 +47,7 @@ class APICourse  extends APIBase
 		$course = null;
 		if (!isset($course_id))
 		{
-			Session::set_error_assoc("Invalid Post", "Post must include course_id.");
+			Session::set_error_assoc("Invalid Request", "Request must include course_id.");
 		}
 		else if (!($course = Course::select(($course_id = intval($course_id, 10)))))
 		{

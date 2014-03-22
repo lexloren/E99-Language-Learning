@@ -21,7 +21,7 @@ class APIBase
 	
 	protected function return_array_as_assoc_for_json($array)
 	{
-		if (!$array) return null;
+		if ($array === null) return null;
 		
 		$returnable = array ();
 		foreach ($array as $item)
