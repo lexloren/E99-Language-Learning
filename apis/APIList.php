@@ -11,8 +11,7 @@ class APIList extends APIBase
 	
 	public function insert()
 	{
-		if (!Session::reauthenticate())
-			return;
+		if (!Session::reauthenticate()) return;
 		
 		if (!($list = EntryList::insert(isset($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
@@ -22,7 +21,9 @@ class APIList extends APIBase
 			Session::set_error_assoc("List Insertion", $error_description);
 		}
 		else
+		{
 			Session::set_result_assoc($list->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));
+		}
 	}
 	
 	public function delete()
@@ -33,7 +34,7 @@ class APIList extends APIBase
 		{
 			Session::set_error_assoc("Invalid Post", "List-deletion post must include list_id.");
 		}
-		else if (!($list = EntryList::select(($list_id = intval($_POST["list_id"])))))
+		else if (!($list = EntryList::select(($list_id = intval($_POST["list_id"], 10)))))
 		{
 			Session::set_error_assoc("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
 		}
@@ -74,7 +75,6 @@ class APIList extends APIBase
 		}
 	}
 	
-	//  Arunabha, please expose this functionality to the front end.
 	public function entries_add()
 	{
 		if (!Session::reauthenticate()) return;
