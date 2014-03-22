@@ -74,6 +74,24 @@ class APIUser extends APIBase
 		//  name_family
 	}
 	
+	//  needs back-end implementation
+	public function languages()
+	{
+	
+	}
+	
+	//  needs back-end implementation
+	public function languages_add()
+	{
+	
+	}
+	
+	//  needs back-end implementation
+	public function languages_remove()
+	{
+	
+	}
+	
 	//  Courses owned by the user
 	public function courses()
 	{
