@@ -11,7 +11,6 @@ if (!$result)
 	Session::exit_with_error("Database Error", $mysqli->error);
 }
 $languages_available = mysqli_fetch_all_assocs($result);
-$result->close();
 
 //  Create a dictionary mapping language codes to language identifiers
 $lang_codes_dictionary = array();
