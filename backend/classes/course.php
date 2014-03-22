@@ -11,7 +11,7 @@ class Course extends DatabaseRow
 	
 	public static function insert($lang_code_0, $lang_code_1, $course_name = null)
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return Course::set_error_description("Session user has not reauthenticated.");
 		}
@@ -35,14 +35,14 @@ class Course extends DatabaseRow
 			: "NULL";
 		
 		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name) %s",
-			"SELECT " . Session::get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
 		$course = self::select($mysqli->insert_id);
 		
 		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
 			$course->get_course_id(),
-			Session::get_user()->get_user_id()
+			Session::get()->get_user()->get_user_id()
 		));
 		
 		return $course;
@@ -136,11 +136,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		if (!Session::get_user()) return false;
+		if (!Session::get()->get_user()) return false;
 		
 		foreach ($this->get_instructors() as $instructor)
 		{
-			if (Session::get_user()->equals($instructor)) return true;
+			if (Session::get()->get_user()->equals($instructor)) return true;
 		}
 		
 		return false;
@@ -169,11 +169,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		if (!Session::get_user()) return false;
+		if (!Session::get()->get_user()) return false;
 		
 		foreach ($this->get_students() as $student)
 		{
-			if (Session::get_user()->equals($student)) return true;
+			if (Session::get()->get_user()->equals($student)) return true;
 		}
 		
 		return false;
@@ -241,7 +241,7 @@ class Course extends DatabaseRow
 	
 	public function session_user_can_write()
 	{
-		return $this->session_user_is_instructor() || $this->get_owner()->equals(Session::get_user());
+		return $this->session_user_is_instructor() || $this->get_owner()->equals(Session::get()->get_user());
 	}
 	
 	public function session_user_can_read()
@@ -251,7 +251,7 @@ class Course extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->get_owner()->equals(Session::get_user()))
+		if (!$this->get_owner()->equals(Session::get()->get_user()))
 		{
 			return Course::set_error_description("Session user is not owner of course.");
 		}
@@ -336,7 +336,7 @@ class Course extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->get_owner()->equals(Session::get_user());
+		$omniscience = $this->get_owner()->equals(Session::get()->get_user());
 		
 		if ($omniscience) $privacy = false;
 		else if ($privacy === null) $privacy = !$this->session_user_can_read();

@@ -58,7 +58,7 @@ class Dictionary
 		$result = $mysqli->query($query);
 		if (!$result)
 		{
-			Session::set_error_assoc("Database Error", $mysqli->error);
+			Session::get()->set_error_assoc("Database Error", $mysqli->error);
 			return null;
 		}
 		

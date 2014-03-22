@@ -60,15 +60,15 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			Session::set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
+			Session::get()->set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
 		}
 		else if (!self::validate_password($password))
 		{
-			Session::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			Session::get()->set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		else if (!self::validate_handle($handle))
 		{
-			Session::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			Session::get()->set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 		else
 		{
@@ -79,7 +79,7 @@ class User extends DatabaseRow
 			
 			if ($existing_user = $result->fetch_assoc())
 			{
-				Session::set_error_assoc("Handle Conflict", "The requested handle is already taken.");
+				Session::get()->set_error_assoc("Handle Conflict", "The requested handle is already taken.");
 				return null;
 			}
 			
@@ -99,7 +99,7 @@ class User extends DatabaseRow
 			//  Just make sure we actually created the user
 			if (!$result)
 			{
-				Session::set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
+				Session::get()->set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
 				return null;
 			}
 			$user_assoc = $result->fetch_assoc();
@@ -346,7 +346,7 @@ class User extends DatabaseRow
 	
 	public function is_session_user()
 	{
-		return $this->equals(Session::get_user());
+		return $this->equals(Session::get()->get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)

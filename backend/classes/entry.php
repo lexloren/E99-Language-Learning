@@ -43,7 +43,7 @@ class Entry extends DatabaseRow
 	public function get_annotations()
 	{
 		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return Entry::set_error_description("Session user has not reauthenticated.");
 		}
@@ -55,7 +55,7 @@ class Entry extends DatabaseRow
 			$mysqli = Connection::get_shared_instance();
 		
 			$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations WHERE user_id = %d AND entry_id = %d",
-				Session::get_user()->get_user_id(),
+				Session::get()->get_user()->get_user_id(),
 				$this->get_entry_id()
 			));
 			
@@ -137,7 +137,7 @@ class Entry extends DatabaseRow
 	
 	public function session_user_can_write()
 	{
-		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->user_id);
+		return !!Session::get()->get_user() && (Session::get()->get_user()->get_user_id() === $this->user_id);
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -222,14 +222,14 @@ class Entry extends DatabaseRow
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return Entry::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		if ($this->user_id === Session::get_user()->get_user_id())
+		if ($this->user_id === Session::get()->get_user()->get_user_id())
 		{
-			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get_user());
+			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user());
 			//  Just make sure that this Entry object has been appropriately registered
 			return ($entries_by_id_for_user_id[$this->entry_id] = $this);
 		}
@@ -240,14 +240,14 @@ class Entry extends DatabaseRow
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
 			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
-				Session::get_user()->get_user_id(),
+				Session::get()->get_user()->get_user_id(),
 				$this->entry_id
 			));
 			
 			$query = sprintf("SELECT * FROM (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
 				Dictionary::join(),
 				$this->entry_id,
-				Session::get_user()->get_user_id()
+				Session::get()->get_user()->get_user_id()
 			);
 			
 			$result = $mysqli->query($query);
@@ -290,7 +290,7 @@ class Entry extends DatabaseRow
 
 	public function assoc_for_json()
 	{
-		$privacy = !!$this->get_owner() && !$this->get_owner()->equals(Session::get_user());
+		$privacy = !!$this->get_owner() && !$this->get_owner()->equals(Session::get()->get_user());
 		
 		$entry = !$privacy ? $this : Dictionary::select_entry($this->entry_id);
 		

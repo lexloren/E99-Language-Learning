@@ -29,7 +29,7 @@ class APIBase
 			array_push($returnable, $item->assoc_for_json());
 		}
 		
-		Session::set_result_assoc($returnable);
+		Session::get()->set_result_assoc($returnable);
 	}
 }
 
