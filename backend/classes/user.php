@@ -97,15 +97,13 @@ class User extends DatabaseRow
 			));
 			
 			//  Just make sure we actually created the user
-			if (!$result)
+			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
 				Session::set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
 				return null;
 			}
-			$user_assoc = $result->fetch_assoc();
-			$result->close();
 			
-			return User::from_mysql_result_assoc($user_assoc);
+			return User::from_mysql_result_assoc($result_assoc);
 		}
 	}
 	
