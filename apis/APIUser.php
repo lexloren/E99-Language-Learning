@@ -75,6 +75,28 @@ class APIUser extends APIBase
 		Session::set_result_assoc($lists_returnable);
 	}
 	
+	public function practice()
+	{
+		if (!Session::reauthenticate()) return;
+
+		if (!isset($_GET["list_ids"]))
+                {
+                        Session::set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
+                }
+		return UserPractice::get_practice_entries($_GET["list_ids"], $_GET["entries_count"]);
+        }
+
+	public function practice_response()
+	{
+		if (!Session::reauthenticate()) return;
+
+		if (!isset($_GET["entry_id"]) || !isset($_GET["grade_id"]))
+                {
+                        Session::set_error_assoc("Invalid Post", "User-practice-response must include entry_id and grade_id.");
+                }
+		UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
+	}
+
 	public function student_courses()
 	{
 		if (!Session::reauthenticate()) return;
