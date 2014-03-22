@@ -124,20 +124,19 @@ class Session
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s'",
-				$mysqli->escape_string(session_id()),
+				$mysqli->escape_string($session_id),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				session_destroy();
-				session_unset();
+				$this->session_end();
 				self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 				return null;
 			}
 			
 			$mysqli->query(sprintf("UPDATE users SET `timestamp` = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
-				$mysqli->escape_string(session_id()),
+				$mysqli->escape_string($session_id),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
@@ -154,15 +153,14 @@ class Session
 	{
 		$session_id = $this->session_start();
 		
-		if (!!$session_id && strlen(session_id()) > 0)
+		if (!!$session_id && strlen($session_id) > 0)
 		{
 			$mysqli = Connection::get_shared_instance();
 			$mysqli->query(sprintf("UPDATE users SET session = NULL WHERE session = '%s'",
-				$mysqli->escape_string(session_id())
+				$mysqli->escape_string($session_id)
 			));
 
-			session_destroy();
-			session_unset();
+			$this->session_end();
 		}
 	}
 	
@@ -229,6 +227,13 @@ class Session
 		session_start();
 		$session = session_id();
 		return $session;
+	}
+	
+	//Arunabha : This method is stubbed in unit tests. Do not directly call php session_end()
+	public function session_end()
+	{
+		session_destroy();
+		session_unset();
 	}
 }
 

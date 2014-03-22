@@ -10,13 +10,13 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	private $obj;
 	public function setup()
 	{
-		$session_mock = $this->getMock('Session', array('session_start'));
+		$session_mock = $this->getMock('Session', array('session_start', 'session_end'));
 
         // Configure the stub.
         $session_mock->expects($this->any())
 					 ->method('session_start')
-					 ->will($this->returnValue('dummy_session_id'));
-
+					 ->will($this->returnValue(TestDB::$session));
+					 
 		$this->assertNotNull($session_mock, "failed to create session mock");
 		Session::set($session_mock);
 		$this->assertEquals(Session::get(), $session_mock);
@@ -100,10 +100,6 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($error);
 	}
 	
-	private function session_authenticate_mock()
-	{
-	}
-	
 	public function testAuthenticate()
 	{
 		$_POST["handle"] = TestDB::$handle;
@@ -115,5 +111,46 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(Session::get()->get_user()->get_handle(), TestDB::$handle);
 	}
 	
+	public function testAuthenticateNoHandle()
+	{
+		$_POST["password"] = TestDB::$password;
+		$this->obj->authenticate();
+		
+		$this->assertTrue(Session::get()->has_error());
+		$this->assertNull(Session::get()->get_user());
+	}
+
+	public function testAuthenticateNoPassword()
+	{
+		$_POST["handle"] = TestDB::$handle;
+		$this->obj->authenticate();
+		
+		$this->assertTrue(Session::get()->has_error());
+		$this->assertNull(Session::get()->get_user());
+	}
+	
+	/*public function test_deuthenticate()
+	{
+		$this->obj->deauthenticate();
+	}*/
+	
+	public function test_lists()
+	{
+		$_SESSION["handle"] = TestDB::$handle;
+		$this->obj->lists();
+		
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc['result'];		
+		$this->assertNotNull($result);
+		
+		//todo
+	}
 }
+
+
+
 ?>
