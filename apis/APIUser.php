@@ -66,6 +66,14 @@ class APIUser extends APIBase
 		$this->return_array_as_assoc_for_json(Session::get_user()->get_lists());
 	}
 	
+	public function update()
+	{
+		//  email
+		//  handle
+		//  name_given
+		//  name_family
+	}
+	
 	//  Courses owned by the user
 	public function courses()
 	{

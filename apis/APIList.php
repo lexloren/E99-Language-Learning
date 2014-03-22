@@ -26,6 +26,11 @@ class APIList extends APIBase
 		}
 	}
 	
+	public function update()
+	{
+		//  list_name
+	}
+	
 	public function delete()
 	{
 		if (!Session::reauthenticate()) return;

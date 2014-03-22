@@ -42,6 +42,13 @@ class APICourse  extends APIBase
 		}
 	}
 	
+	public function update()
+	{
+		//  course_name
+		//  timeframe
+		//  user_id (owner of the course)
+	}
+	
 	private function validate_course_id($course_id)
 	{
 		$course = null;
@@ -86,16 +93,6 @@ class APICourse  extends APIBase
 		{
 			$this->return_array_as_assoc_for_json($course->get_units());
 		}
-	}
-	
-	public function timeframe_update()
-	{
-		
-	}
-	
-	public function name_update()
-	{
-	
 	}
 	
 	public function students_add()
