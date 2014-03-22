@@ -38,14 +38,14 @@ class Course extends DatabaseRow
 			"SELECT " . Session::get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		$course_id = self::select($mysqli->insert_id);
+		$course = self::select($mysqli->insert_id);
 		
 		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
-			$course_id,
+			$course->get_course_id(),
 			Session::get_user()->get_user_id()
 		));
 		
-		return self::select($course_id);
+		return $course;
 	}
 	
 	public static function select($course_id)
