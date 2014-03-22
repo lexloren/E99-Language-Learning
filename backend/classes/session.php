@@ -35,6 +35,11 @@ class Session
 		self::$result_assoc = self::result_assoc($result, $result_information);
 	}
 	
+	public static function get_result_assoc()
+	{
+		return self::$result_assoc;
+	}
+
 	//This will be called from router.php
 	public static function echo_json()
 	{
