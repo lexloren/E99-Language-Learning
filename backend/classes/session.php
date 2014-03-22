@@ -73,9 +73,8 @@ class Session
 			
 			if (($user_assoc = $result->fetch_assoc()))
 			{
-				$result->close();
-				
 				session_start();
+				session_regenerate_id(true);
 				$session = session_id();
 				
 				$user_assoc["user_id"] = intval($user_assoc["user_id"]);
@@ -106,12 +105,12 @@ class Session
 	{
 		session_start();
 		
-		if (!!session_id() && isset($_SESSION["handle"]))
+		if (!!($session_id_old = session_id()) && isset($_SESSION["handle"]))
 		{
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s'",
-				$mysqli->escape_string(session_id()),
+				$mysqli->escape_string($session_id_old),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
@@ -123,14 +122,16 @@ class Session
 				return null;
 			}
 			
-			$mysqli->query(sprintf("UPDATE users SET `timestamp` = CURRENT_TIMESTAMP WHERE session = '%s' AND handle = '%s'",
-				$mysqli->escape_string(session_id()),
+			session_regenerate_id(true);
+			$session_id_new = session_id();
+			
+			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
+				$mysqli->escape_string($session_id_new),
+				$mysqli->escape_string($session_id_old),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
-			self::$user = User::from_mysql_result_assoc($result_assoc);
-			
-			return self::$user;
+			return (self::$user = User::from_mysql_result_assoc($result_assoc));
 		}
 		
 		self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
