@@ -124,10 +124,30 @@ class Dictionary
 	public static function get_lang_code($lang_id)
 	{
 		$lang_id = intval($lang_id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
 		$result = $mysqli->query("SELECT * FROM languages WHERE lang_id = $lang_id");
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return $result_assoc["lang_code"];
+		}
+		
+		return null;
+	}
+	
+	public static function get_lang_id($lang_code)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM languages WHERE lang_code LIKE '%s'",
+			$mysqli->escape_string($lang_code)
+		));
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			return intval($result_assoc["lang_id"], 10);
 		}
 		
 		return null;
