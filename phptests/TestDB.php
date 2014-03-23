@@ -73,14 +73,20 @@ class TestDB
 		$link->query(sprintf("INSERT INTO languages (lang_code) VALUES ('%s')", self::$lang_code_1));			
 		self::$lang_id_1 = $link->insert_id;
 		
-		$link->query(sprintf("INSERT INTO language_names (lang_id lang_id_name lang_name) VALUES ('%s')",
-			self::$lang_code_0, self::$lang_code_0, $link->escape_string('English in English')));
-		$link->query(sprintf("INSERT INTO language_names (lang_id lang_id_name lang_name) VALUES ('%s')",
-			self::$lang_code_0, self::$lang_code_1, $link->escape_string('English in Chinese')));
-		$link->query(sprintf("INSERT INTO language_names (lang_id lang_id_name lang_name) VALUES ('%s')",
-			self::$lang_code_1, self::$lang_code_0, $link->escape_string('Chinese in English')));
-		$link->query(sprintf("INSERT INTO language_names (lang_id lang_id_name lang_name) VALUES ('%s')",
-			self::$lang_code_1, self::$lang_code_1, $link->escape_string('Chinese in Chinese')));
+		$sql = sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English'));
+		
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English')));
+		
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+			self::$lang_id_0, self::$lang_id_1, $link->escape_string('English in Chinese')));
+			
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+			self::$lang_id_1, self::$lang_id_0, $link->escape_string('Chinese in English')));
+
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+			self::$lang_id_1, self::$lang_id_1, $link->escape_string('Chinese in Chinese')));
 	}
 	
 	private static function add_list($link)
@@ -102,8 +108,8 @@ class TestDB
 	
 	private static function add_dictionary($link)
 	{
-		$link->query(sprintf("INSERT INTO dictionary (lang_id_0 lang_id_1 word_0 word_1 word_1_pronun) VALUES (%d %d '%s' '%s' '%s')",
-			self::$lang_code_0, self::$lang_code_1, self::$word_0, self::$word_1, self::$word_1_pronun));
+		$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+			self::$lang_id_0, self::$lang_id_1, self::$word_0, self::$word_1, self::$word_1_pronun));
 			
 		self::$entry_id = $link->insert_id;
 	}

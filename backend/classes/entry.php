@@ -38,6 +38,11 @@ class Entry extends DatabaseRow
 	}
 	
 	private $words = null; //Associative array from language codes to word values
+	public function get_words()
+	{
+		return $this->words;
+	}	
+
 	private $pronunciations = null;
 	private $annotations = null;
 	public function get_annotations()
@@ -129,9 +134,9 @@ class Entry extends DatabaseRow
 			$result_assoc["word_0"],
 			$result_assoc["word_1"],
 			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
-			$result_assoc["interval"],
-			$result_assoc["efactor"],
-			$result_assoc["user_id"]
+			array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
+			array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null,
+			array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null
 		);
 	}
 	
