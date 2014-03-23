@@ -131,8 +131,7 @@ class Session
 				return null;
 			}
 			
-			session_regenerate_id(true);
-			$session_id_new = session_id();
+			$session_id_new = $this->session_regenerate_id();
 			
 			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
 				$mysqli->escape_string($session_id_new),
@@ -217,6 +216,13 @@ class Session
 		}
 		
 		return $return;
+	}
+	
+	public function session_regenerate_id()
+	{
+		session_regenerate_id(true);
+		$session_id_new = session_id();
+		return $session_id_new;
 	}
 	
 	//Arunabha : This method is stubbed in unit tests. Do not directly call php session_start()

@@ -17,11 +17,15 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->obj, "Null APIList");
 		
 		
-		$session_mock = $this->getMock('Session', array('session_start', 'session_end'));
+		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
         // Configure the stub.
         $session_mock->expects($this->any())
 					 ->method('session_start')
+					 ->will($this->returnValue(TestDB::$session));
+		
+		$session_mock->expects($this->any())
+					 ->method('session_regenerate_id')
 					 ->will($this->returnValue(TestDB::$session));
 					 
 		$this->assertNotNull($session_mock, "failed to create session mock");
