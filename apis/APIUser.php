@@ -66,12 +66,38 @@ class APIUser extends APIBase
 		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_lists());
 	}
 	
+	
 	public function update()
 	{
 		//  email
 		//  handle
 		//  name_given
 		//  name_family
+	}
+	
+	public function practice()
+	{
+		if (!Session::reauthenticate()) return;
+
+		if (!isset($_GET["list_ids"]))
+		{
+			Session::set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
+		}
+		//  TO FIX: SHOULDN'T PASS A COMMA-DELIMITED LIST AS AN ARGUMENT
+		return UserPractice::get_practice_entries($_GET["list_ids"], $_GET["entries_count"]);
+	}
+
+	public function practice_response()
+	{
+		if (!Session::reauthenticate()) return;
+
+		if (!isset($_GET["entry_id"]) || !isset($_GET["grade_id"]))
+		{
+			Session::set_error_assoc("Invalid Post", "User-practice-response must include entry_id and grade_id.");
+		}
+		//  TO FIX: SHOULDN'T PASS A COMMA-DELIMITED LIST AS AN ARGUMENT
+		UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
+		//  WHAT ARE WE RETURNING?
 	}
 	
 	//  needs back-end implementation
@@ -99,28 +125,6 @@ class APIUser extends APIBase
 		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_courses());
 	}
 	
-	public function practice()
-	{
-		if (!Session::reauthenticate()) return;
-
-		if (!isset($_GET["list_ids"]))
-                {
-                        Session::set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
-                }
-		return UserPractice::get_practice_entries($_GET["list_ids"], $_GET["entries_count"]);
-        }
-
-	public function practice_response()
-	{
-		if (!Session::reauthenticate()) return;
-
-		if (!isset($_GET["entry_id"]) || !isset($_GET["grade_id"]))
-                {
-                        Session::set_error_assoc("Invalid Post", "User-practice-response must include entry_id and grade_id.");
-                }
-		UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
-	}
-
 	public function student_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
