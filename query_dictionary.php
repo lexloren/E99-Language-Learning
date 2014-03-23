@@ -49,8 +49,8 @@ if (isset($_GET["query"]))
 	if (isset($_GET["page_size"]) && isset($_GET["page_num"]))
 	{
 		$pagination = array(
-			"size" => intval($_GET["page_size"]),
-			"num" => intval($_GET["page_num"])
+			"size" => intval($_GET["page_size"], 10),
+			"num" => intval($_GET["page_num"], 10)
 		);
 	}
 	

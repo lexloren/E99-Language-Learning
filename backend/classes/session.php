@@ -87,11 +87,9 @@ class Session
 			
 			if (($user_assoc = $result->fetch_assoc()))
 			{
-				session_start();
-				session_regenerate_id(true);
-				$session = session_id();
+				$session = $this->session_start();
 				
-				$user_assoc["user_id"] = intval($user_assoc["user_id"]);
+				$user_assoc["user_id"] = intval($user_assoc["user_id"], 10);
 				
 				$_SESSION["handle"] = $user_assoc["handle"];
 				
@@ -117,9 +115,7 @@ class Session
 	//!!!!  Must be called before starting into any script that requires a session.
 	public function reauthenticate()
 	{
-		$session_id = $this->session_start();
-		
-		if (!!($session_id_old = session_id()) && isset($_SESSION["handle"]))
+		if (!!($session_id_old = $this->session_start()) && isset($_SESSION["handle"]))
 		{
 			$mysqli = Connection::get_shared_instance();
 			

@@ -189,7 +189,7 @@ class Course extends DatabaseRow
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM course_units WHERE course_id = %d",
-				intval($this->get_course_id())
+				intval($this->get_course_id(), 10)
 			));
 
 			while (($unit_assoc = $result->fetch_assoc()))

@@ -70,8 +70,8 @@ class Dictionary
 		//  Use pagination only if we have both page size and page number
 		if (isset($pagination["size"]) && isset($pagination["num"]))
 		{
-			self::$page_size = intval($pagination["size"]);
-			self::$page_num = intval($pagination["num"]);
+			self::$page_size = intval($pagination["size"], 10);
+			self::$page_num = intval($pagination["num"], 10);
 		}
 		
 		//  Compute the minimum and maximum entries to return
