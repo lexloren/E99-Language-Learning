@@ -50,23 +50,26 @@ class APIList extends APIBase
 		}
 	}
 	
+	private function validate_list_id($list_id)
+	{
+		$list = null;
+		if (!isset($list_id) || $list_id === null)
+		{
+			Session::get()->set_error_assoc("Invalid Request", "Request must include list_id.");
+		}
+		else if (!($list = EntryList::select(($list_id = intval($list_id, 10)))))
+		{
+			Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
+		}
+		
+		return $list;
+	}
+	
 	public function entries()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_GET["list_id"]))
-		{
-			Session::get()->set_error_assoc("Invalid Get", "List-entries get must include list_id.");
-		}
-		else if (!($list = EntryList::select($_GET["list_id"])) || !$list->session_user_can_read())
-		{
-			$error_description = sprintf("Back end failed to get entries for list%s",
-				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
-			);
-			
-			Session::get()->set_error_assoc("List Description", $error_description);
-		}
-		else
+		if (($list = $this->validate_list_id($_GET["list_id"])))
 		{
 			$entries = $list->get_entries();
 		
@@ -84,26 +87,29 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["list_id"]) || !isset($_POST["entry_ids"]))
+		if (($list = $this->validate_list_id($_POST["list_id"])))
 		{
-			Session::get()->set_error_assoc("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
-		}
-		else if (!!($list = EntryList::select($_POST["list_id"])) && $list->session_user_can_write())
-		{
-			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			if (!isset($_POST["entry_ids"]))
 			{
-				if (!$list->add_entry(Entry::select($entry_id)))
-				{
-					Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
-					return;
-				}
+				Session::get()->set_error_assoc("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
 			}
-			
-			Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-		}
-		else
-		{
-			Session::get()->set_error_assoc("List Edit", "Back end failed to add entries to list.");
+			else if ($list->session_user_can_write())
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					if (!$list->add_entry(Entry::select($entry_id)))
+					{
+						Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Edit", "Back end failed to add entries to list.");
+			}
 		}
 	}
 	
@@ -111,26 +117,29 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["list_id"]) || !isset($_POST["entry_ids"]))
+		if (($list = $this->validate_list_id($_POST["list_id"])))
 		{
-			Session::get()->set_error_assoc("Invalid Post", "List–remove-entries post must include list_id and entry_ids.");
-		}
-		else if (!!($list = EntryList::select($_POST["list_id"])) && $list->session_user_can_write())
-		{
-			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			if (!isset($_POST["entry_ids"]))
 			{
-				if (!$list->remove_entry(Entry::select($entry_id)))
-				{
-					Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
-					return;
-				}
+				Session::get()->set_error_assoc("Invalid Post", "List–remove-entries post must include list_id and entry_ids.");
 			}
-			
-			Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-		}
-		else
-		{
-			Session::get()->set_error_assoc("List Edit", "Back end failed to add entries to list.");
+			else if ($list->session_user_can_write())
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					if (!$list->remove_entry(Entry::select($entry_id)))
+					{
+						Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Edit", "Back end failed to remove entries from list.");
+			}
 		}
 	}
 	
