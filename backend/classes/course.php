@@ -123,7 +123,7 @@ class Course extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_instructors WHERE course_id = %d",
+			$result = $mysqli->query(sprintf("SELECT users.* FROM course_instructors LEFT JOIN users USING (user_id) WHERE course_id = %d",
 				$this->get_course_id()
 			));
 			
@@ -155,7 +155,7 @@ class Course extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_students WHERE course_id = %d",
+			$result = $mysqli->query(sprintf("SELECT users.* FROM course_students LEFT JOIN users USING (user_id) WHERE course_id = %d",
 				$this->get_course_id()
 			));
 			
