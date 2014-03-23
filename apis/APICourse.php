@@ -58,7 +58,7 @@ class APICourse  extends APIBase
 		}
 		else if (!($course = Course::select(($course_id = intval($course_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with posted course_id = $course_id.");
+			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with course_id = $course_id.");
 		}
 		
 		return $course;
@@ -97,46 +97,123 @@ class APICourse  extends APIBase
 	
 	public function students_add()
 	{
+		if (!Session::get()->reauthenticate()) return;
 		
+		if (($course = $this->validate_course_id($_POST["course_id"])))
+		{
+			if (!isset($_POST["user_ids"]))
+			{
+				Session::get()->set_error_assoc("Invalid Post", "Course–add-students post must include course_id and user_ids.");
+			}
+			else if (Session::get()->get_user()->in_array($course->get_instructors()))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->add_student(User::select($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Edit", "Back end failed to add students to course.");
+			}
+		}
 	}
 	
 	public function instructors_add()
 	{
+		if (!Session::get()->reauthenticate()) return;
 		
+		if (($course = $this->validate_course_id($_POST["course_id"])))
+		{
+			if (!isset($_POST["user_ids"]))
+			{
+				Session::get()->set_error_assoc("Invalid Post", "Course–add-instructors post must include course_id and user_ids.");
+			}
+			else if ($course->get_owner()->equals(Session::get()->get_user()))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->add_instructor(User::select($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Edit", "Back end failed to add instructors to course.");
+			}
+		}
 	}
 	
 	public function students_remove()
 	{
-	
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_POST["course_id"])))
+		{
+			if (!isset($_POST["user_ids"]))
+			{
+				Session::get()->set_error_assoc("Invalid Post", "Course–remove-students post must include course_id and user_ids.");
+			}
+			else if (Session::get()->get_user()->in_array($course->get_instructors()))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->remove_student(User::select($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Edit", "Back end failed to remove students from course.");
+			}
+		}
 	}
 	
 	public function instructors_remove()
 	{
-	
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_POST["course_id"])))
+		{
+			if (!isset($_POST["user_ids"]))
+			{
+				Session::get()->set_error_assoc("Invalid Post", "Course–remove-instructors post must include course_id and user_ids.");
+			}
+			else if ($course->get_owner()->equals(Session::get()->get_user()))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->remove_instructor(User::select($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Edit", "Back end failed to remove instructors from course.");
+			}
+		}
 	}
-	
-	/*
-	//  Maybe just call APIUnit.insert from here (?)
-	public function units_add()
-	{
-	
-	}
-	
-	//  Maybe just call APIUnit.delete from here (?)
-	public function units_remove()
-	{
-	
-	}
-	
-	//  DEPRECATED (?)
-	//      I'm not sure whether we actually need this method.
-	public function select()
-	{
-		if (!Session::get()->reauthenticate())
-			return;
-		Session::get()->set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
-	}
-	*/
 }
 
 ?>
