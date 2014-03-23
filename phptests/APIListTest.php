@@ -74,8 +74,6 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$this->obj->delete();	
 		$this->assertFalse(Session::get()->has_error());
 
-		$this->assertFalse(Session::get()->has_error());
-		
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
@@ -101,6 +99,20 @@ class APIListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_entries()
 	{
+		$_SESSION["handle"] = TestDB::$handle;
+		$_GET["list_id"] = TestDB::$list_id;
+		$this->obj->entries();	
+
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc['result'];		
+		$this->assertNotNull($result);
+
+		//TODO
+		//print_r($result);
 	}
 	
 	public function test_entries_add()
