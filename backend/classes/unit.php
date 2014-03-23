@@ -207,7 +207,7 @@ class Unit extends DatabaseRow
 			$this->get_unit_id()
 		));
 		
-		unset ($this->lists);
+		unset($this->lists);
 		
 		return $this;
 	}

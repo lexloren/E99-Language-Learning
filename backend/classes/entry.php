@@ -219,7 +219,7 @@ class Entry extends DatabaseRow
 		
 		$annotation->delete();
 		
-		unset ($this->annotations);
+		unset($this->annotations);
 		
 		return $this;
 	}

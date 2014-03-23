@@ -235,7 +235,7 @@ class EntryList extends DatabaseRow
 					$entry_removed->get_entry_id()
 				));
 				
-				unset ($this->entries);
+				unset($this->entries);
 				
 				return $this;
 			}

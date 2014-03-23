@@ -313,13 +313,7 @@ class Course extends DatabaseRow
 			$user->get_user_id()
 		));
 		
-		$array_new = array ();
-		foreach ($array as $item)
-		{
-			if (!$array->equals($user)) array_push($array_new, $item);
-		}
-		
-		$array = $array_new;
+		unset($array);
 		
 		return $this;
 	}
