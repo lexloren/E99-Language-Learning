@@ -2,6 +2,12 @@ body {
   padding-top: 50px;
 }
 
+.container-left {
+  width: 600px;
+  align:left;
+  padding: 30px
+}
+
 .starter-template {
   padding: 40px 15px;
   text-align: center;
@@ -17,8 +23,18 @@ body {
   margin: auto;
 }
 
+/* Custom .form-control width */
+.form-control-date {
+  width: 204px;
+}
+
 /* Custom .help-block font */
 .help-block-small {
   font-size: 12px;
+}
+
+/* Custom datepicker */
+div.ui-datepicker{
+ font-size:12px;
 }
 
