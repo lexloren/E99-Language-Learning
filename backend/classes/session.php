@@ -140,7 +140,7 @@ class Session
 				$mysqli->escape_string($_SESSION["handle"])
 			));
 			
-			return (self::$user = User::from_mysql_result_assoc($result_assoc));
+			return ($this->user = User::from_mysql_result_assoc($result_assoc));
 		}
 		
 		self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
