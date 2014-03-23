@@ -20,36 +20,6 @@ class APIUnit  extends APIBase
 	
 	}
 	
-	public function instructors()
-	{
-	
-	}
-	
-	public function instructors_add()
-	{
-	
-	}
-	
-	public function instructors_remove()
-	{
-	
-	}
-	
-	public function students()
-	{
-	
-	}
-	
-	public function students_add()
-	{
-	
-	}
-	
-	public function students_remove()
-	{
-	
-	}
-	
 	public function lists()
 	{
 	
