@@ -2,6 +2,7 @@
 
 require_once './apis/APIUser.php';
 require_once './phptests/TestDB.php';
+require_once './backend/classes/session.php';
 
 class APIUserTest extends PHPUnit_Framework_TestCase
 {
@@ -9,6 +10,17 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	private $obj;
 	public function setup()
 	{
+		$session_mock = $this->getMock('Session', array('session_start', 'session_end'));
+
+        // Configure the stub.
+        $session_mock->expects($this->any())
+					 ->method('session_start')
+					 ->will($this->returnValue(TestDB::$session));
+					 
+		$this->assertNotNull($session_mock, "failed to create session mock");
+		Session::set($session_mock);
+		$this->assertEquals(Session::get(), $session_mock);
+		
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 
@@ -29,9 +41,9 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_POST["password"] = 'P@ssword1';
 		$this->obj->register();
 		
-		$this->assertFalse(Session::has_error());
+		$this->assertFalse(Session::get()->has_error());
 		
-		$result_assoc = Session::get_result_assoc();		
+		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
 		$result = $result_assoc['result'];		
@@ -48,9 +60,9 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_POST["password"] = 'P@ssword1';
 		$this->obj->register();
 		
-		$this->assertTrue(Session::has_error());
+		$this->assertTrue(Session::get()->has_error());
 		
-		$result_assoc = Session::get_result_assoc();		
+		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
 		$error = $result_assoc['errorTitle'];		
@@ -63,9 +75,9 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_POST["password"] = 'P@ssword1';
 		$this->obj->register();
 		
-		$this->assertTrue(Session::has_error());
+		$this->assertTrue(Session::get()->has_error());
 		
-		$result_assoc = Session::get_result_assoc();		
+		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
 		$error = $result_assoc['errorTitle'];		
@@ -79,28 +91,73 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
 		$this->obj->register();
 		
-		$this->assertTrue(Session::has_error());
+		$this->assertTrue(Session::get()->has_error());
 		
-		$result_assoc = Session::get_result_assoc();		
+		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
 		$error = $result_assoc['errorTitle'];		
 		$this->assertNotNull($error);
 	}
 	
-	private function session_authenticate_mock()
-	{
-	}
-	
 	public function testAuthenticate()
 	{
-		
 		$_POST["handle"] = TestDB::$handle;
 		$_POST["password"] = TestDB::$password;
-		//$this->obj->authenticate();
+		$this->obj->authenticate();
 		
-		//$this->assertFalse(Session::has_error());
+		$this->assertFalse(Session::get()->has_error());
+		$this->assertNotNull(Session::get()->get_user());
+		$this->assertEquals(Session::get()->get_user()->get_handle(), TestDB::$handle);
 	}
 	
+	public function testAuthenticateNoHandle()
+	{
+		$_POST["password"] = TestDB::$password;
+		$this->obj->authenticate();
+		
+		$this->assertTrue(Session::get()->has_error());
+		$this->assertNull(Session::get()->get_user());
+	}
+
+	public function testAuthenticateNoPassword()
+	{
+		$_POST["handle"] = TestDB::$handle;
+		$this->obj->authenticate();
+		
+		$this->assertTrue(Session::get()->has_error());
+		$this->assertNull(Session::get()->get_user());
+	}
+	
+	/*public function test_deuthenticate()
+	{
+		$this->obj->deauthenticate();
+	}*/
+	
+	public function test_lists()
+	{
+		$_SESSION["handle"] = TestDB::$handle;
+		$this->obj->lists();
+		
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc['result'];		
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
+		
+		$this->assertArrayHasKey('listId', $result[0]);
+		$this->assertArrayHasKey('listName', $result[0]);
+		$this->assertArrayHasKey('owner', $result[0]);
+		$this->assertArrayHasKey('isPublic', $result[0]);
+		
+		$this->assertEquals($result[0]['listName'], TestDB::$list_name);
+		$this->assertEquals($result[0]['owner']['handle'], TestDB::$handle);
+	}
 }
+
+
+
 ?>

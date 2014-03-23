@@ -111,7 +111,7 @@ class Router
 			self::__404();
 		}
 		$method->invoke($instance);
-		Session::echo_json();
+		Session::get()->echo_json();
 	}
 	
 	private static function __404()

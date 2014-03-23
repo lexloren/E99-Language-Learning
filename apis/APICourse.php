@@ -12,18 +12,18 @@ class APICourse  extends APIBase
 	
 	public function insert()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 		
 		if (!isset($_POST["lang_known"]) || !isset($_POST["lang_unknw"]))
 		{
-			Session::set_error_assoc("Invalid Post", "Course-insertion post must include lang_known and lang_unknw.");
+			Session::get()->set_error_assoc("Invalid Post", "Course-insertion post must include lang_known and lang_unknw.");
 		}
 		else
 		{
 			if (Dictionary::get_lang_id($_POST["lang_known"]) === null
 				|| Dictionary::get_lang_id($_POST["lang_unknw"]) === null)
 			{
-				Session::set_error_assoc("Unknown Language(s)", "Posted lang_known and lang_unknw must be valid two-letter codes within the application.");
+				Session::get()->set_error_assoc("Unknown Language(s)", "Posted lang_known and lang_unknw must be valid two-letter codes within the application.");
 			}
 			else
 			{
@@ -32,11 +32,11 @@ class APICourse  extends APIBase
 					$error_description = sprintf("Back end unexpectedly failed to insert course%s",
 						!!Course::get_error_description() ? (": " . Course::get_error_description()) : "."
 					);
-					Session::set_error_assoc("Course Insertion", $error_description);
+					Session::get()->set_error_assoc("Course Insertion", $error_description);
 				}
 				else
 				{
-					Session::set_result_assoc($course->assoc_for_json());//, Session::database_result_assoc(array ("didInsert" => true)));
+					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
 			}
 		}
@@ -54,11 +54,11 @@ class APICourse  extends APIBase
 		$course = null;
 		if (!isset($course_id))
 		{
-			Session::set_error_assoc("Invalid Request", "Request must include course_id.");
+			Session::get()->set_error_assoc("Invalid Request", "Request must include course_id.");
 		}
 		else if (!($course = Course::select(($course_id = intval($course_id, 10)))))
 		{
-			Session::set_error_assoc("Unknown Course", "Back end failed to select course with posted course_id = $course_id.");
+			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with posted course_id = $course_id.");
 		}
 		
 		return $course;
@@ -66,18 +66,18 @@ class APICourse  extends APIBase
 	
 	public function delete()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 		
 		if (($course = $this->validate_course_id($_POST["course_id"])))
 		{
 			$course->delete();
-			Session::set_result_assoc($course->assoc_for_json());//, Session::database_result_assoc(array ("didDelete" => true)));
+			Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
 		}
 	}
 	
 	public function lists()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 		
 		if (($course = $this->validate_course_id($_GET["course_id"])))
 		{
@@ -87,7 +87,7 @@ class APICourse  extends APIBase
 	
 	public function units()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 		
 		if (($course = $this->validate_course_id($_GET["course_id"])))
 		{
@@ -132,9 +132,9 @@ class APICourse  extends APIBase
 	//      I'm not sure whether we actually need this method.
 	public function select()
 	{
-		if (!Session::reauthenticate())
+		if (!Session::get()->reauthenticate())
 			return;
-		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
+		Session::get()->set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	*/
 }

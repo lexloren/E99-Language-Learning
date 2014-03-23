@@ -30,7 +30,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$given = 'SomeGiven1';
 
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
-		session::set_user($user_obj);
+		Session::get()->set_user($user_obj);
 				
 		//Check database
 		$link = $this->db->link;
@@ -61,7 +61,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$result->close();
 		
 		$user_obj = User::select($user_assoc['user_id']);
-		session::set_user($user_obj);
+		Session::get()->set_user($user_obj);
 		
 		$this->assertEquals($user_obj->get_user_id(), $user_assoc['user_id']);
 		$this->assertEquals($user_obj->get_email(), TestDB::$email);

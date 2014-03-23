@@ -5,51 +5,65 @@ require_once "./backend/classes.php";
 
 class Session
 {
-	private static $user = null;
-	private static $result_assoc = null;
-	public static function get_user()
+	private $user = null;
+	private $result_assoc = null;
+	private static $instance = null;
+	
+	public static function set($instance)
 	{
-		return self::$user;
+		self::$instance = $instance;
+	}
+	
+	public static function get()
+	{
+		if (!isset(self::$instance))
+			self::$instance = new Session();
+		return self::$instance;
+	}
+	
+	public function get_user()
+	{
+		return $this->user;
 	}
 	
 	//Used by unit tests
-	public static function set_user($user)
+	public function set_user($user)
 	{
-		self::$user = $user;
+		$this->user = $user;
 	}
 	
-	public static function has_error()
+	public function has_error()
 	{
-		return !!self::$result_assoc && !!self::$result_assoc["isError"];
+		return !!$this->result_assoc && !!$this->result_assoc["isError"];
 	}
 	
 	// Sets result_assoc
-	public static function set_error_assoc($title, $description)
+	public function set_error_assoc($title, $description)
 	{
-		self::$result_assoc = self::error_assoc($title, $description);
+		$this->result_assoc = self::error_assoc($title, $description);
 	}
 
 	//  Sets result_assoc
-	public static function set_result_assoc($result, $result_information = null)
+	public function set_result_assoc($result, $result_information = null)
 	{
-		self::$result_assoc = self::result_assoc($result, $result_information);
+		$this->result_assoc = self::result_assoc($result, $result_information);
 	}
 	
-	public static function get_result_assoc()
+	public function get_result_assoc()
 	{
-		return self::$result_assoc;
+		return $this->result_assoc;
 	}
 
 	//This will be called from router.php
-	public static function echo_json()
+	public function echo_json()
 	{
 		require_once "./backend/headers.php";
-		echo json_encode(self::$result_assoc);
+		echo json_encode($this->result_assoc);
 	}
 	
 	//  Opens a session.
 	//!!!!  Exits the current script, returning to the front end in case of error.
-	public static function authenticate($handle, $password)
+	public function authenticate($handle, $password)
 	{
 		self::deauthenticate();
 				
@@ -87,9 +101,9 @@ class Session
 					$user_assoc["user_id"]
 				));
 				
-				self::$user = User::from_mysql_result_assoc($user_assoc);
+				$this->user = User::from_mysql_result_assoc($user_assoc);
 				
-				Session::set_result_assoc(self::$user->assoc_for_json());
+				Session::get()->set_result_assoc($this->user->assoc_for_json());
 			}
 			else
 			{
@@ -101,9 +115,9 @@ class Session
 	//  Reauthenticates the current session and refreshes the timestamp.
 	//!!!!  If authentication fails, exits the script with an error.
 	//!!!!  Must be called before starting into any script that requires a session.
-	public static function reauthenticate()
+	public function reauthenticate()
 	{
-		session_start();
+		$session_id = $this->session_start();
 		
 		if (!!($session_id_old = session_id()) && isset($_SESSION["handle"]))
 		{
@@ -116,8 +130,7 @@ class Session
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				session_destroy();
-				session_unset();
+				$this->session_end();
 				self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 				return null;
 			}
@@ -138,24 +151,23 @@ class Session
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
-	public static function deauthenticate()
+	public function deauthenticate()
 	{
-		session_start();
+		$session_id = $this->session_start();
 		
-		if (!!session_id() && strlen(session_id()) > 0)
+		if (!!$session_id && strlen($session_id) > 0)
 		{
 			$mysqli = Connection::get_shared_instance();
 			$mysqli->query(sprintf("UPDATE users SET session = NULL WHERE session = '%s'",
-				$mysqli->escape_string(session_id())
+				$mysqli->escape_string($session_id)
 			));
 
-			session_destroy();
-			session_unset();
+			$this->session_end();
 		}
 	}
 	
 	//  Returns new PHP associative array for returning to front end.
-	private static function new_return_template()
+	private function new_return_template()
 	{
 		return array (
 			"isError" => false,
@@ -166,7 +178,7 @@ class Session
 		);
 	}
 	
-	private static function new_database_result_template()
+	private function new_database_result_template()
 	{
 		return array (
 			"didInsert" => false,
@@ -176,7 +188,7 @@ class Session
 	}
 
 	//  Formats an error as a PHP associative array.
-	private static function error_assoc($title, $description)
+	private function error_assoc($title, $description)
 	{
 		$return = self::new_return_template();
 		
@@ -188,7 +200,7 @@ class Session
 	}
 
 	//  Formats a result as a PHP associative array.
-	private static function result_assoc($result, $result_information = NULL)
+	private function result_assoc($result, $result_information = NULL)
 	{
 		$return = self::new_return_template();
 		
@@ -198,7 +210,7 @@ class Session
 		return $return;
 	}
 	
-	private static function database_result_assoc($database_result_assoc)
+	private function database_result_assoc($database_result_assoc)
 	{
 		foreach (array_keys(($return = self::new_database_result_template())) as $key)
 		{
@@ -209,6 +221,21 @@ class Session
 		}
 		
 		return $return;
+	}
+	
+	//Arunabha : This method is stubbed in unit tests. Do not directly call php session_start()
+	public function session_start()
+	{
+		session_start();
+		$session = session_id();
+		return $session;
+	}
+	
+	//Arunabha : This method is stubbed in unit tests. Do not directly call php session_end()
+	public function session_end()
+	{
+		session_destroy();
+		session_unset();
 	}
 }
 
