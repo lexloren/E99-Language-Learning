@@ -95,6 +95,16 @@ class APICourse  extends APIBase
 		}
 	}
 	
+	public function students()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_GET["course_id"])))
+		{
+			$this->return_array_as_assoc_for_json($course->get_students());
+		}
+	}
+	
 	public function students_add()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -122,6 +132,16 @@ class APICourse  extends APIBase
 			{
 				Session::get()->set_error_assoc("Course Edit", "Back end failed to add students to course.");
 			}
+		}
+	}
+	
+	public function instructors()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = $this->validate_course_id($_GET["course_id"])))
+		{
+			$this->return_array_as_assoc_for_json($course->get_instructors());
 		}
 	}
 	
