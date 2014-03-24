@@ -35,43 +35,11 @@
   <body role="document">
 
     <!-- Fixed navbar -->
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Xenogloss</a>
-        </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#practice">Practice</a></li>
-            <li><a href="#review">Review</a></li>
-			<li><a href="#tests">Tests</a></li>
-			<li><a href="#progress">Progress</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classes <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-			  <li class="dropdown-header">Current classes</li>
-                <li><a href="#">Chinese 101</a></li>
-                <li><a href="#">Chinese 102</a></li>
-                <li><a href="#">Chinese Literature</a></li>
-                <li class="divider"></li>
-                <li class="dropdown-header">Other</li>
-                <li><a href="#">Search for Classes</a></li>
-              </ul>
-            </li>
-          </ul>
-        </div><!--/.nav-collapse -->
-      </div>
-    </div>
+    <div id="navbar"></div>
 
     <div class="container role="main">
-
+	<div id="success" class="alert alert-success"></div>
+      <div id="failure" class="alert alert-danger"></div>
 	<!-- The "introductory section, where  student selects which decks they would like to practice. -->
 	<div id="deck-selection-container">
 	<form role="form">
@@ -134,7 +102,7 @@
 		
 		<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
 		<div id="card-followup-container">
-		<h4>Rate your knowledge:</h4>
+		<h4>Rate your knowledge to continue:</h4>
 		<div class="btn-group">
 			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
@@ -142,9 +110,6 @@
 			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
 		</div>
-		<br/>
-		<br/>
-		<button type="button" class="btn btn-default btn-lg" id="button-get-next">Next Card</button>
 		<br/>
 		<br/>
 		<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>

@@ -35,4 +35,3 @@ test( "shiftCards(), 0 items", function() {
   equal(0, 0, 'code functions');
 
 });
-
