@@ -28,6 +28,7 @@ class TestDB
 	public static $list_name = 'somelist';
 
 	public static $course_id;
+	public static $course_name = 'some course';
 	
 	public $link = null;
 
@@ -46,7 +47,8 @@ class TestDB
 		self::add_languages($link);
 		self::add_dictionary($link);
 		self::add_user($link);
-		self::add_list($link);
+		self::add_course($link);
+		self::add_list($link);		
 		
 		return $testdb;
 	}
@@ -62,6 +64,9 @@ class TestDB
 			$link->escape_string(self::$session)
 		));
 
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+			
 		self::$user_id = $link->insert_id;
 	}
 
@@ -70,12 +75,16 @@ class TestDB
 		$link->query(sprintf("INSERT INTO languages (lang_code) VALUES ('%s')", self::$lang_code_0));
 		self::$lang_id_0 = $link->insert_id;
 
-		$link->query(sprintf("INSERT INTO languages (lang_code) VALUES ('%s')", self::$lang_code_1));			
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+
+			$link->query(sprintf("INSERT INTO languages (lang_code) VALUES ('%s')", self::$lang_code_1));			
 		self::$lang_id_1 = $link->insert_id;
 		
-		$sql = sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
-			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English'));
-		
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+
+
 		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
 			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English')));
 		
@@ -111,18 +120,23 @@ class TestDB
 		$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
 			self::$lang_id_0, self::$lang_id_1, self::$word_0, self::$word_1, self::$word_1_pronun));
 			
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+
 		self::$entry_id = $link->insert_id;
 	}
 	
-	private static function add_courses($link)
+	private static function add_course($link)
 	{
-		$link->query(sprintf("INSERT INTO courses (user_id, course_name lang_id_0 lang_id_1) VALUES (%d, '%s' %d %d %d)",
+		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1) VALUES (%d, '%s', %d, %d)",
 			self::$user_id,
 			$link->escape_string(self::$course_name),
 			self::$lang_id_0,
 			self::$lang_id_1
 		));
 
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 		self::$course_id = $link->insert_id;
 	}
 }
