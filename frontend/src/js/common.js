@@ -1,0 +1,1 @@
+// To contain global JS functions

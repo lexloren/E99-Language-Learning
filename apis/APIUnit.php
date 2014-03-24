@@ -1,6 +1,6 @@
 <?php
 
-require_once "./APIBase.php";
+require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
 class APIUnit  extends APIBase
@@ -16,36 +16,6 @@ class APIUnit  extends APIBase
 	}
 	
 	public function delete()
-	{
-	
-	}
-	
-	public function instructors()
-	{
-	
-	}
-	
-	public function instructors_add()
-	{
-	
-	}
-	
-	public function instructors_remove()
-	{
-	
-	}
-	
-	public function students()
-	{
-	
-	}
-	
-	public function students_add()
-	{
-	
-	}
-	
-	public function students_remove()
 	{
 	
 	}
@@ -88,7 +58,7 @@ class APIUnit  extends APIBase
 	//      I'm not sure whether we actually need this method.
 	public function select()
 	{
-		Session::set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
+		Session::get()->set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
 	}
 	*/
 }

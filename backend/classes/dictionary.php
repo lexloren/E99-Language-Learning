@@ -58,7 +58,7 @@ class Dictionary
 		$result = $mysqli->query($query);
 		if (!$result)
 		{
-			Session::set_error_assoc("Database Error", $mysqli->error);
+			Session::get()->set_error_assoc("Database Error", $mysqli->error);
 			return null;
 		}
 		
@@ -70,8 +70,8 @@ class Dictionary
 		//  Use pagination only if we have both page size and page number
 		if (isset($pagination["size"]) && isset($pagination["num"]))
 		{
-			self::$page_size = intval($pagination["size"]);
-			self::$page_num = intval($pagination["num"]);
+			self::$page_size = intval($pagination["size"], 10);
+			self::$page_num = intval($pagination["num"], 10);
 		}
 		
 		//  Compute the minimum and maximum entries to return
@@ -124,10 +124,30 @@ class Dictionary
 	public static function get_lang_code($lang_id)
 	{
 		$lang_id = intval($lang_id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
 		$result = $mysqli->query("SELECT * FROM languages WHERE lang_id = $lang_id");
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return $result_assoc["lang_code"];
+		}
+		
+		return null;
+	}
+	
+	public static function get_lang_id($lang_code)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM languages WHERE lang_code LIKE '%s'",
+			$mysqli->escape_string($lang_code)
+		));
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			return intval($result_assoc["lang_id"], 10);
 		}
 		
 		return null;

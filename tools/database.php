@@ -9,7 +9,7 @@ class database
 		
 		$filename = './tools/recreatedb.sql';
 		// MySQL host
-		$mysql_host = 'localhost';
+		$mysql_host = '127.0.0.1';
 		// MySQL username
 		$mysql_username = 'root';
 		// MySQL password

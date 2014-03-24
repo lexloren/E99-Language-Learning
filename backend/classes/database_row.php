@@ -21,6 +21,8 @@ class DatabaseRow
 		return null;
 	}
 	
+	//Commented. Getting error because function signature are not matching with derived objects
+	/*
 	public static function select($id)
 	{
 		return null;
@@ -34,7 +36,7 @@ class DatabaseRow
 	public function delete($id)
 	{
 		return $this;
-	}
+	}*/
 	
 	public function assoc_for_json()
 	{

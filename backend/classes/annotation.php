@@ -51,12 +51,12 @@ class Annotation extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!Session::get_user()) return null;
+		if (!Session::get()->get_user()) return null;
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("DELETE FROM user_entry_annotations WHERE user_id = %d AND annotation_id = %d",
-			Session::get_user()->get_user_id(),
+			Session::get()->get_user()->get_user_id(),
 			$this->get_annotation_id()
 		));
 		

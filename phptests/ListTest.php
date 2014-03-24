@@ -2,28 +2,18 @@
 
 //Tests class list
 require_once './backend/classes/list.php';
-require_once './backend/connection.php';
-require_once './tools/database.php';
+require_once './phptests/TestDB.php';
 
 class ListTest extends PHPUnit_Framework_TestCase
 {
-	private $link;
+	private $db;
 
 	public function setup()
 	{
-		$this->link = database::recreate_database('cscie99test');
-		
-		$this->assertNotNull($this->link, "No database connection");
-
-		Connection::set_shared_instance($this->link);
+		$this->db = TestDB::create();
+		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public function tearDown()
-	{
-		//if (isset($this->link))
-		//	$this->link->close();
-	}
-
 	public function testInsert()
 	{
 		

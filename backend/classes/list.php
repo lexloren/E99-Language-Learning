@@ -11,7 +11,7 @@ class EntryList extends DatabaseRow
 	
 	public static function insert($list_name = null)
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return EntryList::set_error_description("Session user has not reauthenticated.");
 		}
@@ -19,7 +19,7 @@ class EntryList extends DatabaseRow
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
-			Session::get_user()->get_user_id(),
+			Session::get()->get_user()->get_user_id(),
 			$mysqli->escape_string($list_name)
 		));
 		
@@ -97,7 +97,7 @@ class EntryList extends DatabaseRow
 			
 			$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
 				Dictionary::join(),
-				Session::get_user()->get_user_id()
+				Session::get()->get_user()->get_user_id()
 			);
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN ($user_entries) AS user_entries USING (entry_id) WHERE list_id = %d",
@@ -137,7 +137,7 @@ class EntryList extends DatabaseRow
 		);
 	}
 	
-	//  Returns true iff Session::get_user() can read this list for any reason
+	//  Returns true iff Session::get()->get_user() can read this list for any reason
 	public function session_user_can_read()
 	{
 		return $this->session_user_can_write()
@@ -145,7 +145,7 @@ class EntryList extends DatabaseRow
 			|| $this->is_public();
 	}
 	
-	//  Returns true iff Session::get_user() is in any course in which this list is shared
+	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
 	private function session_user_can_read_via_course()
 	{
 		foreach ($this->get_owner()->get_student_courses() as $student_course)
@@ -163,15 +163,15 @@ class EntryList extends DatabaseRow
 		return false;
 	}
 	
-	//  Returns true iff Session::get_user() owns this list
+	//  Returns true iff Session::get()->get_user() owns this list
 	public function session_user_can_write()
 	{
-		return !!Session::get_user() && (Session::get_user()->get_user_id() === $this->get_user_id());
+		return !!Session::get()->get_user() && (Session::get()->get_user()->get_user_id() === $this->get_user_id());
 	}
 	
 	public function delete()
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return EntryList::set_error_description("Session user has not reauthenticated.");
 		}
@@ -179,7 +179,7 @@ class EntryList extends DatabaseRow
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
-			Session::get_user()->get_user_id(),
+			Session::get()->get_user()->get_user_id(),
 			$this->list_id
 		));
 		
@@ -235,7 +235,7 @@ class EntryList extends DatabaseRow
 					$entry_removed->get_entry_id()
 				));
 				
-				unset ($this->entries);
+				unset($this->entries);
 				
 				return $this;
 			}
@@ -248,7 +248,7 @@ class EntryList extends DatabaseRow
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::get_user() || !$this->session_user_can_read())
+		if (!Session::get()->get_user() || !$this->session_user_can_read())
 		{
 			return EntryList::set_error_description("Session user cannot read list.");
 		}
@@ -256,7 +256,7 @@ class EntryList extends DatabaseRow
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) SELECT %d, list_name FROM lists WHERE list_id = %d",
-			Session::get_user()->get_user_id(),
+			Session::get()->get_user()->get_user_id(),
 			$this->get_list_id()
 		));
 		

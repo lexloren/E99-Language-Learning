@@ -8,10 +8,9 @@ $mysqli = Connection::get_shared_instance();
 $result = $mysqli->query("SELECT * FROM languages");
 if (!$result)
 {
-	Session::exit_with_error("Database Error", $mysqli->error);
+	Session::get()->exit_with_error("Database Error", $mysqli->error);
 }
 $languages_available = mysqli_fetch_all_assocs($result);
-$result->close();
 
 //  Create a dictionary mapping language codes to language identifiers
 $lang_codes_dictionary = array();
@@ -50,8 +49,8 @@ if (isset($_GET["query"]))
 	if (isset($_GET["page_size"]) && isset($_GET["page_num"]))
 	{
 		$pagination = array(
-			"size" => intval($_GET["page_size"]),
-			"num" => intval($_GET["page_num"])
+			"size" => intval($_GET["page_size"], 10),
+			"num" => intval($_GET["page_num"], 10)
 		);
 	}
 	
@@ -70,13 +69,13 @@ if (isset($_GET["query"]))
 	}
 	
 	//      Finally, format the query results and send them to the front end
-	Session::exit_with_result($entries_returnable, array (
+	Session::get()->exit_with_result($entries_returnable, array (
 		"entriesCount" => Dictionary::$look_up_last_count,
 		"pageSize" => Dictionary::$page_size,
 		"pageNum" => Dictionary::$page_num
 	));
 }
 
-Session::exit_with_error("Missing Query", "The call specified no query.");
+Session::get()->exit_with_error("Missing Query", "The call specified no query.");
 
 ?>

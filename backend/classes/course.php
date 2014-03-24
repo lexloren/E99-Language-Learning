@@ -11,7 +11,7 @@ class Course extends DatabaseRow
 	
 	public static function insert($lang_code_0, $lang_code_1, $course_name = null)
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return Course::set_error_description("Session user has not reauthenticated.");
 		}
@@ -34,18 +34,18 @@ class Course extends DatabaseRow
 			? "'".$mysqli->escape_string($course_name)."'"
 			: "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO courses (lang_id_0, lang_id_1, course_name) %s",
-			"SELECT $language_ids, $course_name FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		$course_id = self::select($mysqli->insert_id);
+		$course = self::select($mysqli->insert_id);
 		
 		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
-			$course_id,
-			Session::get_user()->get_user_id()
+			$course->get_course_id(),
+			Session::get()->get_user()->get_user_id()
 		));
 		
-		return self::select($mysqli->insert_id);
+		return $course;
 	}
 	
 	public static function select($course_id)
@@ -70,6 +70,16 @@ class Course extends DatabaseRow
 	public function get_course_id()
 	{
 		return $this->course_id;
+	}
+	
+	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	public function get_owner()
+	{
+		return User::select($this->get_user_id());
 	}
 	
 	private $course_name = null;
@@ -113,7 +123,7 @@ class Course extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_instructors WHERE course_id = %d",
+			$result = $mysqli->query(sprintf("SELECT users.* FROM course_instructors LEFT JOIN users USING (user_id) WHERE course_id = %d",
 				$this->get_course_id()
 			));
 			
@@ -126,11 +136,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		if (!Session::get_user()) return false;
+		if (!Session::get()->get_user()) return false;
 		
 		foreach ($this->get_instructors() as $instructor)
 		{
-			if (Session::get_user()->equals($instructor)) return true;
+			if (Session::get()->get_user()->equals($instructor)) return true;
 		}
 		
 		return false;
@@ -145,7 +155,7 @@ class Course extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_students WHERE course_id = %d",
+			$result = $mysqli->query(sprintf("SELECT users.* FROM course_students LEFT JOIN users USING (user_id) WHERE course_id = %d",
 				$this->get_course_id()
 			));
 			
@@ -159,11 +169,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		if (!Session::get_user()) return false;
+		if (!Session::get()->get_user()) return false;
 		
 		foreach ($this->get_students() as $student)
 		{
-			if (Session::get_user()->equals($student)) return true;
+			if (Session::get()->get_user()->equals($student)) return true;
 		}
 		
 		return false;
@@ -179,7 +189,7 @@ class Course extends DatabaseRow
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM course_units WHERE course_id = %d",
-				intval($this->get_course_id())
+				intval($this->get_course_id(), 10)
 			));
 
 			while (($unit_assoc = $result->fetch_assoc()))
@@ -200,9 +210,10 @@ class Course extends DatabaseRow
 		return $lists;
 	}
 	
-	private function __construct($course_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
 	{
 		$this->course_id = intval($course_id, 10);
+		$this->user_id = intval($user_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
 		$this->course_name = $course_name;
@@ -220,18 +231,29 @@ class Course extends DatabaseRow
 		
 		return new Course(
 			$result_assoc["course_id"],
+			$result_assoc["user_id"],
 			$result_assoc["lang_id_0"],
 			$result_assoc["lang_id_1"],
-			!!$result_assoc["course_name"] && strlen($result_assoc["course_name"]) > 0 ? $result_assoc["course_name"] : null,
+			$result_assoc["course_name"],
 			$result_assoc["public"]
 		);
 	}
 	
+	public function session_user_can_write()
+	{
+		return $this->session_user_is_instructor() || $this->get_owner()->equals(Session::get()->get_user());
+	}
+	
+	public function session_user_can_read()
+	{
+		return $this->session_user_can_write() || $this->session_user_is_instructor() || $this->session_user_is_student();
+	}
+	
 	public function delete()
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->get_owner()->equals(Session::get()->get_user()))
 		{
-			return Course::set_error_description("Session user is not instructor of course.");
+			return Course::set_error_description("Session user is not owner of course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -245,7 +267,12 @@ class Course extends DatabaseRow
 	
 	private function add_user(&$array, $table, $user)
 	{
-		if (!$this->session_user_is_instructor() || $user->in_array($array))
+		if (!$this->session_user_can_write())
+		{
+			return Course::set_error_description("Session user cannot edit course.");
+		}
+		
+		if ($user->in_array($array))
 		{
 			return Course::set_error_description("Course cannot add user.");
 		}
@@ -274,9 +301,9 @@ class Course extends DatabaseRow
 	
 	private function remove_user(&$array, $table, $user)
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_can_write())
 		{
-			return Course::set_error_description("Session user is not instructor of course.");
+			return Course::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -286,13 +313,7 @@ class Course extends DatabaseRow
 			$user->get_user_id()
 		));
 		
-		$array_new = array ();
-		foreach ($array as $item)
-		{
-			if (!$array->equals($user)) array_push($array_new, $item);
-		}
-		
-		$array = $array_new;
+		unset($array);
 		
 		return $this;
 	}
@@ -309,14 +330,15 @@ class Course extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_instructor();
+		$omniscience = $this->get_owner()->equals(Session::get()->get_user());
 		
 		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_is_student();
+		else if ($privacy === null) $privacy = !$this->session_user_can_read();
 		
 		return array (
 			"courseId" => $this->get_course_id(),
 			"courseName" => !$privacy ? $this->get_course_name() : null,
+			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => !$privacy ? $this->is_public() : null,
 			"timeframe" => null // Not yet implemented
 		);

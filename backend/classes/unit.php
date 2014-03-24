@@ -11,7 +11,7 @@ class Unit extends DatabaseRow
 	
 	public static function insert($course_id, $unit_name = null)
 	{
-		if (!Session::get_user())
+		if (!Session::get()->get_user())
 		{
 			return Unit::set_error_description("Session user has not reauthenticated.");
 		}
@@ -176,7 +176,7 @@ class Unit extends DatabaseRow
 		
 		$list = EntryList::select($list_id);
 		
-		if (!$list->get_owner()->equals(Session::get_user()))
+		if (!$list->get_owner()->equals(Session::get()->get_user()))
 		{
 			return Unit::set_error_description("Session user is not owner of list.");
 		}
@@ -207,7 +207,7 @@ class Unit extends DatabaseRow
 			$this->get_unit_id()
 		));
 		
-		unset ($this->lists);
+		unset($this->lists);
 		
 		return $this;
 	}

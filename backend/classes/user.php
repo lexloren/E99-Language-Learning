@@ -60,15 +60,15 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			Session::set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
+			Session::get()->set_error_assoc("Invalid Email", "Email must conform to the standard pattern.");
 		}
 		else if (!self::validate_password($password))
 		{
-			Session::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			Session::get()->set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		else if (!self::validate_handle($handle))
 		{
-			Session::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			Session::get()->set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 		else
 		{
@@ -79,7 +79,7 @@ class User extends DatabaseRow
 			
 			if ($existing_user = $result->fetch_assoc())
 			{
-				Session::set_error_assoc("Handle Conflict", "The requested handle is already taken.");
+				Session::get()->set_error_assoc("Handle Conflict", "The requested handle is already taken.");
 				return null;
 			}
 			
@@ -97,15 +97,13 @@ class User extends DatabaseRow
 			));
 			
 			//  Just make sure we actually created the user
-			if (!$result)
+			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				Session::set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
+				Session::get()->set_error_assoc("Unknown Error", "The back end unexpectedly failed to create the user.");
 				return null;
 			}
-			$user_assoc = $result->fetch_assoc();
-			$result->close();
 			
-			return User::from_mysql_result_assoc($user_assoc);
+			return User::from_mysql_result_assoc($result_assoc);
 		}
 	}
 	
@@ -181,47 +179,152 @@ class User extends DatabaseRow
 		);
 	}
 	
+	//  To be completed....
+	//      This function will factor out get_lists(), get_student_courses(), and get_instructor_courses()
+	/*
+	private function populate(&$collection, $class, $table_relational, $table_informative, $id_column)
+	{
+		if (!($this->is_session_user())) return null;
+		
+		if (!isset($collection))
+		{
+			$collection = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query("SELECT $table_informative.* FROM $table_relational LEFT JOIN $table_informative USING ($id_column) WHERE $table_relational.user_id = " . $this->get_user_id());
+			
+			//  Unknown error
+			if (!$result) return null;
+			
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($instance = $class::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($collection, $instance);
+				}
+			}
+		}
+		
+		return $collection;
+	}
+	*/
+	
 	private $lists;
 	public function get_lists()
 	{
-		//  Don't let the session user get lists for other users
+		//  return $this->populate($this->lists, EntryList, "user_lists", "lists", "list_id");
+		
 		if (!($this->is_session_user())) return null;
 		
 		if (!isset($this->lists))
 		{
+			$this->lists = array ();
+			
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
 				$this->get_user_id()
 			));
 			
-			//  Unknown error
-			if (!$result) return null;
-			
-			$lists = array ();
 			while (!!($result_assoc = $result->fetch_assoc()))
 			{
-				if (!!($list = EntryList::select($result_assoc["list_id"]))) array_push($lists, $list);
+				if (!!($list = EntryList::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($this->lists, $list);
+				}
 			}
-			
-			$this->lists = $lists;
 		}
 		
 		return $this->lists;
 	}
 	
+	private $courses;
+	public function get_courses()
+	{
+		//  return $this->populate($this->instructor_courses, Course, "course_instructors", "courses", "course_id");
+		
+		if (!($this->is_session_user())) return null;
+		
+		if (!isset($this->courses))
+		{
+			$this->courses = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM courses WHERE user_id = %d",
+				$this->get_user_id()
+			));
+			
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($this->courses, $course);
+				}
+			}
+		}
+		
+		return $this->courses;
+	}
+	
+	
 	private $instructor_courses;
 	public function get_instructor_courses()
 	{
-		//  STUB
-		return array ();
+		//  return $this->populate($this->instructor_courses, Course, "course_instructors", "courses", "course_id");
+		
+		if (!($this->is_session_user())) return null;
+		
+		if (!isset($this->instructor_courses))
+		{
+			$this->instructor_courses = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_instructors LEFT JOIN courses USING (course_id) WHERE course_instructors.user_id = %d",
+				$this->get_user_id()
+			));
+			
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($this->instructor_courses, $course);
+				}
+			}
+		}
+		
+		return $this->instructor_courses;
 	}
 	
 	private $student_courses;
 	public function get_student_courses()
 	{
-		//  STUB
-		return array ();
+		//  return $this->populate($this->student_courses, Course, "course_students", "courses", "course_id");
+		
+		if (!($this->is_session_user())) return null;
+		
+		if (!isset($this->student_courses))
+		{
+			$this->student_courses = array ();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_students LEFT JOIN courses USING (course_id) WHERE course_students.user_id = %d",
+				$this->get_user_id()
+			));
+			
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
+				{
+					array_push($this->student_courses, $course);
+				}
+			}
+		}
+		
+		return $this->student_courses;
 	}
 	
 	public function in_array($array)
@@ -241,7 +344,7 @@ class User extends DatabaseRow
 	
 	public function is_session_user()
 	{
-		return $this->equals(Session::get_user());
+		return $this->equals(Session::get()->get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)
