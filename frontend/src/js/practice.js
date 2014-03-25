@@ -26,7 +26,7 @@ $.mockjax({
 });
 
 $.mockjax({
-  url: 'practice.php',
+  url: 'user_practice.php',
   responseText: {
 	"isError":false,
 	"errorTitle":null,
@@ -233,7 +233,7 @@ function getCards() {
 		requestedDecks.push(this.id);
 	});
 	var string = JSON.stringify(requestedDecks);
-	$.getJSON( 'practice.php', string, function( data ) {
+	$.getJSON( 'user_practice.php', string, function( data ) {
 		if (data.isError === true) {
 			console.log(data.errorTitle);
 			console.log(data.errorDescription);
@@ -265,6 +265,6 @@ function nextCard() {
 
 /* send student ratings to the backend */
 function send_rating(value) {
-	$.post('insert_result.php', 
+	$.post('entry_results_insert.php', 
         { 'entry_id' : wordList[0].entryId, 'correctness' : value });
 }
