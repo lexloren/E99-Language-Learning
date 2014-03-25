@@ -8,6 +8,20 @@ body {
   padding: 30px
 }
 
+.container-small{
+  width: 300px;
+  align: left;
+}
+
+.span-action{
+  color: #428bca;
+  cursor: pointer;
+}
+
+.span-action:hover{
+  color: #2a6496;
+}
+
 .starter-template {
   padding: 40px 15px;
   text-align: center;

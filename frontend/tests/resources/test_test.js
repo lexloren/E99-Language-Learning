@@ -85,7 +85,7 @@ test("test creation success", function(){
 			redirectUrl = validtestparamUrl;
 		}
     else{
-      redirectUrl = validtestparamUrl;
+      redirectUrl = "";
     }
     ok(redirectUrl === validtestparamUrl, "Test successfully created.");
     start();	
