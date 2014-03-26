@@ -12,15 +12,21 @@ var wordList = [];
 /* mockjax for testing */
 
 $.mockjax({
-  url: 'enumerate_lists.php',
+  url: 'user_lists.php',
   responseText: {
-	'1' : 'Lesson 1: Family', 
-	'2' : 'Lesson 2: Animals' 
-  }
+	"isError":false,
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[
+		{"listId" : 1,
+		"listName" : "Lesson 1: Family"},
+		{"listId" : 2,
+		"listName" : "Lesson 2: Animals"}],
+	},
 });
 
 $.mockjax({
-  url: 'practice.php',
+  url: 'user_practice.php',
   responseText: {
 	"isError":false,
 	"errorTitle":null,
@@ -60,15 +66,15 @@ $.mockjax({
 		"entryId":"5",
 		"word":"Word 5",
 		"translation":"Translation 5",
-		"pronunciation":"Pronunciation 5",},
+		"pronunciation":"Pronunciation 5"},
 		{"entryId":"6",
 		"word":"Word 6",
 		"translation":"Translation 6",
-		"pronunciation":"Pronunciation 6",},
+		"pronunciation":"Pronunciation 6"},
 		{"entryId":"7",
 		"word":"Word 7",
 		"translation":"Translation 7",
-		"pronunciation":"Pronunciation 7",}],
+		"pronunciation":"Pronunciation 7"}],
 	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
 });
 
@@ -85,10 +91,13 @@ $( document ).ready(function() {
 /* set up document for first use. */
 
 function setupDoc() {
+	$("#success").hide();
+    $("#failure").hide();
+    $("#navbar").load("navbar.html");
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
 	$('#card-followup-container').hide();
-};
+}
 
 function handleClicks() {
 
@@ -102,6 +111,8 @@ function handleClicks() {
 	$(".rating-button").click(function(event) {
 		event.preventDefault();
 		send_rating(this.value);
+		shiftCards();
+		nextCard();
 	});
 	
 	/* char/word lookup */
@@ -113,9 +124,7 @@ function handleClicks() {
 	$(document).on('click', '.dictionary-close', function () {
 		$('#translation-panel').hide();
 	});	
-	
-	
-	
+
 	/* show hidden cards */
 	$('#flashcard-word-button').click(function(event) {
 		event.preventDefault();
@@ -130,60 +139,64 @@ function handleClicks() {
 		$('#flashcard-trans-panel').html(wordList[0].translation);
 	});
 
-	/* shift the array and get the next card */
-	$('#button-get-next').click(function(event) {
-		event.preventDefault();
-		shiftCards();
-		nextCard();
-	});
-	
 	/* open menu to select a new deck */
 	$('#button-new-deck').click(function(event) {
 		event.preventDefault();
 		setupDoc();
 	});
-};
+}
 
 /* split the word into individual characters */
 function getWord(word) {
 	var myarray = word.split('');
 	var newWord = '';
 	$.each(myarray, function() {
-		wordspan = '<span class="char-of-word">' + this + '</span>';
-		newWord = newWord.concat(wordspan);
+		newWord = newWord.concat('<span class="char-of-word">' + this + '</span>');
 	});
 	return newWord;
-};
+}
 
 function shiftCards() {
 	var temp = wordList[0];
 	wordList.shift();
 	wordList.push(temp);
-};
+}
 
 /* request a list of the user's decks from the backend and populate the "select
 your decks" form */
 function getLists() {
-	$.getJSON( 'enumerate_lists.php', function( data ) {
-		$.each( data, function( key, value ) {
-			$('#deck-selection-form').append('<div class="checkbox"><label>' + 
-			'<input type="checkbox" name ="wordlist" id="' + key + '"> ' + value + ' </label></div>');
-		});
+	$.getJSON( 'user_lists.php', function( data ) {
+		if (data.isError === true) {
+			console.log(data.errorTitle);
+			console.log(data.errorDescription);
+		} else {
+			$.each( data.result, function( ) {
+				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
+				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.listName + ' </label></div>');
+			});
+		}
+	})
+	 .fail(function() {
+		console.log( "error" );
 	});
-};
+}
 
 /*  */
 function get_dictionary(word) {
 	$('#translation-panel').show();
 	$('#translation-panel-inner').html('');
 	$.getJSON( 'query_dictionary.php', {query : word }, function( data ) {
-		console.log(data);
-		$.each( data.result, function() {
-		$('#translation-panel-inner').append('<div>' + this.word + ' : ' + this.translation +
-			' : ' + this.pronunciation + '</div>');
-		});
+		if (data.isError === true) {
+			console.log(data.errorTitle);
+			console.log(data.errorDescription);
+		} else {
+			$.each( data.result, function() {
+			$('#translation-panel-inner').append('<div>' + this.word + ' : ' + this.translation +
+				' : ' + this.pronunciation + '</div>');
+			});
+		}
 	});
-};
+}
 
 
 /* send user's selected decks to the backend and receive a list of cards to practice with */
@@ -199,17 +212,17 @@ function getCards() {
 	$('#flashcard-container').show();
 	$('#card-followup-container').show();
 	
-	if ($('#show-word').prop('checked') == true) {
+	if ($('#show-word').prop('checked') === true) {
 		showWord = true;
 	} else {
 		showWord = false;
 	}
-	if ($('#show-pronounce').prop('checked') == true) {
+	if ($('#show-pronounce').prop('checked') === true) {
 		showPronun = true;
 	} else {
 		showPronun = false;
 	}
-	if ($('#show-trans').prop('checked') == true) {
+	if ($('#show-trans').prop('checked') === true) {
 		showTrans = true;
 	} else {
 		showTrans = false;
@@ -220,11 +233,16 @@ function getCards() {
 		requestedDecks.push(this.id);
 	});
 	var string = JSON.stringify(requestedDecks);
-	$.getJSON( 'practice.php', string, function( data ) {
-		wordList = data.result;
-		nextCard();
+	$.getJSON( 'user_practice.php', string, function( data ) {
+		if (data.isError === true) {
+			console.log(data.errorTitle);
+			console.log(data.errorDescription);
+		} else {
+			wordList = data.result;
+			nextCard();
+		}
 	});
-};
+}
 
 /* use the first card to populate the "flashcard view", using view preferences that the user specified earlier */
 function nextCard() {
@@ -243,10 +261,10 @@ function nextCard() {
 	} else {
 		$('#flashcard-trans-panel').html('');
 	}
-};
+}
 
 /* send student ratings to the backend */
 function send_rating(value) {
-	$.post('insert_result.php', 
+	$.post('entry_results_insert.php', 
         { 'entry_id' : wordList[0].entryId, 'correctness' : value });
-};
+}
