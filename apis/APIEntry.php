@@ -24,7 +24,7 @@ class APIEntry extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Request", "Request must include entry_id.");
 		}
-		else if (!($entry = Entry::select(($entry_id = intval($entry_id, 10)))))
+		else if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10)))))
 		{
 			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = $entry_id.");
 		}

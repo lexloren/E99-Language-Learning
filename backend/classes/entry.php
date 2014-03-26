@@ -24,7 +24,7 @@ class Entry extends DatabaseRow
 		return self::$user_entries_by_id[$user_id];
 	}
 	
-	public static function select($entry_id)
+	public static function select_by_id($entry_id)
 	{
 		return Dictionary::select_entry($entry_id);
 	}
@@ -44,7 +44,12 @@ class Entry extends DatabaseRow
 	}	
 
 	private $pronunciations = null;
-	private $annotations = null;
+	public function get_pronunciations()
+	{
+		return $this->pronunciations;
+	}
+
+	private $annotations;
 	public function get_annotations()
 	{
 		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
@@ -53,7 +58,7 @@ class Entry extends DatabaseRow
 			return Entry::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		if (!$this->annotations)
+		if (!isset($this->annotations))
 		{
 			$this->annotations = array ();
 			
@@ -78,10 +83,9 @@ class Entry extends DatabaseRow
 	{
 		return $this->user_id;
 	}
-	
 	public function get_owner()
 	{
-		return !!$this->user_id ? User::select($this->user_id) : null;
+		return !!$this->user_id ? User::select_by_id($this->user_id) : null;
 	}
 	
 	private $interval = null;
@@ -184,35 +188,27 @@ class Entry extends DatabaseRow
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
-	public function add_annotation($annotation_contents)
+	public function annotations_add($annotation_contents)
 	{
 		if (!$this->session_user_can_write())
 		{
 			return Entry::set_error_description("Session user cannot edit entry.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
+		$annotation = Annotation::insert($this->get_entry_id(), $annotation_contents);
 		
-		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_id, entry_id, contents) VALUES (%d, %d, '%s'",
-			$this->user_id,
-			$this->entry_id,
-			$mysqli->escape_string($annotation_contents)
-		));
-		
-		$result = $mysqli->query("SELECT * FROM user_entry_annotations WHERE annotation_id = %d", $mysqli->insert_id);
-		
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
+		if (!!$annotation)
 		{
-			array_push($this->get_annotations(), Annotation::from_mysql_result_assoc($result_assoc));
+			array_push($this->get_annotations(), $annotation);
+			return $this;
 		}
 		
-		return $this;
+		return Entry::set_error_description(Annotation::get_error_description());
 	}
 	
-	public function remove_annotation($annotation)
+	public function annotations_remove($annotation)
 	{
-		if (!in_array($annotation, $this->get_annotations())
-			|| $annotation->get_entry_id() !== $this->get_entry_id())
+		if ($annotation->get_entry_id() !== $this->get_entry_id())
 		{
 			return Entry::set_error_description("Cannot delete annotation.");
 		}
@@ -220,7 +216,6 @@ class Entry extends DatabaseRow
 		$annotation->delete();
 		
 		unset($this->annotations);
-		$this->annotations = null;
 		
 		return $this;
 	}

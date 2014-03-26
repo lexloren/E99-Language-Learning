@@ -17,7 +17,7 @@ class Unit extends DatabaseRow
 		}
 		
 		$course_id = intval($course_id, 10);
-		$course = Course::select($course_id);
+		$course = Course::select_by_id($course_id);
 		
 		if (!$course->session_user_is_instructor())
 		{
@@ -30,10 +30,10 @@ class Unit extends DatabaseRow
 			!!$unit_name && strlen($unit_name) > 0 ? "'" . $mysqli->escape_string($unit_name) . "'" : "NULL"
 		));
 		
-		return self::select($mysqli->insert_id);
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
-	public static function select($unit_id)
+	public static function select_by_id($unit_id)
 	{
 		$unit_id = intval($unit_id, 10);
 		
@@ -58,7 +58,7 @@ class Unit extends DatabaseRow
 	}
 	public function get_course()
 	{
-		return Course::select($this->get_course_id());
+		return Course::select_by_id($this->get_course_id());
 	}
 	
 	private $unit_id = null;
@@ -73,10 +73,10 @@ class Unit extends DatabaseRow
 		return $this->unit_name;
 	}
 	
-	private $tests = null;
+	private $tests;
 	public function get_tests()
 	{
-		if (!$this->tests)
+		if (!isset($this->tests))
 		{
 			$this->tests = array ();
 			
@@ -94,10 +94,10 @@ class Unit extends DatabaseRow
 		return $this->tests;
 	}
 	
-	private $lists = null;
+	private $lists;
 	public function get_lists()
 	{
-		if (!$this->lists)
+		if (!isset($this->lists))
 		{
 			$this->lists = array ();
 			
@@ -165,7 +165,8 @@ class Unit extends DatabaseRow
 		return $this->get_course()->session_user_is_student();
 	}
 	
-	public function add_list($list_id)
+	//  TO FIX: FOR CONSISTENCY, SHOULD ACCEPT AN ENTRYLIST OBJECT, NOT A LIST ID
+	public function lists_add($list_id)
 	{
 		$list_id = intval($list_id, 10);
 		
@@ -174,7 +175,7 @@ class Unit extends DatabaseRow
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
 		
-		$list = EntryList::select($list_id);
+		$list = EntryList::select_by_id($list_id);
 		
 		if (!$list->get_owner()->equals(Session::get()->get_user()))
 		{
@@ -192,6 +193,7 @@ class Unit extends DatabaseRow
 		return $this;
 	}
 	
+	//  TO FIX: FOR CONSISTENCY, SHOULD ACCEPT AN ENTRYLIST OBJECT, NOT A LIST ID
 	public function remove_list($list_id)
 	{
 		$list_id = intval($list_id, 10);

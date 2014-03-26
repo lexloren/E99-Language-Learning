@@ -17,7 +17,7 @@ class APIAnnotation extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Request", "Request must include entry_id.");
 		}
-		else if (!($entry = Entry::select(($entry_id = intval($entry_id, 10)))))
+		else if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10)))))
 		{
 			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = $entry_id.");
 		}
@@ -39,7 +39,7 @@ class APIAnnotation extends APIBase
 			{
 				$entry = $entry->copy_for_session_user();
 				
-				$entry->add_annotation($_POST["contents"]);
+				$entry->annotations_add($_POST["contents"]);
 				
 				Session::get()->set_result_assoc($entry->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
@@ -54,7 +54,7 @@ class APIAnnotation extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Request", "Request must include annotation_id.");
 		}
-		else if (($annotation = Annotation::select($_POST["annotation_id"])))
+		else if (($annotation = Annotation::select_by_id($_POST["annotation_id"])))
 		{
 			$annotation->delete();
 			Session::get()->set_result_assoc($annotation->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));

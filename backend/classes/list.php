@@ -23,10 +23,10 @@ class EntryList extends DatabaseRow
 			$mysqli->escape_string($list_name)
 		));
 		
-		return self::select($mysqli->insert_id);
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
-	public static function select($list_id)
+	public static function select_by_id($list_id)
 	{
 		$list_id = intval($list_id, 10);
 		
@@ -71,7 +71,7 @@ class EntryList extends DatabaseRow
 	}
 	public function get_owner()
 	{
-		return User::select($this->get_user_id());
+		return User::select_by_id($this->get_user_id());
 	}
 	
 	private $list_name;
@@ -188,7 +188,7 @@ class EntryList extends DatabaseRow
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function add_entry($entry_to_add)
+	public function entries_add($entry_to_add)
 	{
 		if (!$this->session_user_can_write())
 		{
@@ -217,7 +217,7 @@ class EntryList extends DatabaseRow
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function remove_entry($entry_to_remove)
+	public function entries_remove($entry_to_remove)
 	{
 		if (!$this->session_user_can_write())
 		{
@@ -272,7 +272,7 @@ class EntryList extends DatabaseRow
 			$this->get_list_id()
 		));
 		
-		return EntryList::select($copy_id);
+		return EntryList::select_by_id($copy_id);
 	}
 	
 	public function assoc_for_json()

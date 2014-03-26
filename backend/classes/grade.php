@@ -9,12 +9,12 @@ class Grade extends DatabaseRow
 
 	private static $grades_by_id = array ();
 
-	public static function insert()
+	public static function insert($point, $desc_short = null, $desc_long = null)
 	{
-		return;
+		return null;
 	}
 
-	public static function select($grade_id)
+	public static function select_by_id($grade_id)
 	{
 		$grade_id = intval($grade_id, 10);
 
@@ -81,9 +81,9 @@ class Grade extends DatabaseRow
 		);
 	}
 
-	public function delete()
+	public function delete($grade_id)
 	{
-		return;
+		return null;
 	}
 
 	public function assoc_for_json()

@@ -5,6 +5,25 @@ require_once "./backend/classes.php";
 
 class Annotation extends DatabaseRow
 {
+	public static function select_by_id($annotation_id)
+	{
+		$annotation_id = intval($annotation_id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations WHERE user_id = %d AND annotation_id = %d",
+			Session::get()->get_user()->get_user_id(),
+			$annotation_id
+		));
+		
+		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			return Annotation::from_mysql_result_assoc($result_assoc);
+		}
+		
+		return Annotation::set_error_description("Failed to select annotation where annotation_id = $annotation_id.");
+	}
+
 	private $contents;
 	public function get_contents()
 	{
@@ -49,6 +68,21 @@ class Annotation extends DatabaseRow
 		);
 	}
 	
+	public static function insert($entry_id, $contents)
+	{
+		$entry_id = intval($entry_id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_id, entry_id, contents) VALUES (%d, %d, '%s'",
+			Session::get_user()->get_user_id(),
+			$entry_id,
+			$mysqli->escape_string($contents)
+		));
+		
+		return Annotation::select_by_id($mysqli->insert_id);
+	}
+	
 	public function delete()
 	{
 		if (!Session::get()->get_user()) return null;
@@ -60,7 +94,7 @@ class Annotation extends DatabaseRow
 			$this->get_annotation_id()
 		));
 		
-		return null;
+		return $this;
 	}
 	
 	public function assoc_for_json()

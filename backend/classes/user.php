@@ -37,7 +37,7 @@ class User extends DatabaseRow
 	}
 	
 	//  Creates a User object by selecting from the database
-	public static function select($user_id)
+	public static function select_by_id($user_id)
 	{
 		$user_id = intval($user_id, 10);
 		

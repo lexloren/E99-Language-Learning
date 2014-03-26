@@ -38,7 +38,7 @@ class Course extends DatabaseRow
 			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		$course = self::select($mysqli->insert_id);
+		$course = self::select_by_id($mysqli->insert_id);
 		
 		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
 			$course->get_course_id(),
@@ -48,7 +48,7 @@ class Course extends DatabaseRow
 		return $course;
 	}
 	
-	public static function select($course_id)
+	public static function select_by_id($course_id)
 	{
 		$course_id = intval($course_id, 10);
 		
@@ -79,7 +79,7 @@ class Course extends DatabaseRow
 	}
 	public function get_owner()
 	{
-		return User::select($this->get_user_id());
+		return User::select_by_id($this->get_user_id());
 	}
 	
 	private $course_name = null;
@@ -114,10 +114,10 @@ class Course extends DatabaseRow
 		return !!$this->public;
 	}
 	
-	private $instructors = null;
+	private $instructors;
 	public function get_instructors()
 	{
-		if (!$this->instructors)
+		if (!isset($this->instructors))
 		{
 			$this->instructors = array ();
 			
@@ -146,10 +146,10 @@ class Course extends DatabaseRow
 		return false;
 	}
 	
-	private $students = null;
+	private $students;
 	public function get_students()
 	{
-		if (!$this->students)
+		if (!isset($this->students))
 		{
 			$this->students = array ();
 			
@@ -179,10 +179,10 @@ class Course extends DatabaseRow
 		return false;
 	}
 	
-	private $units = null;
+	private $units;
 	public function get_units()
 	{
-		if (!$this->units)
+		if (!isset($this->units))
 		{
 			$this->units = array();
 			
@@ -265,7 +265,7 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
-	private function add_user(&$array, $table, $user)
+	private function users_add(&$array, $table, $user)
 	{
 		if (!$this->session_user_can_write())
 		{
@@ -289,17 +289,17 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
-	public function add_instructor($user)
+	public function instructors_add($user)
 	{
-		return $this->add_user($this->get_instructors(), "course_instructors", $user);
+		return $this->users_add($this->get_instructors(), "course_instructors", $user);
 	}
 	
-	public function add_student($user)
+	public function students_add($user)
 	{
-		return $this->add_user($this->get_students(), "course_students", $user);
+		return $this->users_add($this->get_students(), "course_students", $user);
 	}
 	
-	private function remove_user(&$array, $table, $user)
+	private function users_remove(&$array, $table, $user)
 	{
 		if (!$this->session_user_can_write())
 		{
@@ -318,14 +318,14 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
-	public function remove_instructor($user)
+	public function instructors_remove($user)
 	{
-		return $this->remove_user($this->get_instructors(), "course_instructors", $user);
+		return $this->users_remove($this->get_instructors(), "course_instructors", $user);
 	}
 	
-	public function remove_student($user)
+	public function students_remove($user)
 	{
-		return $this->remove_user($this->get_students(), "course_students", $user);
+		return $this->users_remove($this->get_students(), "course_students", $user);
 	}
 	
 	public function assoc_for_json($privacy = null)

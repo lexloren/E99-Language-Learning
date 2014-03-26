@@ -39,7 +39,7 @@ class APIList extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Post", "List-deletion post must include list_id.");
 		}
-		else if (!($list = EntryList::select(($list_id = intval($_POST["list_id"], 10)))))
+		else if (!($list = EntryList::select_by_id(($list_id = intval($_POST["list_id"], 10)))))
 		{
 			Session::get()->set_error_assoc("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
 		}
@@ -57,7 +57,7 @@ class APIList extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Request", "Request must include list_id.");
 		}
-		else if (!($list = EntryList::select(($list_id = intval($list_id, 10)))))
+		else if (!($list = EntryList::select_by_id(($list_id = intval($list_id, 10)))))
 		{
 			Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
 		}
@@ -97,7 +97,7 @@ class APIList extends APIBase
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					if (!$list->add_entry(Entry::select($entry_id)))
+					if (!$list->entries_add(Entry::select_by_id($entry_id)))
 					{
 						Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
 						return;
@@ -127,7 +127,7 @@ class APIList extends APIBase
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					if (!$list->remove_entry(Entry::select($entry_id)))
+					if (!$list->entries_remove(Entry::select_by_id($entry_id)))
 					{
 						Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
 						return;
@@ -154,7 +154,7 @@ class APIList extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Get", "List-description get must include list_id.");
 		}
-		else if (!($list = EntryList::select($_GET["list_id"])))
+		else if (!($list = EntryList::select_by_id($_GET["list_id"])))
 		{
 			$error_description = sprintf("Back end failed to describe list%s",
 				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."

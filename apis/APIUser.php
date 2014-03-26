@@ -82,7 +82,7 @@ class APIUser extends APIBase
 		$list_ids = array();
 		foreach (explode(",", $_GET["list_ids"]) as $list_id)
 		{
-			if (!($list = EntryList::select(intval($list_id, 10))))
+			if (!($list = EntryList::select_by_id(intval($list_id, 10))))
 	                {
                 	        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
 				return;
@@ -104,11 +104,11 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 
-		if (!isset($_GET["entry_id"]) || !($entry = Entry::select(intval($_GET["entry_id"], 10))))
+		if (!isset($_GET["entry_id"]) || !($entry = Entry::select_by_id(intval($_GET["entry_id"], 10))))
                 {
                         Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".$_GET["entry_id"]);
                 }
-		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select(intval($_GET["grade_id"], 10))))
+		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select_by_id(intval($_GET["grade_id"], 10))))
                 {
                         Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".$_GET["grade_id"]);
                 }

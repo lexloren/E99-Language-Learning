@@ -23,7 +23,7 @@ class DatabaseRow
 	
 	//Commented. Getting error because function signature are not matching with derived objects
 	/*
-	public static function select($id)
+	public static function select_by_id($id)
 	{
 		return null;
 	}

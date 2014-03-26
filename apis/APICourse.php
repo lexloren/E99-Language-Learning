@@ -56,7 +56,7 @@ class APICourse  extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Request", "Request must include course_id.");
 		}
-		else if (!($course = Course::select(($course_id = intval($course_id, 10)))))
+		else if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
 		{
 			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with course_id = $course_id.");
 		}
@@ -119,7 +119,7 @@ class APICourse  extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->add_student(User::select($user_id)))
+					if (!$course->students_add(User::select_by_id($user_id)))
 					{
 						Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
 						return;
@@ -159,7 +159,7 @@ class APICourse  extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->add_instructor(User::select($user_id)))
+					if (!$course->instructors_add(User::select_by_id($user_id)))
 					{
 						Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
 						return;
@@ -189,7 +189,7 @@ class APICourse  extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->remove_student(User::select($user_id)))
+					if (!$course->students_remove(User::select_by_id($user_id)))
 					{
 						Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
 						return;
@@ -219,7 +219,7 @@ class APICourse  extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->remove_instructor(User::select($user_id)))
+					if (!$course->instructors_remove(User::select_by_id($user_id)))
 					{
 						Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
 						return;
