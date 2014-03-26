@@ -51,7 +51,7 @@ class APIUser extends APIBase
 			Session::get()->set_error_assoc("Invalid Request", "Find-user get must include query (which contains email or handle).");
 		}
 		
-		$this->return_array_as_assoc_for_json(Directory::look_up($_GET["query"]));
+		$this->return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
 	}
 	
 	public function activate()
