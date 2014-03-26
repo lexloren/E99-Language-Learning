@@ -8,6 +8,7 @@ require_once "./backend/classes/user.php";
 require_once "./backend/classes/list.php";
 require_once "./backend/classes/dictionary.php";
 require_once "./backend/classes/practice.php";
+require_once "./backend/classes/grades.php";
 require_once "./backend/classes/test.php";
 
 ?>

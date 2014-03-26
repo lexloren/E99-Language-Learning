@@ -77,27 +77,50 @@ class APIUser extends APIBase
 	
 	public function practice()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 
-		if (!isset($_GET["list_ids"]))
+		$list_ids = array();
+		foreach (explode(",", $_GET["list_ids"]) as $list_id)
 		{
-			Session::set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
+			if (!($list = EntryList::select(intval($list_id, 10))))
+	                {
+                	        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
+				return;
+        	        }
+			array_push($list_ids, $list->get_list_id());
 		}
-		//  TO FIX: SHOULDN'T PASS A COMMA-DELIMITED LIST AS AN ARGUMENT
-		return UserPractice::get_practice_entries($_GET["list_ids"], $_GET["entries_count"]);
+
+		if (empty($list_ids))
+		{
+			Session::get()->set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
+		} else {
+			$entry_set = UserPractice::get_practice_entries($list_ids, $_GET["entries_count"]);
+			Session::get()->set_result_assoc($entry_set);
+		}
+		return;
 	}
 
 	public function practice_response()
 	{
-		if (!Session::reauthenticate()) return;
+		if (!Session::get()->reauthenticate()) return;
 
-		if (!isset($_GET["entry_id"]) || !isset($_GET["grade_id"]))
+		if (!isset($_GET["entry_id"]) || !($entry = Entry::select(intval($_GET["entry_id"], 10))))
+                {
+                        Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".$_GET["entry_id"]);
+                }
+		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select(intval($_GET["grade_id"], 10))))
+                {
+                        Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".$_GET["grade_id"]);
+                }
+		else
 		{
-			Session::set_error_assoc("Invalid Post", "User-practice-response must include entry_id and grade_id.");
+			$result = UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
+			if (!Session::get()->has_error())
+			{
+				Session::get()->set_result_assoc($result);
+			}
 		}
-		//  TO FIX: SHOULDN'T PASS A COMMA-DELIMITED LIST AS AN ARGUMENT
-		UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
-		//  WHAT ARE WE RETURNING?
+		return;
 	}
 	
 	//  needs back-end implementation

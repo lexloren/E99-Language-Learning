@@ -110,7 +110,7 @@ class Entry extends DatabaseRow
 		);
 		$this->interval = intval($interval, 10);
 		$this->efactor = floatval($efactor);
-		$this->user_id = $user_id;
+		$this->user_id = intval($user_id, 10);
 		
 		//  Register $this in the appropriate member of Entry::$user_entries_by_id
 		if (!!$this->user_id)
@@ -272,25 +272,40 @@ class Entry extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return Entry::set_error_description("Session user cannot edit entry.");
+			Session::get()->set_error_assoc("Session user cannot edit entry.");
+			return;
 		}
+		$mysqli = Connection::get_shared_instance();
+
 		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$new_interval = $this->interval * $new_efactor;
-		$is_updated = $mysqli->query(sprintf(
-			"UPDATE user_entries SET interval = %d, efactor = %f ".
+		$iteration_result = $mysqli->query(sprintf(
+			"SELECT count(*) as row_count from user_entry_results where user_id = %d ".
+			"AND entry_id = %d",
+			$this->user_id, $this->entry_id)
+		);
+		$iteration_assoc = $iteration_result->fetch_assoc();
+		$iteration_count = intval($iteration_assoc["row_count"], 10);
+		if ($iteration_count == 1)
+			$new_interval = 1;
+		else if ($iteration_count == 2)
+			$new_interval = 6;
+		else
+			$new_interval = round($this->interval * $new_efactor);
+
+		if(!$mysqli->query(sprintf(
+			"UPDATE user_entries SET `interval` = %d, efactor = %f ".
 			"WHERE user_id = %d AND entry_id = %d",
 			$new_interval, $new_efactor,
-			$this->user_id, $this->entry_id
-		));
-		
-		if (!$is_updated)
+			$this->user_id, $this->entry_id)))
 		{
-			return Entry::set_error_description("Failed to update interval details: " . $mysqli->error);
+			Session::get()->set_error_assoc("Failed to update interval details: " . $mysqli->error);
+			return;
 		}
 		
 		$this->interval = $new_interval;
 		$this->efactor = $new_efactor;
+		return true;
 	}
 
 	public function assoc_for_json()
