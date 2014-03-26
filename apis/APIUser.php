@@ -22,7 +22,7 @@ class APIUser extends APIBase
 			//  Finally, send the user information to the front end
 			if (!!($new_user = User::insert($email, $handle, $password)))
 			{	
-				Session::get()->set_result_assoc($new_user->assoc_for_json());
+				Session::get()->set_result_assoc($new_user->assoc_for_json(false));
 			}
 		}
 		else

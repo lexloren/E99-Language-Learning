@@ -39,9 +39,14 @@ class APIAnnotation extends APIBase
 			{
 				$entry = $entry->copy_for_session_user();
 				
-				$entry->annotations_add($_POST["contents"]);
-				
-				Session::get()->set_result_assoc($entry->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				if (!$entry->annotations_add($_POST["contents"]))
+				{
+					Session::get()->set_error_assoc("Annotation Insertion", Entry::get_error_description());
+				}
+				else
+				{
+					Session::get()->set_result_assoc($entry->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				}
 			}
 		}
 	}

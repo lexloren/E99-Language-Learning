@@ -24,7 +24,7 @@ class Annotation extends DatabaseRow
 			return $annotation->get_owner()->equals(Session::get()->get_user()) ? $annotation : null;
 		}
 		
-		return Annotation::set_error_description("Failed to select annotation where annotation_id = $annotation_id.");
+		return Annotation::set_error_description("Failed to select annotation where annotation_id = $annotation_id: " . $mysqli->error);
 	}
 
 	private $contents;
@@ -95,10 +95,12 @@ class Annotation extends DatabaseRow
 		
 		$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
 		
-		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s'",
+		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
 			$entry->get_user_entry_id(),
 			$mysqli->escape_string($contents)
 		));
+		
+		if (!!$mysqli->error) return Annotation::set_error_description($mysqli->error);
 		
 		return Annotation::select_by_id($mysqli->insert_id);
 	}
