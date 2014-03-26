@@ -22,6 +22,8 @@ class TestDB
 	public static $word_0 = 'Peace';
 	public static $word_1 = 'Peace in CN';
 	public static $word_1_pronun = 'Peace pronun in CN';
+	public static $entry_annotation = 'Some user annotation';
+	public static $entry_annotation_id;
 
 	public static $list_id;
 	public static $list_entry_id;
@@ -107,12 +109,20 @@ class TestDB
 
 		self::$list_id = $link->insert_id;
 		
+		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
+			self::$entry_id, self::$user_id));
+
 		$link->query(sprintf("INSERT INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
 			self::$list_id,
 			self::$entry_id
 		));
 
 		self::$list_entry_id = $link->insert_id;
+
+		$link->query(sprintf("INSERT INTO user_entry_annotations (entry_id, user_id, contents) VALUES (%d, %d, '%s')",
+			self::$entry_id, self::$user_id, $link->escape_string(self::$entry_annotation)));
+
+		self::$entry_annotation_id = $link->insert_id;
 	}
 	
 	private static function add_dictionary($link)

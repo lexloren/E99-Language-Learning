@@ -220,6 +220,7 @@ class Entry extends DatabaseRow
 		$annotation->delete();
 		
 		unset($this->annotations);
+		$this->annotations = null;
 		
 		return $this;
 	}

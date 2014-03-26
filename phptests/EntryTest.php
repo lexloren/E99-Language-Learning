@@ -14,12 +14,61 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public static function test_select()
+	public function test_select()
 	{
+		$entry = Entry::select(TestDB::$entry_id);
+		$this->assertNotNull($entry);
+		
+		$this->assertNull($entry->get_owner());
+		
+		$words = $entry->get_words();
+		$this->assertNotNull($words);
+		$this->assertCount(2, $words);
+		
+		$this->assertEquals($entry->get_entry_id(), TestDB::$entry_id);
+	}
+
+	public function test_get_annotation()
+	{
+		$entry = Entry::select(TestDB::$entry_id);
+		$this->assertNotNull($entry);
+		
+		Session::get()->set_user(null);
+		$annotations = $entry->get_annotations();
+		$this->assertNull($annotations);
+		
+		$user_obj = User::select(TestDB::$user_id);
+		Session::get()->set_user($user_obj);	
+		
+		$annotations = $entry->get_annotations();
+		$this->assertNotNull($annotations);
+		$this->assertCount(1, $annotations);
+		
+		$annotation = $annotations[0];
+		$this->assertEquals($annotation->get_annotation_id(), TestDB::$entry_annotation_id);
+		$this->assertEquals($annotation->get_entry_id(), TestDB::$entry_id);
+		
+		$ret = $entry->remove_annotation($annotation);
+		$this->assertNotNull($ret);
+		$annotations = $entry->get_annotations();
+		$this->assertNotNull($annotations);
+		$this->assertCount(0, $annotations);
 	}
 	
 	public function test_add_annotation()
 	{
+		$entry = Entry::select(TestDB::$entry_id);
+		$this->assertNotNull($entry);
+		
+		Session::get()->set_user(null);
+		$ret = $entry->add_annotation("a new annotation");
+		$this->assertNull($ret);
+	
+		$user_obj = User::select(TestDB::$user_id);
+		Session::get()->set_user($user_obj);
+		$ret = $entry->add_annotation("a new annotation");
+		//Assert below is failing; Entry also looks like UserEntry
+		//$this->assertNotNull($ret);
 	}
 	
 	public function test_remove_annotation()

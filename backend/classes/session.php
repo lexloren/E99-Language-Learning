@@ -66,7 +66,8 @@ class Session
 	public function authenticate($handle, $password)
 	{
 		self::deauthenticate();
-				
+		
+		//Arunabha: Existing users many not be able to log-in if password/handle requirement changes
 		if (!User::validate_password($password))
 		{
 			self::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
