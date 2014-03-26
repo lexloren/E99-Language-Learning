@@ -20,7 +20,7 @@ class Grade extends DatabaseRow
 		
 		if (isset(self::$grades_by_id[$grade_id]))
 		{
-			return self::$grades_by_id[$grade_id]);
+			return self::$grades_by_id[$grade_id];
 		}
 
 		$mysqli = Connection::get_shared_instance();
