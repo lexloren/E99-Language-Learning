@@ -40,13 +40,7 @@ class APIEntry extends APIBase
 		{
 			$entry = $entry->copy_for_session_user();
 			
-			$annotations = $entry->get_annotations();
-			foreach ($annotations as &$annotation)
-			{
-				$annotation = $annotation->assoc_for_json();
-			}
-			
-			Session::get()->set_result_assoc($annotations);
+			$this->return_array_as_assoc_for_json($entry->get_annotations());
 		}
 	}
 }

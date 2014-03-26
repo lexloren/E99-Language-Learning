@@ -73,10 +73,9 @@ class Grade extends DatabaseRow
 
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc)
-		{
-			return Grade::set_error_description("Invalid result_assoc.");
-		}
+		$mysql_columns = array ("grade_id", "point", "desc_short", "desc_long");
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 
 		return new Grade(
 			$result_assoc["grade_id"],

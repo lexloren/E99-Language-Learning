@@ -51,6 +51,8 @@ class Unit extends DatabaseRow
 		$mysqli = Connection::get_shared_instance();
 		
 		$result = $mysqli->query("SELECT * FROM course_units WHERE unit_id = $unit_id");
+
+		if (!!$mysqli->error) return self::set_error_description("Failed to select unit: " . $mysqli->error);
 		
 		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
@@ -125,13 +127,17 @@ class Unit extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_lists WHERE unit_id = %d",
+			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_lists LEFT JOIN lists USING (list_id) WHERE unit_id = %d",
 				$this->get_unit_id()
 			));
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->lists, EntryList::from_mysql_result_assoc($result_assoc));
+				if (!($list = EntryList::from_mysql_result_assoc($result_assoc)))
+				{
+					return Unit::set_error_description("Failed to get lists: " . EntryList::get_error_description());
+				}
+				array_push($this->lists, $list);
 			}
 		}
 		
@@ -150,10 +156,14 @@ class Unit extends DatabaseRow
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc)
-		{
-			return self::set_error_description("Invalid result_assoc.");
-		}
+		$mysql_columns = array (
+			"unit_id",
+			"course_id",
+			"unit_nmbr",
+			"unit_name"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 		
 		return new Unit(
 			$result_assoc["unit_id"],
@@ -165,7 +175,7 @@ class Unit extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_course_instructor())
+		if (!$this->session_user_is_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
@@ -179,19 +189,19 @@ class Unit extends DatabaseRow
 		return $this;
 	}
 	
-	public function session_user_is_course_instructor()
+	public function session_user_is_instructor()
 	{
 		return $this->get_course()->session_user_is_instructor();
 	}
 	
-	public function session_user_is_course_student()
+	public function session_user_is_student()
 	{
 		return $this->get_course()->session_user_is_student();
 	}
 	
 	public function lists_add($list)
 	{
-		if (!$this->session_user_is_course_instructor())
+		if (!$this->session_user_is_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
@@ -215,7 +225,7 @@ class Unit extends DatabaseRow
 	
 	public function lists_remove($list)
 	{
-		if (!$this->session_user_is_course_instructor())
+		if (!$this->session_user_is_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
@@ -234,25 +244,10 @@ class Unit extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_course_instructor();
+		$omniscience = $this->session_user_is_instructor();
 		
 		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_is_course_student();
-		
-		if (!$privacy)
-		{
-			$lists_returnable = array ();
-			foreach ($this->get_lists() as $list)
-			{
-				array_push($lists_returnable, $list->assoc_for_json());
-			}
-			
-			$tests_returnable = array ();
-			foreach ($this->get_tests() as $test)
-			{
-				array_push($tests_returnable, $test->assoc_for_json(!$omniscience));
-			}
-		}
+		else if ($privacy === null) $privacy = !$this->session_user_is_student();
 		
 		return array (
 			"unitId" => $this->get_unit_id(),

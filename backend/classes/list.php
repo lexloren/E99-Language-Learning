@@ -124,10 +124,15 @@ class EntryList extends DatabaseRow
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc)
-		{
-			return EntryList::set_error_description("Invalid result_assoc.");
-		}
+		$mysql_columns = array (
+			"list_id",
+			"user_id",
+			"list_name",
+			"public"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
+
 		
 		return new EntryList(
 			$result_assoc["list_id"],

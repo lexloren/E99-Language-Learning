@@ -38,7 +38,15 @@ class Course extends DatabaseRow
 			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		$course = self::select_by_id($mysqli->insert_id);
+		if ($mysqli->error)
+		{
+			return self::set_error_description("Failed to insert course: " . $mysqli->error);
+		}
+		
+		if (!($course = self::select_by_id($mysqli->insert_id)))
+		{
+			return null;
+		}
 		
 		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
 			$course->get_course_id(),
@@ -131,7 +139,11 @@ class Course extends DatabaseRow
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->instructors, User::from_mysql_result_assoc($result_assoc));
+				if (!($user = User::from_mysql_result_assoc($result_assoc)))
+				{
+					return Course::set_error_description("Failed to get instructors: " . User::get_error_description());
+				}
+				array_push($this->instructors, $user);
 			}
 		}
 		return $this->instructors;
@@ -163,7 +175,11 @@ class Course extends DatabaseRow
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->students, User::from_mysql_result_assoc($result_assoc));
+				if (!($user = User::from_mysql_result_assoc($result_assoc)))
+				{
+					return Course::set_error_description("Failed to get students: " . User::get_error_description());
+				}
+				array_push($this->students, $user);
 			}
 		}
 		
@@ -191,12 +207,16 @@ class Course extends DatabaseRow
 			$mysqli = Connection::get_shared_instance();
 			
 			$result = $mysqli->query(sprintf("SELECT * FROM course_units WHERE course_id = %d",
-				intval($this->get_course_id(), 10)
+				$this->get_course_id()
 			));
 
 			while (($unit_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->units, Unit::from_mysql_result_assoc($unit_assoc["unit_id"]));
+				if (!($unit = Unit::from_mysql_result_assoc($unit_assoc)))
+				{
+					return Course::set_error_description("Failed to get units: " . Unit::get_error_description());
+				}
+				array_push($this->units, $unit);
 			}
 		}
 		
@@ -226,10 +246,16 @@ class Course extends DatabaseRow
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc)
-		{
-			return Course::set_error_description("Invalid result_assoc.");
-		}
+		$mysql_columns = array (
+			"course_id",
+			"user_id",
+			"lang_id_0",
+			"lang_id_1",
+			"course_name",
+			"public"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 		
 		return new Course(
 			$result_assoc["course_id"],

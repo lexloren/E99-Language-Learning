@@ -21,22 +21,22 @@ class DatabaseRow
 		return null;
 	}
 	
-	//Commented. Getting error because function signature are not matching with derived objects
-	/*
-	public static function select_by_id($id)
+	public static function assoc_contains_keys($assoc, $keys)
 	{
-		return null;
+		if (!isset($assoc) || !$assoc || !is_array($assoc))
+		{
+			return self::set_error_description("Invalid result_assoc: " . $assoc . ".");
+		}
+		
+		$keys_missing = array_diff($keys, array_keys($assoc));
+		
+		if (count($keys_missing) > 0)
+		{
+			return self::set_error_description("Missing keys in result_assoc: " . implode(", ", $keys_missing) . ".");
+		}
+		
+		return true;
 	}
-	
-	public static function insert($id)
-	{
-		return null;
-	}
-	
-	public function delete($id)
-	{
-		return $this;
-	}*/
 	
 	public function assoc_for_json()
 	{

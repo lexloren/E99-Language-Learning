@@ -76,7 +76,15 @@ class Annotation extends DatabaseRow
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc) return null;
+		$mysql_columns = array (
+			"annotation_id",
+			"user_entry_id",
+			"entry_id",
+			"user_id",
+			"contents"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 		
 		return new Annotation(
 			$result_assoc["annotation_id"],

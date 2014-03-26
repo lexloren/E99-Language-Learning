@@ -21,15 +21,25 @@ class APIBase
 	
 	protected function return_array_as_assoc_for_json($array)
 	{
-		if ($array === null) return null;
-		
-		$returnable = array ();
-		foreach ($array as $item)
+		if (!is_array($array))
 		{
-			array_push($returnable, $item->assoc_for_json());
+			Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects but received $array.");
 		}
-		
-		Session::get()->set_result_assoc($returnable);
+		else
+		{
+			$returnable = array ();
+			foreach ($array as $item)
+			{
+				if (!is_subclass_of($item, DatabaseRow))
+				{
+					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object in $array was $item.");
+					return;
+				}
+				array_push($returnable, $item->assoc_for_json());
+			}
+			
+			Session::get()->set_result_assoc($returnable);
+		}
 	}
 }
 

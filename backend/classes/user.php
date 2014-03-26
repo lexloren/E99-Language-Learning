@@ -168,7 +168,15 @@ class User extends DatabaseRow
 	//  Creates a User object from an associative array fetched from a mysql_result
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc) return null;
+		$mysql_columns = array (
+			"user_id",
+			"handle",
+			"email",
+			"name_family",
+			"name_given"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 		
 		return new User(
 			$result_assoc["user_id"],

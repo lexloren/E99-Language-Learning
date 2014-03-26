@@ -58,7 +58,7 @@ class APICourse  extends APIBase
 		}
 		else if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with course_id = $course_id.");
+			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with course_id = $course_id:" . Course::get_error_description());
 		}
 		
 		return $course;

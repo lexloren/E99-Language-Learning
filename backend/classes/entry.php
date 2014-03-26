@@ -135,10 +135,16 @@ class Entry extends DatabaseRow
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
-		if (!$result_assoc)
-		{
-			return Entry::set_error_description("Invalid result_assoc.");
-		}
+		$mysql_columns = array (
+			"entry_id",
+			"lang_code_0",
+			"lang_code_1",
+			"word_0",
+			"word_1",
+			"word_1_pronun"
+		);
+		
+		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
 		
 		return new Entry(
 			$result_assoc["entry_id"],
