@@ -16,7 +16,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 	
 	public function test_select()
 	{
-		$entry = Entry::select(TestDB::$entry_id);
+		$entry = Entry::select_by_id(TestDB::$entry_id);
 		$this->assertNotNull($entry);
 		
 		$this->assertNull($entry->get_owner());
@@ -30,14 +30,14 @@ class EntryTest extends PHPUnit_Framework_TestCase
 
 	public function test_get_annotation()
 	{
-		$entry = Entry::select(TestDB::$entry_id);
+		$entry = Entry::select_by_id(TestDB::$entry_id);
 		$this->assertNotNull($entry);
 		
 		Session::get()->set_user(null);
 		$annotations = $entry->get_annotations();
 		$this->assertNull($annotations);
 		
-		$user_obj = User::select(TestDB::$user_id);
+		$user_obj = User::select_by_id(TestDB::$user_id);
 		Session::get()->set_user($user_obj);	
 		
 		$annotations = $entry->get_annotations();
@@ -48,47 +48,51 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($annotation->get_annotation_id(), TestDB::$entry_annotation_id);
 		$this->assertEquals($annotation->get_entry_id(), TestDB::$entry_id);
 		
-		$ret = $entry->remove_annotation($annotation);
+		$ret = $entry->annotations_remove($annotation);
 		$this->assertNotNull($ret);
 		$annotations = $entry->get_annotations();
 		$this->assertNotNull($annotations);
 		$this->assertCount(0, $annotations);
 	}
 	
-	public function test_add_annotation()
+	public function test_annotations_add()
 	{
-		$entry = Entry::select(TestDB::$entry_id);
+		$entry = Entry::select_by_id(TestDB::$entry_id);
 		$this->assertNotNull($entry);
 		
 		Session::get()->set_user(null);
-		$ret = $entry->add_annotation("a new annotation");
+		$ret = $entry->annotations_add("a new annotation");
 		$this->assertNull($ret);
 	
-		$user_obj = User::select(TestDB::$user_id);
+		$user_obj = User::select_by_id(TestDB::$user_id);
 		Session::get()->set_user($user_obj);
-		$ret = $entry->add_annotation("a new annotation");
+		$ret = $entry->annotations_add("a new annotation");
 		//Assert below is failing; Entry also looks like UserEntry
 		//$this->assertNotNull($ret);
 	}
 	
-	public function test_remove_annotation()
+	public function test_annotations_remove()
 	{
 	}
 	
 	public function test_copy_for_session_user()
 	{
+		//  Not necessary, but helpful
 	}
 	
 	public function test_update_repetition_details()
 	{
+		
 	}
 	
 	public function test_get_annotations()
 	{
+		
 	}
 	
 	public function test_session_user_can_write()
 	{
+		
 	}
 }
 

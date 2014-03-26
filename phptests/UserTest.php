@@ -60,7 +60,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$user_assoc = $result->fetch_assoc();
 		$result->close();
 		
-		$user_obj = User::select($user_assoc['user_id']);
+		$user_obj = User::select_by_id($user_assoc['user_id']);
 		Session::get()->set_user($user_obj);
 		
 		$this->assertEquals($user_obj->get_user_id(), $user_assoc['user_id']);

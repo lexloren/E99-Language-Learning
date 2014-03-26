@@ -20,7 +20,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
 		$this->assertNull($course);
 		
-		$user_obj = User::select(TestDB::$user_id);
+		$user_obj = User::select_by_id(TestDB::$user_id);
 		Session::get()->set_user($user_obj);
 		
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
@@ -38,10 +38,10 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	
 	public function test_select()
 	{
-		$course = Course::select(0);
+		$course = Course::select_by_id(0);
 		$this->assertNull($course);
 
-		$course = Course::select(TestDB::$course_id);
+		$course = Course::select_by_id(TestDB::$course_id);
 		$this->assertNotNull($course);
 		$this->assertEquals($course->get_user_id(), TestDB::$user_id);
 		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
@@ -52,25 +52,25 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	public function test_delete()
 	{
 		//TODO: make it better
-		$course = Course::select(TestDB::$course_id);
+		$course = Course::select_by_id(TestDB::$course_id);
 		$this->assertNotNull($course);
 		$course->delete();
 	}
 	
 	
-	public function test_add_instructor()
+	public function test_instructors_add()
 	{
 	}
 	
-	public function test_add_student()
+	public function test_students_add()
 	{
 	}
 	
-	public function test_remove_instructor()
+	public function test_instructors_remove()
 	{
 	}
 	
-	public function test_remove_student()
+	public function test_students_remove()
 	{
 	}
 }
