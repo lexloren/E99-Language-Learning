@@ -16,6 +16,8 @@ class Unit extends DatabaseRow
 			return Unit::set_error_description("Session user has not reauthenticated.");
 		}
 		
+		$mysqli = Connection::get_shared_instance();
+		
 		if ($unit_name !== null) $unit_name = $mysqli->escape_string($unit_name);
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
@@ -26,8 +28,6 @@ class Unit extends DatabaseRow
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
-		
-		$mysqli = Connection::get_shared_instance();
 		
 		$unit_number = count($course->get_units()) + 1;
 		

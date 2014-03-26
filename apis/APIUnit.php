@@ -28,7 +28,7 @@ class APIUnit  extends APIBase
 			{
 				$unit_name = isset($_POST["unit_name"]) && strlen($_POST["unit_name"]) > 0 ? $_POST["unit_name"] : null;
 				
-				if (!($unit = Unit::insert($course_id, $unit_name))
+				if (!($unit = Unit::insert($course_id, $unit_name)))
 				{
 					$error_description = sprintf("Back end unexpectedly failed to insert course unit%s",
 						!!Unit::get_error_description() ? (": " . Unit::get_error_description()) : "."
