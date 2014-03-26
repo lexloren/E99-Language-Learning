@@ -3,14 +3,19 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
+//  Let's think of a "Practice" object as representing one practice session
 class Practice
 {
 	const PRACTICE_ENTRIES_CNT = 50;
+	
+	private $lists;
+	private $entries;
 
 	//  SHOULD THIS BE A PUBLIC STATIC FUNCTION RETURNING A NEW PRACTICE OBJECT?
+	//  public static function generate($list_ids, $entries_count)
 	public function get_practice_entries($list_ids, $entries_count)
 	{
-		$count_limit = (isset($entries_count) ? $entries_count : Practice::PRACTICE_ENTRIES_CNT);
+		$count_limit = isset($entries_count) ? $entries_count : Practice::PRACTICE_ENTRIES_CNT;
 		
 		$mysqli = Connection::get_shared_instance();
 		$list_ids_str = join(', ', $list_ids);
@@ -19,8 +24,8 @@ class Practice
 			"SELECT entry_id FROM user_entries WHERE entry_id IN (".
 			"SELECT entry_id FROM list_entries WHERE list_id IN (%s)) ".
 			"AND user_id = %d ORDER BY interval",
-			$list_ids_str, Session::get()->get_user()->get_user_id())
- 		);
+			$list_ids_str, Session::get()->get_user()->get_user_id()
+		));
 		$learned_entry_set = Practice::from_mysql_entry_id_assoc($learned_entries);
 		$learned_count = count($learned_entry_set);
 		
@@ -84,23 +89,23 @@ class Practice
 		
 		if (!$mysqli->insert_id)
 		{
-			Session::get()->set_error_assoc("Couldn't update the practice response details");
+			Session::get()->set_error_assoc("Failed to update practice response details.");
 		}
 		
 		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id) VALUES (%d, %d)",
 			Session::get()->get_user()->get_user_id(),
 			$entry_id)
 		);
-		$user_entry_result = $mysqli->query(sprintf("SELECT * from user_entries where entry_id = %d AND user_id = %d",
+		$user_entry_result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE entry_id = %d AND user_id = %d",
 			$entry_id,
 			Session::get()->get_user()->get_user_id())
 		);
 		$user_entry = Entry::from_mysql_result_assoc($user_entry_result->fetch_assoc());
-		$grade_result = $mysqli->query(sprintf("SELECT point from grades where grade_id = $grade_id"));
+		$grade_result = $mysqli->query(sprintf("SELECT point FROM grades WHERE grade_id = $grade_id"));
 		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
 		if (!$grade_point || !$user_entry)
 		{
-			Session::get()->set_error_assoc("Couldn't update the practice response details");
+			Session::get()->set_error_assoc("Failed to update practice response details.");
 		}
 		return $user_entry->update_repetition_details($grade_point->get_point());
 	}
