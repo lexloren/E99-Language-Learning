@@ -44,6 +44,16 @@ class APIUser extends APIBase
 		}
 	}
 	
+	public function find()
+	{
+		if (!isset($_GET["query"]))
+		{
+			Session::get()->set_error_assoc("Invalid Request", "Find-user get must include query (which contains email or handle).");
+		}
+		
+		$this->return_array_as_assoc_for_json(Directory::look_up($_GET["query"]));
+	}
+	
 	public function activate()
 	{
 		Session::get()->set_error_assoc("TODO", __CLASS__."::".__FUNCTION__);
