@@ -16,8 +16,11 @@ class Unit extends DatabaseRow
 			return Unit::set_error_description("Session user has not reauthenticated.");
 		}
 		
+		if ($unit_name !== null) $unit_name = $mysqli->escape_string($unit_name);
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
+		
+		if (!$course) return Unit::set_error_description(Course::get_error_description());
 		
 		if (!$course->session_user_is_instructor())
 		{
@@ -26,8 +29,12 @@ class Unit extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name) VALUES ($course_id, %s)",
-			!!$unit_name && strlen($unit_name) > 0 ? "'" . $mysqli->escape_string($unit_name) . "'" : "NULL"
+		$unit_number = count($course->get_units()) + 1;
+		
+		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_numbr) VALUES (%d, %s, %d)",
+			$course_id,
+			!!$unit_name && strlen($unit_name) > 0 ? "'$unit_name'" : "NULL",
+			$unit_number
 		));
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -36,6 +43,8 @@ class Unit extends DatabaseRow
 	public static function select_by_id($unit_id)
 	{
 		$unit_id = intval($unit_id, 10);
+		
+		if (isset(self::$units_by_id[$unit_id])) return self::$units_by_id[$unit_id];
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -62,9 +71,20 @@ class Unit extends DatabaseRow
 	}
 	
 	private $unit_id = null;
-	public function get_course_id()
+	public function get_unit_id()
 	{
 		return $this->unit_id;
+	}
+	
+	private $unit_number = null;
+	public function get_unit_number()
+	{
+		return $this->unit_number;
+	}
+	public function set_unit_number($unit_number)
+	{
+		//  Verify that $unit_number <= count of units in the course
+		//  Set this unit's number to $unit_number, pushing all subsequent units down by one
 	}
 	
 	private $unit_name = null;
@@ -116,10 +136,11 @@ class Unit extends DatabaseRow
 		return $this->lists;
 	}
 	
-	private function __construct($unit_id, $course_id, $unit_name = null)
+	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null)
 	{
 		$this->unit_id = intval($unit_id, 10);
 		$this->course_id = intval($course_id, 10);
+		$this->unit_number = intval($unit_number, 10);
 		$this->unit_name = !!$unit_name && strlen($unit_name) > 0 ? $unit_name : null;
 		
 		Unit::$units_by_id[$this->unit_id] = $this;
@@ -135,6 +156,7 @@ class Unit extends DatabaseRow
 		return new Unit(
 			$result_assoc["unit_id"],
 			$result_assoc["course_id"],
+			$result_assoc["unit_numbr"],
 			!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
 		);
 	}
@@ -165,17 +187,12 @@ class Unit extends DatabaseRow
 		return $this->get_course()->session_user_is_student();
 	}
 	
-	//  TO FIX: FOR CONSISTENCY, SHOULD ACCEPT AN ENTRYLIST OBJECT, NOT A LIST ID
-	public function lists_add($list_id)
+	public function lists_add($list)
 	{
-		$list_id = intval($list_id, 10);
-		
 		if (!$this->session_user_is_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
-		
-		$list = EntryList::select_by_id($list_id);
 		
 		if (!$list->get_owner()->equals(Session::get()->get_user()))
 		{
@@ -193,11 +210,8 @@ class Unit extends DatabaseRow
 		return $this;
 	}
 	
-	//  TO FIX: FOR CONSISTENCY, SHOULD ACCEPT AN ENTRYLIST OBJECT, NOT A LIST ID
-	public function remove_list($list_id)
+	public function lists_remove($list)
 	{
-		$list_id = intval($list_id, 10);
-		
 		if (!$this->session_user_is_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
