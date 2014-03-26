@@ -200,17 +200,14 @@ class Entry extends DatabaseRow
 	
 	public function annotations_add($annotation_contents)
 	{
-		if (!$this->session_user_can_write())
-		{
-			return Entry::set_error_description("Session user cannot edit entry.");
-		}
+		$entry = $entry->copy_for_session_user();
 		
-		$annotation = Annotation::insert($this->get_entry_id(), $annotation_contents);
+		$annotation = Annotation::insert($entry->get_entry_id(), $annotation_contents);
 		
 		if (!!$annotation)
 		{
-			array_push($this->get_annotations(), $annotation);
-			return $this;
+			array_push($entry->get_annotations(), $annotation);
+			return $entry;
 		}
 		
 		return Entry::set_error_description(Annotation::get_error_description());
