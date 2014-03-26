@@ -11,14 +11,17 @@ class Annotation extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations WHERE user_id = %d AND annotation_id = %d",
+		$tables = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
+		$result = $mysqli->query(sprintf("SELECT * FROM $tables WHERE user_id = %d AND annotation_id = %d",
 			Session::get()->get_user()->get_user_id(),
 			$annotation_id
 		));
 		
 		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
-			return Annotation::from_mysql_result_assoc($result_assoc);
+			$annotation = Annotation::from_mysql_result_assoc($result_assoc);
+			
+			return $annotation->get_owner()->equals(Session::get()->get_user()) ? $annotation : null;
 		}
 		
 		return Annotation::set_error_description("Failed to select annotation where annotation_id = $annotation_id.");
@@ -36,10 +39,20 @@ class Annotation extends DatabaseRow
 		return $this->annotation_id;
 	}
 	
+	private $user_entry_id;
+	public function get_user_entry_id()
+	{
+		return $this->user_entry_id;
+	}
+	
 	private $entry_id;
 	public function get_entry_id()
 	{
 		return $this->entry_id;
+	}
+	public function get_entry()
+	{
+		return Entry::select_by_id($this->get_entry_id());
 	}
 	
 	private $user_id;
@@ -47,10 +60,15 @@ class Annotation extends DatabaseRow
 	{
 		return $this->user_id;
 	}
+	public function get_owner()
+	{
+		return User::select_by_id($this->get_user_id());
+	}
 	
-	private function __construct($annotation_id, $entry_id, $user_id, $contents)
+	private function __construct($annotation_id, $user_entry_id, $entry_id, $user_id, $contents)
 	{
 		$this->annotation_id = intval($annotation_id, 10);
+		$this->user_entry_id = intval($user_entry_id, 10);
 		$this->entry_id = intval($entry_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->contents = $contents;
@@ -62,6 +80,7 @@ class Annotation extends DatabaseRow
 		
 		return new Annotation(
 			$result_assoc["annotation_id"],
+			$result_assoc["user_entry_id"],
 			$result_assoc["entry_id"],
 			$result_assoc["user_id"],
 			$result_assoc["contents"]
@@ -74,9 +93,10 @@ class Annotation extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_id, entry_id, contents) VALUES (%d, %d, '%s'",
-			Session::get_user()->get_user_id(),
-			$entry_id,
+		$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
+		
+		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s'",
+			$entry->get_user_entry_id(),
 			$mysqli->escape_string($contents)
 		));
 		
@@ -85,12 +105,11 @@ class Annotation extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!Session::get()->get_user()) return null;
+		if (!$this->get_owner()->equals(Session::get()->get_user())) return null;
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("DELETE FROM user_entry_annotations WHERE user_id = %d AND annotation_id = %d",
-			Session::get()->get_user()->get_user_id(),
+		$mysqli->query(sprintf("DELETE FROM user_entry_annotations WHERE annotation_id = %d",
 			$this->get_annotation_id()
 		));
 		

@@ -63,8 +63,8 @@ class Entry extends DatabaseRow
 			$this->annotations = array ();
 			
 			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations WHERE user_id = %d AND entry_id = %d",
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations LEFT JOIN user_entries USING (user_entry_id) WHERE user_id = %d AND entry_id = %d",
 				Session::get()->get_user()->get_user_id(),
 				$this->get_entry_id()
 			));

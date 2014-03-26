@@ -6,6 +6,7 @@ require_once './tools/database.php';
 class TestDB
 {
 	public static $user_id;
+	public static $user_entry_id;
 	public static $email = 'email@domain.com';
 	public static $handle = 'username';
 	public static $password = 'P@ssword1';
@@ -131,8 +132,6 @@ class TestDB
 	
 	private static function add_dictionary($link)
 	{
-		//  DICTIONARY IS INVARIABLE---NO ENTRIES SHOULD GET ADDED OR REMOVED
-		/*
 		$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
 			self::$lang_id_0, self::$lang_id_1, self::$word_0, self::$word_1, self::$word_1_pronun));
 			
@@ -140,7 +139,6 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
 		self::$entry_id = $link->insert_id;
-		*/
 	}
 	
 	private static function add_course($link)
