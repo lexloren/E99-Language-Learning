@@ -72,7 +72,7 @@ class APIUnit  extends APIBase
 	public function update()
 	{
 		//  unit_name
-		//  unit_numbr
+		//  unit_nmbr
 	}
 	
 	public function lists()
@@ -95,7 +95,7 @@ class APIUnit  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Unit–add-lists post must include unit_id and list_ids.");
 			}
-			else if ($unit->session_user_is_instructor())
+			else if ($unit->session_user_is_course_instructor())
 			{
 				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
@@ -125,7 +125,7 @@ class APIUnit  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Course–remove-lists post must include unit_id and list_ids.");
 			}
-			else if ($unit->session_user_is_instructor())
+			else if ($unit->session_user_is_course_instructor())
 			{
 				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{

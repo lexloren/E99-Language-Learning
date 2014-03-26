@@ -31,11 +31,13 @@ class Unit extends DatabaseRow
 		
 		$unit_number = count($course->get_units()) + 1;
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_numbr) VALUES (%d, %s, %d)",
+		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_nmbr) VALUES (%d, %s, %d)",
 			$course_id,
 			!!$unit_name && strlen($unit_name) > 0 ? "'$unit_name'" : "NULL",
 			$unit_number
 		));
+		
+		if (!!$mysqli->error) return self::set_error_description("Failed to insert course unit: " . $mysqli->error);
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -108,7 +110,7 @@ class Unit extends DatabaseRow
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->instructors, Test::from_mysql_result_assoc($result_assoc));
+				array_push($this->tests, Test::from_mysql_result_assoc($result_assoc));
 			}
 		}
 		return $this->tests;
@@ -129,7 +131,7 @@ class Unit extends DatabaseRow
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				array_push($this->students, EntryList::from_mysql_result_assoc($result_assoc));
+				array_push($this->lists, EntryList::from_mysql_result_assoc($result_assoc));
 			}
 		}
 		
@@ -150,20 +152,20 @@ class Unit extends DatabaseRow
 	{
 		if (!$result_assoc)
 		{
-			return Unit::set_error_description("Invalid result_assoc.");
+			return self::set_error_description("Invalid result_assoc.");
 		}
 		
 		return new Unit(
 			$result_assoc["unit_id"],
 			$result_assoc["course_id"],
-			$result_assoc["unit_numbr"],
+			$result_assoc["unit_nmbr"],
 			!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
 		);
 	}
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_is_course_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
@@ -177,19 +179,19 @@ class Unit extends DatabaseRow
 		return $this;
 	}
 	
-	public function session_user_is_instructor()
+	public function session_user_is_course_instructor()
 	{
 		return $this->get_course()->session_user_is_instructor();
 	}
 	
-	public function session_user_is_student()
+	public function session_user_is_course_student()
 	{
 		return $this->get_course()->session_user_is_student();
 	}
 	
 	public function lists_add($list)
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_is_course_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
@@ -201,8 +203,9 @@ class Unit extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, $list_id)",
-			$this->get_unit_id()
+		$mysqli->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",
+			$this->get_unit_id(),
+			$list->get_list_id()
 		));
 		
 		array_push($this->get_lists(), $list);
@@ -212,15 +215,16 @@ class Unit extends DatabaseRow
 	
 	public function lists_remove($list)
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_is_course_instructor())
 		{
 			return Unit::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("DELETE FROM course_unit_lists WHERE unit_id = %d AND list_id = $list_id",
-			$this->get_unit_id()
+		$mysqli->query(sprintf("DELETE FROM course_unit_lists WHERE unit_id = %d AND list_id = %d",
+			$this->get_unit_id(),
+			$list->get_list_id()
 		));
 		
 		unset($this->lists);
@@ -230,10 +234,10 @@ class Unit extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_instructor();
+		$omniscience = $this->session_user_is_course_instructor();
 		
 		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_is_student();
+		else if ($privacy === null) $privacy = !$this->session_user_is_course_student();
 		
 		if (!$privacy)
 		{
