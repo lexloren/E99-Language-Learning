@@ -14,30 +14,34 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public function testInsert()
+	public function test_insert()
 	{
 		
 	}
 	
-	public function testSelect()
+	public function test_select()
 	{
 		
 	}
 	
-	public function testadd_entry()
+	public function test_entries_add()
 	{
+		
 	}
 	
-	public function testremove_entry()
+	public function test_entries_remove()
 	{
+		
 	}
 	
-	public function testdelete()
+	public function test_delete()
 	{
+		
 	}
 	
-	public function testget_entries()
+	public function test_get_entries()
 	{
+		
 	}
 }
 
