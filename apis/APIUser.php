@@ -75,6 +75,7 @@ class APIUser extends APIBase
 		//  name_family
 	}
 	
+	//  SHOULD THIS GO IN A SEPARATE API? WHY UNDER USER?
 	public function practice()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -94,7 +95,7 @@ class APIUser extends APIBase
 		{
 			Session::get()->set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
 		} else {
-			$entry_set = UserPractice::get_practice_entries($list_ids, $_GET["entries_count"]);
+			$entry_set = Practice::get_practice_entries($list_ids, $_GET["entries_count"]);
 			Session::get()->set_result_assoc($entry_set);
 		}
 		return;
@@ -114,7 +115,7 @@ class APIUser extends APIBase
                 }
 		else
 		{
-			$result = UserPractice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
+			$result = Practice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
 			if (!Session::get()->has_error())
 			{
 				Session::get()->set_result_assoc($result);

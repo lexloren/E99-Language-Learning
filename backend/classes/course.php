@@ -52,6 +52,8 @@ class Course extends DatabaseRow
 	{
 		$course_id = intval($course_id, 10);
 		
+		if (isset(self::$courses_by_id[$course_id])) return self::$courses_by_id[$course_id];
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		$result = $mysqli->query("SELECT * FROM courses WHERE course_id = $course_id");

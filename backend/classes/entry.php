@@ -228,40 +228,35 @@ class Entry extends DatabaseRow
 			return Entry::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		if ($this->user_id === Session::get()->get_user()->get_user_id())
+		$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user());
+		
+		if (isset($entries_by_id_for_user_id[$this->entry_id])) return $entries_by_id_for_user_id[$this->entry_id];
+	
+		$mysqli = Connection::get_shared_instance();
+		
+		//  Insert into user_entries the dictionary row corresponding to this Entry object
+		//      If such a row already exists in user_entries, ignore the insertion error
+		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
+			Session::get()->get_user()->get_user_id(),
+			$this->entry_id
+		));
+		
+		$query = sprintf("SELECT * FROM (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
+			Dictionary::join(),
+			$this->entry_id,
+			Session::get()->get_user()->get_user_id()
+		);
+		
+		$result = $mysqli->query($query);
+		
+		if (!$result || !($result_assoc = $result->fetch_assoc()))
 		{
-			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user());
-			//  Just make sure that this Entry object has been appropriately registered
-			return ($entries_by_id_for_user_id[$this->entry_id] = $this);
-		}
-		else
-		{
-			$mysqli = Connection::get_shared_instance();
-			
-			//  Insert into user_entries the dictionary row corresponding to this Entry object
-			//      If such a row already exists in user_entries, ignore the insertion error
-			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
-				Session::get()->get_user()->get_user_id(),
-				$this->entry_id
-			));
-			
-			$query = sprintf("SELECT * FROM (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
-				Dictionary::join(),
-				$this->entry_id,
-				Session::get()->get_user()->get_user_id()
+			return Entry::set_error_description("Entry failed to copy for session user: " .
+				(!!$mysqli->error ? $mysqli->error : $query)
 			);
-			
-			$result = $mysqli->query($query);
-			
-			if (!$result || !($result_assoc = $result->fetch_assoc()))
-			{
-				return Entry::set_error_description("Entry failed to copy for session user: " .
-					(!!$mysqli->error ? $mysqli->error : $query)
-				);
-			}
-			
-			return Entry::from_mysql_result_assoc($result_assoc);
 		}
+		
+		return Entry::from_mysql_result_assoc($result_assoc);
 	}
 	
 	public function update_repetition_details($point)

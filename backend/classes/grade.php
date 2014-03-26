@@ -17,6 +17,11 @@ class Grade extends DatabaseRow
 	public static function select_by_id($grade_id)
 	{
 		$grade_id = intval($grade_id, 10);
+		
+		if (isset(self::$grades_by_id[$grade_id]))
+		{
+			return self::$grades_by_id[$grade_id]);
+		}
 
 		$mysqli = Connection::get_shared_instance();
 
@@ -81,7 +86,7 @@ class Grade extends DatabaseRow
 		);
 	}
 
-	public function delete($grade_id)
+	public function delete()
 	{
 		return null;
 	}

@@ -3,13 +3,14 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class UserPractice
+class Practice
 {
 	const PRACTICE_ENTRIES_CNT = 50;
 
+	//  SHOULD THIS BE A PUBLIC STATIC FUNCTION RETURNING A NEW PRACTICE OBJECT?
 	public function get_practice_entries($list_ids, $entries_count)
 	{
-		$count_limit = (isset($entries_count) ? $entries_count : UserPractice::PRACTICE_ENTRIES_CNT);
+		$count_limit = (isset($entries_count) ? $entries_count : Practice::PRACTICE_ENTRIES_CNT);
 		
 		$mysqli = Connection::get_shared_instance();
 		$list_ids_str = join(', ', $list_ids);
@@ -20,7 +21,7 @@ class UserPractice
 			"AND user_id = %d ORDER BY interval",
 			$list_ids_str, Session::get()->get_user()->get_user_id())
  		);
-		$learned_entry_set = UserPractice::from_mysql_entry_id_assoc($learned_entries);
+		$learned_entry_set = Practice::from_mysql_entry_id_assoc($learned_entries);
 		$learned_count = count($learned_entry_set);
 		
 		$not_learned_entries = $mysqli->query(sprintf("SELECT entry_id FROM list_entries WHERE list_id IN (%s) ".
@@ -28,7 +29,7 @@ class UserPractice
 			$list_ids_str,
 			join(', ', $learned_entry_set))
 		);
-		$not_learned_entry_set = UserPractice::from_mysql_entry_id_assoc($not_learned_entries);
+		$not_learned_entry_set = Practice::from_mysql_entry_id_assoc($not_learned_entries);
 		$not_learned_count = count($not_learned_entry_set);
 		
 		$new_entry_count = min(
@@ -50,7 +51,13 @@ class UserPractice
 		
 		return $result_entries;
 	}
+	
+	public function __construct(/* ARGUMENTS */)
+	{
+		//  TO IMPLEMENT
+	}
 
+	//  TO FIX: FOR CONSISTENCY, SHOULD RETURN A NEW PRACTICE OBJECT
 	private static function from_mysql_entry_id_assoc($result)
 	{
 		$entry_ids = array();
@@ -64,6 +71,7 @@ class UserPractice
 		return $entry_ids;
 	}
 	
+	//  SHOULD THIS BE CLASS- OR INSTANCE- SCOPE?
 	public static function update_practice_response($entry_id, $grade_id)
 	{
 		$mysqli = Connection::get_shared_instance();
