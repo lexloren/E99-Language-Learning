@@ -100,7 +100,7 @@ class EntryList extends DatabaseRow
 				Session::get()->get_user()->get_user_id()
 			);
 			
-			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN ($user_entries) AS user_entries USING (entry_id) WHERE list_id = %d",
+			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id) WHERE list_id = %d",
 				$this->get_list_id()
 			));
 			
@@ -207,9 +207,9 @@ class EntryList extends DatabaseRow
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 			$this->list_id,
-			$entry_added->get_entry_id()
+			$entry_added->get_user_entry_id()
 		));
 		
 		return $this;
@@ -230,9 +230,9 @@ class EntryList extends DatabaseRow
 		{
 			if ($entry_removed->get_entry_id() === $entry_to_remove->get_entry_id())
 			{
-				$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND entry_id = %d",
+				$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND user_entry_id = %d",
 					$this->list_id,
-					$entry_removed->get_entry_id()
+					$entry_removed->get_user_entry_id()
 				));
 				
 				unset($this->entries);
@@ -267,7 +267,7 @@ class EntryList extends DatabaseRow
 			$entry->copy_for_session_user();
 		}
 		
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, entry_id) SELECT %d, entry_id FROM list_entries WHERE list_id = %d",
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) SELECT %d, user_entry_id FROM list_entries WHERE list_id = %d",
 			$copy_id,
 			$this->get_list_id()
 		));

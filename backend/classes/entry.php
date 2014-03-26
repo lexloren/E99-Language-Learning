@@ -78,6 +78,12 @@ class Entry extends DatabaseRow
 		return $this->annotations;
 	}
 	
+	private $user_entry_id = null;
+	public function get_user_entry_id()
+	{
+		return $this->user_entry_id;
+	}
+	
 	private $user_id = null;
 	public function get_user_id()
 	{
@@ -101,8 +107,9 @@ class Entry extends DatabaseRow
 	}
 
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation = null, $interval = null,
-		$efactor = null, $user_id = null)
+		$word_0, $word_1, $pronunciation = null,
+		$user_entry_id = null, $user_id = null,
+		$interval = null, $efactor = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
 		$this->words = array (
@@ -112,13 +119,15 @@ class Entry extends DatabaseRow
 		$this->pronunciations = array (
 			$lang_code_1 => $pronunciation
 		);
-		$this->interval = intval($interval, 10);
-		$this->efactor = floatval($efactor);
-		$this->user_id = intval($user_id, 10);
 		
-		//  Register $this in the appropriate member of Entry::$user_entries_by_id
-		if (!!$this->user_id)
+		if ($user_entry_id !== null && $user_id !== null && $interval !== null && $efactor !== null)
 		{
+			$this->user_entry_id = intval($user_entry_id, 10);
+			$this->user_id = intval($user_id, 10);
+			
+			$this->interval = intval($interval, 10);
+			$this->efactor = floatval($efactor);
+
 			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id($this->user_id);
 			$entries_by_id_for_user_id[$this->entry_id] = $this;
 		}
@@ -138,9 +147,10 @@ class Entry extends DatabaseRow
 			$result_assoc["word_0"],
 			$result_assoc["word_1"],
 			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
+			array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
+			array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
 			array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
-			array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null,
-			array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null
+			array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
 		);
 	}
 	
@@ -271,7 +281,7 @@ class Entry extends DatabaseRow
 		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
 		$iteration_result = $mysqli->query(sprintf(
-			"SELECT count(*) as row_count from user_entry_results where user_id = %d ".
+			"SELECT COUNT(*) AS row_count FROM user_entry_results WHERE user_id = %d ".
 			"AND entry_id = %d",
 			$this->user_id, $this->entry_id)
 		);
@@ -312,6 +322,11 @@ class Entry extends DatabaseRow
 			"pronuncations" => $entry->pronunciations
 		);
 	}
+}
+
+class UserEntry extends Entry
+{
+	
 }
 
 ?>

@@ -110,23 +110,29 @@ class TestDB
 		self::$list_id = $link->insert_id;
 		
 		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-			self::$entry_id, self::$user_id));
+			self::$entry_id, self::$user_id
+		));
+		
+		self::$user_entry_id = $link->insert_id;
 
-		$link->query(sprintf("INSERT INTO list_entries (list_id, entry_id) VALUES (%d, %d)",
+		$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 			self::$list_id,
-			self::$entry_id
+			self::$user_entry_id
 		));
 
 		self::$list_entry_id = $link->insert_id;
 
-		$link->query(sprintf("INSERT INTO user_entry_annotations (entry_id, user_id, contents) VALUES (%d, %d, '%s')",
-			self::$entry_id, self::$user_id, $link->escape_string(self::$entry_annotation)));
+		$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+			self::$user_entry_id, $link->escape_string(self::$entry_annotation)
+		));
 
 		self::$entry_annotation_id = $link->insert_id;
 	}
 	
 	private static function add_dictionary($link)
 	{
+		//  DICTIONARY IS INVARIABLE---NO ENTRIES SHOULD GET ADDED OR REMOVED
+		/*
 		$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
 			self::$lang_id_0, self::$lang_id_1, self::$word_0, self::$word_1, self::$word_1_pronun));
 			
@@ -134,6 +140,7 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
 		self::$entry_id = $link->insert_id;
+		*/
 	}
 	
 	private static function add_course($link)
