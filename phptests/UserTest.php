@@ -23,11 +23,11 @@ class UserTest extends PHPUnit_Framework_TestCase
 
 	public function testInsert()
 	{
-		$email = 'some1@somewhere.com';
-		$handle = 'username1';
-		$password = 'P@ssword1';
-		$family = 'SomeFamily1';
-		$given = 'SomeGiven1';
+		$email = "some1@somewhere.com";
+		$handle = "username1";
+		$password = "P@ssword1";
+		$family = "SomeFamily1";
+		$given = "SomeGiven1";
 
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
 		Session::get()->set_user($user_obj);
