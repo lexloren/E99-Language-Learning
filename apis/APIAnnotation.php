@@ -16,11 +16,7 @@ class APIAnnotation extends APIBase
 		
 		if (($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
 		{
-			if (!isset($_POST["contents"]))
-			{
-				Session::get()->set_error_assoc("Request Invalid", "Annotation-insertion post must include entry_id and contents.");
-			}
-			else
+			if (self::validate_request($_POST, "contents"))
 			{
 				$entry = $entry->copy_for_session_user();
 				

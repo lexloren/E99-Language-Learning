@@ -14,11 +14,7 @@ class APITest  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["unit_id"]))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Test-insertion post must include unit_id.");
-		}
-		else
+		if (self::validate_request($_POST, "unit_id"))
 		{
 			if (!($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 			{
@@ -70,7 +66,7 @@ class APITest  extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			$this->return_array_as_assoc_for_json($test->get_sections());
+			self::return_array_as_assoc_for_json($test->get_sections());
 		}
 	}
 }

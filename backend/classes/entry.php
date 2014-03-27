@@ -53,30 +53,8 @@ class Entry extends DatabaseRow
 	private $annotations;
 	public function get_annotations()
 	{
-		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
-		if (!Session::get()->get_user())
-		{
-			return self::set_error_description("Session user has not reauthenticated.");
-		}
-		
-		if (!isset($this->annotations))
-		{
-			$this->annotations = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM user_entry_annotations LEFT JOIN user_entries USING (user_entry_id) WHERE user_id = %d AND entry_id = %d",
-				Session::get()->get_user()->get_user_id(),
-				$this->get_entry_id()
-			));
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->annotations, Annotation::from_mysql_result_assoc($result_assoc));
-			}
-		}
-		
-		return $this->annotations;
+		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
+		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->copy_for_session_user()->get_user_entry_id());
 	}
 	
 	private $user_entry_id = null;

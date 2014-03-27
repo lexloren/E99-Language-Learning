@@ -12,7 +12,7 @@ class APIUser extends APIBase
 
 	public function register()
 	{
-		if (isset($_POST["email"]) && isset($_POST["handle"]) && isset($_POST["password"]))
+		if (self::validate_request($_POST, array ("email", "handle", "password")))
 		{
 			//  Validate the posted data
 			$email = strtolower($_POST["email"]);
@@ -29,33 +29,23 @@ class APIUser extends APIBase
 				Session::get()->set_result_assoc($user->assoc_for_json());
 			}
 		}
-		else
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Registration post must include email, handle, and password.");
-		}
 	}
 	
 	public function authenticate()
 	{
-		if (isset($_POST["handle"]) && isset($_POST["password"]))
+		if (self::validate_request($_POST, array ("handle", "password")))
 		{
 			//  Should exit the script in either success or failure.
-			Session::get()->authenticate(strtolower($_POST["handle"]), $_POST["password"]);
-		}
-		else
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Authentication post must include handle and password.");
+			Session::get()->authenticate($_POST["handle"], $_POST["password"]);
 		}
 	}
 	
 	public function find()
 	{
-		if (!isset($_GET["query"]))
+		if (self::validate_request($_GET, "query"))
 		{
-			Session::get()->set_error_assoc("Request Invalid", "Find-user get must include query (which contains email or handle).");
+		self::return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
 		}
-		
-		$this->return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
 	}
 	
 	public function activate()
@@ -77,7 +67,7 @@ class APIUser extends APIBase
 	public function lists()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_lists());
+		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_lists());
 	}
 	
 	
@@ -118,15 +108,15 @@ class APIUser extends APIBase
 	public function practice_response()
 	{
 		if (!Session::get()->reauthenticate()) return;
-
+		
 		if (!isset($_GET["entry_id"]) || !($entry = Entry::select_by_id(intval($_GET["entry_id"], 10))))
-                {
-                        Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".$_GET["entry_id"]);
-                }
+		{
+			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".$_GET["entry_id"]);
+		}
 		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select_by_id(intval($_GET["grade_id"], 10))))
-                {
-                        Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".$_GET["grade_id"]);
-                }
+		{
+			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".$_GET["grade_id"]);
+		}
 		else
 		{
 			$result = Practice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
@@ -160,19 +150,19 @@ class APIUser extends APIBase
 	public function courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_courses());
+		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_courses());
 	}
 	
 	public function student_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_student_courses());
+		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_student_courses());
 	}
 	
 	public function instructor_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		$this->return_array_as_assoc_for_json(Session::get()->get_user()->get_instructor_courses());
+		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_instructor_courses());
 	}
 }
 

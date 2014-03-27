@@ -69,26 +69,25 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			if (!isset($_POST["entry_ids"]))
+			if (self::validate_request($_POST, "entry_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "List–add-entries post must include list_id and entry_ids.");
-			}
-			else if ($list->session_user_can_write())
-			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				if ($list->session_user_can_write())
 				{
-					if (!$list->entries_add(Entry::select_by_id($entry_id)))
+					foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 					{
-						Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
-						return;
+						if (!$list->entries_add(Entry::select_by_id($entry_id)))
+						{
+							Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
+				else
+				{
+					Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
+				}
 			}
 		}
 	}
@@ -99,26 +98,25 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			if (!isset($_POST["entry_ids"]))
+			if (self::validate_request($_POST, "entry_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "List–remove-entries post must include list_id and entry_ids.");
-			}
-			else if ($list->session_user_can_write())
-			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				if ($list->session_user_can_write())
 				{
-					if (!$list->entries_remove(Entry::select_by_id($entry_id)))
+					foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 					{
-						Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
-						return;
+						if (!$list->entries_remove(Entry::select_by_id($entry_id)))
+						{
+							Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
+				else
+				{
+					Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
+				}
 			}
 		}
 	}
