@@ -7,24 +7,7 @@ class Annotation extends DatabaseRow
 {
 	public static function select_by_id($annotation_id)
 	{
-		$annotation_id = intval($annotation_id, 10);
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$tables = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
-		$result = $mysqli->query(sprintf("SELECT * FROM $tables WHERE user_id = %d AND annotation_id = %d",
-			Session::get()->get_user()->get_user_id(),
-			$annotation_id
-		));
-		
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-		{
-			$annotation = Annotation::from_mysql_result_assoc($result_assoc);
-			
-			return $annotation->get_owner()->equals(Session::get()->get_user()) ? $annotation : null;
-		}
-		
-		return Annotation::set_error_description("Failed to select annotation where annotation_id = $annotation_id: " . $mysqli->error);
+		return self::select_by_id("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
 	}
 
 	private $contents;
@@ -72,6 +55,8 @@ class Annotation extends DatabaseRow
 		$this->entry_id = intval($entry_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->contents = $contents;
+		
+		self::register($this->annotation_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)

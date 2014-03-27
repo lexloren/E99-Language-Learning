@@ -55,7 +55,7 @@ class Entry extends DatabaseRow
 		//  Annotations are user-specific, so if we have no Session User, we can't have annotations
 		if (!Session::get()->get_user())
 		{
-			return Entry::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		if (!isset($this->annotations))
@@ -128,7 +128,7 @@ class Entry extends DatabaseRow
 			$this->interval = intval($interval, 10);
 			$this->efactor = floatval($efactor);
 
-			$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id($this->user_id);
+			$entries_by_id_for_user_id = self::entries_by_id_for_user_id($this->user_id);
 			$entries_by_id_for_user_id[$this->entry_id] = $this;
 		}
 	}
@@ -170,7 +170,7 @@ class Entry extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return Entry::set_error_description("Session user cannot edit entry.");
+			return self::set_error_description("Session user cannot edit entry.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -208,7 +208,7 @@ class Entry extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return Entry::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		$entry = $this->copy_for_session_user();
 		
@@ -221,14 +221,14 @@ class Entry extends DatabaseRow
 			return $entry;
 		}
 		
-		return Entry::set_error_description(Annotation::get_error_description());
+		return self::set_error_description(Annotation::get_error_description());
 	}
 	
 	public function annotations_remove($annotation)
 	{
 		if ($annotation->get_entry_id() !== $this->get_entry_id())
 		{
-			return Entry::set_error_description("Cannot delete annotation.");
+			return self::set_error_description("Cannot delete annotation.");
 		}
 		
 		$annotation->delete();
@@ -243,10 +243,10 @@ class Entry extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return Entry::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user()->get_user_id());
+		$entries_by_id_for_user_id = self::entries_by_id_for_user_id(Session::get()->get_user()->get_user_id());
 		
 		if (isset($entries_by_id_for_user_id[$this->entry_id])) return $entries_by_id_for_user_id[$this->entry_id];
 	
@@ -259,7 +259,8 @@ class Entry extends DatabaseRow
 			$this->entry_id
 		));
 		
-		$query = sprintf("SELECT * FROM (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
+		$query = sprintf("SELECT * FROM (SELECT entry_id, %s FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
+			Dictionary::language_code_columns(),
 			Dictionary::join(),
 			$this->entry_id,
 			Session::get()->get_user()->get_user_id()
@@ -269,12 +270,12 @@ class Entry extends DatabaseRow
 		
 		if (!$result || !($result_assoc = $result->fetch_assoc()))
 		{
-			return Entry::set_error_description("Entry failed to copy for session user: " .
+			return self::set_error_description("Entry failed to copy for session user: " .
 				(!!$mysqli->error ? $mysqli->error : $query)
 			);
 		}
 		
-		return Entry::from_mysql_result_assoc($result_assoc);
+		return self::from_mysql_result_assoc($result_assoc);
 	}
 	
 	public function update_repetition_details($point)

@@ -39,18 +39,7 @@ class User extends DatabaseRow
 	//  Creates a User object by selecting from the database
 	public static function select_by_id($user_id)
 	{
-		$user_id = intval($user_id, 10);
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query("SELECT * FROM users WHERE user_id = $user_id");
-		
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-		{
-			return User::from_mysql_result_assoc($result_assoc);
-		}
-		
-		return null;
+		return self::select_by_id("users", "user_id", $user_id);
 	}
 	
 	//  Inserts a row into users table and returns corresponding User object
@@ -103,7 +92,7 @@ class User extends DatabaseRow
 				return null;
 			}
 			
-			return User::from_mysql_result_assoc($result_assoc);
+			return self::from_mysql_result_assoc($result_assoc);
 		}
 	}
 	
@@ -163,6 +152,8 @@ class User extends DatabaseRow
 		$this->email = $email;
 		$this->name_family = $name_family;
 		$this->name_given = $name_given;
+		
+		self::register($this->user_id, $this);
 	}
 	
 	//  Creates a User object from an associative array fetched from a mysql_result

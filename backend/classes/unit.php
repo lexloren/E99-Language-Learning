@@ -7,13 +7,11 @@ class Unit extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 	
-	private static $units_by_id = array ();
-	
-	public static function insert($course_id, $unit_name = null)
+	public static function insert($course_id, $unit_name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return Unit::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -22,11 +20,11 @@ class Unit extends DatabaseRow
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
 		
-		if (!$course) return Unit::set_error_description(Course::get_error_description());
+		if (!$course) return self::set_error_description(Course::get_error_description());
 		
 		if (!$course->session_user_is_instructor())
 		{
-			return Unit::set_error_description("Session user is not instructor of course.");
+			return self::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$unit_number = count($course->get_units()) + 1;
@@ -44,22 +42,7 @@ class Unit extends DatabaseRow
 	
 	public static function select_by_id($unit_id)
 	{
-		$unit_id = intval($unit_id, 10);
-		
-		if (isset(self::$units_by_id[$unit_id])) return self::$units_by_id[$unit_id];
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query("SELECT * FROM course_units WHERE unit_id = $unit_id");
-
-		if (!!$mysqli->error) return self::set_error_description("Failed to select unit: " . $mysqli->error);
-		
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-		{
-			return Unit::from_mysql_result_assoc($result_assoc);
-		}
-		
-		return Unit::set_error_description("No unit matches unit_id = $unit_id.");
+		return self::select_by_id("course_units", "unit_id", $unit_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -135,7 +118,7 @@ class Unit extends DatabaseRow
 			{
 				if (!($list = EntryList::from_mysql_result_assoc($result_assoc)))
 				{
-					return Unit::set_error_description("Failed to get lists: " . EntryList::get_error_description());
+					return self::set_error_description("Failed to get lists: " . EntryList::get_error_description());
 				}
 				array_push($this->lists, $list);
 			}
@@ -151,7 +134,7 @@ class Unit extends DatabaseRow
 		$this->unit_number = intval($unit_number, 10);
 		$this->unit_name = !!$unit_name && strlen($unit_name) > 0 ? $unit_name : null;
 		
-		Unit::$units_by_id[$this->unit_id] = $this;
+		self::register($this->unit_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
@@ -177,7 +160,7 @@ class Unit extends DatabaseRow
 	{
 		if (!$this->session_user_is_instructor())
 		{
-			return Unit::set_error_description("Session user is not instructor of course.");
+			return self::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -203,12 +186,12 @@ class Unit extends DatabaseRow
 	{
 		if (!$this->session_user_is_instructor())
 		{
-			return Unit::set_error_description("Session user is not instructor of course.");
+			return self::set_error_description("Session user is not instructor of course.");
 		}
 		
 		if (!$list->get_owner()->equals(Session::get()->get_user()))
 		{
-			return Unit::set_error_description("Session user is not owner of list.");
+			return self::set_error_description("Session user is not owner of list.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -227,7 +210,7 @@ class Unit extends DatabaseRow
 	{
 		if (!$this->session_user_is_instructor())
 		{
-			return Unit::set_error_description("Session user is not instructor of course.");
+			return self::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -252,6 +235,7 @@ class Unit extends DatabaseRow
 		return array (
 			"unitId" => $this->get_unit_id(),
 			"unitName" => !$privacy ? $this->get_unit_name() : null,
+			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => null // Not yet implemented
 		);

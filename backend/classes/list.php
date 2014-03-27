@@ -7,13 +7,11 @@ class EntryList extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 	
-	private static $lists_by_id = array ();
-	
 	public static function insert($list_name = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return EntryList::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -28,32 +26,7 @@ class EntryList extends DatabaseRow
 	
 	public static function select_by_id($list_id)
 	{
-		$list_id = intval($list_id, 10);
-		
-		if (!in_array($list_id, array_keys(self::$lists_by_id)))
-		{
-			$mysqli = Connection::get_shared_instance();
-			
-			//  Need to add privileges here, based on public sharing and course-wide sharing
-			
-			$result = $mysqli->query("SELECT * FROM lists WHERE list_id = $list_id");
-			
-			if (!!$result && !!($result_assoc = $result->fetch_assoc()))
-			{
-				EntryList::from_mysql_result_assoc($result_assoc);
-			}
-			else
-			{
-				return EntryList::set_error_description("Failed to select list where list_id = $list_id.");
-			}
-		}
-		
-		if (in_array($list_id, array_keys(self::$lists_by_id)))
-		{
-			if (!!($list = self::$lists_by_id[$list_id]) && $list->session_user_can_read()) return $list;
-		}
-		
-		return EntryList::set_error_description("Failed to select list where list_id = $list_id.");
+		return self::select_by_id("lists", "list_id", $list_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -95,7 +68,8 @@ class EntryList extends DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 			
-			$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1 FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
+			$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
+				Dictionary::language_code_columns(),
 				Dictionary::join(),
 				Session::get()->get_user()->get_user_id()
 			);
@@ -119,7 +93,7 @@ class EntryList extends DatabaseRow
 		$this->list_name = $list_name;
 		$this->public = !!$public;
 		
-		EntryList::$lists_by_id[$this->list_id] = $this;
+		self::register($this->list_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
@@ -178,7 +152,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return EntryList::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -197,7 +171,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return EntryList::set_error_description("Session user cannot edit list.");
+			return self::set_error_description("Session user cannot edit list.");
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
@@ -205,7 +179,7 @@ class EntryList extends DatabaseRow
 		
 		if (!$entry_added)
 		{
-			return EntryList::set_error_description(Entry::get_error_description());
+			return self::set_error_description(Entry::get_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -226,7 +200,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return EntryList::set_error_description("Session user cannot edit list.");
+			return self::set_error_description("Session user cannot edit list.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -246,7 +220,7 @@ class EntryList extends DatabaseRow
 			}
 		}
 		
-		return EntryList::set_error_description("List failed to remove entry.");
+		return self::set_error_description("List failed to remove entry.");
 	}
 	
 	//  Copies this list, setting the copy's owner to some other user
@@ -255,7 +229,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!Session::get()->get_user() || !$this->session_user_can_read())
 		{
-			return EntryList::set_error_description("Session user cannot read list.");
+			return self::set_error_description("Session user cannot read list.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -277,7 +251,7 @@ class EntryList extends DatabaseRow
 			$this->get_list_id()
 		));
 		
-		return EntryList::select_by_id($copy_id);
+		return self::select_by_id($copy_id);
 	}
 	
 	public function assoc_for_json()

@@ -15,7 +15,7 @@ class Practice
 	//  public static function generate($list_ids, $entries_count)
 	public function get_practice_entries($list_ids, $entries_count)
 	{
-		$count_limit = isset($entries_count) ? $entries_count : Practice::PRACTICE_ENTRIES_CNT;
+		$count_limit = isset($entries_count) ? $entries_count : self::PRACTICE_ENTRIES_CNT;
 		
 		$mysqli = Connection::get_shared_instance();
 		$list_ids_str = join(', ', $list_ids);
@@ -26,14 +26,14 @@ class Practice
 			"AND user_id = %d ORDER BY interval",
 			$list_ids_str, Session::get()->get_user()->get_user_id()
 		));
-		$learned_entry_set = Practice::from_mysql_entry_id_assoc($learned_entries);
+		$learned_entry_set = self::from_mysql_entry_id_assoc($learned_entries);
 		$learned_count = count($learned_entry_set);
 		
 		$not_learned_entries = $mysqli->query(sprintf("SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) AND entry_id NOT IN (%s)",
 			$list_ids_str,
 			join(', ', $learned_entry_set))
 		);
-		$not_learned_entry_set = Practice::from_mysql_entry_id_assoc($not_learned_entries);
+		$not_learned_entry_set = self::from_mysql_entry_id_assoc($not_learned_entries);
 		$not_learned_count = count($not_learned_entry_set);
 		
 		$new_entry_count = min(

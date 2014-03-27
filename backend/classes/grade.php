@@ -7,8 +7,6 @@ class Grade extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 
-	private static $grades_by_id = array ();
-
 	public static function insert($point, $desc_short = null, $desc_long = null)
 	{
 		return null;
@@ -16,23 +14,7 @@ class Grade extends DatabaseRow
 
 	public static function select_by_id($grade_id)
 	{
-		$grade_id = intval($grade_id, 10);
-		
-		if (isset(self::$grades_by_id[$grade_id]))
-		{
-			return self::$grades_by_id[$grade_id];
-		}
-
-		$mysqli = Connection::get_shared_instance();
-
-		$result = $mysqli->query("SELECT * FROM grades WHERE grade_id = $grade_id");
-
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-		{
-			return Grade::from_mysql_result_assoc($result_assoc);
-		}
-
-		return Grade::set_error_description("No grade matches grade_id = $grade_id.");
+		return self::select_by_id("grades", "grade_id", $grade_id);
 	}
 
 	/***    INSTANCE    ***/
@@ -68,7 +50,7 @@ class Grade extends DatabaseRow
 		$this->desc_short = !!$desc_short && strlen($desc_short) > 0 ? $desc_short : null;
 		$this->desc_long = !!$desc_long && strlen($desc_long) > 0 ? $desc_long : null;
 
-		Grade::$grades_by_id[$this->grade_id] = $this;
+		self::register($this->grade_id, $this);
 	}
 
 	public static function from_mysql_result_assoc($result_assoc)

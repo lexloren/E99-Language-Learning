@@ -7,13 +7,11 @@ class Course extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 	
-	private static $courses_by_id = array ();
-	
-	public static function insert($lang_code_0, $lang_code_1, $course_name = null)
+	public static function insert($lang_code_0, $lang_code_1, $course_name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return Course::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -58,20 +56,7 @@ class Course extends DatabaseRow
 	
 	public static function select_by_id($course_id)
 	{
-		$course_id = intval($course_id, 10);
-		
-		if (isset(self::$courses_by_id[$course_id])) return self::$courses_by_id[$course_id];
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query("SELECT * FROM courses WHERE course_id = $course_id");
-		
-		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
-		{
-			return Course::from_mysql_result_assoc($result_assoc);
-		}
-		
-		return Course::set_error_description("Failed to select course where course_id = $course_id.");
+		return self::select_by_id("courses", "course_id", $course_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -90,6 +75,11 @@ class Course extends DatabaseRow
 	public function get_owner()
 	{
 		return User::select_by_id($this->get_user_id());
+	}
+	public function session_user_is_owner()
+	{
+		return !!Session::get() && !!Session::get()->get_user()
+			&& Session::get()->get_user()->equals($this->get_owner());
 	}
 	
 	private $course_name = null;
@@ -141,7 +131,7 @@ class Course extends DatabaseRow
 			{
 				if (!($user = User::from_mysql_result_assoc($result_assoc)))
 				{
-					return Course::set_error_description("Failed to get instructors: " . User::get_error_description());
+					return self::set_error_description("Failed to get instructors: " . User::get_error_description());
 				}
 				array_push($this->instructors, $user);
 			}
@@ -177,7 +167,7 @@ class Course extends DatabaseRow
 			{
 				if (!($user = User::from_mysql_result_assoc($result_assoc)))
 				{
-					return Course::set_error_description("Failed to get students: " . User::get_error_description());
+					return self::set_error_description("Failed to get students: " . User::get_error_description());
 				}
 				array_push($this->students, $user);
 			}
@@ -214,7 +204,7 @@ class Course extends DatabaseRow
 			{
 				if (!($unit = Unit::from_mysql_result_assoc($unit_assoc)))
 				{
-					return Course::set_error_description("Failed to get units: " . Unit::get_error_description());
+					return self::set_error_description("Failed to get units: " . Unit::get_error_description());
 				}
 				array_push($this->units, $unit);
 			}
@@ -241,7 +231,7 @@ class Course extends DatabaseRow
 		$this->course_name = $course_name;
 		$this->public = intval($public, 10);
 		
-		Course::$courses_by_id[$this->course_id] = $this;
+		self::register($this->course_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
@@ -269,19 +259,21 @@ class Course extends DatabaseRow
 	
 	public function session_user_can_write()
 	{
-		return $this->session_user_is_instructor() || $this->get_owner()->equals(Session::get()->get_user());
+		return $this->session_user_is_instructor()
+			|| $this->session_user_is_owner();
 	}
 	
 	public function session_user_can_read()
 	{
-		return $this->session_user_can_write() || $this->session_user_is_instructor() || $this->session_user_is_student();
+		return $this->session_user_can_write()
+			|| $this->session_user_is_student();
 	}
 	
 	public function delete()
 	{
-		if (!$this->get_owner()->equals(Session::get()->get_user()))
+		if (!$this->session_user_is_owner())
 		{
-			return Course::set_error_description("Session user is not owner of course.");
+			return self::set_error_description("Session user is not course owner.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -297,12 +289,12 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return Course::set_error_description("Session user cannot edit course.");
+			return self::set_error_description("Session user cannot edit course.");
 		}
 		
 		if ($user->in_array($array))
 		{
-			return Course::set_error_description("Course cannot add user.");
+			return self::set_error_description("Course cannot add user.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -319,6 +311,10 @@ class Course extends DatabaseRow
 	
 	public function instructors_add($user)
 	{
+		if (!$this->session_user_is_owner())
+		{
+			return self::set_error_description("Session user is not course owner.");
+		}
 		return $this->users_add($this->get_instructors(), "course_instructors", $user);
 	}
 	
@@ -331,7 +327,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return Course::set_error_description("Session user cannot edit course.");
+			return self::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -348,6 +344,10 @@ class Course extends DatabaseRow
 	
 	public function instructors_remove($user)
 	{
+		if (!$this->session_user_is_owner())
+		{
+			return self::set_error_description("Session user is not course owner.");
+		}
 		return $this->users_remove($this->get_instructors(), "course_instructors", $user);
 	}
 	

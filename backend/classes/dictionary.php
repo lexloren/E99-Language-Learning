@@ -20,10 +20,15 @@ class Dictionary
 		return "($join_dict_lang_0) LEFT JOIN languages AS languages_1 ON dictionary.lang_id_1 = languages_1.lang_id";
 	}
 
+	public static function language_code_columns()
+	{
+		return "languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1";
+	}
+
 	//  Returns the default columns that result from join()
 	public static function default_columns()
 	{
-		return "dictionary.*, languages_0.lang_code AS lang_code_0, languages_1.lang_code AS lang_code_1";
+		return "dictionary.*, " . self::language_code_columns();
 	}
 	
 	public static function look_up($word, $lang_codes, $pagination = null)

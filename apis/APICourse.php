@@ -68,7 +68,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])))
+		if (($course = $this->validate_course_id($_POST["course_id"])) && $course->session_user_is_owner())
 		{
 			$course->delete();
 			Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
@@ -79,7 +79,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])))
+		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_lists());
 		}
@@ -89,7 +89,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])))
+		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_units());
 		}
@@ -99,7 +99,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])))
+		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_students());
 		}
@@ -115,7 +115,7 @@ class APICourse  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Course–add-students post must include course_id and user_ids.");
 			}
-			else if (Session::get()->get_user()->in_array($course->get_instructors()))
+			else if ($course->session_user_can_write())
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -130,7 +130,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Back end failed to add students to course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user cannot edit course.");
 			}
 		}
 	}
@@ -139,7 +139,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])))
+		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_instructors());
 		}
@@ -155,7 +155,7 @@ class APICourse  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Course–add-instructors post must include course_id and user_ids.");
 			}
-			else if ($course->get_owner()->equals(Session::get()->get_user()))
+			else if ($course->session_user_is_owner())
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -170,7 +170,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Back end failed to add instructors to course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
 			}
 		}
 	}
@@ -185,7 +185,7 @@ class APICourse  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Course–remove-students post must include course_id and user_ids.");
 			}
-			else if (Session::get()->get_user()->in_array($course->get_instructors()))
+			else if ($course->session_user_can_write())
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -200,7 +200,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Back end failed to remove students from course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user cannot edit course.");
 			}
 		}
 	}
@@ -215,7 +215,7 @@ class APICourse  extends APIBase
 			{
 				Session::get()->set_error_assoc("Invalid Post", "Course–remove-instructors post must include course_id and user_ids.");
 			}
-			else if ($course->get_owner()->equals(Session::get()->get_user()))
+			else if ($course->session_user_is_owner())
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -230,7 +230,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Back end failed to remove instructors from course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
 			}
 		}
 	}
