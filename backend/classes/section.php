@@ -28,7 +28,7 @@ class Section extends DatabaseRow
 		$section_number = count($test->get_sections()) + 1;
 		$timer = intval($timer, 10);
 		
-		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_nmbr, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
+		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_num, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
 		
 		if ($mysqli->error)
 		{
@@ -60,17 +60,14 @@ class Section extends DatabaseRow
 	{
 		return Test::select_by_id($this->get_test_id());
 	}
-	public function get_unit_id()
-	{
-		return $this->get_test()->get_unit_id();
-	}
+	
 	public function get_unit()
 	{
 		return $this->get_test()->get_unit();
 	}
-	public function get_course_id()
+	public function get_unit_id()
 	{
-		return $this->get_test()->get_course_id();
+		return $this->get_unit()->get_unit_id();
 	}
 	public function get_course()
 	{
@@ -81,29 +78,6 @@ class Section extends DatabaseRow
 	public function get_section_name()
 	{
 		return $this->section_name;
-	}
-	
-	public function get_owner()
-	{
-		return $this->get_course()->get_owner();
-	}
-	
-	public function get_instructors()
-	{
-		return $this->get_course()->get_instructors();
-	}
-	public function session_user_is_instructor()
-	{
-		return $this->get_course()->session_user_is_instructor();
-	}
-	
-	public function get_students()
-	{
-		return $this->get_course()->get_students();
-	}
-	public function session_user_is_student()
-	{
-		return $this->get_course()->session_user_is_student();
 	}
 
 	private $entries;

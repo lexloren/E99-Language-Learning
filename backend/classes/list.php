@@ -227,7 +227,7 @@ class EntryList extends DatabaseRow
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::get()->get_user() || !$this->session_user_can_read())
+		if (!Session::get() || !$this->session_user_can_read())
 		{
 			return self::set_error_description("Session user cannot read list.");
 		}

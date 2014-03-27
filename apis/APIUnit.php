@@ -72,7 +72,7 @@ class APIUnit  extends APIBase
 	public function update()
 	{
 		//  unit_name
-		//  unit_nmbr
+		//  unit_num
 	}
 	
 	public function lists()

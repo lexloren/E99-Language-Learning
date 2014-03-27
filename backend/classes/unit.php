@@ -29,7 +29,7 @@ class Unit extends CourseComponent
 		
 		$unit_number = count($course->get_units()) + 1;
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_nmbr) VALUES (%d, %s, %d)",
+		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, %s, %d)",
 			$course_id,
 			!!$unit_name && strlen($unit_name) > 0 ? "'$unit_name'" : "NULL",
 			$unit_number
@@ -142,7 +142,7 @@ class Unit extends CourseComponent
 		$mysql_columns = array (
 			"unit_id",
 			"course_id",
-			"unit_nmbr",
+			"unit_num",
 			"unit_name"
 		);
 		
@@ -151,7 +151,7 @@ class Unit extends CourseComponent
 		return new Unit(
 			$result_assoc["unit_id"],
 			$result_assoc["course_id"],
-			$result_assoc["unit_nmbr"],
+			$result_assoc["unit_num"],
 			!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
 		);
 	}
