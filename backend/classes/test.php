@@ -27,10 +27,10 @@ class Test extends CourseComponent
 		
 		$test_name = $test_name !== null ? "'" . $mysqli->escape_string($test_name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$open = $timeframe->get_open();
-		$close = $timeframe->get_close();
+		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
+		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
 		
-		$mysqli->query("INSERT INTO course_unit_tests (test_name, open, close, message) VALUES ($test_name, FROM_UNIXTIME($open), FROM_UNIXTIME($close), $message)");
+		$mysqli->query("INSERT INTO course_unit_tests (unit_id, test_name, open, close, message) VALUES ($unit_id, $test_name, $open, $close, $message)");
 		
 		if ($mysqli->error)
 		{
@@ -165,7 +165,7 @@ class Test extends CourseComponent
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
-			"timeframe" => !$privacy ? $this->get_timeframe()->assoc_for_json() : null			
+			"timeframe" => !$privacy ? (!!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null) : null
 		);
 	}
 }
