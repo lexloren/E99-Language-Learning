@@ -63,6 +63,15 @@ class Test extends CourseComponent
 	{
 		return $this->test_name;
 	}
+	public function set_test_name($test_name)
+	{
+		if (!self::update_this($this, "course_unit_tests", array ("test_name", $test_name), "test_id", $this->get_test_id()))
+		{
+			return null;
+		}
+		$this->test_name = $test_name;
+		return $this;
+	}
 	
 	private $unit_id = null;
 	public function get_unit_id()
@@ -82,7 +91,7 @@ class Test extends CourseComponent
 	private $sections;
 	public function get_sections()
 	{
-		return $this->get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id());
+		return self::get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id());
 	}
 	public function get_sections_by_number()
 	{

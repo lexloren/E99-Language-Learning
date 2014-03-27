@@ -161,26 +161,16 @@ class Entry extends DatabaseRow
 		);
 	}
 	
-	public function session_user_can_write()
-	{
-		return !!Session::get()->get_user() && (Session::get()->get_user()->get_user_id() === $this->user_id);
-	}
-	
 	//  Sets both some object property and the corresponding spot in the database
 	private function set(&$variable, $column, $value)
 	{
-		if (!$this->session_user_can_write())
-		{
-			return self::set_error_description("Session user cannot edit entry.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("UPDATE user_entries SET $column = '%s' WHERE user_id = %d AND entry_id = %d",
-			$mysqli->escape_string($value),
-			$this->user_id,
-			$this->entry_id
-		));
+		if (!self::update_this(
+			$this,
+			"user_entries",
+			array ($column => $value),
+			"user_entry_id",
+			$this->get_user_entry_id()
+		)) return null;
 		
 		$variable = $value;
 		

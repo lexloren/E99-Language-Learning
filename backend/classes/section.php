@@ -81,6 +81,15 @@ class Section extends DatabaseRow
 	{
 		return $this->section_name;
 	}
+	public function set_section_name($section_name)
+	{
+		if (!self::update_this($this, "course_unit_test_sections", array ("section_name", $section_name), "section_id", $this->get_section_id()))
+		{
+			return null;
+		}
+		$this->section_name = $section_name;
+		return $this;
+	}
 
 	private $entries;
 	public function get_entries()
@@ -91,7 +100,7 @@ class Section extends DatabaseRow
 			Dictionary::join()
 		);
 		$table = "$section_entries LEFT JOIN $language_codes USING (entry_id)";
-		return $this->get_cached_collection($this->entries, "Entry", $table, "section_id", $this->get_section_id());
+		return self::get_cached_collection($this->entries, "Entry", $table, "section_id", $this->get_section_id());
 	}
 	
 	private $timer;

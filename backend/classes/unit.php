@@ -72,6 +72,7 @@ class Unit extends CourseComponent
 	}
 	public function set_unit_number($unit_number)
 	{
+		return null;
 		//  Verify that $unit_number <= count of units in the course
 		//  Set this unit's number to $unit_number, pushing all subsequent units down by one
 	}
@@ -81,18 +82,29 @@ class Unit extends CourseComponent
 	{
 		return $this->unit_name;
 	}
+	public function set_unit_name($unit_name)
+	{
+		if (!self::update_this($this, "course_units", array ("unit_name", $unit_name), "unit_id", $this->get_unit_id()))
+		{
+			return null;
+		}
+		$this->unit_name = $unit_name;
+		return $this;
+	}
+	
+	//  $message
 	
 	private $tests;
 	public function get_tests()
 	{
-		return $this->get_cached_collection($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
+		return self::get_cached_collection($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
 	}
 	
 	private $lists;
 	public function get_lists()
 	{
 		$table = "course_unit_lists LEFT JOIN lists USING (list_id)";
-		return $this->get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
+		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
 	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null)

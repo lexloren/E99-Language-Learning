@@ -89,6 +89,15 @@ class Course extends DatabaseRow
 	{
 		return $this->course_name;
 	}
+	public function set_course_name($course_name)
+	{
+		if (!self::update_this($this, "courses", array ("course_name", $course_name), "course_id", $this->get_course_id()))
+		{
+			return null;
+		}
+		$this->course_name = $course_name;
+		return $this;
+	}
 	
 	private $lang_id_0 = null;
 	public function get_lang_id_0()
@@ -116,11 +125,13 @@ class Course extends DatabaseRow
 		return !!$this->public;
 	}
 	
+	//  $message
+	
 	private $instructors;
 	public function get_instructors()
 	{
 		$table = "course_instructors LEFT JOIN users USING (user_id)";
-		return $this->get_cached_collection($this->instructors, "User", $table, "course_id", $this->get_course_id());
+		return self::get_cached_collection($this->instructors, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_instructor()
 	{
@@ -131,7 +142,7 @@ class Course extends DatabaseRow
 	public function get_students()
 	{
 		$table = "course_students LEFT JOIN users USING (user_id)";
-		return $this->get_cached_collection($this->students, "User", $table, "course_id", $this->get_course_id());
+		return self::get_cached_collection($this->students, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_student()
 	{
@@ -142,7 +153,7 @@ class Course extends DatabaseRow
 	public function get_units()
 	{
 		$table = "course_students LEFT JOIN users USING (user_id)";
-		return $this->get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id());
+		return self::get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id());
 	}
 	public function get_lists()
 	{

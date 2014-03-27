@@ -78,12 +78,7 @@ class DatabaseRow
 		return true;
 	}
 	
-	public function get_owner()
-	{
-		return null;
-	}
-	
-	public function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id)
+	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id)
 	{
 		if (!isset($cache))
 		{
@@ -109,10 +104,50 @@ class DatabaseRow
 		return $cache;
 	}
 	
+	protected static function update_this($instance, $table, $assignments, $column, $id)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$assignments_sql = array ();
+		foreach ($assignments as $column => $value)
+		{
+			array_push($assignments_sql, "$column = " . $mysqli->escape_string($value));
+		}
+		$assignments_sql = implode(", ", $assignments_sql);
+		
+		$failure_message = "Failed to update $table setting $assignments_sql where $column = $id";
+		
+		if (!$instance->session_user_can_write())
+		{
+			return static::set_error_description("$failure_message: Session user is not owner.");
+		}
+		
+		$id = intval($id, 10);
+		
+		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $column = $id");
+		
+		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error);
+	}
+	
+	public function get_owner()
+	{
+		return null;
+	}
+	
 	public function session_user_is_owner()
 	{
 		return !!Session::get() && !!$this->get_owner()
 			&& $this->get_owner()->equals(Session::get()->get_user());
+	}
+	
+	public function session_user_can_write()
+	{
+		return $this->session_user_is_owner();
+	}
+	
+	public function session_user_can_read()
+	{
+		return $this->session_user_can_write();
 	}
 	
 	public function assoc_for_json()

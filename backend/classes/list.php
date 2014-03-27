@@ -54,6 +54,15 @@ class EntryList extends DatabaseRow
 	{
 		return $this->list_name;
 	}
+	public function set_list_name($list_name)
+	{
+		if (!self::update_this($this, "lists", array ("list_name", $list_name), "list_id", $this->get_list_id()))
+		{
+			return null;
+		}
+		$this->list_name = $list_name;
+		return $this;
+	}
 	
 	private $public;
 	public function is_public()
@@ -71,7 +80,7 @@ class EntryList extends DatabaseRow
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
-		return $this->get_cached_collection($this->entries, "Entry", $table, "list_id", $this->get_list_id());
+		return self::get_cached_collection($this->entries, "Entry", $table, "list_id", $this->get_list_id());
 	}
 	
 	private function __construct($list_id, $user_id, $list_name = null, $public = false)
@@ -128,12 +137,6 @@ class EntryList extends DatabaseRow
 		}
 		
 		return false;
-	}
-	
-	//  Returns true iff Session::get()->get_user() owns this list
-	public function session_user_can_write()
-	{
-		return !!Session::get()->get_user() && (Session::get()->get_user()->get_user_id() === $this->get_user_id());
 	}
 	
 	public function delete()

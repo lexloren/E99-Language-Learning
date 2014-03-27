@@ -105,6 +105,10 @@ class User extends DatabaseRow
 	{
 		return $this->user_id;
 	}
+	protected function get_owner()
+	{
+		return $this;
+	}
 	
 	private $handle = null;
 	public function get_handle()
@@ -119,6 +123,20 @@ class User extends DatabaseRow
 		
 		return $this->email;
 	}
+	public function set_email($email)
+	{
+		if (!self::validate_email($email))
+		{
+			return self::set_error_description("Invalid Email", "Email must conform to the standard pattern.");
+		}
+		
+		if (!self::update_this($this, "users", array ("email", $email), "user_id", $this->get_user_id()))
+		{
+			return null;
+		}
+		$this->email = $email;
+		return $this;
+	}
 	
 	private $name_family = null;
 	public function get_name_family()
@@ -127,6 +145,15 @@ class User extends DatabaseRow
 		
 		return $this->name_family;
 	}
+	public function set_name_family($name_family)
+	{
+		if (!self::update_this($this, "users", array ("name_family", $name_family), "user_id", $this->get_user_id()))
+		{
+			return null;
+		}
+		$this->name_family = $name_family;
+		return $this;
+	}
 	
 	private $name_given = null;
 	public function get_name_given()
@@ -134,6 +161,15 @@ class User extends DatabaseRow
 		if (!($this->is_session_user())) return null;
 		
 		return $this->name_given;
+	}
+	public function set_name_given($name_given)
+	{
+		if (!self::update_this($this, "users", array ("name_given", $name_given), "user_id", $this->get_user_id()))
+		{
+			return null;
+		}
+		$this->name_given = $name_given;
+		return $this;
 	}
 	
 	//  Returns the full name, formatted with given/family names in the right places
@@ -179,37 +215,6 @@ class User extends DatabaseRow
 			$result_assoc["name_given"]
 		);
 	}
-	
-	//  To be completed....
-	//      This function will factor out get_lists(), get_student_courses(), and get_instructor_courses()
-	/*
-	private function populate(&$collection, $class, $table_relational, $table_informative, $id_column)
-	{
-		if (!($this->is_session_user())) return null;
-		
-		if (!isset($collection))
-		{
-			$collection = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query("SELECT $table_informative.* FROM $table_relational LEFT JOIN $table_informative USING ($id_column) WHERE $table_relational.user_id = " . $this->get_user_id());
-			
-			//  Unknown error
-			if (!$result) return null;
-			
-			while (!!($result_assoc = $result->fetch_assoc()))
-			{
-				if (!!($instance = $class::from_mysql_result_assoc($result_assoc)))
-				{
-					array_push($collection, $instance);
-				}
-			}
-		}
-		
-		return $collection;
-	}
-	*/
 	
 	private $lists;
 	public function get_lists()
