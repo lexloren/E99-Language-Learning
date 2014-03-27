@@ -39,21 +39,6 @@ class APICourse  extends APIBase
 		}
 	}
 	
-	private function validate_course_id($course_id)
-	{
-		$course = null;
-		if (!isset($course_id))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include course_id.");
-		}
-		else if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
-		{
-			Session::get()->set_error_assoc("Course Selection", Course::get_error_description());
-		}
-		
-		return $course;
-	}
-	
 	public function update()
 	{
 		//  course_name
@@ -65,7 +50,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])) && $course->session_user_is_owner())
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			if (!$course->delete())
 			{
@@ -82,9 +67,21 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
+		//  session_user_can_read() here?
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_lists());
+		}
+	}
+	
+	public function tests()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		//  session_user_can_read() here?
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		{
+			$this->return_array_as_assoc_for_json($course->get_tests());
 		}
 	}
 	
@@ -92,7 +89,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_units());
 		}
@@ -102,7 +99,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_students());
 		}
@@ -112,7 +109,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])))
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			if (!isset($_POST["user_ids"]))
 			{
@@ -142,7 +139,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_GET["course_id"])) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
 			$this->return_array_as_assoc_for_json($course->get_instructors());
 		}
@@ -152,7 +149,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])))
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			if (!isset($_POST["user_ids"]))
 			{
@@ -182,7 +179,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])))
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			if (!isset($_POST["user_ids"]))
 			{
@@ -212,7 +209,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = $this->validate_course_id($_POST["course_id"])))
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			if (!isset($_POST["user_ids"]))
 			{

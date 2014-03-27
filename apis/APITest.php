@@ -20,7 +20,7 @@ class APITest  extends APIBase
 		}
 		else
 		{
-			if (!($unit = Unit::select_by_id(($unit_id = intval($_POST["unit_id"], 10)))))
+			if (!($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 			{
 				Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
 			}
@@ -40,25 +40,11 @@ class APITest  extends APIBase
 		}
 	}
 	
-	private function validate_test_id($test_id)
-	{
-		if (!isset($test_id))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include test_id.");
-		}
-		else if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
-		{
-			Session::get()->set_error_assoc("Test Selection", Test::get_error_description());
-		}
-		
-		return $test;
-	}
-	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($test = $this->validate_test_id($_POST["test_id"])))
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
 			if (!$test->delete())
 			{
@@ -82,7 +68,7 @@ class APITest  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($test = $this->validate_test_id($_GET["test_id"])))
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
 			$this->return_array_as_assoc_for_json($test->get_sections());
 		}

@@ -20,7 +20,7 @@ class APIUnit  extends APIBase
 		}
 		else
 		{
-			if (!($course = Course::select_by_id(($course_id = intval($_POST["course_id"], 10)))))
+			if (!($course = self::validate_selection_id($_POST, "course_id", "Course")))
 			{
 				Session::get()->set_error_assoc("Course Selection", Course::get_error_description());
 			}
@@ -40,26 +40,11 @@ class APIUnit  extends APIBase
 		}
 	}
 	
-	private function validate_unit_id($unit_id)
-	{
-		$unit = null;
-		if (!isset($unit_id))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include unit_id.");
-		}
-		else if (!($unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)))))
-		{
-			Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
-		}
-		
-		return $unit;
-	}
-	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($unit = $this->validate_unit_id($_POST["unit_id"])))
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
 			if (!$unit->delete())
 			{
@@ -82,7 +67,7 @@ class APIUnit  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($unit = $this->validate_unit_id($_GET["unit_id"])))
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
 			$this->return_array_as_assoc_for_json($unit->get_lists());
 		}
@@ -92,7 +77,7 @@ class APIUnit  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($unit = $this->validate_unit_id($_POST["unit_id"])))
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
 			if (!isset($_POST["list_ids"]))
 			{
@@ -122,7 +107,7 @@ class APIUnit  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($unit = $this->validate_unit_id($_POST["unit_id"])))
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
 			if (!isset($_POST["list_ids"]))
 			{
@@ -152,7 +137,7 @@ class APIUnit  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($unit = $this->validate_unit_id($_GET["unit_id"])))
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
 			$this->return_array_as_assoc_for_json($unit->get_tests());
 		}

@@ -23,21 +23,6 @@ class APIList extends APIBase
 		}
 	}
 	
-	private function validate_list_id($list_id)
-	{
-		$list = null;
-		if (!isset($list_id) || $list_id === null)
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include list_id.");
-		}
-		else if (!($list = EntryList::select_by_id(($list_id = intval($list_id, 10)))))
-		{
-			Session::get()->set_error_assoc("List Selection", EntryList::get_error_description());
-		}
-		
-		return $list;
-	}
-	
 	public function update()
 	{
 		//  list_name
@@ -47,11 +32,7 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 
-                if (!isset($_POST["list_id"]))
-                {
-                        Session::get()->set_error_assoc("List Deletion", "list_id not provided");
-                }
-		else if (($list = $this->validate_list_id($_POST["list_id"])))
+		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
 			if (!$list->delete())
 			{
@@ -68,7 +49,7 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($list = $this->validate_list_id($_GET["list_id"])))
+		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
 		{
 			$entries = $list->get_entries();
 		
@@ -86,7 +67,7 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($list = $this->validate_list_id($_POST["list_id"])))
+		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
 			if (!isset($_POST["entry_ids"]))
 			{
@@ -116,7 +97,7 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($list = $this->validate_list_id($_POST["list_id"])))
+		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
 			if (!isset($_POST["entry_ids"]))
 			{
