@@ -47,7 +47,11 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 
-		if (($list = $this->validate_list_id($_POST["list_id"])))
+                if (!isset($_POST["list_id"]))
+                {
+                        Session::get()->set_error_assoc("List Deletion", "list_id not provided");
+                }
+		else if (($list = $this->validate_list_id($_POST["list_id"])))
 		{
 			if (!$list->delete())
 			{
