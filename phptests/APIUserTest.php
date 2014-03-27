@@ -50,12 +50,12 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$result = $result_assoc['result'];		
+		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertEquals($result['handle'], 'username1');
+		$this->assertEquals($result["handle"], $_POST["handle"]);
 		
-		$this->assertEquals($result['email'], 'someone@somewhere.com');
+		$this->assertEquals($result["email"], $_POST["email"]);
 	}
 	
 	public function testRegisterNoEmail()
@@ -69,7 +69,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$error = $result_assoc['errorTitle'];		
+		$error = $result_assoc["errorTitle"];		
 		$this->assertNotNull($error);
 	}
 	
@@ -84,7 +84,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$error = $result_assoc['errorTitle'];		
+		$error = $result_assoc["errorTitle"];		
 		$this->assertNotNull($error);
 	}
 
@@ -100,7 +100,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$error = $result_assoc['errorTitle'];		
+		$error = $result_assoc["errorTitle"];		
 		$this->assertNotNull($error);
 	}
 	
@@ -148,7 +148,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$result = $result_assoc['result'];		
+		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 		$this->assertCount(1, $result);
 		
@@ -157,8 +157,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertArrayHasKey('owner', $result[0]);
 		$this->assertArrayHasKey('isPublic', $result[0]);
 		
-		$this->assertEquals($result[0]['listName'], TestDB::$list_name);
-		$this->assertEquals($result[0]['owner']['handle'], TestDB::$handle);
+		$this->assertEquals($result[0]["listName"], TestDB::$list_name);
+		$this->assertEquals($result[0]["owner"]["handle"], TestDB::$handle);
 	}
 }
 

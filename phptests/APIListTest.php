@@ -49,7 +49,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 			$result_assoc = Session::get()->get_result_assoc();		
 			$this->assertNotNull($result_assoc);
 			
-			$result = $result_assoc['result'];		
+			$result = $result_assoc["result"];		
 			$this->assertNotNull($result);
 			
 			$this->assertArrayHasKey('listId', $result);
@@ -57,8 +57,8 @@ class APIListTest extends PHPUnit_Framework_TestCase
 			$this->assertArrayHasKey('owner', $result);
 			$this->assertArrayHasKey('isPublic', $result);
 			
-			$this->assertEquals($result['listName'], $i == 0 ? null : $_POST["list_name"]);
-			$this->assertEquals($result['owner']['handle'], TestDB::$handle);
+			$this->assertEquals($result["listName"], $i == 0 ? null : $_POST["list_name"]);
+			$this->assertEquals($result["owner"]["handle"], TestDB::$handle);
 		}
 	}
 	
@@ -79,10 +79,10 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$result = $result_assoc['result'];		
+		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertEquals($result['listName'], TestDB::$list_name);
+		$this->assertEquals($result["listName"], TestDB::$list_name);
 	}
 	
 	public function test_delete_no_id()
@@ -110,7 +110,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
 		
-		$result = $result_assoc['result'];		
+		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
 		//TODO

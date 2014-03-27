@@ -53,6 +53,8 @@ class Entry extends DatabaseRow
 	private $annotations;
 	public function get_annotations()
 	{
+		if (!Session::get() || !Session::get()->get_user()) return null;
+		
 		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
 		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->copy_for_session_user()->get_user_entry_id());
 	}

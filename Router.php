@@ -21,7 +21,7 @@ class Router
 
 	public static function route()
 	{
-		$uri = $_SERVER['REQUEST_URI'];
+		$uri = $_SERVER["REQUEST_URI"];
 		
 		// remove query string from URI
 		if (strpos($uri, '?') != false)
@@ -54,7 +54,7 @@ class Router
 	
 	public static function route2()
 	{
-		$uri = $_SERVER['REQUEST_URI'];
+		$uri = $_SERVER["REQUEST_URI"];
 		
 		// remove query string from URI
 		if (strpos($uri, '?') != false) $uri = strtok($uri,'?');
@@ -117,7 +117,7 @@ class Router
 	private static function __404()
 	{
 		header('HTTP/1.1 404 File Not Found');
-		echo '<h1>'.$_SERVER['REQUEST_URI']. ' not found<h1>';
+		echo '<h1>'.$_SERVER["REQUEST_URI"]. ' not found<h1>';
 		exit;
 	}
 }
