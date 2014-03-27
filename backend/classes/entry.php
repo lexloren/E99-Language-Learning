@@ -216,8 +216,8 @@ class Entry extends DatabaseRow
 		
 		if (!!$annotation)
 		{
-			$anno_arr = $entry->get_annotations();
-			array_push($anno_arr, $annotation);
+			$annotations = $entry->get_annotations();
+			array_push($annotations, $annotation);
 			return $entry;
 		}
 		
