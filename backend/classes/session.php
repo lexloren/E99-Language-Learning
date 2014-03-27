@@ -67,6 +67,8 @@ class Session
 	{
 		self::deauthenticate();
 		
+		$handle = strtolower($handle);
+		
 		//Arunabha: Existing users many not be able to log-in if password/handle requirement changes
 		if (!User::validate_password($password))
 		{

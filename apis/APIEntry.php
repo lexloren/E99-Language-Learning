@@ -25,7 +25,7 @@ class APIEntry extends APIBase
 		{
 			$entry = $entry->copy_for_session_user();
 			
-			$this->return_array_as_assoc_for_json($entry->get_annotations());
+			self::return_array_as_assoc_for_json($entry->get_annotations());
 		}
 	}
 }

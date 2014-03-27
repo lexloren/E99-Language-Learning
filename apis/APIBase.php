@@ -19,6 +19,19 @@ class APIBase
 		$this->mysqli = $mysqli;
 	}
 	
+	protected static function validate_request($array, $keys)
+	{
+		if (is_string($keys)) $keys = array ($keys, $keys);
+		
+		$keys_missing = array_diff($keys, array_keys($array));
+		if (count($keys_missing) > 0)
+		{
+			Session::get()->set_error_assoc("Request Invalid", "Request must include " . implode(", ", $keys) . " (missing " . implode(", ", $keys_missing) . ").");
+			return false;
+		}
+		return true;
+	}
+	
 	protected static function validate_selection_id($array, $id_key, $class_name)
 	{
 		$object = null;
@@ -34,7 +47,7 @@ class APIBase
 		return $object;
 	}
 	
-	protected function return_array_as_assoc_for_json($array)
+	protected static function return_array_as_assoc_for_json($array)
 	{
 		if (!is_array($array))
 		{

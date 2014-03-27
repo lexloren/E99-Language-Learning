@@ -14,11 +14,7 @@ class APICourse  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["lang_known"]) || !isset($_POST["lang_unknw"]))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Course-insertion post must include lang_known and lang_unknw.");
-		}
-		else
+		if (self::validate_request($_POST, array ("lang_known", "lang_unknw")))
 		{
 			if (Dictionary::get_lang_id($_POST["lang_known"]) === null
 				|| Dictionary::get_lang_id($_POST["lang_unknw"]) === null)
@@ -70,7 +66,7 @@ class APICourse  extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			$this->return_array_as_assoc_for_json($course->get_lists());
+			self::return_array_as_assoc_for_json($course->get_lists());
 		}
 	}
 	
@@ -81,7 +77,7 @@ class APICourse  extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			$this->return_array_as_assoc_for_json($course->get_tests());
+			self::return_array_as_assoc_for_json($course->get_tests());
 		}
 	}
 	
@@ -91,7 +87,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			$this->return_array_as_assoc_for_json($course->get_units());
+			self::return_array_as_assoc_for_json($course->get_units());
 		}
 	}
 	
@@ -101,7 +97,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			$this->return_array_as_assoc_for_json($course->get_students());
+			self::return_array_as_assoc_for_json($course->get_students());
 		}
 	}
 	
@@ -111,26 +107,25 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!isset($_POST["user_ids"]))
+			if (self::validate_request($_POST, "user_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "Course–add-students post must include course_id and user_ids.");
-			}
-			else if ($course->session_user_can_write())
-			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				if ($course->session_user_can_write())
 				{
-					if (!$course->students_add(User::select_by_id($user_id)))
+					foreach (explode(",", $_POST["user_ids"]) as $user_id)
 					{
-						Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
-						return;
+						if (!$course->students_add(User::select_by_id($user_id)))
+						{
+							Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
+				else
+				{
+					Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
+				}
 			}
 		}
 	}
@@ -141,7 +136,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			$this->return_array_as_assoc_for_json($course->get_instructors());
+			self::return_array_as_assoc_for_json($course->get_instructors());
 		}
 	}
 	
@@ -151,26 +146,25 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!isset($_POST["user_ids"]))
+			if (self::validate_request($_POST, "user_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "Course–add-instructors post must include course_id and user_ids.");
-			}
-			else if ($course->session_user_is_owner())
-			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				if ($course->session_user_is_owner())
 				{
-					if (!$course->instructors_add(User::select_by_id($user_id)))
+					foreach (explode(",", $_POST["user_ids"]) as $user_id)
 					{
-						Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
-						return;
+						if (!$course->instructors_add(User::select_by_id($user_id)))
+						{
+							Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("Course Modification", "Session user is not course owner.");
+				else
+				{
+					Session::get()->set_error_assoc("Course Modification", "Session user is not course owner.");
+				}
 			}
 		}
 	}
@@ -181,26 +175,25 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!isset($_POST["user_ids"]))
+			if (self::validate_request($_POST, "user_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "Course–remove-students post must include course_id and user_ids.");
-			}
-			else if ($course->session_user_can_write())
-			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				if ($course->session_user_can_write())
 				{
-					if (!$course->students_remove(User::select_by_id($user_id)))
+					foreach (explode(",", $_POST["user_ids"]) as $user_id)
 					{
-						Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
-						return;
+						if (!$course->students_remove(User::select_by_id($user_id)))
+						{
+							Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
+				else
+				{
+					Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
+				}
 			}
 		}
 	}
@@ -211,26 +204,25 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!isset($_POST["user_ids"]))
+			if (self::validate_request($_POST, "user_ids"))
 			{
-				Session::get()->set_error_assoc("Request Invalid", "Course–remove-instructors post must include course_id and user_ids.");
-			}
-			else if ($course->session_user_is_owner())
-			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				if ($course->session_user_is_owner())
 				{
-					if (!$course->instructors_remove(User::select_by_id($user_id)))
+					foreach (explode(",", $_POST["user_ids"]) as $user_id)
 					{
-						Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
-						return;
+						if (!$course->instructors_remove(User::select_by_id($user_id)))
+						{
+							Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
+							return;
+						}
 					}
+					
+					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
-			}
-			else
-			{
-				Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
+				else
+				{
+					Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
+				}
 			}
 		}
 	}
