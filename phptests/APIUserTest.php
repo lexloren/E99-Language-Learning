@@ -40,9 +40,9 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	
 	public function testRegister()
 	{
-		$_POST["email"] = 'someone@somewhere.com';
-		$_POST["handle"] = 'username1';
-		$_POST["password"] = 'P@ssword1';
+		$_POST["email"] = "someone@somewhere.com";
+		$_POST["handle"] = "username1";
+		$_POST["password"] = "P@ssword1";
 		$this->obj->register();
 		
 		$this->assertFalse(Session::get()->has_error());
@@ -54,14 +54,13 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($result);
 
 		$this->assertEquals($result["handle"], $_POST["handle"]);
-		
 		$this->assertEquals($result["email"], $_POST["email"]);
 	}
 	
 	public function testRegisterNoEmail()
 	{
-		$_POST["handle"] = 'username1';
-		$_POST["password"] = 'P@ssword1';
+		$_POST["handle"] = "username1";
+		$_POST["password"] = "P@ssword1";
 		$this->obj->register();
 		
 		$this->assertTrue(Session::get()->has_error());
@@ -75,8 +74,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	
 	public function testRegisterNoHandle()
 	{
-		$_POST["email"] = 'someone@somewhere.com';
-		$_POST["password"] = 'P@ssword1';
+		$_POST["email"] = "someone@somewhere.com";
+		$_POST["password"] = "P@ssword1";
 		$this->obj->register();
 		
 		$this->assertTrue(Session::get()->has_error());
@@ -90,8 +89,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
 	public function testRegisterNoPassword()
 	{
-		$_POST["handle"] = 'username1';
-		$_POST["email"] = 'someone@somewhere.com';
+		$_POST["handle"] = "username1";
+		$_POST["email"] = "someone@somewhere.com";
 
 		$this->obj->register();
 		
