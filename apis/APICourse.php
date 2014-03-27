@@ -16,23 +16,20 @@ class APICourse  extends APIBase
 		
 		if (!isset($_POST["lang_known"]) || !isset($_POST["lang_unknw"]))
 		{
-			Session::get()->set_error_assoc("Invalid Post", "Course-insertion post must include lang_known and lang_unknw.");
+			Session::get()->set_error_assoc("Request Invalid", "Course-insertion post must include lang_known and lang_unknw.");
 		}
 		else
 		{
 			if (Dictionary::get_lang_id($_POST["lang_known"]) === null
 				|| Dictionary::get_lang_id($_POST["lang_unknw"]) === null)
 			{
-				Session::get()->set_error_assoc("Unknown Language(s)", "Posted lang_known and lang_unknw must be valid two-letter codes within the application.");
+				Session::get()->set_error_assoc("Course Insertion", "Posted lang_known and lang_unknw must be valid two-letter codes within the application.");
 			}
 			else
 			{
 				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null)))
 				{
-					$error_description = sprintf("Back end unexpectedly failed to insert course%s",
-						!!Course::get_error_description() ? (": " . Course::get_error_description()) : "."
-					);
-					Session::get()->set_error_assoc("Course Insertion", $error_description);
+					Session::get()->set_error_assoc("Course Insertion", COurse::get_error_description());
 				}
 				else
 				{
@@ -47,11 +44,11 @@ class APICourse  extends APIBase
 		$course = null;
 		if (!isset($course_id))
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Request must include course_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Request must include course_id.");
 		}
 		else if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Course", "Back end failed to select course with course_id = $course_id:" . Course::get_error_description());
+			Session::get()->set_error_assoc("Course Selection", Course::get_error_description());
 		}
 		
 		return $course;
@@ -119,7 +116,7 @@ class APICourse  extends APIBase
 		{
 			if (!isset($_POST["user_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Course–add-students post must include course_id and user_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Course–add-students post must include course_id and user_ids.");
 			}
 			else if ($course->session_user_can_write())
 			{
@@ -136,7 +133,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Session user cannot edit course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
 			}
 		}
 	}
@@ -159,7 +156,7 @@ class APICourse  extends APIBase
 		{
 			if (!isset($_POST["user_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Course–add-instructors post must include course_id and user_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Course–add-instructors post must include course_id and user_ids.");
 			}
 			else if ($course->session_user_is_owner())
 			{
@@ -176,7 +173,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
+				Session::get()->set_error_assoc("Course Modification", "Session user is not course owner.");
 			}
 		}
 	}
@@ -189,7 +186,7 @@ class APICourse  extends APIBase
 		{
 			if (!isset($_POST["user_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Course–remove-students post must include course_id and user_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Course–remove-students post must include course_id and user_ids.");
 			}
 			else if ($course->session_user_can_write())
 			{
@@ -206,7 +203,7 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Edit", "Session user cannot edit course.");
+				Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
 			}
 		}
 	}
@@ -219,7 +216,7 @@ class APICourse  extends APIBase
 		{
 			if (!isset($_POST["user_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Course–remove-instructors post must include course_id and user_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Course–remove-instructors post must include course_id and user_ids.");
 			}
 			else if ($course->session_user_is_owner())
 			{

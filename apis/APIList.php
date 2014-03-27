@@ -15,10 +15,7 @@ class APIList extends APIBase
 		
 		if (!($list = EntryList::insert(isset($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
-			$error_description = sprintf("Back end unexpectedly failed to insert list%s",
-				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
-			);
-			Session::get()->set_error_assoc("List Insertion", $error_description);
+			Session::get()->set_error_assoc("List Insertion", EntryList::get_error_description());
 		}
 		else
 		{
@@ -31,11 +28,11 @@ class APIList extends APIBase
 		$list = null;
 		if (!isset($list_id) || $list_id === null)
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Request must include list_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Request must include list_id.");
 		}
 		else if (!($list = EntryList::select_by_id(($list_id = intval($list_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
+			Session::get()->set_error_assoc("List Selection", EntryList::get_error_description());
 		}
 		
 		return $list;
@@ -89,7 +86,7 @@ class APIList extends APIBase
 		{
 			if (!isset($_POST["entry_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "List–add-entries post must include list_id and entry_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "List–add-entries post must include list_id and entry_ids.");
 			}
 			else if ($list->session_user_can_write())
 			{
@@ -106,7 +103,7 @@ class APIList extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("List Edit", "Back end failed to add entries to list.");
+				Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
 			}
 		}
 	}
@@ -119,7 +116,7 @@ class APIList extends APIBase
 		{
 			if (!isset($_POST["entry_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "List–remove-entries post must include list_id and entry_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "List–remove-entries post must include list_id and entry_ids.");
 			}
 			else if ($list->session_user_can_write())
 			{
@@ -136,7 +133,7 @@ class APIList extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("List Edit", "Back end failed to remove entries from list.");
+				Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
 			}
 		}
 	}

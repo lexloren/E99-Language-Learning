@@ -22,11 +22,11 @@ class APIEntry extends APIBase
 		$entry = null;
 		if (!isset($entry_id))
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Request must include entry_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Request must include entry_id.");
 		}
 		else if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = $entry_id.");
+			Session::get()->set_error_assoc("Entry Selection", Entry::get_error_description());
 		}
 		
 		return $entry;

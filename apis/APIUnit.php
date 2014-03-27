@@ -16,13 +16,13 @@ class APIUnit  extends APIBase
 		
 		if (!isset($_POST["course_id"]))
 		{
-			Session::get()->set_error_assoc("Invalid Post", "Unit-insertion post must include course_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Unit-insertion post must include course_id.");
 		}
 		else
 		{
 			if (!($course = Course::select_by_id(($course_id = intval($_POST["course_id"], 10)))))
 			{
-				Session::get()->set_error_assoc("Course-Unit Insertion", "Failed to insert course unit: " . Course::get_error_description());
+				Session::get()->set_error_assoc("Course Selection", Course::get_error_description());
 			}
 			else
 			{
@@ -30,10 +30,7 @@ class APIUnit  extends APIBase
 				
 				if (!($unit = Unit::insert($course_id, $unit_name)))
 				{
-					$error_description = sprintf("Back end unexpectedly failed to insert course unit%s",
-						!!Unit::get_error_description() ? (": " . Unit::get_error_description()) : "."
-					);
-					Session::get()->set_error_assoc("Course-Unit Insertion", $error_description);
+					Session::get()->set_error_assoc("Unit Insertion", Unit::get_error_description());
 				}
 				else
 				{
@@ -48,11 +45,11 @@ class APIUnit  extends APIBase
 		$unit = null;
 		if (!isset($unit_id))
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Request must include unit_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Request must include unit_id.");
 		}
 		else if (!($unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Unit", "Back end failed to select unit with unit_id = $unit_id.");
+			Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
 		}
 		
 		return $unit;
@@ -99,9 +96,9 @@ class APIUnit  extends APIBase
 		{
 			if (!isset($_POST["list_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Unit–add-lists post must include unit_id and list_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Unit–add-lists post must include unit_id and list_ids.");
 			}
-			else if ($unit->session_user_is_instructor())
+			else if ($unit->session_user_can_write())
 			{
 				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
@@ -116,7 +113,7 @@ class APIUnit  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Unit Edit", "Back end failed to add lists to unit.");
+				Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
 			}
 		}
 	}
@@ -129,9 +126,9 @@ class APIUnit  extends APIBase
 		{
 			if (!isset($_POST["list_ids"]))
 			{
-				Session::get()->set_error_assoc("Invalid Post", "Course–remove-lists post must include unit_id and list_ids.");
+				Session::get()->set_error_assoc("Request Invalid", "Course–remove-lists post must include unit_id and list_ids.");
 			}
-			else if ($unit->session_user_is_instructor())
+			else if ($unit->session_user_can_write())
 			{
 				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
@@ -146,7 +143,7 @@ class APIUnit  extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Unit Edit", "Back end failed to remove lists from unit.");
+				Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
 			}
 		}
 	}

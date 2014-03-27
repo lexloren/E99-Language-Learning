@@ -20,14 +20,18 @@ class APIUser extends APIBase
 			$password = $_POST["password"];
 			
 			//  Finally, send the user information to the front end
-			if (!!($new_user = User::insert($email, $handle, $password)))
-			{	
-				Session::get()->set_result_assoc($new_user->assoc_for_json(false));
+			if (!($user = User::insert($email, $handle, $password)))
+			{
+				Session::get()->set_error_assoc("User Insertion", User::get_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($user->assoc_for_json());
 			}
 		}
 		else
 		{
-			Session::get()->set_error_assoc("Invalid Post", "Registration post must include email, handle, and password.");
+			Session::get()->set_error_assoc("Request Invalid", "Registration post must include email, handle, and password.");
 		}
 	}
 	
@@ -40,7 +44,7 @@ class APIUser extends APIBase
 		}
 		else
 		{
-			Session::get()->set_error_assoc("Invalid Post", "Authentication post must include handle and password.");
+			Session::get()->set_error_assoc("Request Invalid", "Authentication post must include handle and password.");
 		}
 	}
 	
@@ -48,7 +52,7 @@ class APIUser extends APIBase
 	{
 		if (!isset($_GET["query"]))
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Find-user get must include query (which contains email or handle).");
+			Session::get()->set_error_assoc("Request Invalid", "Find-user get must include query (which contains email or handle).");
 		}
 		
 		$this->return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
@@ -103,7 +107,7 @@ class APIUser extends APIBase
 
 		if (empty($list_ids))
 		{
-			Session::get()->set_error_assoc("Invalid Get", "User-practice get must include list_ids.");
+			Session::get()->set_error_assoc("Request Invalid", "User-practice get must include list_ids.");
 		} else {
 			$entry_set = Practice::get_practice_entries($list_ids, $_GET["entries_count"]);
 			Session::get()->set_result_assoc($entry_set);

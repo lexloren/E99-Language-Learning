@@ -16,13 +16,13 @@ class APITest  extends APIBase
 		
 		if (!isset($_POST["unit_id"]))
 		{
-			Session::get()->set_error_assoc("Invalid Post", "Test-insertion post must include unit_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Test-insertion post must include unit_id.");
 		}
 		else
 		{
 			if (!($unit = Unit::select_by_id(($unit_id = intval($_POST["unit_id"], 10)))))
 			{
-				Session::get()->set_error_assoc("Unit-Test Insertion", "Failed to insert course unit test: " . Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
 			}
 			else
 			{
@@ -30,10 +30,7 @@ class APITest  extends APIBase
 				
 				if (!($test = Test::insert($unit_id, $test_name)))
 				{
-					$error_description = sprintf("Back end unexpectedly failed to insert course unit test%s",
-						!!Test::get_error_description() ? (": " . Test::get_error_description()) : "."
-					);
-					Session::get()->set_error_assoc("Unit-Test Insertion", $error_description);
+					Session::get()->set_error_assoc("Test Insertion", Test::get_error_description());
 				}
 				else
 				{
@@ -47,11 +44,11 @@ class APITest  extends APIBase
 	{
 		if (!isset($test_id))
 		{
-			Session::get()->set_error_assoc("Invalid Request", "Request must include test_id.");
+			Session::get()->set_error_assoc("Request Invalid", "Request must include test_id.");
 		}
 		else if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
 		{
-			Session::get()->set_error_assoc("Unknown Test", "Back end failed to select test with test_id = $test_id.");
+			Session::get()->set_error_assoc("Test Selection", Test::get_error_description());
 		}
 		
 		return $test;
