@@ -352,7 +352,7 @@ class User extends DatabaseRow
 	
 	public function is_session_user()
 	{
-		return $this->equals(Session::get()->get_user());
+		return !!Session::get() && $this->equals(Session::get()->get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)
@@ -361,6 +361,7 @@ class User extends DatabaseRow
 		
 		return array (
 			"userId" => $this->user_id,
+			"isSessionUser" => $this->is_session_user(),
 			"handle" => $this->handle,
 			"email" => $privacy ? null : $this->email,
 			"nameGiven" => $privacy ? null : $this->name_given,
