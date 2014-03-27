@@ -252,6 +252,8 @@ class Unit extends DatabaseRow
 		return array (
 			"unitId" => $this->get_unit_id(),
 			"unitName" => !$privacy ? $this->get_unit_name() : null,
+			"isOwner" => $this->get_owner()->equals(Session::get()->get_user()),
+			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => null // Not yet implemented
 		);
 	}
