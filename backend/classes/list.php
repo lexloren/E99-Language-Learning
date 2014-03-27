@@ -285,6 +285,7 @@ class EntryList extends DatabaseRow
 		return array (
 			"listId" => $this->list_id,
 			"listName" => $this->list_name,
+			"isOwner" => $this->get_owner()->equals(Session::get()->get_user()),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
 		);
