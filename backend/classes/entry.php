@@ -320,13 +320,13 @@ class Entry extends DatabaseRow
 
 	public function assoc_for_json()
 	{
-		$privacy = !!$this->get_owner() && !$this->get_owner()->equals(Session::get()->get_user());
+		$privacy = !!$this->get_owner() && !$this->session_user_is_owner();
 		
 		$entry = !$privacy ? $this : Dictionary::select_entry($this->entry_id);
 		
 		return array (
 			"entryId" => $entry->entry_id,
-			"owner" => $this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
+			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
 			"words" => $entry->words,
 			"pronuncations" => $entry->pronunciations
 		);

@@ -140,14 +140,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		if (!Session::get()->get_user()) return false;
-		
-		foreach ($this->get_instructors() as $instructor)
-		{
-			if (Session::get()->get_user()->equals($instructor)) return true;
-		}
-		
-		return false;
+		return !!Session::get() && Session::get()->get_user()->in_array($this->get_instructors());
 	}
 	
 	private $students;
@@ -177,14 +170,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		if (!Session::get()->get_user()) return false;
-		
-		foreach ($this->get_students() as $student)
-		{
-			if (Session::get()->get_user()->equals($student)) return true;
-		}
-		
-		return false;
+		return !!Session::get() && Session::get()->get_user()->in_array($this->get_students());
 	}
 	
 	private $units;
@@ -358,7 +344,7 @@ class Course extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->get_owner()->equals(Session::get()->get_user());
+		$omniscience = $this->session_user_is_owner();
 		
 		if ($omniscience) $privacy = false;
 		else if ($privacy === null) $privacy = !$this->session_user_can_read();

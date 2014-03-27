@@ -93,14 +93,17 @@ class Annotation extends DatabaseRow
 			$mysqli->escape_string($contents)
 		));
 		
-		if (!!$mysqli->error) return Annotation::set_error_description($mysqli->error);
+		if (!!$mysqli->error) return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error);
 		
 		return Annotation::select_by_id($mysqli->insert_id);
 	}
 	
 	public function delete()
 	{
-		if (!$this->get_owner()->equals(Session::get()->get_user())) return null;
+		if (!$this->session_user_is_owner())
+		{
+			return self::set_error_description("Session user is not annotation owner.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		

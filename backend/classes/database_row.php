@@ -65,6 +65,17 @@ class DatabaseRow
 		return true;
 	}
 	
+	public function get_owner()
+	{
+		return null;
+	}
+	
+	public function session_user_is_owner()
+	{
+		return !!Session::get() && !!$this->get_owner()
+			&& $this->get_owner()->equals(Session::get()->get_user());
+	}
+	
 	public function assoc_for_json()
 	{
 		return null;

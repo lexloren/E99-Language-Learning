@@ -3,81 +3,84 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Test extends DatabaseRow
+class Section extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
 	
-	public static function insert($unit_id, $test_name = null, $timeframe = null, $message = null)
+	public static function insert($test_id, $section_name = null, $timer = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
 			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)));
+		$test = Test::select_by_id(($test_id = intval($test_id, 10)));
 		
-		if (!$unit->session_user_is_instructor())
+		if (!$test->session_user_is_instructor())
 		{
 			return self::set_error_description("Session user is not course instructor.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$test_name = $test_name !== null ? "'" . $mysqli->escape_string($test_name) . "'" : "NULL";
+		$section_name = $section_name !== null ? "'" . $mysqli->escape_string($section_name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$open = $timeframe->get_open();
-		$close = $timeframe->get_close();
+		$section_number = count($test->get_sections()) + 1;
+		$timer = intval($timer, 10);
 		
-		$mysqli->query("INSERT INTO course_unit_tests (test_name, open, close, message) VALUES ($test_name, FROM_UNIXTIME($open), FROM_UNIXTIME($close), $message)");
+		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_nmbr, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
 		
 		if ($mysqli->error)
 		{
-			return self::set_error_description("Failed to insert test: " . $mysqli->error);
+			return self::set_error_description("Failed to insert test section: " . $mysqli->error);
 		}
 		
-		if (!($test = self::select_by_id($mysqli->insert_id)))
-		{
-			return null;
-		}
-		
-		return $test;
+		return !!($section = self::select_by_id($mysqli->insert_id)) ? $section : null;
 	}
 	
-	public static function select_by_id($test_id)
+	public static function select_by_id($section_id)
 	{
-		return self::select_by_id("tests", "test_id", $test_id);
+		return self::select_by_id("course_unit_test_sections", "section_id", $section_id);
 	}
 	
 	/***    INSTANCE    ***/
 
+	private $section_id = null;
+	public function get_section_id()
+	{
+		return $this->section_id;
+	}
+	
 	private $test_id = null;
 	public function get_test_id()
 	{
 		return $this->test_id;
 	}
-	
-	private $test_name = null;
-	public function get_test_name()
+	public function get_test()
 	{
-		return $this->test_name;
+		return Test::select_by_id($this->get_test_id());
 	}
-	
-	private $unit_id = null;
 	public function get_unit_id()
 	{
-		return $this->unit_id;
+		return $this->get_test()->get_unit_id();
 	}
 	public function get_unit()
 	{
-		return Unit::select_by_id($this->get_unit_id());
+		return $this->get_test()->get_unit();
 	}
 	public function get_course_id()
 	{
-		return $this->get_unit()->get_course_id();
+		return $this->get_test()->get_course_id();
 	}
 	public function get_course()
 	{
-		return $this->get_unit()->get_course();
+		return $this->get_test()->get_course();
+	}
+	
+	private $section_name = null;
+	public function get_section_name()
+	{
+		return $this->section_name;
 	}
 	
 	public function get_owner()
@@ -102,46 +105,38 @@ class Test extends DatabaseRow
 	{
 		return $this->get_course()->session_user_is_student();
 	}
-	
-	private $sections;
-	public function get_sections()
+
+	private $entries;
+	public function get_entries()
 	{
-		if (!isset($this->sections))
+		if (!isset($this->entries))
 		{
-			$this->sections = array();
+			$this->entries = array();
 			
 			$mysqli = Connection::get_shared_instance();
 			
-			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_sections WHERE test_id = %d",
-				$this->get_test_id()
+			$section_entries = "(course_unit_test_section_entries LEFT JOIN user_entries USING (user_entry_id))";
+			$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
+				Dictionary::language_code_columns(),
+				Dictionary::join()
+			);
+			
+			$result = $mysqli->query(sprintf("SELECT * FROM $section_entries LEFT JOIN $language_codes USING (entry_id) WHERE section_id = %d",
+				$this->get_section_id()
 			));
-
-			while (($section_assoc = $result->fetch_assoc()))
+			
+			while (($entry_assoc = $result->fetch_assoc()))
 			{
-				if (!($section = Section::from_mysql_result_assoc($section_assoc)))
-				{
-					return self::set_error_description("Failed to get sections: " . Section::get_error_description());
-				}
-				array_push($this->sections, $section);
+				array_push($this->entries, Entry::from_mysql_result_assoc($entry_assoc);
 			}
 		}
-		
-		return $this->sections;
-	}
-	public function get_sections_by_number()
-	{
-		$sections_by_number = array ();
-		foreach ($this->get_sections() as $section)
-		{
-			$sections_by_number[$section->get_section_number()] = $section;
-		}
-		return $sections_by_number;
+		return $this->entries;
 	}
 	
-	private $timeframe;
-	public function get_timeframe()
+	private $timer;
+	public function get_timer()
 	{
-		return $this->timeframe;
+		return $this->timer;
 	}
 	
 	private $message;
@@ -158,7 +153,7 @@ class Test extends DatabaseRow
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message ? $message : null;
 		
-		self::register($this->test_id, $this);
+		self::register($this->unit_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
@@ -223,6 +218,8 @@ class Test extends DatabaseRow
 		else if ($privacy === null) $privacy = !$this->session_user_can_read();
 		
 		return array (
+			"sectionId" => $this->get_section_id(),
+			"sectionName" => !$privacy ? $this->get_section_name() : null,
 			"testId" => $this->get_test_id(),
 			"testName" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,

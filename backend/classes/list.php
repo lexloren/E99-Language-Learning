@@ -132,7 +132,7 @@ class EntryList extends DatabaseRow
 			foreach ($student_course->get_lists() as $list)
 			{
 				if ($list->list_id === $this->list_id
-					&& in_array($list->get_owner(), $student_course->get_instructors()))
+					&& $list->get_owner()->in_array($student_course->get_instructors()))
 				{
 					return true;
 				}

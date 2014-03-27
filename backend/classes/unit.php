@@ -189,7 +189,7 @@ class Unit extends DatabaseRow
 			return self::set_error_description("Session user is not instructor of course.");
 		}
 		
-		if (!$list->get_owner()->equals(Session::get()->get_user()))
+		if (!$list->session_user_is_owner())
 		{
 			return self::set_error_description("Session user is not owner of list.");
 		}
