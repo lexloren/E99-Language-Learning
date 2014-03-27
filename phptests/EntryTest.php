@@ -61,12 +61,13 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($entry);
 		
 		Session::get()->set_user(null);
-		$ret = $entry->annotations_add("a new annotation");
+		$new_anno = "a new annotation";
+		$ret = $entry->annotations_add($new_anno);
 		$this->assertNull($ret);
 	
 		$user_obj = User::select_by_id(TestDB::$user_id);
 		Session::get()->set_user($user_obj);
-		$ret = $entry->annotations_add("a new annotation");
+		$ret = $entry->annotations_add($new_anno);
 		//Assert below is failing; Entry also looks like UserEntry
 		//$this->assertNotNull($ret);
 	}

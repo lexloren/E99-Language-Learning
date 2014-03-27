@@ -2,7 +2,7 @@
 
 require_once './apis/APIUser.php';
 require_once './phptests/TestDB.php';
-require_once './backend/classes/session.php';
+require_once './backend/classes.php';
 
 class APIUserTest extends PHPUnit_Framework_TestCase
 {
@@ -55,7 +55,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals($result['handle'], 'username1');
 		
-		$this->assertEquals($result['email'], null);
+		$this->assertEquals($result['email'], 'someone@somewhere.com');
 	}
 	
 	public function testRegisterNoEmail()
