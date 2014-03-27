@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class Course extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function insert($lang_code_0, $lang_code_1, $course_name = null, $timeframe = null, $message = null)
 	{
@@ -56,7 +58,7 @@ class Course extends DatabaseRow
 	
 	public static function select_by_id($course_id)
 	{
-		return self::select_by_id("courses", "course_id", $course_id);
+		return parent::select_by_id("courses", "course_id", $course_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -117,26 +119,8 @@ class Course extends DatabaseRow
 	private $instructors;
 	public function get_instructors()
 	{
-		if (!isset($this->instructors))
-		{
-			$this->instructors = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query(sprintf("SELECT users.* FROM course_instructors LEFT JOIN users USING (user_id) WHERE course_id = %d",
-				$this->get_course_id()
-			));
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				if (!($user = User::from_mysql_result_assoc($result_assoc)))
-				{
-					return self::set_error_description("Failed to get instructors: " . User::get_error_description());
-				}
-				array_push($this->instructors, $user);
-			}
-		}
-		return $this->instructors;
+		$table = "course_instructors LEFT JOIN users USING (user_id)";
+		return $this->get_cached_collection($this->instructors, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_instructor()
 	{
@@ -146,27 +130,8 @@ class Course extends DatabaseRow
 	private $students;
 	public function get_students()
 	{
-		if (!isset($this->students))
-		{
-			$this->students = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query(sprintf("SELECT users.* FROM course_students LEFT JOIN users USING (user_id) WHERE course_id = %d",
-				$this->get_course_id()
-			));
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				if (!($user = User::from_mysql_result_assoc($result_assoc)))
-				{
-					return self::set_error_description("Failed to get students: " . User::get_error_description());
-				}
-				array_push($this->students, $user);
-			}
-		}
-		
-		return $this->students;
+		$table = "course_students LEFT JOIN users USING (user_id)";
+		return $this->get_cached_collection($this->students, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_student()
 	{
@@ -176,34 +141,21 @@ class Course extends DatabaseRow
 	private $units;
 	public function get_units()
 	{
-		if (!isset($this->units))
-		{
-			$this->units = array();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM course_units WHERE course_id = %d",
-				$this->get_course_id()
-			));
-
-			while (($unit_assoc = $result->fetch_assoc()))
-			{
-				if (!($unit = Unit::from_mysql_result_assoc($unit_assoc)))
-				{
-					return self::set_error_description("Failed to get units: " . Unit::get_error_description());
-				}
-				array_push($this->units, $unit);
-			}
-		}
-		
-		return $this->units;
+		$table = "course_students LEFT JOIN users USING (user_id)";
+		return $this->get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id());
 	}
 	public function get_lists()
 	{
 		$lists = array ();
 		foreach ($this->get_units() as $unit)
 		{
-			$lists = array_merge(array_diff($unit->get_lists(), $lists));
+			foreach ($unit->get_lists() as $list)
+			{
+				if (!in_array($list, $lists))
+				{
+					array_push($lists, $list);
+				}
+			}
 		}
 		return $lists;
 	}
@@ -257,18 +209,7 @@ class Course extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_owner())
-		{
-			return self::set_error_description("Session user is not course owner.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM courses WHERE course_id = %d",
-			$this->get_course_id()
-		));
-		
-		return $this;
+		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
 	
 	private function users_add(&$array, $table, $user)

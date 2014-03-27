@@ -6,6 +6,7 @@ require_once "./backend/classes.php";
 class Entry extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
+	protected static $error_description = null;
 
 	//  Associative array, keyed by user_id,
 	//      of associative arrays of Entry objects keyed by entry_id

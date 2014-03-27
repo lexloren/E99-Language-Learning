@@ -61,8 +61,14 @@ class APIAnnotation extends APIBase
 		}
 		else if (($annotation = Annotation::select_by_id($_POST["annotation_id"])))
 		{
-			$annotation->delete();
-			Session::get()->set_result_assoc($annotation->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
+			if (!$annotation->delete())
+			{
+				Session::get()->set_error_assoc("Annotation Deletion", Annotation::get_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($annotation->assoc_for_json());
+			}
 		}
 	}
 }

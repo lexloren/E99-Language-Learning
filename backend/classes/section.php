@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class Section extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function insert($test_id, $section_name = null, $timer = null, $message = null)
 	{
@@ -40,7 +42,7 @@ class Section extends DatabaseRow
 	
 	public static function select_by_id($section_id)
 	{
-		return self::select_by_id("course_unit_test_sections", "section_id", $section_id);
+		return parent::select_by_id("course_unit_test_sections", "section_id", $section_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -83,28 +85,13 @@ class Section extends DatabaseRow
 	private $entries;
 	public function get_entries()
 	{
-		if (!isset($this->entries))
-		{
-			$this->entries = array();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$section_entries = "(course_unit_test_section_entries LEFT JOIN user_entries USING (user_entry_id))";
-			$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
-				Dictionary::language_code_columns(),
-				Dictionary::join()
-			);
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM $section_entries LEFT JOIN $language_codes USING (entry_id) WHERE section_id = %d",
-				$this->get_section_id()
-			));
-			
-			while (($entry_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->entries, Entry::from_mysql_result_assoc($entry_assoc);
-			}
-		}
-		return $this->entries;
+		$section_entries = "(course_unit_test_section_entries LEFT JOIN user_entries USING (user_entry_id))";
+		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
+			Dictionary::language_code_columns(),
+			Dictionary::join()
+		);
+		$table = "$section_entries LEFT JOIN $language_codes USING (entry_id)";
+		return $this->get_cached_collection($this->entries, "Entry", $table, "section_id", $this->get_section_id());
 	}
 	
 	private $timer;
@@ -160,7 +147,7 @@ class Section extends DatabaseRow
 	
 	public function delete()
 	{
-		return self::delete("course_unit_test_sections", "section_id", $this->get_section_id());
+		return self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
 	public function assoc_for_json($privacy = null)

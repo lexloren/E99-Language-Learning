@@ -6,7 +6,9 @@ require_once "./backend/classes.php";
 class Grade extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
+	
 	public static function insert($point, $desc_short = null, $desc_long = null)
 	{
 		return null;
@@ -14,7 +16,7 @@ class Grade extends DatabaseRow
 
 	public static function select_by_id($grade_id)
 	{
-		return self::select_by_id("grades", "grade_id", $grade_id);
+		return parent::select_by_id("grades", "grade_id", $grade_id);
 	}
 
 	/***    INSTANCE    ***/

@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class Test extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function insert($unit_id, $test_name = null, $timeframe = null, $message = null)
 	{
@@ -45,7 +47,7 @@ class Test extends CourseComponent
 	
 	public static function select_by_id($test_id)
 	{
-		return self::select_by_id("tests", "test_id", $test_id);
+		return parent::select_by_id("course_unit_tests", "test_id", $test_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -80,27 +82,7 @@ class Test extends CourseComponent
 	private $sections;
 	public function get_sections()
 	{
-		if (!isset($this->sections))
-		{
-			$this->sections = array();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_sections WHERE test_id = %d",
-				$this->get_test_id()
-			));
-
-			while (($section_assoc = $result->fetch_assoc()))
-			{
-				if (!($section = Section::from_mysql_result_assoc($section_assoc)))
-				{
-					return self::set_error_description("Failed to get sections: " . Section::get_error_description());
-				}
-				array_push($this->sections, $section);
-			}
-		}
-		
-		return $this->sections;
+		return $this->get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id());
 	}
 	public function get_sections_by_number()
 	{
@@ -160,12 +142,12 @@ class Test extends CourseComponent
 	
 	public function session_user_can_execute()
 	{
-		return (!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		return (!$this->get_timeframe() || $this->get_timeframe()->is_current()) && $this->session_user_is_student();
 	}
 	
 	public function delete()
 	{
-		return self::delete("course_unit_tests", "test_id", $this->get_test_id());
+		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
 	public function assoc_for_json($privacy = null)

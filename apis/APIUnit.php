@@ -64,8 +64,14 @@ class APIUnit  extends APIBase
 		
 		if (($unit = $this->validate_unit_id($_POST["unit_id"])))
 		{
-			$unit->delete();
-			Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
+			if (!$unit->delete())
+			{
+				Session::get()->set_error_assoc("Unit Deletion", Unit::get_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($unit->assoc_for_json());
+			}
 		}
 	}
 	

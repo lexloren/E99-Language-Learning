@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class EntryList extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function insert($list_name = null)
 	{
@@ -26,7 +28,7 @@ class EntryList extends DatabaseRow
 	
 	public static function select_by_id($list_id)
 	{
-		return self::select_by_id("lists", "list_id", $list_id);
+		return parent::select_by_id("lists", "list_id", $list_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -62,28 +64,14 @@ class EntryList extends DatabaseRow
 	private $entries;
 	public function get_entries()
 	{
-		if (!isset($this->entries))
-		{
-			$this->entries = array();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
-				Dictionary::language_code_columns(),
-				Dictionary::join(),
-				Session::get()->get_user()->get_user_id()
-			);
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id) WHERE list_id = %d",
-				$this->get_list_id()
-			));
-			
-			while (($entry_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->entries, Dictionary::select_entry($entry_assoc["entry_id"]));
-			}
-		}
-		return $this->entries;
+		$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
+			Dictionary::language_code_columns(),
+			Dictionary::join(),
+			Session::get()->get_user()->get_user_id()
+		);
+		
+		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
+		return $this->get_cached_collection($this->entries, "Entry", $table, "list_id", $this->get_list_id());
 	}
 	
 	private function __construct($list_id, $user_id, $list_name = null, $public = false)
@@ -150,19 +138,7 @@ class EntryList extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!Session::get()->get_user())
-		{
-			return self::set_error_description("Session user has not reauthenticated.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM lists WHERE user_id = %d AND list_id = %d",
-			Session::get()->get_user()->get_user_id(),
-			$this->list_id
-		));
-		
-		return $this;
+		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
 	//  Adds an entry to this list

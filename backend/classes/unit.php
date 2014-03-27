@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class Unit extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function insert($course_id, $unit_name = null, $timeframe = null, $message = null)
 	{
@@ -42,7 +44,7 @@ class Unit extends CourseComponent
 	
 	public static function select_by_id($unit_id)
 	{
-		return self::select_by_id("course_units", "unit_id", $unit_id);
+		return parent::select_by_id("course_units", "unit_id", $unit_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -83,48 +85,14 @@ class Unit extends CourseComponent
 	private $tests;
 	public function get_tests()
 	{
-		if (!isset($this->tests))
-		{
-			$this->tests = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_tests WHERE unit_id = %d",
-				$this->get_unit_id()
-			));
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				array_push($this->tests, Test::from_mysql_result_assoc($result_assoc));
-			}
-		}
-		return $this->tests;
+		return $this->get_cached_collection($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
 	}
 	
 	private $lists;
 	public function get_lists()
 	{
-		if (!isset($this->lists))
-		{
-			$this->lists = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query(sprintf("SELECT * FROM course_unit_lists LEFT JOIN lists USING (list_id) WHERE unit_id = %d",
-				$this->get_unit_id()
-			));
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				if (!($list = EntryList::from_mysql_result_assoc($result_assoc)))
-				{
-					return self::set_error_description("Failed to get lists: " . EntryList::get_error_description());
-				}
-				array_push($this->lists, $list);
-			}
-		}
-		
-		return $this->lists;
+		$table = "course_unit_lists LEFT JOIN lists USING (list_id)";
+		return $this->get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
 	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null)
@@ -158,7 +126,7 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
-		return self::delete("course_units", "unit_id", $this->get_unit_id());
+		return self::delete_this($this, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
 	public function lists_add($list)

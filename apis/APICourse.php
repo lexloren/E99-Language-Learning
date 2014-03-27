@@ -42,13 +42,6 @@ class APICourse  extends APIBase
 		}
 	}
 	
-	public function update()
-	{
-		//  course_name
-		//  timeframe
-		//  user_id (owner of the course)
-	}
-	
 	private function validate_course_id($course_id)
 	{
 		$course = null;
@@ -64,14 +57,27 @@ class APICourse  extends APIBase
 		return $course;
 	}
 	
+	public function update()
+	{
+		//  course_name
+		//  timeframe
+		//  user_id (owner of the course)
+	}
+	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
 		if (($course = $this->validate_course_id($_POST["course_id"])) && $course->session_user_is_owner())
 		{
-			$course->delete();
-			Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
+			if (!$course->delete())
+			{
+				Session::get()->set_error_assoc("Course Deletion", Course::get_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($course->assoc_for_json());
+			}
 		}
 	}
 	

@@ -26,30 +26,6 @@ class APIList extends APIBase
 		}
 	}
 	
-	public function update()
-	{
-		//  list_name
-	}
-	
-	public function delete()
-	{
-		if (!Session::get()->reauthenticate()) return;
-
-		if (!isset($_POST["list_id"]))
-		{
-			Session::get()->set_error_assoc("Invalid Post", "List-deletion post must include list_id.");
-		}
-		else if (!($list = EntryList::select_by_id(($list_id = intval($_POST["list_id"], 10)))))
-		{
-			Session::get()->set_error_assoc("List Deletion", "Back end failed to find list for deletion with posted list_id = $list_id.");
-		}
-		else
-		{
-			$list->delete();		
-			Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didDelete" => true)));
-		}
-	}
-	
 	private function validate_list_id($list_id)
 	{
 		$list = null;
@@ -63,6 +39,28 @@ class APIList extends APIBase
 		}
 		
 		return $list;
+	}
+	
+	public function update()
+	{
+		//  list_name
+	}
+	
+	public function delete()
+	{
+		if (!Session::get()->reauthenticate()) return;
+
+		if (($list = $this->validate_list_id($_POST["list_id"])))
+		{
+			if (!$list->delete())
+			{
+				Session::get()->set_error_assoc("List Deletion", EntryList::get_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($list->assoc_for_json());
+			}
+		}
 	}
 	
 	public function entries()
@@ -142,31 +140,5 @@ class APIList extends APIBase
 			}
 		}
 	}
-	
-	/*
-	//  Functionality moved to list_entries()
-	//  Do we actually need this method? I'm not sure anymore...
-	public function select()
-	{
-		if (!Session::get()->reauthenticate()) return;
-		
-		if (!isset($_GET["list_id"]))
-		{
-			Session::get()->set_error_assoc("Invalid Get", "List-description get must include list_id.");
-		}
-		else if (!($list = EntryList::select_by_id($_GET["list_id"])))
-		{
-			$error_description = sprintf("Back end failed to describe list%s",
-				!!EntryList::get_error_description() ? (": " . EntryList::get_error_description()) : "."
-			);
-			
-			Session::get()->set_error_assoc("List Description", $error_description);
-		}
-		else
-		{
-			Session::get()->set_result_assoc($list->assoc_for_json());
-		}
-	}
-	*/
 }
 ?>

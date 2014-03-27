@@ -54,7 +54,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		//TODO: make it better
 		$course = Course::select_by_id(TestDB::$course_id);
 		$this->assertNotNull($course);
-		$course->delete();
+		//$course->delete();
 	}
 	
 	

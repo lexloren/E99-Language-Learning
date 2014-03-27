@@ -47,22 +47,6 @@ class CourseComponent extends DatabaseRow
 	{
 		return !!($course = $this->get_course()) ? $course->session_user_can_read() : false;
 	}
-	
-	protected function delete($table, $column, $id)
-	{
-		if (!$this->session_user_is_owner())
-		{
-			return self::set_error_description("Session user is not course owner.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM $table WHERE $column = %d",
-			intval($id, 10)
-		));
-		
-		return $this;
-	}
 }
 
 ?>

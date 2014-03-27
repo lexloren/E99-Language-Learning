@@ -5,9 +5,12 @@ require_once "./backend/classes.php";
 
 class Annotation extends DatabaseRow
 {
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
+	
 	public static function select_by_id($annotation_id)
 	{
-		return self::select_by_id("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
+		return parent::select_by_id("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
 	}
 
 	private $contents;
@@ -100,18 +103,7 @@ class Annotation extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_owner())
-		{
-			return self::set_error_description("Session user is not annotation owner.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM user_entry_annotations WHERE annotation_id = %d",
-			$this->get_annotation_id()
-		));
-		
-		return $this;
+		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
 	
 	public function assoc_for_json()

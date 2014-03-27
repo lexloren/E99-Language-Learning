@@ -6,6 +6,8 @@ require_once "./backend/classes.php";
 class User extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
+	protected static $error_description = null;
+	protected static $instances_by_id = array ();
 	
 	public static function validate_email($string_in_question)
 	{
@@ -39,7 +41,7 @@ class User extends DatabaseRow
 	//  Creates a User object by selecting from the database
 	public static function select_by_id($user_id)
 	{
-		return self::select_by_id("users", "user_id", $user_id);
+		return parent::select_by_id("users", "user_id", $user_id);
 	}
 	
 	//  Inserts a row into users table and returns corresponding User object
