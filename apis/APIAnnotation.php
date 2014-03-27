@@ -10,26 +10,11 @@ class APIAnnotation extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 	
-	private function validate_entry_id($entry_id)
-	{
-		$entry = null;
-		if (!isset($entry_id))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include entry_id.");
-		}
-		else if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10)))))
-		{
-			Session::get()->set_error_assoc("Entry Selection", Entry::get_error_description());
-		}
-		
-		return $entry;
-	}
-	
 	public function insert()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($entry = $this->validate_entry_id($_POST["entry_id"])))
+		if (($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
 		{
 			if (!isset($_POST["contents"]))
 			{
@@ -55,11 +40,7 @@ class APIAnnotation extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["annotation_id"]))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include annotation_id.");
-		}
-		else if (($annotation = Annotation::select_by_id($_POST["annotation_id"])))
+		if (($annotation = self::validate_selection_id($_POST, "annotation_id", "Annotation")))
 		{
 			if (!$annotation->delete())
 			{

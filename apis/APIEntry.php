@@ -17,26 +17,11 @@ class APIEntry extends APIBase
 		// word_1_pronun
 	}
 	
-	private function validate_entry_id($entry_id)
-	{
-		$entry = null;
-		if (!isset($entry_id))
-		{
-			Session::get()->set_error_assoc("Request Invalid", "Request must include entry_id.");
-		}
-		else if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10)))))
-		{
-			Session::get()->set_error_assoc("Entry Selection", Entry::get_error_description());
-		}
-		
-		return $entry;
-	}
-	
 	public function annotations()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($entry = $this->validate_entry_id($_GET["entry_id"])))
+		if (($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
 		{
 			$entry = $entry->copy_for_session_user();
 			

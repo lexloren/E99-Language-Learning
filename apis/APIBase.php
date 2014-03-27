@@ -19,9 +19,19 @@ class APIBase
 		$this->mysqli = $mysqli;
 	}
 	
-	protected static function validate_request($array, $id_key, $class_name)
+	protected static function validate_selection_id($array, $id_key, $class_name)
 	{
+		$object = null;
+		if (!in_array($id_key, array_keys($array)))
+		{
+			Session::get()->set_error_assoc("Request Invalid", "Request must include $id_key.");
+		}
+		else if (!($object = $class_name::select_by_id(($id = intval($array[$id_key], 10)))))
+		{
+			Session::get()->set_error_assoc("$class_name Selection", $class_name::get_error_description());
+		}
 		
+		return $object;
 	}
 	
 	protected function return_array_as_assoc_for_json($array)

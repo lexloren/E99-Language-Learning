@@ -170,6 +170,18 @@ class Course extends DatabaseRow
 		}
 		return $lists;
 	}
+	public function get_tests()
+	{
+		$tests = array ();
+		foreach ($this->get_units() as $unit)
+		{
+			foreach ($unit->get_tests() as $test)
+			{
+				array_push($tests, $test);
+			}
+		}
+		return $tests;
+	}
 	
 	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
 	{
