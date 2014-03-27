@@ -206,13 +206,18 @@ class Entry extends DatabaseRow
 	
 	public function annotations_add($annotation_contents)
 	{
-		$entry = $entry->copy_for_session_user();
+		if (!Session::get()->get_user())
+		{
+			return Entry::set_error_description("Session user has not reauthenticated.");
+		}
+		$entry = $this->copy_for_session_user();
 		
 		$annotation = Annotation::insert($entry->get_entry_id(), $annotation_contents);
 		
 		if (!!$annotation)
 		{
-			array_push($entry->get_annotations(), $annotation);
+			$anno_arr = $entry->get_annotations();
+			array_push($anno_arr, $annotation);
 			return $entry;
 		}
 		
@@ -241,7 +246,7 @@ class Entry extends DatabaseRow
 			return Entry::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user());
+		$entries_by_id_for_user_id = Entry::entries_by_id_for_user_id(Session::get()->get_user()->get_user_id());
 		
 		if (isset($entries_by_id_for_user_id[$this->entry_id])) return $entries_by_id_for_user_id[$this->entry_id];
 	

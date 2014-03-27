@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 68.178.216.146
--- Generation Time: Mar 22, 2014 at 01:57 PM
+-- Generation Time: Mar 26, 2014 at 05:06 PM
 -- Server version: 5.0.96
 -- PHP Version: 5.1.6
 
@@ -37,7 +37,7 @@ CREATE TABLE `courses` (
   KEY `open` (`open`),
   KEY `close` (`close`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
 
 -- --------------------------------------------------------
 
@@ -53,7 +53,7 @@ CREATE TABLE `course_instructors` (
   PRIMARY KEY  (`instructor_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
 
 -- --------------------------------------------------------
 
@@ -69,7 +69,7 @@ CREATE TABLE `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
 
 -- --------------------------------------------------------
 
@@ -91,7 +91,7 @@ CREATE TABLE `course_units` (
   KEY `unit_nmbr` (`unit_nmbr`),
   KEY `open` (`open`),
   KEY `close` (`close`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -158,7 +158,7 @@ CREATE TABLE `course_unit_test_entry_results` (
   `student_id` bigint(20) unsigned NOT NULL,
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
   PRIMARY KEY  (`test_result_id`),
-  KEY `test_entry_id` (`test_entry_id`),
+  UNIQUE KEY `test_entry_id` (`test_entry_id`,`student_id`),
   KEY `timestamp` (`timestamp`),
   KEY `student_id` (`student_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -250,7 +250,7 @@ CREATE TABLE `lists` (
   KEY `user_id` (`user_id`),
   KEY `list_name` (`list_name`),
   KEY `share_public` (`public`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=14 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -262,11 +262,11 @@ DROP TABLE IF EXISTS `list_entries`;
 CREATE TABLE `list_entries` (
   `list_entry_id` bigint(20) unsigned NOT NULL auto_increment,
   `list_id` bigint(20) unsigned NOT NULL,
-  `entry_id` bigint(20) unsigned NOT NULL,
+  `user_entry_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY  (`list_entry_id`),
-  UNIQUE KEY `list_id` (`list_id`,`entry_id`),
-  KEY `entry_id` (`entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+  UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
+  KEY `user_entry_id` (`user_entry_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -292,7 +292,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `login_token` (`login_token`),
   KEY `last_activity` (`timestamp`),
   KEY `pswd_hash` (`pswd_hash`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -302,6 +302,7 @@ CREATE TABLE `users` (
 
 DROP TABLE IF EXISTS `user_entries`;
 CREATE TABLE `user_entries` (
+  `user_entry_id` bigint(20) unsigned NOT NULL auto_increment,
   `user_id` bigint(20) unsigned NOT NULL,
   `entry_id` bigint(20) unsigned NOT NULL,
   `word_0` char(255) default NULL,
@@ -309,14 +310,15 @@ CREATE TABLE `user_entries` (
   `word_1_pronun` char(255) default NULL,
   `interval` int(11) NOT NULL default '0',
   `efactor` decimal(3,2) NOT NULL default '2.50',
-  PRIMARY KEY  (`entry_id`,`user_id`),
+  PRIMARY KEY  (`user_entry_id`),
+  UNIQUE KEY `entry_id` (`entry_id`,`user_id`),
   KEY `user_id` (`user_id`),
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`),
   KEY `interval` (`interval`),
   KEY `efactor` (`efactor`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -327,14 +329,12 @@ CREATE TABLE `user_entries` (
 DROP TABLE IF EXISTS `user_entry_annotations`;
 CREATE TABLE `user_entry_annotations` (
   `annotation_id` bigint(20) unsigned NOT NULL auto_increment,
-  `entry_id` bigint(20) unsigned NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
+  `user_entry_id` bigint(20) unsigned NOT NULL,
   `contents` char(255) NOT NULL,
   PRIMARY KEY  (`annotation_id`),
-  KEY `entry_id` (`entry_id`),
-  KEY `user_id` (`user_id`),
-  KEY `annotation_text` (`contents`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+  KEY `user_entry_id` (`user_entry_id`),
+  KEY `contents` (`contents`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -345,15 +345,13 @@ CREATE TABLE `user_entry_annotations` (
 DROP TABLE IF EXISTS `user_entry_results`;
 CREATE TABLE `user_entry_results` (
   `result_id` bigint(20) unsigned NOT NULL auto_increment,
-  `entry_id` bigint(20) unsigned NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
+  `user_entry_id` bigint(20) unsigned NOT NULL,
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
   `grade_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY  (`result_id`),
   KEY `timestamp` (`timestamp`),
-  KEY `user_id` (`user_id`),
-  KEY `entry_id` (`entry_id`),
-  KEY `grade_id` (`grade_id`)
+  KEY `grade_id` (`grade_id`),
+  KEY `user_entry_id` (`user_entry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -380,9 +378,9 @@ CREATE TABLE `user_languages` (
 -- Constraints for table `courses`
 --
 ALTER TABLE `courses`
-  ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`lang_id_0`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `courses_ibfk_2` FOREIGN KEY (`lang_id_1`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `courses_ibfk_2` FOREIGN KEY (`lang_id_1`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `course_instructors`
@@ -408,7 +406,7 @@ ALTER TABLE `course_units`
 -- Constraints for table `course_unit_lists`
 --
 ALTER TABLE `course_unit_lists`
-  ADD CONSTRAINT `course_unit_lists_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_unit_lists_ibfk_3` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_lists_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -432,6 +430,13 @@ ALTER TABLE `course_unit_test_entry_results`
   ADD CONSTRAINT `course_unit_test_entry_results_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `course_students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `language_names`
+--
+ALTER TABLE `language_names`
+  ADD CONSTRAINT `language_names_ibfk_2` FOREIGN KEY (`lang_id_name`) REFERENCES `language_names` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `language_names_ibfk_1` FOREIGN KEY (`lang_id`) REFERENCES `languages` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `lists`
 --
 ALTER TABLE `lists`
@@ -442,19 +447,30 @@ ALTER TABLE `lists`
 --
 ALTER TABLE `list_entries`
   ADD CONSTRAINT `list_entries_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`entry_id`) REFERENCES `user_entries` (`entry_id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_entries`
+--
+ALTER TABLE `user_entries`
+  ADD CONSTRAINT `user_entries_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `user_entry_annotations`
 --
 ALTER TABLE `user_entry_annotations`
-  ADD CONSTRAINT `user_entry_annotations_ibfk_3` FOREIGN KEY (`entry_id`) REFERENCES `user_entries` (`entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `user_entry_annotations_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `user_entries` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `user_entry_annotations_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `user_entry_results`
 --
 ALTER TABLE `user_entry_results`
-  ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `user_entry_results_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `user_entry_results_ibfk_3` FOREIGN KEY (`entry_id`) REFERENCES `user_entries` (`entry_id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `user_entry_results_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user_languages`
+--
+ALTER TABLE `user_languages`
+  ADD CONSTRAINT `user_languages_ibfk_2` FOREIGN KEY (`lang_id`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_languages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
