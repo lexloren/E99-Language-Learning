@@ -19,6 +19,11 @@ class APIBase
 		$this->mysqli = $mysqli;
 	}
 	
+	protected static function validate_request($array, $id_key, $class_name)
+	{
+		
+	}
+	
 	protected function return_array_as_assoc_for_json($array)
 	{
 		if (!is_array($array))
