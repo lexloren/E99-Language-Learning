@@ -127,7 +127,7 @@ class User extends DatabaseRow
 	{
 		if (!self::validate_email($email))
 		{
-			return self::set_error_description("Invalid Email", "Email must conform to the standard pattern.");
+			return self::set_error_description("Email failed to conform to standard pattern.");
 		}
 		
 		if (!self::update_this($this, "users", array ("email", $email), "user_id", $this->get_user_id()))
@@ -219,118 +219,28 @@ class User extends DatabaseRow
 	private $lists;
 	public function get_lists()
 	{
-		//  return $this->populate($this->lists, EntryList, "user_lists", "lists", "list_id");
-		
-		if (!($this->is_session_user())) return null;
-		
-		if (!isset($this->lists))
-		{
-			$this->lists = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM lists WHERE user_id = %d",
-				$this->get_user_id()
-			));
-			
-			while (!!($result_assoc = $result->fetch_assoc()))
-			{
-				if (!!($list = EntryList::from_mysql_result_assoc($result_assoc)))
-				{
-					array_push($this->lists, $list);
-				}
-			}
-		}
-		
-		return $this->lists;
+		return self::get_cached_collection($this->lists, "EntryList", "lists", "user_id", $this->get_user_id());
 	}
 	
 	private $courses;
 	public function get_courses()
 	{
-		//  return $this->populate($this->instructor_courses, Course, "course_instructors", "courses", "course_id");
-		
-		if (!($this->is_session_user())) return null;
-		
-		if (!isset($this->courses))
-		{
-			$this->courses = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM courses WHERE user_id = %d",
-				$this->get_user_id()
-			));
-			
-			while (!!($result_assoc = $result->fetch_assoc()))
-			{
-				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
-				{
-					array_push($this->courses, $course);
-				}
-			}
-		}
-		
-		return $this->courses;
+		return self::get_cached_collection($this->courses, "Course", "courses", "user_id", $this->get_user_id());
 	}
 	
 	
 	private $instructor_courses;
 	public function get_instructor_courses()
 	{
-		//  return $this->populate($this->instructor_courses, Course, "course_instructors", "courses", "course_id");
-		
-		if (!($this->is_session_user())) return null;
-		
-		if (!isset($this->instructor_courses))
-		{
-			$this->instructor_courses = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_instructors LEFT JOIN courses USING (course_id) WHERE course_instructors.user_id = %d",
-				$this->get_user_id()
-			));
-			
-			while (!!($result_assoc = $result->fetch_assoc()))
-			{
-				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
-				{
-					array_push($this->instructor_courses, $course);
-				}
-			}
-		}
-		
-		return $this->instructor_courses;
+		$table = "course_instructors LEFT JOIN courses USING (course_id)";
+		return self::get_cached_collection($this->instructor_courses, "Course", $table, "course_instructors.user_id", $this->get_user_id(), "courses.*");
 	}
 	
 	private $student_courses;
 	public function get_student_courses()
 	{
-		//  return $this->populate($this->student_courses, Course, "course_students", "courses", "course_id");
-		
-		if (!($this->is_session_user())) return null;
-		
-		if (!isset($this->student_courses))
-		{
-			$this->student_courses = array ();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT courses.* FROM course_students LEFT JOIN courses USING (course_id) WHERE course_students.user_id = %d",
-				$this->get_user_id()
-			));
-			
-			while (!!($result_assoc = $result->fetch_assoc()))
-			{
-				if (!!($course = Course::from_mysql_result_assoc($result_assoc)))
-				{
-					array_push($this->student_courses, $course);
-				}
-			}
-		}
-		
-		return $this->student_courses;
+		$table = "course_students LEFT JOIN courses USING (course_id)";
+		return self::get_cached_collection($this->student_courses, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
 	}
 	
 	public function in_array($array)

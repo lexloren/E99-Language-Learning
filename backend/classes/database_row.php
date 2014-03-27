@@ -78,7 +78,7 @@ class DatabaseRow
 		return true;
 	}
 	
-	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id)
+	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*")
 	{
 		if (!isset($cache))
 		{
@@ -88,7 +88,7 @@ class DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query("SELECT * FROM $table WHERE $anchor_column = $anchor_id");
+			$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id");
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
@@ -129,7 +129,7 @@ class DatabaseRow
 		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error);
 	}
 	
-	public function get_owner()
+	protected function get_owner()
 	{
 		return null;
 	}
