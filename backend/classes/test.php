@@ -3,7 +3,7 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Test extends DatabaseRow
+class Test extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
 	
@@ -71,36 +71,10 @@ class Test extends DatabaseRow
 	{
 		return Unit::select_by_id($this->get_unit_id());
 	}
-	public function get_course_id()
-	{
-		return $this->get_unit()->get_course_id();
-	}
+	
 	public function get_course()
 	{
 		return $this->get_unit()->get_course();
-	}
-	
-	public function get_owner()
-	{
-		return $this->get_course()->get_owner();
-	}
-	
-	public function get_instructors()
-	{
-		return $this->get_course()->get_instructors();
-	}
-	public function session_user_is_instructor()
-	{
-		return $this->get_course()->session_user_is_instructor();
-	}
-	
-	public function get_students()
-	{
-		return $this->get_course()->get_students();
-	}
-	public function session_user_is_student()
-	{
-		return $this->get_course()->session_user_is_student();
 	}
 	
 	private $sections;
@@ -184,16 +158,6 @@ class Test extends DatabaseRow
 		);
 	}
 	
-	public function session_user_can_write()
-	{
-		return $this->session_user_is_instructor() || $this->session_user_is_owner();
-	}
-	
-	public function session_user_can_read()
-	{
-		return $this->session_user_can_write() || $this->session_user_is_student();
-	}
-	
 	public function session_user_can_execute()
 	{
 		return (!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
@@ -201,18 +165,7 @@ class Test extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_owner())
-		{
-			return self::set_error_description("Session user is not course owner.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM course_unit_tests WHERE test_id = %d",
-			$this->get_test_id()
-		));
-		
-		return $this;
+		return self::delete("course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
 	public function assoc_for_json($privacy = null)
@@ -226,9 +179,11 @@ class Test extends DatabaseRow
 			"testId" => $this->get_test_id(),
 			"testName" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
+			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"owner" => !$privacy ? $this->get_owner()->assoc_for_json(),
-			"timeframe" => !$privacy ? $this->get_timeframe()->assoc_for_json()
+			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
+			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
+			"timeframe" => !$privacy ? $this->get_timeframe()->assoc_for_json() : null			
 		);
 	}
 }

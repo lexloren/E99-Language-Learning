@@ -3,7 +3,7 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Unit extends DatabaseRow
+class Unit extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
 	
@@ -158,28 +158,7 @@ class Unit extends DatabaseRow
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_instructor())
-		{
-			return self::set_error_description("Session user is not instructor of course.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM course_units WHERE unit_id = %d",
-			$this->get_unit_id()
-		));
-		
-		return $this;
-	}
-	
-	public function session_user_is_instructor()
-	{
-		return $this->get_course()->session_user_is_instructor();
-	}
-	
-	public function session_user_is_student()
-	{
-		return $this->get_course()->session_user_is_student();
+		return self::delete("course_units", "unit_id", $this->get_unit_id());
 	}
 	
 	public function lists_add($list)

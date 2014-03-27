@@ -179,35 +179,14 @@ class Section extends DatabaseRow
 		);
 	}
 	
-	public function session_user_can_write()
-	{
-		return $this->session_user_is_instructor() || $this->session_user_is_owner();
-	}
-	
-	public function session_user_can_read()
-	{
-		return $this->session_user_can_write() || $this->session_user_is_student();
-	}
-	
 	public function session_user_can_execute()
 	{
-		return (!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		return false; //(!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
 	}
 	
 	public function delete()
 	{
-		if (!$this->session_user_is_owner())
-		{
-			return self::set_error_description("Session user is not course owner.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM course_unit_tests WHERE test_id = %d",
-			$this->get_test_id()
-		));
-		
-		return $this;
+		return self::delete("course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
 	public function assoc_for_json($privacy = null)
@@ -215,17 +194,20 @@ class Section extends DatabaseRow
 		$omniscience = $this->session_user_is_owner();
 		
 		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_read();
+		else if ($privacy === null) $privacy = !$this->session_user_can_execute();
 		
 		return array (
 			"sectionId" => $this->get_section_id(),
 			"sectionName" => !$privacy ? $this->get_section_name() : null,
-			"testId" => $this->get_test_id(),
+			"testId" => !$privacy ? $this->get_test_id() : null,
 			"testName" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
+			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"owner" => !$privacy ? $this->get_owner()->assoc_for_json(),
-			"timeframe" => !$privacy ? $this->get_timeframe()->assoc_for_json()
+			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
+			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
+			"timer" => !$privacy ? $this->get_timer() : null,
+			"message" => !$privacy ? $this->get_message() : null
 		);
 	}
 }
