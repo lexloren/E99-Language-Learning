@@ -51,8 +51,6 @@ class APIListTest extends PHPUnit_Framework_TestCase
 			
 			$result = $result_assoc['result'];		
 			$this->assertNotNull($result);
-
-			//print_r($result);
 			
 			$this->assertArrayHasKey('listId', $result);
 			$this->assertArrayHasKey('listName', $result);

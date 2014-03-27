@@ -30,7 +30,7 @@ class APIBase
 			$returnable = array ();
 			foreach ($array as $item)
 			{
-				if (!is_subclass_of($item, 'DatabaseRow'))
+				if (!is_subclass_of($item, "DatabaseRow"))
 				{
 					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object in $array was $item.");
 					return;
