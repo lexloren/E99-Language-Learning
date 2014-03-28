@@ -125,20 +125,20 @@ class Entry extends DatabaseRow
 			"word_1_pronun"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Entry(
-			$result_assoc["entry_id"],
-			$result_assoc["lang_code_0"],
-			$result_assoc["lang_code_1"],
-			$result_assoc["word_0"],
-			$result_assoc["word_1"],
-			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
-			array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
-			array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
-			array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
-			array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Entry(
+				$result_assoc["entry_id"],
+				$result_assoc["lang_code_0"],
+				$result_assoc["lang_code_1"],
+				$result_assoc["word_0"],
+				$result_assoc["word_1"],
+				!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
+				array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
+				array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
+				array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
+				array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
+			)
+			: null;
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database

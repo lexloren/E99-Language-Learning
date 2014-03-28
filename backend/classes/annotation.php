@@ -72,15 +72,15 @@ class Annotation extends DatabaseRow
 			"contents"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Annotation(
-			$result_assoc["annotation_id"],
-			$result_assoc["user_entry_id"],
-			$result_assoc["entry_id"],
-			$result_assoc["user_id"],
-			$result_assoc["contents"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Annotation(
+				$result_assoc["annotation_id"],
+				$result_assoc["user_entry_id"],
+				$result_assoc["entry_id"],
+				$result_assoc["user_id"],
+				$result_assoc["contents"]
+			)
+			: null;
 	}
 	
 	public static function insert($entry_id, $contents)
@@ -96,9 +96,12 @@ class Annotation extends DatabaseRow
 			$mysqli->escape_string($contents)
 		));
 		
-		if (!!$mysqli->error) return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error);
+		if (!!$mysqli->error)
+		{
+			return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error);
+		}
 		
-		return Annotation::select_by_id($mysqli->insert_id);
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
 	public function delete()

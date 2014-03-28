@@ -23,7 +23,7 @@ class EntryList extends DatabaseRow
 			$mysqli->escape_string($list_name)
 		));
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
@@ -107,15 +107,14 @@ class EntryList extends DatabaseRow
 			"public"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-
-		
-		return new EntryList(
-			$result_assoc["list_id"],
-			$result_assoc["user_id"],
-			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
-			$result_assoc["public"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new EntryList(
+				$result_assoc["list_id"],
+				$result_assoc["user_id"],
+				!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
+				$result_assoc["public"]
+			)
+			: null;
 	}
 	
 	//  Returns true iff Session::get()->get_user() can read this list for any reason

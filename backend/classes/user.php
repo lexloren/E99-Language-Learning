@@ -198,15 +198,20 @@ class User extends DatabaseRow
 			"name_given"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new User(
-			$result_assoc["user_id"],
-			$result_assoc["handle"],
-			$result_assoc["email"],
-			$result_assoc["name_family"],
-			$result_assoc["name_given"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new User(
+				$result_assoc["user_id"],
+				$result_assoc["handle"],
+				$result_assoc["email"],
+				$result_assoc["name_family"],
+				$result_assoc["name_given"]
+			)
+			: null;
+	}
+	
+	public function delete()
+	{
+		return self::set_error_description("Failed to delete user.");
 	}
 	
 	private $lists;

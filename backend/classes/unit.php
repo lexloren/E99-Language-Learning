@@ -126,14 +126,14 @@ class Unit extends CourseComponent
 			"unit_name"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Unit(
-			$result_assoc["unit_id"],
-			$result_assoc["course_id"],
-			$result_assoc["unit_num"],
-			!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Unit(
+				$result_assoc["unit_id"],
+				$result_assoc["course_id"],
+				$result_assoc["unit_num"],
+				!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
+			)
+			: null;
 	}
 	
 	public function delete()

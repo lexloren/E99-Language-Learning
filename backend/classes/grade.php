@@ -59,19 +59,19 @@ class Grade extends DatabaseRow
 	{
 		$mysql_columns = array ("grade_id", "point", "desc_short", "desc_long");
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-
-		return new Grade(
-			$result_assoc["grade_id"],
-			$result_assoc["point"],
-			!!$result_assoc["desc_short"] && strlen($result_assoc["desc_short"]) > 0 ? $result_assoc["desc_short"] : null,
-			!!$result_assoc["desc_long"] && strlen($result_assoc["desc_long"]) > 0 ? $result_assoc["desc_long"] : null
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Grade(
+				$result_assoc["grade_id"],
+				$result_assoc["point"],
+				!!$result_assoc["desc_short"] && strlen($result_assoc["desc_short"]) > 0 ? $result_assoc["desc_short"] : null,
+				!!$result_assoc["desc_long"] && strlen($result_assoc["desc_long"]) > 0 ? $result_assoc["desc_long"] : null
+			)
+			: null;
 	}
 
 	public function delete()
 	{
-		return null;
+		return self::set_error_description("Failed to delete grade.");
 	}
 
 	public function assoc_for_json()
