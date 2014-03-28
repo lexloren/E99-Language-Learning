@@ -26,7 +26,7 @@ class APIUser extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($user->assoc_for_json());
+				Session::get()->set_result_assoc($user->assoc_for_json(false));
 			}
 		}
 	}
