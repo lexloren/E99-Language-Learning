@@ -29,6 +29,8 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$family = "SomeFamily1";
 		$given = "SomeGiven1";
 
+		print_r("\n\nDatabases the same? ".(Connection::get_shared_instance() === $link ? "Yes" : "No")."\n\n");
+
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
 		//print_r(User::get_error_description());
 		Session::get()->set_user($user_obj);
