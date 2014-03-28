@@ -25,6 +25,11 @@ class DatabaseRow
 		static::$instances_by_id[$id] = $instance;
 	}
 	
+	public static function unregister_all()
+	{
+		static::$instances_by_id = array ();
+	}
+	
 	protected static function select($table, $column, $id)
 	{
 		$id = intval($id, 10);
