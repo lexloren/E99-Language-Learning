@@ -2,21 +2,21 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- Värd: 68.178.216.146
--- Skapad: 27 mars 2014 kl 08:58
--- Serverversion: 5.0.96
--- PHP-version: 5.1.6
+-- Host: 68.178.216.146
+-- Generation Time: Mar 27, 2014 at 05:08 PM
+-- Server version: 5.0.96
+-- PHP Version: 5.1.6
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 --
--- Databas: `cscie99`
+-- Database: `cscie99`
 --
 
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `courses`
+-- Table structure for table `courses`
 --
 
 DROP TABLE IF EXISTS `courses`;
@@ -43,7 +43,7 @@ CREATE TABLE `courses` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_instructors`
+-- Table structure for table `course_instructors`
 --
 
 DROP TABLE IF EXISTS `course_instructors`;
@@ -59,7 +59,7 @@ CREATE TABLE `course_instructors` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_students`
+-- Table structure for table `course_students`
 --
 
 DROP TABLE IF EXISTS `course_students`;
@@ -70,12 +70,12 @@ CREATE TABLE `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_units`
+-- Table structure for table `course_units`
 --
 
 DROP TABLE IF EXISTS `course_units`;
@@ -98,7 +98,7 @@ CREATE TABLE `course_units` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_lists`
+-- Table structure for table `course_unit_lists`
 --
 
 DROP TABLE IF EXISTS `course_unit_lists`;
@@ -115,7 +115,7 @@ CREATE TABLE `course_unit_lists` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_tests`
+-- Table structure for table `course_unit_tests`
 --
 
 DROP TABLE IF EXISTS `course_unit_tests`;
@@ -131,12 +131,12 @@ CREATE TABLE `course_unit_tests` (
   KEY `test_name` (`test_name`),
   KEY `open` (`open`),
   KEY `close` (`close`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_test_sections`
+-- Table structure for table `course_unit_test_sections`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_sections`;
@@ -155,7 +155,7 @@ CREATE TABLE `course_unit_test_sections` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_test_section_entries`
+-- Table structure for table `course_unit_test_section_entries`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_section_entries`;
@@ -171,7 +171,7 @@ CREATE TABLE `course_unit_test_section_entries` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_test_section_entry_results`
+-- Table structure for table `course_unit_test_section_entry_results`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_section_entry_results`;
@@ -189,7 +189,7 @@ CREATE TABLE `course_unit_test_section_entry_results` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `dictionary`
+-- Table structure for table `dictionary`
 --
 
 DROP TABLE IF EXISTS `dictionary`;
@@ -213,7 +213,7 @@ CREATE TABLE `dictionary` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `grades`
+-- Table structure for table `grades`
 --
 
 DROP TABLE IF EXISTS `grades`;
@@ -229,7 +229,7 @@ CREATE TABLE `grades` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `languages`
+-- Table structure for table `languages`
 --
 
 DROP TABLE IF EXISTS `languages`;
@@ -243,7 +243,7 @@ CREATE TABLE `languages` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `language_names`
+-- Table structure for table `language_names`
 --
 
 DROP TABLE IF EXISTS `language_names`;
@@ -260,7 +260,7 @@ CREATE TABLE `language_names` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `lists`
+-- Table structure for table `lists`
 --
 
 DROP TABLE IF EXISTS `lists`;
@@ -268,7 +268,7 @@ CREATE TABLE `lists` (
   `list_id` bigint(20) unsigned NOT NULL auto_increment,
   `user_id` bigint(20) unsigned NOT NULL,
   `list_name` char(255) default NULL,
-  `public` tinyint(1) NOT NULL,
+  `public` tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (`list_id`),
   KEY `user_id` (`user_id`),
   KEY `list_name` (`list_name`),
@@ -278,7 +278,7 @@ CREATE TABLE `lists` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `list_entries`
+-- Table structure for table `list_entries`
 --
 
 DROP TABLE IF EXISTS `list_entries`;
@@ -294,7 +294,7 @@ CREATE TABLE `list_entries` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `users`
+-- Table structure for table `users`
 --
 
 DROP TABLE IF EXISTS `users`;
@@ -320,7 +320,7 @@ CREATE TABLE `users` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `user_entries`
+-- Table structure for table `user_entries`
 --
 
 DROP TABLE IF EXISTS `user_entries`;
@@ -346,7 +346,7 @@ CREATE TABLE `user_entries` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `user_entry_annotations`
+-- Table structure for table `user_entry_annotations`
 --
 
 DROP TABLE IF EXISTS `user_entry_annotations`;
@@ -357,12 +357,12 @@ CREATE TABLE `user_entry_annotations` (
   PRIMARY KEY  (`annotation_id`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `user_entry_results`
+-- Table structure for table `user_entry_results`
 --
 
 DROP TABLE IF EXISTS `user_entry_results`;
@@ -380,7 +380,7 @@ CREATE TABLE `user_entry_results` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `user_languages`
+-- Table structure for table `user_languages`
 --
 
 DROP TABLE IF EXISTS `user_languages`;
@@ -394,11 +394,11 @@ CREATE TABLE `user_languages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Restriktioner för dumpade tabeller
+-- Constraints for dumped tables
 --
 
 --
--- Restriktioner för tabell `courses`
+-- Constraints for table `courses`
 --
 ALTER TABLE `courses`
   ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`lang_id_0`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
@@ -406,99 +406,98 @@ ALTER TABLE `courses`
   ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_instructors`
+-- Constraints for table `course_instructors`
 --
 ALTER TABLE `course_instructors`
   ADD CONSTRAINT `course_instructors_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_instructors_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_students`
+-- Constraints for table `course_students`
 --
 ALTER TABLE `course_students`
   ADD CONSTRAINT `course_students_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_students_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_units`
+-- Constraints for table `course_units`
 --
 ALTER TABLE `course_units`
   ADD CONSTRAINT `course_units_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_lists`
+-- Constraints for table `course_unit_lists`
 --
 ALTER TABLE `course_unit_lists`
   ADD CONSTRAINT `course_unit_lists_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_lists_ibfk_3` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_tests`
+-- Constraints for table `course_unit_tests`
 --
 ALTER TABLE `course_unit_tests`
   ADD CONSTRAINT `course_unit_tests_ibfk_1` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_sections`
+-- Constraints for table `course_unit_test_sections`
 --
 ALTER TABLE `course_unit_test_sections`
   ADD CONSTRAINT `course_unit_test_sections_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_section_entries`
+-- Constraints for table `course_unit_test_section_entries`
 --
 ALTER TABLE `course_unit_test_section_entries`
-  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `course_unit_test_sections` (`section_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_2` FOREIGN KEY (`entry_id`) REFERENCES `user_entries` (`entry_id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `course_unit_test_sections` (`section_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_section_entry_results`
+-- Constraints for table `course_unit_test_section_entry_results`
 --
 ALTER TABLE `course_unit_test_section_entry_results`
   ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_section_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `course_students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `language_names`
+-- Constraints for table `language_names`
 --
 ALTER TABLE `language_names`
   ADD CONSTRAINT `language_names_ibfk_1` FOREIGN KEY (`lang_id`) REFERENCES `languages` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `language_names_ibfk_2` FOREIGN KEY (`lang_id_name`) REFERENCES `language_names` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `lists`
+-- Constraints for table `lists`
 --
 ALTER TABLE `lists`
   ADD CONSTRAINT `lists_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `list_entries`
+-- Constraints for table `list_entries`
 --
 ALTER TABLE `list_entries`
   ADD CONSTRAINT `list_entries_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `user_entries`
+-- Constraints for table `user_entries`
 --
 ALTER TABLE `user_entries`
   ADD CONSTRAINT `user_entries_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `user_entry_annotations`
+-- Constraints for table `user_entry_annotations`
 --
 ALTER TABLE `user_entry_annotations`
   ADD CONSTRAINT `user_entry_annotations_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `user_entry_results`
+-- Constraints for table `user_entry_results`
 --
 ALTER TABLE `user_entry_results`
   ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_entry_results_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `user_languages`
+-- Constraints for table `user_languages`
 --
 ALTER TABLE `user_languages`
   ADD CONSTRAINT `user_languages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
