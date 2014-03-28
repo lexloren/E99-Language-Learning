@@ -41,6 +41,16 @@ class TestDB
 	
 	public static function create()
 	{
+		User::unregister_all();
+		Grade::unregister_all();
+		//Entry::unregister_all();  //Does not use the cache
+		Course::unregister_all();
+		Unit::unregister_all();
+		EntryList::unregister_all();
+		Test::unregister_all();
+		Section::unregister_all();
+		Annotation::unregister_all();
+	
 		$testdb = new TestDB();
 		
 		$link = database::recreate_database('cscie99test');

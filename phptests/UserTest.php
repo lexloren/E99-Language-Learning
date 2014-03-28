@@ -29,23 +29,19 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$family = "SomeFamily1";
 		$given = "SomeGiven1";
 
-		print_r("\n\nDatabases the same? ".(Connection::get_shared_instance() === $this->db->link ? "Yes" : "No")."\n\n");
-
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
-		//print_r(User::get_error_description());
 		Session::get()->set_user($user_obj);
 				
 		//Check database
 		$link = $this->db->link;
 		$result = $link->query(sprintf("SELECT * FROM users WHERE handle LIKE '%s'", $link->escape_string($handle)));
+		$this->assertEquals($result->num_rows, 1);
 		$this->assertNotNull($result, "Null result");
 		$user_assoc = $result->fetch_assoc();
 		$this->assertNotNull($user_assoc, "Null user_assoc");
 		$this->assertEquals($user_assoc["email"], $email);
 		$user_id = $user_assoc["user_id"];
 		$this->assertNotEquals($user_id, 0);
-		
-		//print_r($user_obj->assoc_for_json());
 		
 		//Check user object
 		$this->assertEquals($user_obj->get_user_id(), $user_id);
