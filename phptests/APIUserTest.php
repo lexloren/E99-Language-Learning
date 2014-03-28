@@ -41,7 +41,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	public function testRegister()
 	{
 		$_POST["email"] = "someone@somewhere.com";
-		$_POST["handle"] = "username1";
+		$_POST["handle"] = "usernameone";
 		$_POST["password"] = "P@ssword1";
 		$this->obj->register();
 		
@@ -59,7 +59,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	
 	public function testRegisterNoEmail()
 	{
-		$_POST["handle"] = "username1";
+		$_POST["handle"] = "usernameone";
 		$_POST["password"] = "P@ssword1";
 		$this->obj->register();
 		
@@ -89,7 +89,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
 	public function testRegisterNoPassword()
 	{
-		$_POST["handle"] = "username1";
+		$_POST["handle"] = "usernameone";
 		$_POST["email"] = "someone@somewhere.com";
 
 		$this->obj->register();

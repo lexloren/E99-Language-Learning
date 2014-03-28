@@ -30,6 +30,8 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$given = "SomeGiven1";
 
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
+		if (User::get_error_description()) print_r(User::get_error_description());
+		print_r($user_obj->assoc_for_json());
 		Session::get()->set_user($user_obj);
 				
 		//Check database
@@ -41,6 +43,8 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($user_assoc["email"], $email);
 		$user_id = $user_assoc["user_id"];
 		$this->assertNotEquals($user_id, 0);
+		
+		print_r($user_obj->assoc_for_json());
 		
 		//Check user object
 		$this->assertEquals($user_obj->get_user_id(), $user_id);
