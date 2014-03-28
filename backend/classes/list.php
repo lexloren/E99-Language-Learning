@@ -23,6 +23,11 @@ class EntryList extends DatabaseRow
 			$mysqli->escape_string($list_name)
 		));
 		
+		if ($mysqli->error)
+		{
+			return self::set_error_description("Failed to insert list: " . $mysqli->error);
+		}
+		
 		return self::select_by_id($mysqli->insert_id);
 	}
 	

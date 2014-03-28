@@ -85,10 +85,10 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Back end unexpectedly failed to insert user: " . $mysqli->error);
+			return self::set_error_description("Failed to insert user: " . $mysqli->error);
 		}
 		
-		return !!($user = self::select_by_id($mysqli->insert_id)) ? $user : null;
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
 	/***    INSTANCE    ***/
