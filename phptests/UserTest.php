@@ -3,6 +3,7 @@
 //Tests class User
 require_once './backend/classes/session.php';
 require_once './backend/classes/user.php';
+require_once './backend/classes/directory.php';
 require_once './phptests/TestDB.php';
 
 class UserTest extends PHPUnit_Framework_TestCase
@@ -69,6 +70,20 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($user_obj->get_handle(), TestDB::$handle);
 		$this->assertEquals($user_obj->get_name_family(), TestDB::$name_family);
 		$this->assertEquals($user_obj->get_name_given(), TestDB::$name_given);
+	}
+	
+	public function test_look_up()
+	{
+		$result = UsersDirectory::look_up("");
+		$this->assertCount(0, $result);
+		$result = UsersDirectory::look_up(TestDB::$email);
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
+		$this->assertEquals($result[0]->get_user_id(), TestDB::$user_id);
+		$result = UsersDirectory::look_up(TestDB::$handle);
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
+		$this->assertEquals($result[0]->get_user_id(), TestDB::$user_id);
 	}
 }
 ?>
