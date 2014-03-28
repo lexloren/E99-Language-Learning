@@ -44,7 +44,7 @@ class APIUser extends APIBase
 	{
 		if (self::validate_request($_GET, "query"))
 		{
-		self::return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
+			self::return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
 		}
 	}
 	
