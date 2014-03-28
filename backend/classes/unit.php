@@ -37,7 +37,7 @@ class Unit extends CourseComponent
 			$unit_number
 		));
 		
-		if (!!$mysqli->error) return self::set_error_description("Failed to insert course unit: " . $mysqli->error);
+		if (!!$mysqli->error) return self::set_error_description("Failed to insert unit: " . $mysqli->error);
 		
 		return self::select_by_id($mysqli->insert_id);
 	}

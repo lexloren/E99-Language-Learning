@@ -34,7 +34,7 @@ class Section extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return self::set_error_description("Failed to insert test section: " . $mysqli->error);
+			return self::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
 		
 		return !!($section = self::select_by_id($mysqli->insert_id)) ? $section : null;
