@@ -58,7 +58,7 @@ class Course extends DatabaseRow
 	
 	public static function select_by_id($course_id)
 	{
-		return parent::select_by_id("courses", "course_id", $course_id);
+		return parent::select("courses", "course_id", $course_id);
 	}
 	
 	/***    INSTANCE    ***/

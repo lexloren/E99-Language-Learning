@@ -10,7 +10,7 @@ class Annotation extends DatabaseRow
 	
 	public static function select_by_id($annotation_id)
 	{
-		return parent::select_by_id("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
+		return parent::select("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
 	}
 
 	private $contents;

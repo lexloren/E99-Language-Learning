@@ -16,7 +16,7 @@ class Grade extends DatabaseRow
 
 	public static function select_by_id($grade_id)
 	{
-		return parent::select_by_id("grades", "grade_id", $grade_id);
+		return parent::select("grades", "grade_id", $grade_id);
 	}
 
 	/***    INSTANCE    ***/

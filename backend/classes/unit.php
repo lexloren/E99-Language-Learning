@@ -44,7 +44,7 @@ class Unit extends CourseComponent
 	
 	public static function select_by_id($unit_id)
 	{
-		return parent::select_by_id("course_units", "unit_id", $unit_id);
+		return parent::select("course_units", "unit_id", $unit_id);
 	}
 	
 	/***    INSTANCE    ***/

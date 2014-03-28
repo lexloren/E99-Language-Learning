@@ -47,7 +47,7 @@ class Test extends CourseComponent
 	
 	public static function select_by_id($test_id)
 	{
-		return parent::select_by_id("course_unit_tests", "test_id", $test_id);
+		return parent::select("course_unit_tests", "test_id", $test_id);
 	}
 	
 	/***    INSTANCE    ***/
