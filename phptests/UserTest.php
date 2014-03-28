@@ -30,13 +30,12 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$given = "SomeGiven1";
 
 		$user_obj = User::insert($email, $handle, $password, $family, $given);
-		if (User::get_error_description()) print_r(User::get_error_description());
-		print_r($user_obj->assoc_for_json());
+		//print_r(User::get_error_description());
 		Session::get()->set_user($user_obj);
 				
 		//Check database
 		$link = $this->db->link;
-		$result = $link->query(sprintf("SELECT * FROM users WHERE handle = '%s'", $link->escape_string($handle)));
+		$result = $link->query(sprintf("SELECT * FROM users WHERE handle LIKE '%s'", $link->escape_string($handle)));
 		$this->assertNotNull($result, "Null result");
 		$user_assoc = $result->fetch_assoc();
 		$this->assertNotNull($user_assoc, "Null user_assoc");
@@ -44,7 +43,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$user_id = $user_assoc["user_id"];
 		$this->assertNotEquals($user_id, 0);
 		
-		print_r($user_obj->assoc_for_json());
+		//print_r($user_obj->assoc_for_json());
 		
 		//Check user object
 		$this->assertEquals($user_obj->get_user_id(), $user_id);
@@ -57,7 +56,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 	public function testSelect()
 	{
 		$link = $this->db->link;
-		$result = $link->query(sprintf("SELECT * FROM users WHERE handle = '%s'",
+		$result = $link->query(sprintf("SELECT * FROM users WHERE handle LIKE '%s'",
 			$link->escape_string(TestDB::$handle)
 		));
 		

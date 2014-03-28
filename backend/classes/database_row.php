@@ -25,7 +25,7 @@ class DatabaseRow
 		static::$instances_by_id[$id] = $instance;
 	}
 	
-	protected static function select_by_id($table, $column, $id)
+	protected static function select($table, $column, $id)
 	{
 		$id = intval($id, 10);
 		

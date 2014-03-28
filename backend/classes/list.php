@@ -33,7 +33,7 @@ class EntryList extends DatabaseRow
 	
 	public static function select_by_id($list_id)
 	{
-		return parent::select_by_id("lists", "list_id", $list_id);
+		return parent::select("lists", "list_id", $list_id);
 	}
 	
 	/***    INSTANCE    ***/

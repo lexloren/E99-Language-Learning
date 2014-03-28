@@ -42,7 +42,7 @@ class Section extends DatabaseRow
 	
 	public static function select_by_id($section_id)
 	{
-		return parent::select_by_id("course_unit_test_sections", "section_id", $section_id);
+		return parent::select("course_unit_test_sections", "section_id", $section_id);
 	}
 	
 	/***    INSTANCE    ***/

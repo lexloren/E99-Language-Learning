@@ -41,7 +41,7 @@ class User extends DatabaseRow
 	//  Creates a User object by selecting from the database
 	public static function select_by_id($user_id)
 	{
-		return parent::select_by_id("users", "user_id", $user_id);
+		return parent::select("users", "user_id", $user_id);
 	}
 	
 	//  Inserts a row into users table and returns corresponding User object
