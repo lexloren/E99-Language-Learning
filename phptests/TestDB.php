@@ -30,6 +30,10 @@ class TestDB
 	public static $list_entry_id;
 	public static $list_name = 'somelist';
 
+	public static $list_to_delete_id;
+	public static $list_to_delete_name = 'somelist to del';
+
+
 	public static $course_id;
 	public static $course_name = 'some course';
 	
@@ -119,6 +123,13 @@ class TestDB
 		));
 
 		self::$list_id = $link->insert_id;
+		
+		$link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+			self::$user_id,
+			$link->escape_string(self::$list_to_delete_name)
+		));
+
+		self::$list_to_delete_id = $link->insert_id;
 		
 		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
 			self::$entry_id, self::$user_id
