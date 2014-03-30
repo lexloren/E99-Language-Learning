@@ -69,7 +69,7 @@ class Practice
 		$this->entries = array();
 		foreach ($entry_ids as $entry_id)
                 {
-			$entry = Dictionary::select_entry($entry_id);
+			$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
                         array_push($this->entries, $entry->assoc_for_json());
                 }
 		$this->entry_ids = $entry_ids;

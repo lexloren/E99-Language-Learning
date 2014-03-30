@@ -126,8 +126,8 @@ class TestDB
 
 		self::$list_id = $link->insert_id;
 		
-		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-			self::$entry_id, self::$user_id
+		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+			self::$entry_id, self::$user_id, self::$word_0, self::$word_1, self::$word_1_pronun
 		));
 		
 		self::$user_entry_id = $link->insert_id;
@@ -207,8 +207,8 @@ class TestDB
                                 $entry_id = $link->insert_id;
                                 array_push(self::$practice_entry_ids, $entry_id);
 
-                                $link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-                                        $entry_id, self::$user_id
+                                $link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+                                        $entry_id, self::$user_id, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j
                                 ));
 
                                 $user_entry_id = $link->insert_id;
