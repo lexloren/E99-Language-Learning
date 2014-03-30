@@ -101,7 +101,7 @@ class APIUser extends APIBase
 		} else {
 			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
 			$practice = Practice::generate($list_ids, $entries_count);
-			Session::get()->set_result_assoc($practice->get_entries());
+			self::return_array_as_assoc_for_json($practice->get_entries());
 		}
 		return;
 	}

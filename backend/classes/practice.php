@@ -70,7 +70,7 @@ class Practice
 		foreach ($entry_ids as $entry_id)
                 {
 			$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-                        array_push($this->entries, $entry->assoc_for_json());
+                        array_push($this->entries, $entry);
                 }
 		$this->entry_ids = $entry_ids;
 	}

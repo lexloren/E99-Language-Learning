@@ -166,10 +166,26 @@ class APIUserTest extends PHPUnit_Framework_TestCase
                 $_SESSION["handle"] = TestDB::$handle;
                 $_GET["list_ids"] = join(', ', TestDB::$practice_list_ids);
                 $this->obj->practice();
-                $result = Session::get()->get_result_assoc();
 
+		$this->assertFalse(Session::get()->has_error());
+
+                $result_assoc = Session::get()->get_result_assoc();
+                $this->assertNotNull($result_assoc);
+
+                $result = $result_assoc["result"];
                 $this->assertNotNull($result);
-                //$this->assertEquals(count(TestDB::$practice_entry_ids), count($result));
+                $this->assertCount(count(TestDB::$practice_entry_ids), $result);
+
+		$this->assertArrayHasKey('entryId', $result[0]);
+		$this->assertArrayHasKey('owner', $result[0]);
+		$this->assertArrayHasKey('words', $result[0]);
+		$this->assertArrayHasKey('pronuncations', $result[0]);
+
+		$result_0_prefix = '11';
+		$this->assertEquals($result[0]["owner"]["handle"], TestDB::$handle);
+		$this->assertEquals($result[0]["words"][TestDB::$lang_code_0], TestDB::$word_0.$result_0_prefix);
+		$this->assertEquals($result[0]["words"][TestDB::$lang_code_1], TestDB::$word_1.$result_0_prefix);
+		$this->assertEquals($result[0]["pronuncations"][TestDB::$lang_code_1], TestDB::$word_1_pronun.$result_0_prefix);
         }
 
         public function testPracticeWrongListIds()
@@ -185,6 +201,10 @@ class APIUserTest extends PHPUnit_Framework_TestCase
                 $this->assertTrue(Session::get()->has_error());
 
                 $_GET["list_ids"] = 0;
+                $this->obj->practice();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["list_ids"] = 'x,y';
                 $this->obj->practice();
                 $this->assertTrue(Session::get()->has_error());
         }
