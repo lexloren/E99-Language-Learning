@@ -10,6 +10,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
+		Session::set(null);
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
@@ -51,12 +52,70 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	
 	public function test_delete()
 	{
-		//TODO: make it better
+		Session::get()->set_user(null);
 		$course = Course::select_by_id(TestDB::$course_id);
 		$this->assertNotNull($course);
-		//$course->delete();
+		$ret = $course->delete();
+		$this->assertNull($ret);
+		$user_obj = User::select_by_id(TestDB::$user_id);
+		Session::get()->set_user($user_obj);
+		$ret = $course->delete();
+		$this->assertNotNull($ret);
+
+		//$this->assertNull(Course::select_by_id(TestDB::$course_id));		
+		Course::unregister_all();
+		$this->assertNull(Course::select_by_id(TestDB::$course_id));
 	}
 	
+	public function test_get_lists()
+	{
+		$course = Course::select_by_id(TestDB::$course_id);
+		$lists = $course->get_lists();
+		$this->assertNotNull($lists);
+		$this->assertCount(1, $lists);
+		$this->assertEquals($lists[0]->get_list_id(), TestDB::$list_id);
+	}
+	
+	public function test_set_course_name()
+	{
+		$user_obj = User::select_by_id(TestDB::$user_id);
+		Session::get()->set_user($user_obj);
+
+		$course = Course::select_by_id(TestDB::$course_id);
+		$this->assertNotNull($course);
+
+		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
+		$course->set_course_name("new name of old course");
+		/*
+		$this->assertEquals($course->get_course_name(), "new name of old course");
+		
+		Course::unregister_all();
+		$course = Course::select_by_id(TestDB::$course_id);
+		$this->assertEquals($course->get_course_name(), "new name of old course");
+		$course->set_course_name(TestDB::$course_name);
+		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
+		*/
+		Course::unregister_all();
+	}
+	
+	public function test_set_course_name_no_user()
+	{
+		Session::get()->set_user(null);
+
+		$course = Course::select_by_id(TestDB::$course_id);
+		$this->assertNotNull($course);
+
+		//session user not set, it should fail
+		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
+		$ret = $course->set_course_name("new name of old course");
+
+		$this->assertNull($ret);
+		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
+		
+		Course::unregister_all();
+		$course = Course::select_by_id(TestDB::$course_id);
+		$this->assertEquals($course->get_course_name(), TestDB::$course_name);
+	}
 	
 	public function test_instructors_add()
 	{

@@ -10,12 +10,14 @@ class Router
 	{
 		foreach ($_GET as $key => $value)
 		{
-			$_GET[$key] = urldecode($value);
+			if (is_string($value))
+				$_GET[$key] = urldecode($value);
 		}
 		
 		foreach ($_POST as $key => $value)
 		{
-			$_POST[$key] = urldecode($value);
+			if (is_string($value))
+				$_POST[$key] = urldecode($value);
 		}
 	}
 

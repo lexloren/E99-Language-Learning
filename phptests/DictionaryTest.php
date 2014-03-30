@@ -10,6 +10,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
+		Session::set(null);
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 	}

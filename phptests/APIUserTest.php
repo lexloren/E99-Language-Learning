@@ -10,6 +10,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	private $obj;
 	public function setup()
 	{
+		Session::set(null);
 		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
         // Configure the stub.
