@@ -3,48 +3,50 @@ function showFailure(){
   $("html, body").animate({scrollTop:0}, "slow");  
 }
 
-function removeStudent(user,course){
-    var mockJSON = '{"course_id":'+course+',"user_id":'+user+'}';
-    $.mockjax({
-        url: '../../remove_course_student.php',  
-        contentType: 'text/json',
-        responseText: mockJSON
-    });	
-    $.post('../../remove_course_student.php', function(data){
-        if(data.isError){
-            var errorMsg = "Student could not be removed: ";
-            // don't know the error titles yet
-            $("#failure").html(errorMsg);
-            showFailure();
-        }
-        else{
-            $("#success").html("Placeholder: when this is linked to API, student will be removed and page will refresh.");
-            $("#success").show();
-            //location.reload(true);
-        }
+function removeStudents(){
+    var studentsRem = $('.rem_user_ids:checked').map(function () {
+      return this.value;
+    }).get().join(",");
+
+    $.post('../../course_students_remove.php', 
+        { course_id: urlParams.course, user_ids: studentsRem })
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "Student(s) could not be removed: ";
+                if(data.errorTitle == "Course Selection"){
+                    errorMsg += "Course does not exist.";
+                }
+                // don't know all the error titles yet
+                $("#failure").html(errorMsg);
+                showFailure();
+            }
+            else{
+                location.reload(true);
+            }
     });
     return; 
 }
 
-function addStudent(user,course){
-    var mockJSON = '{"course_id":'+course+',"user_id":'+user+'}';
-    $.mockjax({
-        url: '../../add_course_student.php',  
-        contentType: 'text/json',
-        responseText: mockJSON
-    });	
-    $.post('../../add_course_student.php', function(data){
-        if(data.isError){
-            var errorMsg = "Student could not be enrolled: ";
-            // don't know the error titles yet
-            $("#failure").html(errorMsg);
-            showFailure();
-        }
-        else{
-            $("#success").html("Placeholder: when this is linked to API, student will be added and page will refresh.");
-            $("#success").show();
-            //location.reload(true);
-        }
+function addStudents(){
+    var studentsAdd = $('.add_user_ids:checked').map(function () {
+      return this.value;
+    }).get().join(",");
+
+    $.post('../../course_students_add.php', 
+        { course_id: urlParams.course, user_ids: studentsAdd })
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "Student(s) could not be added: ";
+                if(data.errorTitle == "Course Selection"){
+                    errorMsg += "Course does not exist.";
+                }
+                // don't know all the error titles yet
+                $("#failure").html(errorMsg);
+                showFailure();
+            }
+            else{
+                location.reload(true);
+            }
     });
     return; 
 }
@@ -57,55 +59,63 @@ function getStudentInfo(){
         return;
     }
 
-    var mockJSON = '[{"userId":"1","handle":"ssodhi","email":"sukhm@hotmail.com", "nameGiven": "Sukh", "nameFamily": "Sodhi"},' +
-                    '{"userId":"2","handle":"lloren","email":"lloren@gmail.com", "nameGiven": "Lex", "nameFamily": "Loren"}]';
-    $.mockjax({
-        url: '../../user_courses_student.php', 
-        contentType: 'text/json',
-        responseText: mockJSON
-    });
-
-    $.getJSON('../../user_courses_student.php', function(data){
-        if(data.isError){
-            $("#failure").html("Enrollment for this course could not be retrieved.");
-            showFailure();
-        }
-        else{
-	          $.each(data, function(i, item){
-                newrow = '<tr><td>' + item.handle + '</td>' +
-                         '<td>' + item.nameGiven + '</td>' +
-                         '<td>' + item.nameFamily + '</td>' +
-                         '<td>' + item.email + '</td>' +
-                         '<td><span class="span-action" onclick="removeStudent('+item.userId+','+urlParams.course+');">Remove</span></td></tr>';
-                $('#studentDetails').append(newrow);
-            });
-        }		
+    $.getJSON('../../course_students.php', 
+        {course_id: urlParams.course},
+        function(data){
+            if(data.isError){
+                $("#failure").html("Enrollment data could not be retrieved for this course.");
+                showFailure();
+            }
+            else{
+                $("#newStudent").show();
+                $.each(data.result, function(i, item){
+                    newrow = '<tr><td>' + item.handle + '</td>' +
+                             '<td>' + item.nameGiven + '</td>' +
+                             '<td>' + item.nameFamily + '</td>' +
+                             '<td>' + item.email + '</td>' +
+                             '<td><input type="checkbox" class="rem_user_ids" name="rem_user_ids" value='+item.userId+'></td></tr>';
+                    $('#studentDetails').append(newrow);
+                });
+                $('#studentDetails').append('<tr><td></td><td></td><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeStudents();">Remove Selected Users</button></td></tr>');
+            }		
     }); 
 }
 
-function searchUsers(){
-    var mockJSON = '[{"userId":"3","handle":"arunag","email":"nag.arunabha@gmail.com", "nameGiven": "Arunabha", "nameFamily": "Nag"},' +
-                    '{"userId":"4","handle":"hansa","email":"leif.hans.daniel.andersson@gmail.com", "nameGiven": "Hans", "nameFamily": "Andersson"},' +
-                    '{"userId":"5","handle":"nirmal","email":"nirmal.veerasamy@gmail.com", "nameGiven": "Nirmal", "nameFamily": "Veerasamy"}]';
-    $.mockjax({
-        url: '../../user_search.php', 
-        contentType: 'text/json',
-        responseText: mockJSON
-    });
+function toggleSearch(){
+    $("#searchResults").html('');
+    $("#failure").hide();
+    if($("#searchUserForm").is(":visible")){
+        $("#searchUserForm").slideUp();
+    }
+    else{
+        $("#searchCriteria").val('');
+        $("#searchUserForm").slideDown();
+    }
+}
 
-    $.getJSON('../../user_search.php', function(data){
-        if(data.isError){
-            $('#searchResults').html('<br />No user found with that email address.');
-        }
-        else{
-            $('#searchResults').append('<br /><strong>Search Results:</strong>');
-	          $.each(data, function(i, item){
-                result = '<br />'+item.nameFamily+', '+item.nameGiven+' | '+ item.email+' - '+
-                         '<span class="span-action" onclick="addStudent('+item.userId+','+urlParams.course+');">Add</span>';
-                $('#searchResults').append(result);
-            });
-        }		
+function searchUsers(){
+    toggleSearch();
+    criteria = $("#searchCriteria").val();
+    $.getJSON('../../user_find.php', 
+        {query: criteria}, 
+        function(data){
+            if(data.result.length == 0){
+                $('#searchResults').html('<br />No matching users found.<br /><br />');
+                $('#searchResults').append('<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
+            }
+            else{
+                $('#searchResults').append('<br /><strong>Search Results:</strong>');
+                $.each(data.result, function(i, item){
+                    result = '<div class="checkbox"><label><input type="checkbox" class="add_user_ids" name="add_user_ids" value='+item.userId+'>'+
+                             item.nameFamily+', '+item.nameGiven+' | '+item.handle+' | '+item.email+'</label></div>';
+                    $('#searchResults').append(result);
+                });
+                $('#searchResults').append('<br /><button class="btn btn-primary" type="button" onclick="addStudents();">Add Selected Users</button> &nbsp; &nbsp;'+
+                                           '<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
+            }		
     }); 
+    $("html, body").animate({scrollBottom:0}, "slow");  
+    return;
 }
 
 function showStudentForm(){
