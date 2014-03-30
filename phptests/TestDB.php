@@ -30,12 +30,10 @@ class TestDB
 	public static $list_entry_id;
 	public static $list_name = 'somelist';
 
-	public static $list_to_delete_id;
-	public static $list_to_delete_name = 'somelist to del';
-
-
 	public static $course_id;
 	public static $course_name = 'some course';
+	public static $course_unit_id;
+	public static $course_unit_name = 'some unit';
 	
 	public $link = null;
 
@@ -64,8 +62,8 @@ class TestDB
 		self::add_languages($link);
 		self::add_dictionary($link);
 		self::add_user($link);
+		self::add_list($link);
 		self::add_course($link);
-		self::add_list($link);		
 		
 		return $testdb;
 	}
@@ -124,13 +122,6 @@ class TestDB
 
 		self::$list_id = $link->insert_id;
 		
-		$link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
-			self::$user_id,
-			$link->escape_string(self::$list_to_delete_name)
-		));
-
-		self::$list_to_delete_id = $link->insert_id;
-		
 		$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
 			self::$entry_id, self::$user_id
 		));
@@ -164,6 +155,7 @@ class TestDB
 	
 	private static function add_course($link)
 	{
+		//Add one course
 		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1) VALUES (%d, '%s', %d, %d)",
 			self::$user_id,
 			$link->escape_string(self::$course_name),
@@ -174,6 +166,21 @@ class TestDB
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 		self::$course_id = $link->insert_id;
+		
+		$link->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, '%s', %d)",
+			self::$course_id,
+			self::$course_unit_name,
+			1
+		));
+		
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+		self::$course_unit_id = $link->insert_id;
+
+		$link->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",
+			self::$course_unit_id,
+			self::$list_id
+		));
 	}
 }
 	

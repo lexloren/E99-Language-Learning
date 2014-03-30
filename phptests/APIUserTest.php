@@ -10,6 +10,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	private $obj;
 	public function setup()
 	{
+		Session::set(null);
 		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
         // Configure the stub.
@@ -149,7 +150,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
-		$this->assertCount(2, $result);
+		$this->assertCount(1, $result);
 		
 		$this->assertArrayHasKey('listId', $result[0]);
 		$this->assertArrayHasKey('listName', $result[0]);

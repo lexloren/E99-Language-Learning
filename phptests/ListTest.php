@@ -11,6 +11,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
+		Session::set(null);
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
@@ -70,13 +71,18 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_delete()
 	{
-		$list = EntryList::select_by_id(TestDB::$list_to_delete_id);
+		$list = EntryList::select_by_id(TestDB::$list_id);
 		$this->assertNotNull($list);
-		/*
 		$ret = $list->delete();
-		$list = EntryList::select_by_id(TestDB::$list_to_delete_id);
-		$this->assertNull($list);
-		*/
+		$this->assertNull($ret);
+		
+		Session::get()->set_user(User::select_by_id(TestDB::$user_id));
+		$ret = $list->delete();
+
+		//$this->assertNotNull($ret);
+		//$this->assertNull(EntryList::select_by_id(TestDB::$list_id));
+		//EntryList::unregister_all();
+		//$this->assertNull(EntryList::select_by_id(TestDB::$list_id));
 	}
 	
 	public function test_get_entries()
