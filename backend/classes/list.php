@@ -81,7 +81,7 @@ class EntryList extends DatabaseRow
 		$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
 			Dictionary::language_code_columns(),
 			Dictionary::join(),
-			Session::get()->get_user()->get_user_id()
+			$this->get_user_id()
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
