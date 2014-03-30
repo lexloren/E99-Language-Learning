@@ -35,6 +35,9 @@ class TestDB
 	public static $course_unit_id;
 	public static $course_unit_name = 'some unit';
 	
+	public static $practice_list_ids = array();
+        public static $practice_entry_ids = array();
+
 	public $link = null;
 
 	private function __construct()
@@ -64,6 +67,7 @@ class TestDB
 		self::add_user($link);
 		self::add_list($link);
 		self::add_course($link);
+		self::add_practice_data($link);
 		
 		return $testdb;
 	}
@@ -182,8 +186,45 @@ class TestDB
 			self::$list_id
 		));
 	}
+
+	private static function add_practice_data($link)
+        {
+                for ($i = 1; $i <= 2; $i++)
+                {
+                        $link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+                                self::$user_id,
+                                $link->escape_string(self::$list_name).$i
+                        ));
+                        $list_id = $link->insert_id;
+                        array_push(self::$practice_list_ids, $list_id);
+
+                        for ($j = 1; $j <= 10; $j++)
+                        {
+                                $link->query(sprintf(
+                                        "INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+                                        self::$lang_id_0, self::$lang_id_1, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j));
+
+                                $entry_id = $link->insert_id;
+                                array_push(self::$practice_entry_ids, $entry_id);
+
+                                $link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
+                                        $entry_id, self::$user_id
+                                ));
+
+                                $user_entry_id = $link->insert_id;
+
+                                $link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
+                                        $list_id,
+                                        $user_entry_id
+                                ));
+
+                                if (!$link->insert_id)
+                                        exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+                        }
+                }
+        }
 }
-	
+
 	
 	
 	

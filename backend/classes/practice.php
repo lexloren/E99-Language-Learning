@@ -8,32 +8,30 @@ class Practice
 {
 	const PRACTICE_ENTRIES_CNT = 50;
 	
-	private $lists;
-	private $entries;
-
 	//  SHOULD THIS BE A PUBLIC STATIC FUNCTION RETURNING A NEW PRACTICE OBJECT?
-	//  public static function generate($list_ids, $entries_count)
-	public function get_practice_entries($list_ids, $entries_count)
+	public static function generate($list_ids, $entries_count)
 	{
-		$count_limit = isset($entries_count) ? $entries_count : self::PRACTICE_ENTRIES_CNT;
+		$count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
+			intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
 		
 		$mysqli = Connection::get_shared_instance();
 		$list_ids_str = join(', ', $list_ids);
-		
+
 		$learned_entries = $mysqli->query(sprintf(
 			"SELECT entry_id FROM user_entries WHERE entry_id IN (".
 			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s)) ".
-			"AND user_id = %d ORDER BY interval",
+			"AND user_id = %d ORDER BY 'interval'",
 			$list_ids_str, Session::get()->get_user()->get_user_id()
 		));
-		$learned_entry_set = self::from_mysql_entry_id_assoc($learned_entries);
+		$learned_entry_set = self::from_mysql_entry_id_assoc($learned_entries)->get_entry_ids();
 		$learned_count = count($learned_entry_set);
 		
-		$not_learned_entries = $mysqli->query(sprintf("SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) AND entry_id NOT IN (%s)",
+		$not_learned_entries = $mysqli->query(sprintf(
+			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) AND entry_id NOT IN (%s)",
 			$list_ids_str,
 			join(', ', $learned_entry_set))
 		);
-		$not_learned_entry_set = self::from_mysql_entry_id_assoc($not_learned_entries);
+		$not_learned_entry_set = self::from_mysql_entry_id_assoc($not_learned_entries)->get_entry_ids();
 		$not_learned_count = count($not_learned_entry_set);
 		
 		$new_entry_count = min(
@@ -46,22 +44,37 @@ class Practice
 			array_slice($learned_entry_set, 0, $count_limit - $new_entry_count)
 		);
 		
-		$result_entries = array();
-		foreach ($practice_entry_set as $entry_id)
-		{
-			$entry = Dictionary::select_entry($entry_id);
-			array_push($result_entries, $entry->assoc_for_json());
-		}
-		
-		return $result_entries;
+		return new Practice($practice_entry_set);
 	}
 	
-	public function __construct(/* ARGUMENTS */)
+	private $entry_ids = null;
+        public function get_entry_ids()
+        {
+                return $this->entry_ids;
+        }
+
+	private $entries = null;
+	public function get_entries()
 	{
-		//  TO IMPLEMENT
+		return $this->entries;
 	}
 
-	//  TO FIX: FOR CONSISTENCY, SHOULD RETURN A NEW PRACTICE OBJECT
+	public function __construct($entry_ids)
+	{
+		if (!is_array($entry_ids))
+		{
+			Session::get()->set_error_assoc("Practice accepts entry_ids array, invalid input.");
+			return;
+		}
+		$this->entries = array();
+		foreach ($entry_ids as $entry_id)
+                {
+			$entry = Dictionary::select_entry($entry_id);
+                        array_push($this->entries, $entry->assoc_for_json());
+                }
+		$this->entry_ids = $entry_ids;
+	}
+
 	private static function from_mysql_entry_id_assoc($result)
 	{
 		$entry_ids = array();
@@ -72,7 +85,7 @@ class Practice
 				array_push($entry_ids, $result_assoc["entry_id"]);
 			}
 		}
-		return $entry_ids;
+		return new Practice($entry_ids);
 	}
 	
 	//  SHOULD THIS BE CLASS- OR INSTANCE- SCOPE?

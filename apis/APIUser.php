@@ -99,8 +99,9 @@ class APIUser extends APIBase
 		{
 			Session::get()->set_error_assoc("Request Invalid", "User-practice get must include list_ids.");
 		} else {
-			$entry_set = Practice::get_practice_entries($list_ids, $_GET["entries_count"]);
-			Session::get()->set_result_assoc($entry_set);
+			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
+			$practice = Practice::generate($list_ids, $entries_count);
+			Session::get()->set_result_assoc($practice->get_entries());
 		}
 		return;
 	}

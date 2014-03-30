@@ -160,6 +160,34 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($result[0]["listName"], TestDB::$list_name);
 		$this->assertEquals($result[0]["owner"]["handle"], TestDB::$handle);
 	}
+
+	public function testPractice()
+        {
+                $_SESSION["handle"] = TestDB::$handle;
+                $_GET["list_ids"] = join(', ', TestDB::$practice_list_ids);
+                $this->obj->practice();
+                $result = Session::get()->get_result_assoc();
+
+                $this->assertNotNull($result);
+                //$this->assertEquals(count(TestDB::$practice_entry_ids), count($result));
+        }
+
+        public function testPracticeWrongListIds()
+        {
+                $_SESSION["handle"] = TestDB::$handle;
+
+                $_GET["list_ids"] = '';
+                $this->obj->practice();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["list_ids"] = -5;
+                $this->obj->practice();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["list_ids"] = 0;
+                $this->obj->practice();
+                $this->assertTrue(Session::get()->has_error());
+        }
 }
 
 
