@@ -5,6 +5,17 @@ require_once "./backend/classes.php";
 
 class Dictionary
 {
+	protected static $error_description = null;
+	protected static function set_error_description($error_description)
+	{
+		static::$error_description = $error_description;
+		return null;
+	}
+	public static function get_error_description()
+	{
+		return static::$error_description;
+	}
+
 	private static $entries_by_id = array ();
 
 	public static $page_size = null;
@@ -64,11 +75,9 @@ class Dictionary
 			implode("','", $lang_codes)
 		);
 		
-		$result = $mysqli->query($query);
-		if (!$result)
+		if (!($result = $mysqli->query($query)))
 		{
-			Session::get()->set_error_assoc("Database Error", $mysqli->error);
-			return null;
+			return self::set_error_description("Failed to find entry: " . $mysqli->error);
 		}
 		
 		//  Save information about query results in static properties
