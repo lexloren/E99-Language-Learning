@@ -17,10 +17,11 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 	
 	public function test_look_up()
 	{
+		$this->db->add_dictionary_entries(10);
 		$codes = Array();
 		array_push($codes, TestDB::$lang_code_0);
 		array_push($codes, TestDB::$lang_code_1);
-		$result = Dictionary::look_up(TestDB::$word_0, $codes);
+		$result = Dictionary::look_up($this->db->word_0s[0], $codes);
 		$this->assertNotNull($result);
 	
 		$this->assertCount(1, $result);
@@ -33,12 +34,13 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($words);
 		$this->assertCount(2, $words);
 		
-		$this->assertEquals($words[TestDB::$lang_code_0], TestDB::$word_0);
+		$this->assertEquals($words[TestDB::$lang_code_0], $this->db->word_0s[0]);
 	}
 	
 	public function test_select_entry()
 	{
-		$entry = Dictionary::select_entry(TestDB::$entry_id);
+		$this->db->add_dictionary_entries(10);
+		$entry = Dictionary::select_entry($this->db->entry_ids[5]);
 		$this->assertNotNull($entry);
 		
 		$this->assertNull($entry->get_owner());
@@ -47,7 +49,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($words);
 		$this->assertCount(2, $words);
 		
-		$this->assertEquals($words[TestDB::$lang_code_0], TestDB::$word_0);
+		$this->assertEquals($words[TestDB::$lang_code_0], $this->db->word_0s[5]);
 	}
 	
 	
