@@ -25,7 +25,29 @@ class APIList extends APIBase
 	
 	public function update()
 	{
-		//  list_name
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
+		{
+			$list = $list->copy_for_session_user();
+			
+			$updates = 0;
+			
+			if (isset($_POST["list_name"]))
+			{
+				$updates += !!$list->set_list_name($_POST["list_name"]);
+			}
+			
+			if (!$updates)
+			{
+				$failure_message = !!EntryList::get_error_description() ? EntryList::get_error_description() : "List failed to update.";
+				Session::get()->set_error_assoc("List Modification", $failure_message);
+			}
+			else
+			{
+				Session::get()->set_result_assoc($list->assoc_for_json());
+			}
+		}
 	}
 	
 	public function delete()
