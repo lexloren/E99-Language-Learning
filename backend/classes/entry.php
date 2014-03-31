@@ -251,18 +251,16 @@ class Entry extends DatabaseRow
 	
 	public function update_repetition_details($point)
 	{
-		if (!$this->session_user_can_read())
-		{
-			return self::set_error_description("Session user cannot edit entry.");
-		}
+		$user_entry = $this->copy_for_session_user();
+		$user_entry_id = $user_entry->get_user_entry_id();
+		
 		$mysqli = Connection::get_shared_instance();
 
-		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
+		$_efactor = $user_entry->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$iteration_result = $mysqli->query(sprintf(
-			"SELECT COUNT(*) AS row_count FROM user_entry_results WHERE user_entry_id = ( ".
-			"SELECT user_entry_id from user_entries where user_id = %d AND entry_id = %d)",
-			$this->user_id, $this->entry_id)
+		$iteration_result = $mysqli->query(
+			"SELECT COUNT(*) AS row_count FROM user_entry_results " .
+			"WHERE user_entry_id = $user_entry_id"
 		);
 		$iteration_assoc = $iteration_result->fetch_assoc();
 		$iteration_count = intval($iteration_assoc["row_count"], 10);
@@ -271,20 +269,19 @@ class Entry extends DatabaseRow
 		else if ($iteration_count == 2)
 			$new_interval = 6;
 		else
-			$new_interval = round($this->interval * $new_efactor);
+			$new_interval = round($user_entry->interval * $new_efactor);
 
-		if(!$mysqli->query(sprintf(
-			"UPDATE user_entries SET `interval` = %d, efactor = %f ".
-			"WHERE user_id = %d AND entry_id = %d",
-			$new_interval, $new_efactor,
-			$this->user_id, $this->entry_id)))
+		if(!$mysqli->query(
+			"UPDATE user_entries SET `interval` = $new_interval, efactor = $new_efactor ".
+			"WHERE user_entry_id = $user_entry_id"
+			))
 		{
 			return self::set_error_description("Failed to update interval details: " . $mysqli->error);
 		}
 
-		$this->interval = $new_interval;
-		$this->efactor = $new_efactor;
-		return true;
+		$user_entry->interval = $new_interval;
+		$user_entry->efactor = $new_efactor;
+		return $user_entry;
 	}
 
 	public function assoc_for_json()
