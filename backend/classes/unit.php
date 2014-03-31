@@ -84,7 +84,7 @@ class Unit extends CourseComponent
 	}
 	public function set_unit_name($unit_name)
 	{
-		if (!self::update_this($this, "course_units", array ("unit_name", $unit_name), "unit_id", $this->get_unit_id()))
+		if (!self::update_this($this, "course_units", array ("unit_name" => $unit_name), "unit_id", $this->get_unit_id()))
 		{
 			return null;
 		}

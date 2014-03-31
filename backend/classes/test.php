@@ -60,7 +60,7 @@ class Test extends CourseComponent
 	}
 	public function set_test_name($test_name)
 	{
-		if (!self::update_this($this, "course_unit_tests", array ("test_name", $test_name), "test_id", $this->get_test_id()))
+		if (!self::update_this($this, "course_unit_tests", array ("test_name" => $test_name), "test_id", $this->get_test_id()))
 		{
 			return null;
 		}

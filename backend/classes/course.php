@@ -91,7 +91,7 @@ class Course extends DatabaseRow
 	}
 	public function set_course_name($course_name)
 	{
-		if (!self::update_this($this, "courses", array ("course_name", $course_name), "course_id", $this->get_course_id()))
+		if (!self::update_this($this, "courses", array ("course_name" => $course_name), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}

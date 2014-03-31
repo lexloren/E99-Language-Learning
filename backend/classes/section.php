@@ -83,7 +83,7 @@ class Section extends DatabaseRow
 	}
 	public function set_section_name($section_name)
 	{
-		if (!self::update_this($this, "course_unit_test_sections", array ("section_name", $section_name), "section_id", $this->get_section_id()))
+		if (!self::update_this($this, "course_unit_test_sections", array ("section_name" => $section_name), "section_id", $this->get_section_id()))
 		{
 			return null;
 		}
