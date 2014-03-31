@@ -21,7 +21,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		$codes = Array();
 		array_push($codes, TestDB::$lang_code_0);
 		array_push($codes, TestDB::$lang_code_1);
-		$result = Dictionary::find($this->db->word_0s[0], $codes);
+		$result = Dictionary::query($this->db->word_0s[0], $codes);
 		$this->assertNotNull($result);
 	
 		$this->assertCount(1, $result);

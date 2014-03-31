@@ -46,7 +46,7 @@ class Dictionary
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function find($word, $lang_codes, $pagination = null)
+	public static function query($word, $lang_codes, $pagination = null)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
