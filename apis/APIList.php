@@ -29,23 +29,28 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			$list = $list->copy_for_session_user();
-			
-			$updates = 0;
-			
-			if (isset($_POST["list_name"]))
+			if (($list = $list->copy_for_session_user()))
 			{
-				$updates += !!$list->set_list_name($_POST["list_name"]);
-			}
-			
-			if (!$updates)
-			{
-				$failure_message = !!EntryList::get_error_description() ? EntryList::get_error_description() : "List failed to update.";
-				Session::get()->set_error_assoc("List Modification", $failure_message);
+				$updates = 0;
+				
+				if (isset($_POST["list_name"]))
+				{
+					$updates += !!$list->set_list_name($_POST["list_name"]);
+				}
+				
+				if (!$updates)
+				{
+					$failure_message = !!EntryList::get_error_description() ? EntryList::get_error_description() : "List failed to update.";
+					Session::get()->set_error_assoc("List Modification", $failure_message);
+				}
+				else
+				{
+					Session::get()->set_result_assoc($list->assoc_for_json());
+				}
 			}
 			else
 			{
-				Session::get()->set_result_assoc($list->assoc_for_json());
+				Session::get()->set_error_assoc("List Modification", EntryList::get_error_description());
 			}
 		}
 	}
@@ -73,15 +78,22 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
 		{
-			$entries = $list->get_entries();
-		
-			$entries_returnable = array ();
-			foreach ($entries as $entry)
+			if ($list->session_user_can_read())
 			{
-				array_push($entries_returnable, $entry->assoc_for_json());
-			}
+				$entries = $list->get_entries();
 			
-			Session::get()->set_result_assoc($entries_returnable);
+				$entries_returnable = array ();
+				foreach ($entries as $entry)
+				{
+					array_push($entries_returnable, $entry->assoc_for_json());
+				}
+				
+				Session::get()->set_result_assoc($entries_returnable);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Selection", "Session user cannot read list.");
+			}
 		}
 	}
 	

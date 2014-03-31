@@ -58,6 +58,36 @@ class APITest  extends APIBase
 		//  test_name
 		//  timeframe
 		//  message
+		
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			if ($test->session_user_can_write())
+			{
+				$updates = 0;
+				
+				if (isset($_POST["test_name"]))
+				{
+					$updates += !!$test->set_test_name($_POST["test_name"]);
+				}
+				
+				if (isset($_POST["message"]))
+				{
+					$updates += !!$test->set_message($_POST["message"]);
+				}
+				
+				if (!$updates)
+				{
+					$failure_message = !!Test::get_error_description() ? Test::get_error_description() : "Test failed to update.";
+					Session::get()->set_error_assoc("Test Modification", $failure_message);
+				}
+				else
+				{
+					Session::get()->set_result_assoc($test->assoc_for_json());
+				}
+			}
+		}
 	}
 	
 	public function sections()

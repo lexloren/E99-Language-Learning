@@ -50,6 +50,36 @@ class APIUnit  extends APIBase
 	{
 		//  unit_name
 		//  unit_num
+		
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
+		{
+			if ($unit->session_user_can_write())
+			{
+				$updates = 0;
+				
+				if (isset($_POST["unit_name"]))
+				{
+					$updates += !!$unit->set_unit_name($_POST["unit_name"]);
+				}
+				
+				if (isset($_POST["message"]))
+				{
+					$updates += !!$unit->set_message($_POST["message"]);
+				}
+				
+				if (!$updates)
+				{
+					$failure_message = !!Unit::get_error_description() ? Unit::get_error_description() : "Unit failed to update.";
+					Session::get()->set_error_assoc("Unit Modification", $failure_message);
+				}
+				else
+				{
+					Session::get()->set_result_assoc($unit->assoc_for_json());
+				}
+			}
+		}
 	}
 	
 	public function lists()

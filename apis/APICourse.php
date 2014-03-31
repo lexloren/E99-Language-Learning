@@ -39,7 +39,37 @@ class APICourse  extends APIBase
 	{
 		//  course_name
 		//  timeframe
-		//  user_id (owner of the course)
+		//  message
+		
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if ($course->session_user_can_write())
+			{
+				$updates = 0;
+				
+				if (isset($_POST["course_name"]))
+				{
+					$updates += !!$course->set_course_name($_POST["course_name"]);
+				}
+				
+				if (isset($_POST["message"]))
+				{
+					$updates += !!$course->set_message($_POST["message"]);
+				}
+				
+				if (!$updates)
+				{
+					$failure_message = !!Course::get_error_description() ? Course::get_error_description() : "Course failed to update.";
+					Session::get()->set_error_assoc("Course Modification", $failure_message);
+				}
+				else
+				{
+					Session::get()->set_result_assoc($course->assoc_for_json());
+				}
+			}
+		}
 	}
 	
 	public function delete()
