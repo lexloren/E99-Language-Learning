@@ -44,7 +44,6 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_list_name()
 	{
-	
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
 		$this->assertEquals($list->get_list_name(), $this->db->list_names[0]);

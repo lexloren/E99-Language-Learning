@@ -4,13 +4,17 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Enrollment</title>
- 
+    <title>Unit</title>
+
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/starter-template.css" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+    <script src="js/jquery-ui-timepicker-addon.js"></script>
 	  <script src="../tests/resources/jquery.mockjax.js"></script>
-    <script src="js/enrollment.js"></script>
+    <script src="js/unit.js"></script>
     <script src="js/bootstrap.min.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -38,8 +42,8 @@
         $("#success").hide();
         $("#failure").hide();
         $("#navbar").load("navbar.html");
-        $("#newStudent").hide();
-        getStudentInfo();
+        getDeckInfo();
+        getTestInfo();
       });
     </script>
   </head>
@@ -48,28 +52,30 @@
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container" role="main">
+    <div class="container-left" role="main">
       <div id="success" class="alert alert-success">
       </div>
       <div id="failure" class="alert alert-danger">
       </div>
-      <div id="studentData">
-        <h3>Course Enrollment</h3><br />
-
-        <div class="table-responsive">
-          <table id="studentDetails" class="table">
-            <tr>
-              <th>Username</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Email Address</th>
-              <th>Remove</th>
-            </tr>
+      <div id="unitData">
+        <h3>Edit Unit</h3><br />
+        <strong>Unit Name:</strong> <span id="unitname">Weather</span>
+        <br /><br />
+        <strong>Decks</strong>
+        <div id="decks" class="table-responsive">
+          <table id="deckDetails" class="table">
           </table>
         </div>
-        <div id="newStudent">
-          <button class="btn btn-primary" type="button" onclick="showStudentForm();">Add New Student</button> &nbsp;
+        <br /><br />
+        <button class="btn btn-primary" type="button" onclick="">Add New Deck</button> 
+        <br /><br /> 
+        <strong>Tests</strong>
+        <div id="tests" class="table-responsive">
+          <table id="testDetails" class="table">
+          </table>
         </div>
+        <br /><br />          
+        <button class="btn btn-primary" type="button" onclick="createTest();">Add New Test</button>  
       </div>
     </div> <!-- /container -->
 
