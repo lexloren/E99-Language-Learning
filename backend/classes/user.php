@@ -65,13 +65,23 @@ class User extends DatabaseRow
 		}
 
 		//  Check whether requested handle conflicts with any existing handle
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE handle = '%s'",
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE handle LIKE '%s'",
 			$mysqli->escape_string($handle)
 		));
 		
 		if (($existing_user = $result->fetch_assoc()))
 		{
 			return self::set_error_description("The requested handle is already taken.");
+		}
+
+		//  Check whether requested email conflicts with any existing email
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE email LIKE '%s'",
+			$mysqli->escape_string($email)
+		));
+		
+		if (($existing_user = $result->fetch_assoc()))
+		{
+			return self::set_error_description("The posted email is already in use by some user.");
 		}
 		
 		//  Good to go, so insert the new user
