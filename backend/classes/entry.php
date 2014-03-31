@@ -27,7 +27,7 @@ class Entry extends DatabaseRow
 	
 	public static function select_by_id($entry_id)
 	{
-		return Dictionary::select_entry($entry_id);
+		return Dictionary::select_entry_by_id($entry_id);
 	}
 	
 	/***    INSTANCE    ***/
@@ -38,10 +38,36 @@ class Entry extends DatabaseRow
 		return $this->entry_id;
 	}
 	
-	private $words = null; //Associative array from language codes to word values
+	private $word_0;
+	public function get_word_0()
+	{
+		return $this->word_0;
+	}
+	
+	private $word_1;
+	public function get_word_1()
+	{
+		return $this->word_1;
+	}
+	
+	private $lang_code_0;
+	public function get_lang_code_0()
+	{
+		return $this->lang_code_0;
+	}
+	
+	private $lang_code_1;
+	public function get_lang_code_1()
+	{
+		return $this->lang_code_1;
+	}
+	
 	public function get_words()
 	{
-		return $this->words;
+		return array (
+			$this->get_lang_code_0() => $this->get_word_0(),
+			$this->get_lang_code_1() => $this->get_word_1()
+		);
 	}
 
 	private $pronunciations = null;
@@ -93,10 +119,10 @@ class Entry extends DatabaseRow
 		$interval = null, $efactor = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
-		$this->words = array (
-			$lang_code_0 => $word_0,
-			$lang_code_1 => $word_1
-		);
+		$this->word_0 = $word_0;
+		$this->word_1 = $word_1;
+		$this->lang_code_0 = $lang_code_0;
+		$this->lang_code_1 = $lang_code_1;
 		$this->pronunciations = array (
 			$lang_code_1 => $pronunciation
 		);
@@ -139,6 +165,27 @@ class Entry extends DatabaseRow
 				array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
 			)
 			: null;
+	}
+	
+	public function revert()
+	{
+		$failure_message = "Failed to revert entry";
+		
+		$entry_modified = $entry->copy_for_session_user();
+		
+		if (!($entry_original = Dictionary::select_entry_by_id($entry_modified->get_entry_id())))
+		{
+			return self::set_error_description("$failure_message: " . Dictionary::get_error_description());
+		}
+		
+		$succeeded = true;
+		
+		$succeeded = !!$entry_modified->set_word_0($entry_original->get_word_0()) && $succeeded;
+		$succeeded = !!$entry_modified->set_word_1($entry_original->get_word_1()) && $succeeded;
+		$pronunciations = $entry_original->get_pronunciations();
+		$succeeded = !!$entry_modified->set_word_1_pronunciation($pronunciations[$entry_original->get_lang_code_1()]) && $succeeded;
+		
+		return $succeeded ? $entry_modified : self::set_error_description("$failure_message: " . self::get_error_description());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -297,7 +344,7 @@ class Entry extends DatabaseRow
 	{
 		$privacy = !!$this->get_owner() && !$this->session_user_is_owner();
 		
-		$entry = !$privacy ? $this : Dictionary::select_entry($this->entry_id);
+		$entry = !$privacy ? $this : Dictionary::select_entry_by_id($this->entry_id);
 		
 		return array (
 			"entryId" => $entry->entry_id,
