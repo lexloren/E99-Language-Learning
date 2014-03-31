@@ -32,17 +32,12 @@ class Test extends CourseComponent
 		
 		$mysqli->query("INSERT INTO course_unit_tests (unit_id, test_name, open, close, message) VALUES ($unit_id, $test_name, $open, $close, $message)");
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert test: " . $mysqli->error);
 		}
 		
-		if (!($test = self::select_by_id($mysqli->insert_id)))
-		{
-			return null;
-		}
-		
-		return $test;
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
 	public static function select_by_id($test_id)
@@ -65,7 +60,7 @@ class Test extends CourseComponent
 	}
 	public function set_test_name($test_name)
 	{
-		if (!self::update_this($this, "course_unit_tests", array ("test_name", $test_name), "test_id", $this->get_test_id()))
+		if (!self::update_this($this, "course_unit_tests", array ("test_name" => $test_name), "test_id", $this->get_test_id()))
 		{
 			return null;
 		}
@@ -137,16 +132,16 @@ class Test extends CourseComponent
 			"message"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Test(
-			$result_assoc["test_id"],
-			$result_assoc["unit_id"],
-			$result_assoc["test_name"],
-			$result_assoc["open"],
-			$result_assoc["close"],
-			$result_assoc["message"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Test(
+				$result_assoc["test_id"],
+				$result_assoc["unit_id"],
+				$result_assoc["test_name"],
+				$result_assoc["open"],
+				$result_assoc["close"],
+				$result_assoc["message"]
+			)
+			: null;
 	}
 	
 	public function session_user_can_execute()

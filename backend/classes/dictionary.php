@@ -12,6 +12,10 @@ class Dictionary
 	
 	public static $look_up_last_count = null;
 	
+	public static function unregister_all()
+	{
+		self::$entries_by_id = array ();
+	}
 	//  Returns the join of the dictionary on the languages table
 	//      so that we can include language codes (which exist only in the languages table)
 	public static function join()

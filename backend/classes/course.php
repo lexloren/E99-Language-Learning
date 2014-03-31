@@ -38,7 +38,7 @@ class Course extends DatabaseRow
 			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert course: " . $mysqli->error);
 		}
@@ -91,7 +91,7 @@ class Course extends DatabaseRow
 	}
 	public function set_course_name($course_name)
 	{
-		if (!self::update_this($this, "courses", array ("course_name", $course_name), "course_id", $this->get_course_id()))
+		if (!self::update_this($this, "courses", array ("course_name" => $course_name), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
@@ -135,7 +135,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		return !!Session::get() && Session::get()->get_user()->in_array($this->get_instructors());
+		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_instructors());
 	}
 	
 	private $students;
@@ -206,16 +206,16 @@ class Course extends DatabaseRow
 			"public"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Course(
-			$result_assoc["course_id"],
-			$result_assoc["user_id"],
-			$result_assoc["lang_id_0"],
-			$result_assoc["lang_id_1"],
-			$result_assoc["course_name"],
-			$result_assoc["public"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Course(
+				$result_assoc["course_id"],
+				$result_assoc["user_id"],
+				$result_assoc["lang_id_0"],
+				$result_assoc["lang_id_1"],
+				$result_assoc["course_name"],
+				$result_assoc["public"]
+			)
+			: null;
 	}
 	
 	public function session_user_can_write()
