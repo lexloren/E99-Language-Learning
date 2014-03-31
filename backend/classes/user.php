@@ -44,6 +44,22 @@ class User extends DatabaseRow
 		return parent::select("users", "user_id", $user_id);
 	}
 	
+	public static function find($query)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$query = $mysqli->escape_string($query);
+		
+		$result = $mysqli->query("SELECT * FROM users WHERE email LIKE '$query' OR handle LIKE '$query'");
+		
+		$users = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($users, User::from_mysql_result_assoc($result_assoc));
+		}
+		return $users;
+	}
+	
 	//  Inserts a row into users table and returns corresponding User object
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
