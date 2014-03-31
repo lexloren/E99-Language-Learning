@@ -54,10 +54,10 @@ class Practice
 	}
 	
 	private $entry_ids = null;
-        public function get_entry_ids()
-        {
-                return $this->entry_ids;
-        }
+	public function get_entry_ids()
+	{
+		return $this->entry_ids;
+	}
 
 	private $entries = null;
 	public function get_entries()
@@ -74,10 +74,10 @@ class Practice
 		}
 		$this->entries = array();
 		foreach ($entry_ids as $entry_id)
-                {
+		{
 			$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-                        array_push($this->entries, $entry);
-                }
+			array_push($this->entries, $entry);
+		}
 		$this->entry_ids = $entry_ids;
 	}
 
@@ -100,7 +100,7 @@ class Practice
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (".
-			"(SELECT user_entry_id from user_entries where user_id = %d and entry_id = %d), %d)",
+			"(SELECT user_entry_id FROM user_entries WHERE user_id = %d AND entry_id = %d), %d)",
 			Session::get()->get_user()->get_user_id(),
 			$entry_id,
 			$grade_id
