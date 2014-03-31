@@ -115,35 +115,33 @@ class Section extends DatabaseRow
 		return parent::set_message($message, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
-	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)
+	private function __construct($section_id, $test_id, $section_name = null, $timer = null, $message = null)
 	{
+		$this->section_id = intval($section_id, 10);
 		$this->test_id = intval($test_id, 10);
-		$this->unit_id = intval($unit_id, 10);
-		$this->test_name = !!$test_name ? $test_name : null;
-		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
-		$this->message = !!$message ? $message : null;
+		$this->section_name = !!$section_name && strlen($section_name) > 0 ? $section_name : null;
+		$this->timer = intval($timer, 10);
+		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
-		self::register($this->unit_id, $this);
+		self::register($this->section_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
 		$mysql_columns = array (
+			"section_id",
 			"test_id",
-			"unit_id",
-			"test_name",
-			"open",
-			"close",
+			"section_name",
+			"timer",
 			"message"
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
 			? new Test(
+				$result_assoc["section_id"],
 				$result_assoc["test_id"],
-				$result_assoc["unit_id"],
-				$result_assoc["test_name"],
-				$result_assoc["open"],
-				$result_assoc["close"],
+				$result_assoc["section_name"],
+				$result_assoc["timer"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -151,7 +149,8 @@ class Section extends DatabaseRow
 	
 	public function session_user_can_execute()
 	{
-		return false; //(!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		//  Need to add another check whether this section is the next section available in the test
+		return $this->get_test()->session_user_can_execute();
 	}
 	
 	public function delete()
