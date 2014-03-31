@@ -69,47 +69,34 @@ class Session
 		
 		$handle = strtolower($handle);
 		
-		//Arunabha: Existing users many not be able to log-in if password/handle requirement changes
-		if (!User::validate_password($password))
+		$mysqli = Connection::get_shared_instance();
+			
+		//  See whether we can authenticate with the handle and password posted
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle LIKE '%s' OR email LIKE '%s') AND pswd_hash = PASSWORD('%s')",
+			$mysqli->escape_string($handle),
+			$mysqli->escape_string($handle),
+			$mysqli->escape_string($password)
+		));
+		
+		if (($user_assoc = $result->fetch_assoc()) && $result->num_rows === 1)
 		{
-			self::set_error_assoc("Invalid Password", "Password must consist of between 6 and 31 (inclusive) characters containing at least one non-alphanumeric character.");
-		}
-		else if (!User::validate_handle($handle))
-		{
-			self::set_error_assoc("Invalid Handle", "Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			$this->user = User::from_mysql_result_assoc($user_assoc);
+			
+			$session = $this->session_start();
+			
+			$_SESSION["handle"] = $this->user->get_handle();
+			
+			//  Start a PHP session (using cookies), and update the database accordingly
+			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
+				$mysqli->escape_string($session),
+				$this->user->get_user_id()
+			));
+			
+			Session::get()->set_result_assoc($this->user->assoc_for_json());
 		}
 		else
 		{
-			$mysqli = Connection::get_shared_instance();
-			
-			//  See whether we can authenticate with the handle and password posted
-			$result = $mysqli->query(sprintf("SELECT user_id, handle, email, name_given, name_family FROM users WHERE handle = '%s' AND pswd_hash = PASSWORD('%s')",
-				$mysqli->escape_string($handle),
-				$mysqli->escape_string($password)
-			));
-			
-			if (($user_assoc = $result->fetch_assoc()))
-			{
-				$session = $this->session_start();
-				
-				$user_assoc["user_id"] = intval($user_assoc["user_id"], 10);
-				
-				$_SESSION["handle"] = $user_assoc["handle"];
-				
-				//  Start a PHP session (using cookies), and update the database accordingly
-				$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
-					$mysqli->escape_string($session),
-					$user_assoc["user_id"]
-				));
-				
-				$this->user = User::from_mysql_result_assoc($user_assoc);
-				
-				Session::get()->set_result_assoc($this->user->assoc_for_json());
-			}
-			else
-			{
-				self::set_error_assoc("Invalid Credentials", "The handle and password entered match no users in the database.");
-			}
+			self::set_error_assoc("Invalid Credentials", "The handle and password entered match no users in the database.");
 		}
 	}
 	
