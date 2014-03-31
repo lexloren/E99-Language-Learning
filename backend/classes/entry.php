@@ -42,7 +42,7 @@ class Entry extends DatabaseRow
 	public function get_words()
 	{
 		return $this->words;
-	}	
+	}
 
 	private $pronunciations = null;
 	public function get_pronunciations()
@@ -177,11 +177,10 @@ class Entry extends DatabaseRow
 	
 	public function annotations_add($annotation_contents)
 	{
-		if (!Session::get()->get_user())
+		if (!($entry = $this->copy_for_session_user()))
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Failed to add annotation: " . self::get_error_description());
 		}
-		$entry = $this->copy_for_session_user();
 		
 		$annotation = Annotation::insert($entry->get_entry_id(), $annotation_contents);
 		
@@ -251,7 +250,12 @@ class Entry extends DatabaseRow
 	
 	public function update_repetition_details($point)
 	{
-		$user_entry = $this->copy_for_session_user();
+		$failure_message = "Failed to update repetition details";
+		if (!($user_entry = $this->copy_for_session_user()))
+		{
+			return self::set_error_description("$failure_message: " . self::get_error_description());
+		}
+		
 		$user_entry_id = $user_entry->get_user_entry_id();
 		
 		$mysqli = Connection::get_shared_instance();
@@ -276,7 +280,7 @@ class Entry extends DatabaseRow
 			"WHERE user_entry_id = $user_entry_id"
 			))
 		{
-			return self::set_error_description("Failed to update interval details: " . $mysqli->error);
+			return self::set_error_description("$failure_message: " . $mysqli->error);
 		}
 
 		$user_entry->interval = $new_interval;
