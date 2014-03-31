@@ -211,12 +211,17 @@ class Entry extends DatabaseRow
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
-		if (!Session::get()->get_user())
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
 			return self::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$entries_by_id_for_user_id = self::entries_by_id_for_user_id(Session::get()->get_user()->get_user_id());
+		return $this->copy_for_user($session_user);
+	}
+	
+	public function copy_for_user($user)
+	{
+		$entries_by_id_for_user_id = self::entries_by_id_for_user_id($user->get_user_id());
 		
 		if (isset($entries_by_id_for_user_id[$this->entry_id])) return $entries_by_id_for_user_id[$this->entry_id];
 	
@@ -225,7 +230,7 @@ class Entry extends DatabaseRow
 		//  Insert into user_entries the dictionary row corresponding to this Entry object
 		//      If such a row already exists in user_entries, ignore the insertion error
 		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
-			Session::get()->get_user()->get_user_id(),
+			$user->get_user_id(),
 			$this->entry_id
 		));
 		
@@ -233,14 +238,14 @@ class Entry extends DatabaseRow
 			Dictionary::language_code_columns(),
 			Dictionary::join(),
 			$this->entry_id,
-			Session::get()->get_user()->get_user_id()
+			$user->get_user_id()
 		);
 		
 		$result = $mysqli->query($query);
 		
 		if (!$result || !($result_assoc = $result->fetch_assoc()))
 		{
-			return self::set_error_description("Entry failed to copy for session user: " .
+			return self::set_error_description("Entry failed to copy for user: " .
 				(!!$mysqli->error ? $mysqli->error : $query)
 			);
 		}
