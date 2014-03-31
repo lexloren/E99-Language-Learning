@@ -35,6 +35,12 @@
       })();
 
       $(document).ready(function(){
+        $(window).keydown(function(event){
+            if(event.keyCode == 13){
+                event.preventDefault();
+                return false;
+            }
+        });
         $("#success").hide();
         $("#failure").hide();
         $("#navbar").load("navbar.html");
