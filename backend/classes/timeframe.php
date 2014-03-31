@@ -27,8 +27,8 @@ class Timeframe
 			$close = $arg[1];
 		}
 		
-		$this->open = strtotime($open);
-		$this->close = strtotime($close);
+		$this->open = intval($open, 10);
+		$this->close = intval($close, 10);
 	}
 	
 	public function is_current()

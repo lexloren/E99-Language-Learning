@@ -135,6 +135,34 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
+	private $timeframe;
+	public function get_timeframe()
+	{
+		return $this->get_timeframe();
+	}
+	public function set_timeframe($timeframe)
+	{
+		if (!self::update_this(
+			$this,
+			"courses",
+			array ("open" => $timeframe->get_open(), "close" => $timeframe->get_close()),
+			"course_id",
+			$this->get_course_id()
+		)) return null;
+		
+		$this->timeframe = $timeframe;
+		
+		return $this;
+	}
+	public function set_open($open)
+	{
+		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+	}
+	public function set_close($close)
+	{
+		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+	}
+	
 	private $message;
 	public function get_message()
 	{
@@ -206,13 +234,14 @@ class Course extends DatabaseRow
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false, $message = null)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false, $open = null, $close = null, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
 		$this->course_name = !!$course_name && strlen($course_name) > 0 ? $course_name : null;
+		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		$this->public = !!$public;
 		
@@ -228,6 +257,8 @@ class Course extends DatabaseRow
 			"lang_id_1",
 			"course_name",
 			"public",
+			"open",
+			"close",
 			"message"
 		);
 		
@@ -239,6 +270,8 @@ class Course extends DatabaseRow
 				$result_assoc["lang_id_1"],
 				$result_assoc["course_name"],
 				$result_assoc["public"],
+				$result_assoc["open"],
+				$result_assoc["close"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -344,7 +377,7 @@ class Course extends DatabaseRow
 			"courseName" => !$privacy ? $this->get_course_name() : null,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => !$privacy ? $this->is_public() : null,
-			"timeframe" => null // Not yet implemented
+			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
 	}
 }

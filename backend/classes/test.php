@@ -101,7 +101,29 @@ class Test extends CourseComponent
 	private $timeframe;
 	public function get_timeframe()
 	{
-		return $this->timeframe;
+		return $this->get_timeframe();
+	}
+	public function set_timeframe($timeframe)
+	{
+		if (!self::update_this(
+			$this,
+			"course_unit_tests",
+			array ("open" => $timeframe->get_open(), "close" => $timeframe->get_close()),
+			"test_id",
+			$this->get_test_id()
+		)) return null;
+		
+		$this->timeframe = $timeframe;
+		
+		return $this;
+	}
+	public function set_open($open)
+	{
+		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+	}
+	public function set_close($close)
+	{
+		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
 	}
 	
 	//  inherits: protected $message;
@@ -169,7 +191,7 @@ class Test extends CourseComponent
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
-			"timeframe" => !$privacy ? (!!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null) : null
+			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
 	}
 }

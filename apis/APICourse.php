@@ -23,9 +23,10 @@ class APICourse  extends APIBase
 			}
 			else
 			{
-				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null)))
+				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null, $timeframe)))
 				{
-					Session::get()->set_error_assoc("Course Insertion", COurse::get_error_description());
+					Session::get()->set_error_assoc("Course Insertion", Course::get_error_description());
 				}
 				else
 				{
@@ -57,6 +58,16 @@ class APICourse  extends APIBase
 				if (isset($_POST["message"]))
 				{
 					$updates += !!$course->set_message($_POST["message"]);
+				}
+				
+				if (isset($_POST["open"]))
+				{
+					$updates += !!$course->set_open($_POST["open"]);
+				}
+				
+				if (isset($_POST["close"]))
+				{
+					$updates += !!$course->set_close($_POST["close"]);
 				}
 				
 				if (!$updates)

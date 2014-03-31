@@ -17,8 +17,9 @@ class APIUnit  extends APIBase
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
 			$unit_name = isset($_POST["unit_name"]) && strlen($_POST["unit_name"]) > 0 ? $_POST["unit_name"] : null;
+			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 			
-			if (!($unit = Unit::insert($course_id, $unit_name)))
+			if (!($unit = Unit::insert($course_id, $unit_name, $timeframe)))
 			{
 				Session::get()->set_error_assoc("Unit Insertion", Unit::get_error_description());
 			}
@@ -67,6 +68,16 @@ class APIUnit  extends APIBase
 				if (isset($_POST["message"]))
 				{
 					$updates += !!$unit->set_message($_POST["message"]);
+				}
+				
+				if (isset($_POST["open"]))
+				{
+					$updates += !!$unit->set_open($_POST["open"]);
+				}
+				
+				if (isset($_POST["close"]))
+				{
+					$updates += !!$unit->set_close($_POST["close"]);
 				}
 				
 				if (!$updates)

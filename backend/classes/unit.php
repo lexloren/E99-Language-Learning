@@ -92,6 +92,34 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
+	private $timeframe;
+	public function get_timeframe()
+	{
+		return $this->get_timeframe();
+	}
+	public function set_timeframe($timeframe)
+	{
+		if (!self::update_this(
+			$this,
+			"course_units",
+			array ("open" => $timeframe->get_open(), "close" => $timeframe->get_close()),
+			"unit_id",
+			$this->get_unit_id()
+		)) return null;
+		
+		$this->timeframe = $timeframe;
+		
+		return $this;
+	}
+	public function set_open($open)
+	{
+		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+	}
+	public function set_close($close)
+	{
+		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+	}
+	
 	//  inherits: protected $message;
 	public function set_message($message)
 	{
@@ -111,12 +139,13 @@ class Unit extends CourseComponent
 		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
-	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null, $message = null)
+	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null, $open = null, $close = null, $message = null)
 	{
 		$this->unit_id = intval($unit_id, 10);
 		$this->course_id = intval($course_id, 10);
 		$this->unit_number = intval($unit_number, 10);
 		$this->unit_name = !!$unit_name && strlen($unit_name) > 0 ? $unit_name : null;
+		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
 		self::register($this->unit_id, $this);
@@ -129,6 +158,8 @@ class Unit extends CourseComponent
 			"course_id",
 			"unit_num",
 			"unit_name",
+			"open",
+			"close",
 			"message"
 		);
 		
@@ -138,6 +169,8 @@ class Unit extends CourseComponent
 				$result_assoc["course_id"],
 				$result_assoc["unit_num"],
 				$result_assoc["unit_name"],
+				$result_assoc["open"],
+				$result_assoc["close"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -205,7 +238,7 @@ class Unit extends CourseComponent
 			"unitName" => !$privacy ? $this->get_unit_name() : null,
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"timeframe" => null // Not yet implemented
+			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
 	}
 }
