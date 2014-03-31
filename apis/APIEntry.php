@@ -12,9 +12,64 @@ class APIEntry extends APIBase
 	
 	public function update()
 	{
-		// word_0
-		// word_1
-		// word_1_pronun
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
+		{
+			$entry = $entry->copy_for_session_user();
+			
+			$updates = 0;
+			
+			if (isset($_POST["word_0"]))
+			{
+				$updates += !!$entry->set_word_0($_POST["word_0"]);
+			}
+			
+			if (isset($_POST["word_1"]))
+			{
+				$updates += !!$entry->set_word_1($_POST["word_1"]);
+			}
+			
+			if (isset($_POST["word_1_pronun"]))
+			{
+				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
+			}
+			
+			if (!$updates)
+			{
+				$failure_message = !!Entry::get_error_description() ? Entry::get_error_description() : "Entry failed to update.";
+				Session::get()->set_error_assoc("Entry Modification", $failure_message);
+			}
+			else
+			{
+				Session::get()->set_result_assoc($entry->assoc_for_json());
+			}
+		}
+	}
+	
+	public function find()
+	{
+		if (self::validate_request($_GET, array ("query", "langs")))
+		{
+			$langs = $_GET["langs"];		
+			$pagination = null;
+			if (isset($_GET["page_size"]) && isset($_GET["page_num"]))
+			{
+				$pagination = array (
+					"size" => $_GET["page_size"],
+					"num" => $_GET["page_num"]
+				);
+			}
+
+			if (($entries = Dictionary::find($_GET["query"], $langs, $pagination)))
+			{
+				self::return_array_as_assoc_for_json($entries);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Entry Find", Dictionary::get_error_description());
+			}
+		}
 	}
 	
 	public function annotations()
