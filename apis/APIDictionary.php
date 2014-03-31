@@ -24,7 +24,7 @@ class APIDictionary extends APIBase
 				);
 			}
 			
-			$entries = Dictionary::look_up($_GET["word"], $langs, $pagination);
+			$entries = Dictionary::find($_GET["word"], $langs, $pagination);
 
 			if (isset($entries))
 			{

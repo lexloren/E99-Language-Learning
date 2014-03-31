@@ -73,7 +73,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($user_obj->get_name_given(), $this->db->names_given[0]);
 	}
 	
-	public function test_look_up()
+	public function test_find()
 	{
 		$this->db->add_users(5);
 		$result = User::find("");

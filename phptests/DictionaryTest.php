@@ -15,13 +15,13 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public function test_look_up()
+	public function test_find()
 	{
 		$this->db->add_dictionary_entries(10);
 		$codes = Array();
 		array_push($codes, TestDB::$lang_code_0);
 		array_push($codes, TestDB::$lang_code_1);
-		$result = Dictionary::look_up($this->db->word_0s[0], $codes);
+		$result = Dictionary::find($this->db->word_0s[0], $codes);
 		$this->assertNotNull($result);
 	
 		$this->assertCount(1, $result);

@@ -55,7 +55,7 @@ if (isset($_GET["query"]))
 	}
 	
 	//  Perform the database query
-	$entries_matching = Dictionary::look_up(
+	$entries_matching = Dictionary::find(
 		$_GET["query"],
 		$lang_codes_requested,
 		$pagination
@@ -70,7 +70,7 @@ if (isset($_GET["query"]))
 	
 	//      Finally, format the query results and send them to the front end
 	Session::get()->exit_with_result($entries_returnable, array (
-		"entriesCount" => Dictionary::$look_up_last_count,
+		"entriesCount" => Dictionary::$find_last_count,
 		"pageSize" => Dictionary::$page_size,
 		"pageNum" => Dictionary::$page_num
 	));
