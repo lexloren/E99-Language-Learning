@@ -251,23 +251,22 @@ class Entry extends DatabaseRow
 	
 	public function update_repetition_details($point)
 	{
-		if (!$this->session_user_can_write())
+		if (!$this->session_user_can_read())
 		{
-			Session::get()->set_error_assoc("Session user cannot edit entry.");
-			return;
+			return self::set_error_description("Session user cannot edit entry.");
 		}
 		$mysqli = Connection::get_shared_instance();
 
 		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
 		$iteration_result = $mysqli->query(sprintf(
-			"SELECT COUNT(*) AS row_count FROM user_entry_results WHERE user_id = %d ".
-			"AND entry_id = %d",
+			"SELECT COUNT(*) AS row_count FROM user_entry_results WHERE user_entry_id = ( ".
+			"SELECT user_entry_id from user_entries where user_id = %d AND entry_id = %d)",
 			$this->user_id, $this->entry_id)
 		);
 		$iteration_assoc = $iteration_result->fetch_assoc();
 		$iteration_count = intval($iteration_assoc["row_count"], 10);
-		if ($iteration_count == 1)
+		if ($iteration_count == 0 || $iteration_count == 1)
 			$new_interval = 1;
 		else if ($iteration_count == 2)
 			$new_interval = 6;
@@ -280,10 +279,9 @@ class Entry extends DatabaseRow
 			$new_interval, $new_efactor,
 			$this->user_id, $this->entry_id)))
 		{
-			Session::get()->set_error_assoc("Failed to update interval details: " . $mysqli->error);
-			return;
+			return self::set_error_description("Failed to update interval details: " . $mysqli->error);
 		}
-		
+
 		$this->interval = $new_interval;
 		$this->efactor = $new_efactor;
 		return true;

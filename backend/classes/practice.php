@@ -63,7 +63,7 @@ class Practice
 	{
 		if (!is_array($entry_ids))
 		{
-			Session::get()->set_error_assoc("Practice accepts entry_ids array, invalid input.");
+			Session::get()->set_error_assoc("Construct", "Practice accepts entry_ids array, invalid input.");
 			return;
 		}
 		$this->entries = array();
@@ -93,7 +93,8 @@ class Practice
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO user_entry_results (user_id, entry_id, grade_id) VALUES (%d, %d, %d)",
+		$mysqli->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (".
+			"(SELECT user_entry_id from user_entries where user_id = %d and entry_id = %d), %d)",
 			Session::get()->get_user()->get_user_id(),
 			$entry_id,
 			$grade_id
@@ -101,23 +102,17 @@ class Practice
 		
 		if (!$mysqli->insert_id)
 		{
-			Session::get()->set_error_assoc("Failed to update practice response details.");
+			Session::get()->set_error_assoc("response", "Failed to update practice response details, ".$mysqli->error);
+			return;
 		}
 		
-		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id) VALUES (%d, %d)",
-			Session::get()->get_user()->get_user_id(),
-			$entry_id)
-		);
-		$user_entry_result = $mysqli->query(sprintf("SELECT * FROM user_entries WHERE entry_id = %d AND user_id = %d",
-			$entry_id,
-			Session::get()->get_user()->get_user_id())
-		);
-		$user_entry = Entry::from_mysql_result_assoc($user_entry_result->fetch_assoc());
-		$grade_result = $mysqli->query(sprintf("SELECT point FROM grades WHERE grade_id = $grade_id"));
+		$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
+		$grade_result = $mysqli->query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id"));
 		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
 		if (!$grade_point || !$user_entry)
 		{
-			Session::get()->set_error_assoc("Failed to update practice response details.");
+			Session::get()->set_error_assoc("response", "Failed to update practice response details, ".$mysqli->error);
+			return;
 		}
 		return $user_entry->update_repetition_details($grade_point->get_point());
 	}

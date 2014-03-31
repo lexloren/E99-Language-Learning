@@ -16,6 +16,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 
 		$this->db->add_users(1);
+		$this->db->add_grades();
 
 		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
@@ -170,8 +171,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
 	public function testPractice()
 	{
-		$this->db->add_practice_data($this->db->user_ids[0]);
-
+		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 		$_SESSION["handle"] = $this->db->handles[0];
 		$_GET["list_ids"] = join(', ', $this->db->practice_list_ids);
 		$this->obj->practice();
@@ -217,6 +217,42 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->obj->practice();
 		$this->assertTrue(Session::get()->has_error());
 	}
+
+        public function testPracticeResponse()
+        {
+		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
+                $_SESSION["handle"] = $this->db->handles[0];
+
+                $_GET["entry_id"] = $this->db->practice_entry_ids[0];
+                $_GET["grade_id"] = 5;
+                $this->obj->practice_response();
+                $this->assertFalse(Session::get()->has_error());
+        }
+
+        public function testPracticeResponseWrongInputs()
+        {
+                $_SESSION["handle"] = $this->db->handles[0];
+                $_GET["grade_id"] = 5;
+
+                $_GET["entry_id"] = '-1';
+                $this->obj->practice_response();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["entry_id"] = '0';
+                Session::get()->set_error_assoc(null, null);
+                $this->obj->practice_response();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["entry_id"] = '2x';
+                $this->obj->practice_response();
+                $this->assertTrue(Session::get()->has_error());
+
+                $_GET["entry_id"] = 2;
+                $_GET["grade_id"] = -5;
+                $this->obj->practice_response();
+                $this->assertTrue(Session::get()->has_error());
+        }
+
 }
 
 
