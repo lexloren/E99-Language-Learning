@@ -115,7 +115,7 @@ class Dictionary
 	}
 	
 	//  Gets an entry from the dictionary by entry_id
-	public static function select_entry($entry_id)
+	public static function select_entry_by_id($entry_id)
 	{
 		$entry_id = intval($entry_id, 10);
 		
@@ -130,7 +130,7 @@ class Dictionary
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				return null;
+				return self::set_error_description("Failed to select dictionary entry where entry_id = $entry_id.");
 			}
 			
 			self::$entries_by_id[$entry_id] = Entry::from_mysql_result_assoc($result_assoc);
@@ -152,7 +152,7 @@ class Dictionary
 			return $result_assoc["lang_code"];
 		}
 		
-		return null;
+		return self::set_error_description("Failed to select language where language_id = $lang_id.");
 	}
 	
 	public static function get_lang_id($lang_code)
@@ -168,7 +168,7 @@ class Dictionary
 			return intval($result_assoc["lang_id"], 10);
 		}
 		
-		return null;
+		return self::set_error_description("Failed to select language where language_code = '$lang_code'.");
 	}
 }
 
