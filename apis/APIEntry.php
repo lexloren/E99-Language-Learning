@@ -61,7 +61,7 @@ class APIEntry extends APIBase
 				);
 			}
 
-			if (($entries = Dictionary::find($_GET["query"], $langs, $pagination)))
+			if (($entries = Dictionary::query($_GET["query"], $langs, $pagination)))
 			{
 				self::return_array_as_assoc_for_json($entries);
 			}
