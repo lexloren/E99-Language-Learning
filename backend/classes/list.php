@@ -120,20 +120,38 @@ class EntryList extends DatabaseRow
 	//  Returns true iff Session::get()->get_user() can read this list for any reason
 	public function session_user_can_read()
 	{
-		return $this->session_user_can_write()
-			|| $this->session_user_can_read_via_course()
+		return !!Session::get()
+			&& !!($session_user = Session::get()->get_user())
+			&& $this->user_can_read($session_user);
+	}
+	
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user)
+			|| $this->user_can_read_via_course($user)
 			|| $this->is_public();
 	}
 	
-	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
-	private function session_user_can_read_via_course()
+	public function user_can_write($user)
 	{
-		foreach ($this->get_owner()->get_student_courses() as $student_course)
+		return parent::user_can_write($user)
+			|| $this->user_can_write_via_course($user);
+	}
+	
+	public function session_user_can_write()
+	{
+		return !!Session::get() && $this->user_can_write(Session::get()->get_user());
+	}
+	
+	private function user_affiliated_via_courses($user, $courses)
+	{
+		foreach ($courses as $course)
 		{
-			foreach ($student_course->get_lists() as $list)
+			foreach ($course->get_lists() as $list)
 			{
-				if ($list->list_id === $this->list_id
-					&& $list->get_owner()->in_array($student_course->get_instructors()))
+				if ($list->list_id === $this->list_id)
+					//  Should now be true for all lists associated with all courses:
+					//  && $list->get_owner()->equals($course->get_owner()))
 				{
 					return true;
 				}
@@ -141,6 +159,17 @@ class EntryList extends DatabaseRow
 		}
 		
 		return false;
+	}
+	
+	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
+	private function user_can_read_via_course($user)
+	{
+		return !!$user && $this->user_affiliated_via_courses($user, $user->get_student_courses());
+	}
+	
+	private function user_can_write_via_course($user)
+	{
+		return !!$user && $this->user_affiliated_via_courses($user, $user->get_instructor_courses());
 	}
 	
 	public function delete()
@@ -210,31 +239,44 @@ class EntryList extends DatabaseRow
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::get() || !$this->session_user_can_read())
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return self::set_error_description("Session user cannot read list.");
+			return self::set_error_description("Session user has not reauthenticated.");
 		}
+		
+		return $this->copy_for_user($session_user);
+	}
+	
+	public function copy_for_user($user)
+	{
+		if (!$this->user_can_read($user))
+		{
+			return self::set_error_description("User cannot read list.");
+		}
+		
+		if ($this->get_owner()->equals($user)) return $this;
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) SELECT %d, list_name FROM lists WHERE list_id = %d",
-			Session::get()->get_user()->get_user_id(),
+			$user->get_user_id(),
 			$this->get_list_id()
 		));
 		
-		$copy_id = $mysqli->insert_id;
+		$list_copy_id = $mysqli->insert_id;
 		
+		$insertion_values = array ();
 		foreach ($this->get_entries() as $entry)
 		{
-			$entry->copy_for_session_user();
+			$user_entry_copy_id = $entry->copy_for_user($user)->get_user_entry_id();
+			array_push($insertion_values, "($list_copy_id, $user_entry_copy_id)");
 		}
 		
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) SELECT %d, user_entry_id FROM list_entries WHERE list_id = %d",
-			$copy_id,
-			$this->get_list_id()
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES %s",
+			implode(", ", $insertion_values)
 		));
 		
-		return self::select_by_id($copy_id);
+		return self::select_by_id($list_copy_id);
 	}
 	
 	public function assoc_for_json()

@@ -160,6 +160,8 @@ class Unit extends CourseComponent
 			return self::set_error_description("Session user is not owner of list.");
 		}
 		
+		$list = $list->copy_for_user($this->get_owner());
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",

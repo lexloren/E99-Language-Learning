@@ -139,15 +139,29 @@ class DatabaseRow
 		return null;
 	}
 	
+	public function user_is_owner($user)
+	{
+		return !!$this->get_owner() && $this->get_owner()->equals($user);
+	}
+	
 	public function session_user_is_owner()
 	{
-		return !!Session::get() && !!$this->get_owner()
-			&& $this->get_owner()->equals(Session::get()->get_user());
+		return !!Session::get() && $this->user_is_owner(Session::get()->get_user());
+	}
+	
+	public function user_can_write($user)
+	{
+		return $this->user_is_owner($user);
 	}
 	
 	public function session_user_can_write()
 	{
 		return $this->session_user_is_owner();
+	}
+	
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user);
 	}
 	
 	public function session_user_can_read()
