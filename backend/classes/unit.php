@@ -92,19 +92,10 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
-	private $message;
-	public function get_message()
-	{
-		return $this->message;
-	}
+	//  inherits: protected $message;
 	public function set_message($message)
 	{
-		if (!self::update_this($this, "course_units", array ("message" => $message), "unit_id", $this->get_unit_id()))
-		{
-			return null;
-		}
-		$this->message = $message;
-		return $this;
+		return parent::set_message($message, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
 	private $tests;

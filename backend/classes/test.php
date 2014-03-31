@@ -104,10 +104,10 @@ class Test extends CourseComponent
 		return $this->timeframe;
 	}
 	
-	private $message;
-	public function get_message()
+	//  inherits: protected $message;
+	public function set_message($message)
 	{
-		return $this->message;
+		return parent::set_message($message, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
 	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)
@@ -116,7 +116,7 @@ class Test extends CourseComponent
 		$this->unit_id = intval($unit_id, 10);
 		$this->test_name = !!$test_name ? $test_name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
-		$this->message = !!$message ? $message : null;
+		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
 		self::register($this->test_id, $this);
 	}

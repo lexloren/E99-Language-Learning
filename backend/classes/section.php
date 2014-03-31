@@ -109,10 +109,10 @@ class Section extends DatabaseRow
 		return $this->timer;
 	}
 	
-	private $message;
-	public function get_message()
+	//  inherits: protected $message;
+	public function set_message($message)
 	{
-		return $this->message;
+		return parent::set_message($message, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
 	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)

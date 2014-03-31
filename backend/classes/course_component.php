@@ -47,6 +47,22 @@ class CourseComponent extends DatabaseRow
 	{
 		return !!($course = $this->get_course()) ? $course->session_user_can_read() : false;
 	}
+	
+	protected $message;
+	public function get_message()
+	{
+		return $this->message;
+	}
+	protected function set_message($message, $table, $column, $id)
+	{
+		if (!self::update_this($this, $table, array ("message" => $message), $column, $id))
+		{
+			return null;
+		}
+		$this->message = $message;
+		return $this;
+	}
+	
 }
 
 ?>
