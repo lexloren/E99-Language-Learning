@@ -38,7 +38,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		
 		Session::get()->set_user(null);
 		$annotations = $entry->get_annotations();
-		$this->assertNull($annotations);
+		$this->assertCount(0, $annotations);
 		
 		$this->db->add_users(1);
 		$user_obj = User::select_by_id($this->db->user_ids[0]);

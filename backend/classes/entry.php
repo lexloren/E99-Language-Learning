@@ -6,27 +6,26 @@ require_once "./backend/classes.php";
 class Entry extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
+	protected static $instances_by_id = array ();
 	protected static $error_description = null;
-
-	//  Associative array, keyed by user_id,
-	//      of associative arrays of Entry objects keyed by entry_id
-	private static $user_entries_by_id = array ();
 	
-	//  Gets the associative array of Entry objects, keyed by entry_id, for some user_id
-	private static function entries_by_id_for_user_id($user_id)
+	public static function select_by_id($entry_id, $promote_automatically = true)
 	{
-		$user_id = intval($user_id, 10);
+		$entry_id = intval($entry_id, 10);
 		
-		if (!in_array($user_id, array_keys(self::$user_entries_by_id)))
+		if ($promote_automatically
+			&& Session::get() && Session::get()->get_user())
 		{
-			self::$user_entries_by_id[$user_id] = array ();
+			if (($user_entry =
+					UserEntry::select_by_user_entry_id(
+						Session::get()->get_user()->get_user_id(),
+						$entry_id,
+						false)
+					)) return $user_entry;
 		}
 		
-		return self::$user_entries_by_id[$user_id];
-	}
-	
-	public static function select_by_id($entry_id)
-	{
+		if (isset(self::$instances_by_id[$entry_id])) return self::$instances_by_id[$entry_id];
+		
 		return Dictionary::select_entry_by_id($entry_id);
 	}
 	
@@ -36,6 +35,18 @@ class Entry extends DatabaseRow
 	public function get_entry_id()
 	{
 		return $this->entry_id;
+	}
+	public function get_user()
+	{
+		return null;
+	}
+	public function get_owner()
+	{
+		return null;
+	}
+	public function get_user_id()
+	{
+		return null;
 	}
 	
 	private $word_0;
@@ -64,10 +75,10 @@ class Entry extends DatabaseRow
 	
 	public function get_languages()
 	{
-                return array (
-                        $this->get_lang_code_0(),
-                        $this->get_lang_code_1()
-                );
+		return array (
+			$this->get_lang_code_0(),
+			$this->get_lang_code_1()
+		);
 	}
 	public function get_words()
 	{
@@ -82,48 +93,23 @@ class Entry extends DatabaseRow
 	{
 		return $this->pronunciations;
 	}
-
-	private $annotations;
+	
 	public function get_annotations()
 	{
-		if (!Session::get() || !Session::get()->get_user()) return null;
+		if (!!Session::get()
+			&& !!($session_user = Session::get()->get_user())
+			&& ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+		{
+			return $user_entry->get_annotations();
+		}
 		
-		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->copy_for_session_user()->get_user_entry_id());
-	}
-	
-	private $user_entry_id = null;
-	public function get_user_entry_id()
-	{
-		return $this->user_entry_id;
-	}
-	
-	private $user_id = null;
-	public function get_user_id()
-	{
-		return $this->user_id;
-	}
-	public function get_owner()
-	{
-		return !!$this->user_id ? User::select_by_id($this->user_id) : null;
-	}
-	
-	private $interval = null;
-	public function get_interval()
-	{
-			return $this->interval;
-	}
-
-	private $efactor = null;
-	public function get_efactor()
-	{
-			return $this->efactor;
+		self::set_error_description(null);
+		
+		return array ();
 	}
 
 	private function __construct($entry_id, $lang_code_0, $lang_code_1,
-		$word_0, $word_1, $pronunciation = null,
-		$user_entry_id = null, $user_id = null,
-		$interval = null, $efactor = null)
+		$word_0, $word_1, $pronunciation = null)
 	{
 		$this->entry_id = intval($entry_id, 10);
 		$this->word_0 = $word_0;
@@ -133,18 +119,6 @@ class Entry extends DatabaseRow
 		$this->pronunciations = array (
 			$lang_code_1 => $pronunciation
 		);
-		
-		if ($user_entry_id !== null && $user_id !== null && $interval !== null && $efactor !== null)
-		{
-			$this->user_entry_id = intval($user_entry_id, 10);
-			$this->user_id = intval($user_id, 10);
-			
-			$this->interval = intval($interval, 10);
-			$this->efactor = floatval($efactor);
-
-			$entries_by_id_for_user_id = self::entries_by_id_for_user_id($this->user_id);
-			$entries_by_id_for_user_id[$this->entry_id] = $this;
-		}
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
@@ -165,34 +139,343 @@ class Entry extends DatabaseRow
 				$result_assoc["lang_code_1"],
 				$result_assoc["word_0"],
 				$result_assoc["word_1"],
-				!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
-				array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
-				array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
-				array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
-				array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
+				!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null
+			)
+			: null;
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_0
+	public function set_word_0($word_0)
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->set_word_0($word_0)
+			: null;
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_1
+	public function set_word_1($word_1)
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->set_word_1($word_1)
+			: null;
+	}
+	
+	//  Sets a new user-specific value for this Entry's word_1_pronun
+	public function set_word_1_pronunciation($word_1_pronun)
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->set_word_1_pronunciation($word_1_pronun)
+			: null;
+	}
+	
+	public function annotations_add($annotation_contents)
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->annotations_add($annotation_contents)
+			: null;
+	}
+	
+	public function annotations_remove($annotation)
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return self::set_error_description("Session user has not reauthenticated.");
+		}
+		
+		return ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false))
+			? $user_entry->annotations_remove($annotation)
+			: null;
+	}
+	
+	public function get_interval()
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->get_interval()
+			: null;
+	}
+	public function get_efactor()
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->get_efactor()
+			: null;
+	}
+	public function update_repetition_details($point)
+	{
+		return ($user_entry = $this->copy_for_session_user())
+			? $user_entry->update_repetition_details($point)
+			: null;
+	}
+	
+	//  Returns a copy of $this owned and editable by the Session User
+	public function copy_for_session_user()
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return static::set_error_description("Session user has not reauthenticated.");
+		}
+		
+		return $this->copy_for_user($session_user);
+	}
+	
+	public function copy_for_user($user)
+	{
+		if (!$user) return static::set_error_description("Failed to copy entry for null user.");
+		
+		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
+	}
+
+	public function assoc_for_json()
+	{
+		return array (
+			"entryId" => $this->get_entry_id(),
+			"languages" => $this->get_languages(),
+			"owner" => null,
+			"words" => $this->get_words(),
+			"pronuncations" => $this->get_pronunciations()
+		);
+	}
+}
+
+class UserEntry extends Entry
+{
+	/***    CLASS/STATIC    ***/
+	protected static $instances_by_id = array ();
+	protected static $instances_by_entry_id_by_user_id = array ();
+	
+	public static function unregister_all()
+	{
+		parent::unregister_all();
+		self::$instances_by_entry_id_by_user_id = array ();
+	}
+	
+	public static function select_by_user_entry_id($user_entry_id)
+	{
+		return self::select("user_entries", "user_entry_id", $user_entry_id);
+	}
+	
+	protected static function entries_by_id_for_user_id($user_id)
+	{
+		$user_id = intval($user_id, 10);
+		
+		if (!in_array($user_id, array_keys(self::$instances_by_entry_id_by_user_id)))
+		{
+			$instances_by_entry_id_by_user_id[$user_id] = array ();
+		}
+		
+		return $instances_by_entry_id_by_user_id[$user_id];
+	}
+	
+	public static function select_by_user_id_entry_id($user_id, $entry_id, $insert_if_necessary = true)
+	{
+		$user_id = intval($user_id, 10);
+		$entry_id = intval($entry_id, 10);
+		
+		$entries_by_id_for_user_id = self::entries_by_id_for_user_id($user_id);
+		
+		if (in_array($entry_id, array_keys($entries_by_id_for_user_id)))
+		{
+			return $entries_by_id_for_user_id[$entry_id];
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		if ($insert_if_necessary)
+		{
+			//  Insert into user_entries the dictionary row corresponding to this Entry object
+			//      If such a row already exists in user_entries, ignore the insertion error
+			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) ".
+					"SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
+				$user_id,
+				$entry_id
+			));
+		}
+		
+		$query = sprintf("SELECT * FROM (SELECT entry_id, %s FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
+			Dictionary::language_code_columns(),
+			Dictionary::join(),
+			$entry_id,
+			$user_id
+		);
+		
+		$result = $mysqli->query($query);
+		
+		if (!$result || !($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " .
+				(!!$mysqli->error ? $mysqli->error : $query)
+			);
+		}
+		
+		return self::from_mysql_result_assoc($result_assoc);
+	}
+	
+	private $user_entry_id;
+	public function get_user_entry_id()
+	{
+		return $this->user_entry_id;
+	}
+	
+	private $user_id = null;
+	public function get_user_id()
+	{
+		return $this->user_id;
+	}
+	public function get_owner()
+	{
+		return !!$this->get_user_id() ? User::select_by_id($this->get_user_id()) : null;
+	}
+	
+	private $interval = null;
+	public function get_interval()
+	{
+		return $this->interval;
+	}
+
+	private $efactor = null;
+	public function get_efactor()
+	{
+		return $this->efactor;
+	}
+	
+	private $entry_id = null;
+	public function get_entry_id()
+	{
+		return $this->entry_id;
+	}
+	public function get_entry()
+	{
+		return parent::select_by_id($this->get_entry_id());
+	}
+	
+	private $word_0 = null;
+	public function get_word_0()
+	{
+		return isset($this->word_0)
+			? $this->word_0
+			: !!$this->get_entry() ? $this->get_entry()->get_word_0() : null;
+	}
+	
+	private $word_1 = null;
+	public function get_word_1()
+	{
+		return isset($this->word_1)
+			? $this->word_1
+			: !!$this->get_entry() ? $this->get_entry()->get_word_1() : null;
+	}
+	
+	private $lang_code_0 = null;
+	public function get_lang_code_0()
+	{
+		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_0() : null;
+	}
+	
+	private $lang_code_1 = null;
+	public function get_lang_code_1()
+	{
+		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_1() : null;
+	}
+	
+	public function get_languages()
+	{
+		return array (
+			$this->get_lang_code_0(),
+			$this->get_lang_code_1()
+		);
+	}
+	public function get_words()
+	{
+		return array (
+			$this->get_lang_code_0() => $this->get_word_0(),
+			$this->get_lang_code_1() => $this->get_word_1()
+		);
+	}
+
+	private $pronunciations = null;
+	public function get_pronunciations()
+	{
+		return !!$this->pronunciations
+			? $this->pronunciations
+			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
+	}
+
+	private $annotations;
+	public function get_annotations()
+	{
+		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
+		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
+	}
+
+	private function __construct($user_entry_id, $user_id, $entry_id,
+		$interval, $efactor,
+		$lang_code_0, $lang_code_1,
+		$word_0, $word_1, $pronunciation = null)
+	{
+		$this->user_entry_id = intval($user_entry_id, 10);
+		$this->entry_id = $entry_id !== null ? intval($entry_id, 10) : null;
+		$this->user_id = intval($user_id, 10);
+		$this->word_0 = $word_0;
+		$this->word_1 = $word_1;
+		$this->lang_code_0 = $lang_code_0;
+		$this->lang_code_1 = $lang_code_1;
+		$this->pronunciations = array (
+			$lang_code_1 => $pronunciation
+		);
+		
+		$this->interval = intval($interval, 10);
+		$this->efactor = floatval($efactor);
+
+		$entries_by_id_for_user_id = self::entries_by_id_for_user_id($this->user_id);
+		$entries_by_id_for_user_id[$this->entry_id] = $this;
+	}
+	
+	public static function from_mysql_result_assoc($result_assoc)
+	{
+		$mysql_columns = array (
+			"user_entry_id",
+			"user_id",
+			"entry_id",
+			"interval",
+			"efactor",
+			"lang_code_0",
+			"lang_code_1",
+			"word_0",
+			"word_1",
+			"word_1_pronun"
+		);
+		
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new UserEntry(
+				$result_assoc["user_entry_id"],
+				$result_assoc["user_id"],
+				$result_assoc["entry_id"],
+				$result_assoc["interval"],
+				$result_assoc["efactor"],
+				$result_assoc["lang_code_0"],
+				$result_assoc["lang_code_1"],
+				$result_assoc["word_0"],
+				$result_assoc["word_1"],
+				!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null
 			)
 			: null;
 	}
 	
 	public function revert()
 	{
-		$failure_message = "Failed to revert entry";
+		$failure_message = "Failed to revert user entry to dictionary entry";
 		
-		$entry_modified = $entry->copy_for_session_user();
-		
-		if (!($entry_original = Dictionary::select_entry_by_id($entry_modified->get_entry_id())))
+		if (!$this->get_entry())
 		{
-			return self::set_error_description("$failure_message: " . Dictionary::get_error_description());
+			return static::set_error_description("$failure_message: No dictionary entry associated with user entry where user_entry_id = " . $this->get_user_entry_id());
 		}
 		
 		$succeeded = true;
 		
-		$succeeded = !!$entry_modified->set_word_0($entry_original->get_word_0()) && $succeeded;
-		$succeeded = !!$entry_modified->set_word_1($entry_original->get_word_1()) && $succeeded;
-		$pronunciations = $entry_original->get_pronunciations();
-		$succeeded = !!$entry_modified->set_word_1_pronunciation($pronunciations[$entry_original->get_lang_code_1()]) && $succeeded;
+		$succeeded = !!$this->set_word_0($this->get_entry()->get_word_0()) && $succeeded;
+		$succeeded = !!$this->set_word_1($this->get_entry()->get_word_1()) && $succeeded;
+		$pronunciations = $this->get_entry()->get_pronunciations();
+		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
-		return $succeeded ? $entry_modified : self::set_error_description("$failure_message: " . self::get_error_description());
+		return $succeeded ? $this : static::set_error_description("$failure_message: " . self::get_error_description());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -231,28 +514,35 @@ class Entry extends DatabaseRow
 	
 	public function annotations_add($annotation_contents)
 	{
-		if (!($entry = $this->copy_for_session_user()))
+		if (!$this->session_user_can_read())
 		{
-			return self::set_error_description("Failed to add annotation: " . self::get_error_description());
+			return static::set_error_description("Session user cannot read entry.");
 		}
 		
-		$annotation = Annotation::insert($entry->get_entry_id(), $annotation_contents);
-		
-		if (!!$annotation)
+		if (($entry = $this->copy_for_session_user()))
 		{
-			$annotations = $entry->get_annotations();
-			array_push($annotations, $annotation);
-			return $entry;
+			if (($annotation = Annotation::insert($entry->get_user_entry_id(), $annotation_contents)))
+			{
+				$annotations = $entry->get_annotations();
+				array_push($annotations, $annotation);
+				return $entry;
+			}
+			return static::set_error_description(Annotation::get_error_description());
 		}
 		
-		return self::set_error_description(Annotation::get_error_description());
+		return null;
 	}
 	
 	public function annotations_remove($annotation)
 	{
-		if ($annotation->get_entry_id() !== $this->get_entry_id())
+		if ($this->get_owner()->equals(Session::get()->get_user()))
 		{
-			return self::set_error_description("Cannot delete annotation.");
+			return static::set_error_description("Session user is not owner of user entry.");
+		}
+		
+		if ($annotation->get_user_entry_id() !== $this->get_user_entry_id())
+		{
+			return static::set_error_description("User entry is not associated with annotation.");
 		}
 		
 		$annotation->delete();
@@ -267,7 +557,7 @@ class Entry extends DatabaseRow
 	{
 		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		return $this->copy_for_user($session_user);
@@ -275,36 +565,28 @@ class Entry extends DatabaseRow
 	
 	public function copy_for_user($user)
 	{
-		$entries_by_id_for_user_id = self::entries_by_id_for_user_id($user->get_user_id());
+		if ($this->get_owner()->equals($user)) return $this;
 		
-		if (isset($entries_by_id_for_user_id[$this->entry_id])) return $entries_by_id_for_user_id[$this->entry_id];
-	
+		if (!$user)
+		{
+			return static::set_error_description("Failed to copy entry for null user.");
+		}
+		
+		if (!$this->user_can_read($user))
+		{
+			return static::set_error_description("User cannot read user entry to copy.");
+		}
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		//  Insert into user_entries the dictionary row corresponding to this Entry object
 		//      If such a row already exists in user_entries, ignore the insertion error
-		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
+		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d",
 			$user->get_user_id(),
-			$this->entry_id
+			$this->get_user_entry_id()
 		));
 		
-		$query = sprintf("SELECT * FROM (SELECT entry_id, %s FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
-			Dictionary::language_code_columns(),
-			Dictionary::join(),
-			$this->entry_id,
-			$user->get_user_id()
-		);
-		
-		$result = $mysqli->query($query);
-		
-		if (!$result || !($result_assoc = $result->fetch_assoc()))
-		{
-			return self::set_error_description("Entry failed to copy for user: " .
-				(!!$mysqli->error ? $mysqli->error : $query)
-			);
-		}
-		
-		return self::from_mysql_result_assoc($result_assoc);
+		return self::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id(), false);
 	}
 	
 	public function update_repetition_details($point)
@@ -312,7 +594,7 @@ class Entry extends DatabaseRow
 		$failure_message = "Failed to update repetition details";
 		if (!($user_entry = $this->copy_for_session_user()))
 		{
-			return self::set_error_description("$failure_message: " . self::get_error_description());
+			return static::set_error_description("$failure_message: " . self::get_error_description());
 		}
 		
 		$user_entry_id = $user_entry->get_user_entry_id();
@@ -339,7 +621,7 @@ class Entry extends DatabaseRow
 			"WHERE user_entry_id = $user_entry_id"
 			))
 		{
-			return self::set_error_description("$failure_message: " . $mysqli->error);
+			return static::set_error_description("$failure_message: " . $mysqli->error);
 		}
 
 		$user_entry->interval = $new_interval;
@@ -351,21 +633,16 @@ class Entry extends DatabaseRow
 	{
 		$privacy = !!$this->get_owner() && !$this->session_user_is_owner();
 		
-		$entry = !$privacy ? $this : Dictionary::select_entry_by_id($this->entry_id);
+		$entry = !$privacy ? $this : parent::select_by_id($this->get_entry_id());
 		
 		return array (
 			"entryId" => $entry->get_entry_id(),
-                        "languages" => $entry->get_languages(),
-			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
+			"languages" => $entry->get_languages(),
+			"owner" => $this->get_owner()->assoc_for_json(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations()
 		);
 	}
-}
-
-class UserEntry extends Entry
-{
-	
 }
 
 ?>
