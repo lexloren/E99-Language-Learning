@@ -62,6 +62,13 @@ class Entry extends DatabaseRow
 		return $this->lang_code_1;
 	}
 	
+	public function get_languages()
+	{
+                return array (
+                        $this->get_lang_code_0(),
+                        $this->get_lang_code_1()
+                );
+	}
 	public function get_words()
 	{
 		return array (
@@ -347,10 +354,11 @@ class Entry extends DatabaseRow
 		$entry = !$privacy ? $this : Dictionary::select_entry_by_id($this->entry_id);
 		
 		return array (
-			"entryId" => $entry->entry_id,
+			"entryId" => $entry->get_entry_id(),
+                        "languages" => $entry->get_languages(),
 			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
-			"words" => $entry->words,
-			"pronuncations" => $entry->pronunciations
+			"words" => $entry->get_words(),
+			"pronuncations" => $entry->get_pronunciations()
 		);
 	}
 }

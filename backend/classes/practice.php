@@ -106,14 +106,14 @@ class Practice
 			$grade_id
 		));
 		
-		if (!$mysqli->insert_id)
+		if (!$mysqli->insert_id ||
+			!($grade_result = $mysqli->query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id"))))
 		{
 			Session::get()->set_error_assoc("response", "Failed to update practice response details, ".$mysqli->error);
 			return;
 		}
 		
 		$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-		$grade_result = $mysqli->query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id"));
 		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
 		if (!$grade_point || !$user_entry)
 		{

@@ -79,20 +79,22 @@ class APIUser extends APIBase
 		//  name_family
 	}
 	
-	//  SHOULD THIS GO IN A SEPARATE API? WHY UNDER USER?
 	public function practice()
 	{
 		if (!Session::get()->reauthenticate()) return;
 
 		$list_ids = array();
-		foreach (explode(",", $_GET["list_ids"]) as $list_id)
+		if (isset($_GET["list_ids"]))
 		{
-			if (!($list = EntryList::select_by_id(intval($list_id, 10))))
-	                {
-                	        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
-				return;
-        	        }
-			array_push($list_ids, $list->get_list_id());
+			foreach (explode(",", $_GET["list_ids"]) as $list_id)
+			{
+				if (!($list = EntryList::select_by_id(intval($list_id, 10))))
+		                {
+                		        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
+					return;
+	        	        }
+				array_push($list_ids, $list->get_list_id());
+			}
 		}
 
 		if (empty($list_ids))
@@ -112,18 +114,20 @@ class APIUser extends APIBase
 		
 		if (!isset($_GET["entry_id"]) || !($entry = Entry::select_by_id(intval($_GET["entry_id"], 10))))
 		{
-			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".$_GET["entry_id"]);
+			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".
+							(isset($_GET["entry_id"]) ? $_GET["entry_id"] : ''));
 		}
 		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select_by_id(intval($_GET["grade_id"], 10))))
 		{
-			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".$_GET["grade_id"]);
+			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".
+                                                        (isset($_GET["grade_id"]) ? $_GET["grade_id"] : ''));
 		}
 		else
 		{
 			$result = Practice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
 			if (!Session::get()->has_error())
 			{
-				Session::get()->set_result_assoc($result);
+				Session::get()->set_result_assoc($result->assoc_for_json());
 			}
 		}
 		return;
