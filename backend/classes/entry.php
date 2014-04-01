@@ -236,14 +236,21 @@ class Entry extends DatabaseRow
 		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
 	}
 
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
+		if ($privacy === null) $privacy = !!$this->get_owner() && !$this->session_user_is_owner();
+		
+		//  If $this is a UserEntry and we want privacy, get the underlying Entry.
+		$entry = !!$privacy && ($dictionary_entry = self::select_by_id($this->get_entry_id(), false))
+			? $dictionary_entry
+			: $this;
+		
 		return array (
-			"entryId" => $this->get_entry_id(),
-			"languages" => $this->get_languages(),
-			"owner" => null,
-			"words" => $this->get_words(),
-			"pronuncations" => $this->get_pronunciations()
+			"entryId" => $entry->get_entry_id(),
+			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
+			"languages" => $entry->get_languages(),
+			"words" => $entry->get_words(),
+			"pronuncations" => $entry->get_pronunciations()
 		);
 	}
 }
@@ -633,21 +640,6 @@ class UserEntry extends Entry
 		$user_entry->interval = $new_interval;
 		$user_entry->efactor = $new_efactor;
 		return $user_entry;
-	}
-
-	public function assoc_for_json()
-	{
-		$privacy = !!$this->get_owner() && !$this->session_user_is_owner();
-		
-		$entry = !$privacy ? $this : parent::select_by_id($this->get_entry_id());
-		
-		return array (
-			"entryId" => $entry->get_entry_id(),
-			"languages" => $entry->get_languages(),
-			"owner" => $this->get_owner()->assoc_for_json(),
-			"words" => $entry->get_words(),
-			"pronuncations" => $entry->get_pronunciations()
-		);
 	}
 }
 
