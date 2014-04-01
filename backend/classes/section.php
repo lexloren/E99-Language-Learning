@@ -13,14 +13,14 @@ class Section extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$test = Test::select_by_id(($test_id = intval($test_id, 10)));
 		
 		if (!$test->session_user_is_instructor())
 		{
-			return self::set_error_description("Session user is not course instructor.");
+			return static::set_error_description("Session user is not course instructor.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -34,7 +34,7 @@ class Section extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert section: " . $mysqli->error);
+			return static::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
 		
 		return self::select_by_id($mysqli->insert_id);

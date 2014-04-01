@@ -67,31 +67,31 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			return self::set_error_description("Email must conform to the standard pattern.");
+			return static::set_error_description("Email must conform to the standard pattern.");
 		}
 		
 		if (!self::validate_password($password))
 		{
-			return self::set_error_description("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			return static::set_error_description("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		
 		if (!self::validate_handle($handle))
 		{
-			return self::set_error_description("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			return static::set_error_description("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 
 		//  Check whether requested handle conflicts with any existing handle
 		$existing_users = self::find($handle);
 		if (count($existing_users) > 0)
 		{
-			return self::set_error_description("The requested handle is already in use.");
+			return static::set_error_description("The requested handle is already in use.");
 		}
 
 		//  Check whether requested email conflicts with any existing email
 		$existing_users = self::find($email);
 		if (count($existing_users) > 0)
 		{
-			return self::set_error_description("The requested email is already in use.");
+			return static::set_error_description("The requested email is already in use.");
 		}
 		
 		//  Good to go, so insert the new user
@@ -105,7 +105,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert user: " . $mysqli->error);
+			return static::set_error_description("Failed to insert user: " . $mysqli->error);
 		}
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -138,7 +138,7 @@ class User extends DatabaseRow
 	{
 		if (!self::validate_email($email))
 		{
-			return self::set_error_description("Email failed to conform to standard pattern.");
+			return static::set_error_description("Email failed to conform to standard pattern.");
 		}
 		
 		if (!self::update_this($this, "users", array ("email" => $email), "user_id", $this->get_user_id()))
@@ -225,7 +225,7 @@ class User extends DatabaseRow
 	
 	public function delete()
 	{
-		return self::set_error_description("Failed to delete user.");
+		return static::set_error_description("Failed to delete user.");
 	}
 	
 	private $lists;

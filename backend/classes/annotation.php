@@ -30,33 +30,25 @@ class Annotation extends DatabaseRow
 	{
 		return $this->user_entry_id;
 	}
-	
-	private $entry_id;
-	public function get_entry_id()
+	public function get_user_entry()
 	{
-		return $this->entry_id;
-	}
-	public function get_entry()
-	{
-		return Entry::select_by_id($this->get_entry_id());
+		return UserEntry::select_by_id($this->get_user_entry_id());
 	}
 	
 	private $user_id;
 	public function get_user_id()
 	{
-		return $this->user_id;
+		return $this->get_user_entry()->get_user_id();
 	}
 	public function get_owner()
 	{
 		return User::select_by_id($this->get_user_id());
 	}
 	
-	private function __construct($annotation_id, $user_entry_id, $entry_id, $user_id, $contents)
+	private function __construct($annotation_id, $user_entry_id, $contents)
 	{
 		$this->annotation_id = intval($annotation_id, 10);
 		$this->user_entry_id = intval($user_entry_id, 10);
-		$this->entry_id = intval($entry_id, 10);
-		$this->user_id = intval($user_id, 10);
 		$this->contents = $contents;
 		
 		self::register($this->annotation_id, $this);
@@ -67,8 +59,6 @@ class Annotation extends DatabaseRow
 		$mysql_columns = array (
 			"annotation_id",
 			"user_entry_id",
-			"entry_id",
-			"user_id",
 			"contents"
 		);
 		
@@ -76,23 +66,19 @@ class Annotation extends DatabaseRow
 			? new Annotation(
 				$result_assoc["annotation_id"],
 				$result_assoc["user_entry_id"],
-				$result_assoc["entry_id"],
-				$result_assoc["user_id"],
 				$result_assoc["contents"]
 			)
 			: null;
 	}
 	
-	public static function insert($entry_id, $contents)
+	public static function insert($user_entry_id, $contents)
 	{
-		$entry_id = intval($entry_id, 10);
+		$user_entry_id = intval($user_entry_id, 10);
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-		
 		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
-			$entry->get_user_entry_id(),
+			$user_entry_id,
 			$mysqli->escape_string($contents)
 		));
 		

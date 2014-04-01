@@ -77,7 +77,7 @@ class Dictionary
 		
 		if (!($result = $mysqli->query($query)))
 		{
-			return self::set_error_description("Failed to find entry: " . $mysqli->error);
+			return static::set_error_description("Failed to find entry: " . $mysqli->error);
 		}
 		
 		//  Save information about query results in static properties
@@ -130,7 +130,7 @@ class Dictionary
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				return self::set_error_description("Failed to select dictionary entry where entry_id = $entry_id.");
+				return static::set_error_description("Failed to select dictionary entry where entry_id = $entry_id.");
 			}
 			
 			self::$entries_by_id[$entry_id] = Entry::from_mysql_result_assoc($result_assoc);
@@ -152,7 +152,7 @@ class Dictionary
 			return $result_assoc["lang_code"];
 		}
 		
-		return self::set_error_description("Failed to select language where language_id = $lang_id.");
+		return static::set_error_description("Failed to select language where language_id = $lang_id.");
 	}
 	
 	public static function get_lang_id($lang_code)
@@ -168,7 +168,7 @@ class Dictionary
 			return intval($result_assoc["lang_id"], 10);
 		}
 		
-		return self::set_error_description("Failed to select language where language_code = '$lang_code'.");
+		return static::set_error_description("Failed to select language where language_code = '$lang_code'.");
 	}
 }
 

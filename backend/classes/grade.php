@@ -71,7 +71,7 @@ class Grade extends DatabaseRow
 
 	public function delete()
 	{
-		return self::set_error_description("Failed to delete grade.");
+		return static::set_error_description("Failed to delete grade.");
 	}
 
 	public function assoc_for_json()

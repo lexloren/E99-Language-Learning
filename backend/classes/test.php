@@ -13,14 +13,14 @@ class Test extends CourseComponent
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)));
 		
 		if (!$unit->session_user_is_instructor())
 		{
-			return self::set_error_description("Session user is not course instructor.");
+			return static::set_error_description("Session user is not course instructor.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -34,7 +34,7 @@ class Test extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert test: " . $mysqli->error);
+			return static::set_error_description("Failed to insert test: " . $mysqli->error);
 		}
 		
 		return self::select_by_id($mysqli->insert_id);

@@ -13,7 +13,7 @@ class Unit extends CourseComponent
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -22,11 +22,11 @@ class Unit extends CourseComponent
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
 		
-		if (!$course) return self::set_error_description(Course::get_error_description());
+		if (!$course) return static::set_error_description(Course::get_error_description());
 		
 		if (!$course->session_user_is_instructor())
 		{
-			return self::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$unit_number = count($course->get_units()) + 1;
@@ -37,7 +37,7 @@ class Unit extends CourseComponent
 			$unit_number
 		));
 		
-		if (!!$mysqli->error) return self::set_error_description("Failed to insert unit: " . $mysqli->error);
+		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -185,12 +185,12 @@ class Unit extends CourseComponent
 	{
 		if (!$this->session_user_is_instructor())
 		{
-			return self::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user is not instructor of course.");
 		}
 		
 		if (!$list->session_user_is_owner())
 		{
-			return self::set_error_description("Session user is not owner of list.");
+			return static::set_error_description("Session user is not owner of list.");
 		}
 		
 		$list = $list->copy_for_user($this->get_owner());
@@ -211,7 +211,7 @@ class Unit extends CourseComponent
 	{
 		if (!$this->session_user_is_instructor())
 		{
-			return self::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user is not instructor of course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();

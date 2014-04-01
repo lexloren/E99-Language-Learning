@@ -13,7 +13,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -25,7 +25,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert list: " . $mysqli->error);
+			return static::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -183,7 +183,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit list.");
+			return static::set_error_description("Session user cannot edit list.");
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
@@ -191,7 +191,7 @@ class EntryList extends DatabaseRow
 		
 		if (!$entry_added)
 		{
-			return self::set_error_description(Entry::get_error_description());
+			return static::set_error_description(Entry::get_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -212,7 +212,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit list.");
+			return static::set_error_description("Session user cannot edit list.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -232,7 +232,7 @@ class EntryList extends DatabaseRow
 			}
 		}
 		
-		return self::set_error_description("List failed to remove entry.");
+		return static::set_error_description("List failed to remove entry.");
 	}
 	
 	//  Copies this list, setting the copy's owner to some other user
@@ -241,7 +241,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		return $this->copy_for_user($session_user);
@@ -251,7 +251,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->user_can_read($user))
 		{
-			return self::set_error_description("User cannot read list.");
+			return static::set_error_description("User cannot read list.");
 		}
 		
 		if ($this->get_owner()->equals($user)) return $this;

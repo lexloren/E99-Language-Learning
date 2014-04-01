@@ -13,7 +13,7 @@ class Course extends DatabaseRow
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -40,7 +40,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert course: " . $mysqli->error);
+			return static::set_error_description("Failed to insert course: " . $mysqli->error);
 		}
 		
 		if (!($course = self::select_by_id($mysqli->insert_id)))
@@ -298,12 +298,12 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		if ($user->in_array($array))
 		{
-			return self::set_error_description("Course cannot add user.");
+			return static::set_error_description("Course cannot add user.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -322,7 +322,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return self::set_error_description("Session user is not course owner.");
+			return static::set_error_description("Session user is not course owner.");
 		}
 		return $this->users_add($this->get_instructors(), "course_instructors", $user);
 	}
@@ -336,7 +336,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -355,7 +355,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return self::set_error_description("Session user is not course owner.");
+			return static::set_error_description("Session user is not course owner.");
 		}
 		return $this->users_remove($this->get_instructors(), "course_instructors", $user);
 	}
