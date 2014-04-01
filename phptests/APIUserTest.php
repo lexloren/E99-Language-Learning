@@ -254,7 +254,6 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 
                 $_GET["entry_id"] = '0';
                 Session::get()->set_result_assoc(null);
-                Session::get()->set_error_assoc(null, null);
                 $this->obj->practice_response();
                 $this->assertTrue(Session::get()->has_error());
 

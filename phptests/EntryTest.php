@@ -14,6 +14,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 		$this->db->add_dictionary_entries(10);
+		$this->db->add_grades();
 	}
 	
 	public function test_select()
@@ -88,7 +89,20 @@ class EntryTest extends PHPUnit_Framework_TestCase
 	
 	public function test_update_repetition_details()
 	{
-		
+		$this->db->add_users(2);
+		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
+		$entry = Entry::select_by_id($this->db->practice_entry_ids[0]);
+		$this->assertNotNull($entry);
+
+		$user_obj = User::select_by_id($this->db->user_ids[1]);
+                Session::get()->set_user($user_obj);
+		$result = $entry->update_repetition_details(4);
+		//$this->assertNull($entry->get_error_description());
+
+		$this->assertEquals($result->get_entry_id(), $entry->get_entry_id());
+		$this->assertEquals($result->get_words(), $entry->get_words());
+		$this->assertEquals($result->get_interval(), 1);
+		$this->assertEquals($result->get_efactor(), 2.50);
 	}
 	
 	public function test_get_annotations()

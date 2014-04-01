@@ -36,7 +36,7 @@ class Practice
 		
 		if (($learned_count + $not_learned_count) == 0 || $count_limit == 0)
 		{
-			return Practice(array());
+			return new Practice(array());
 		}
 		else
 		{
@@ -65,7 +65,7 @@ class Practice
 		return $this->entries;
 	}
 
-	public function __construct($entry_ids)
+	private function __construct($entry_ids)
 	{
 		if (!is_array($entry_ids))
 		{
