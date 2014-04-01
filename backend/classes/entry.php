@@ -121,6 +121,18 @@ class Entry extends DatabaseRow
 		);
 	}
 	
+	public function revert()
+	{
+		if (!!Session::get()
+			&& !!($session_user = Session::get()->get_user())
+			&& ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+		{
+			return $user_entry->revert();
+		}
+		
+		return $this;
+	}
+	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
 		$mysql_columns = array (
@@ -337,7 +349,6 @@ class UserEntry extends Entry
 		return $this->efactor;
 	}
 	
-	private $entry_id = null;
 	public function get_entry_id()
 	{
 		return $this->entry_id;
@@ -347,29 +358,25 @@ class UserEntry extends Entry
 		return parent::select_by_id($this->get_entry_id());
 	}
 	
-	private $word_0 = null;
 	public function get_word_0()
 	{
-		return isset($this->word_0)
+		return isset($this->word_0) && !!$this->word_0
 			? $this->word_0
 			: !!$this->get_entry() ? $this->get_entry()->get_word_0() : null;
 	}
 	
-	private $word_1 = null;
 	public function get_word_1()
 	{
-		return isset($this->word_1)
+		return isset($this->word_1) && !!$this->word_1
 			? $this->word_1
 			: !!$this->get_entry() ? $this->get_entry()->get_word_1() : null;
 	}
 	
-	private $lang_code_0 = null;
 	public function get_lang_code_0()
 	{
 		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_0() : null;
 	}
 	
-	private $lang_code_1 = null;
 	public function get_lang_code_1()
 	{
 		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_1() : null;
@@ -390,10 +397,9 @@ class UserEntry extends Entry
 		);
 	}
 
-	private $pronunciations = null;
 	public function get_pronunciations()
 	{
-		return !!$this->pronunciations
+		return isset($this->pronunciations) && !!$this->pronunciations
 			? $this->pronunciations
 			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
 	}
