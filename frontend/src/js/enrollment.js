@@ -69,9 +69,13 @@ function getStudentInfo(){
             else{
                 $("#newStudent").show();
                 $.each(data.result, function(i, item){
+                    if(item.nameGiven != "null"){nameGiven="";}
+                    else{nameGiven=item.nameGiven;}
+                    if(item.nameFamily != "null"){nameFamily="";}
+                    else{nameFamily=item.nameFamily;}
                     newrow = '<tr><td>' + item.handle + '</td>' +
-                             '<td>' + item.nameGiven + '</td>' +
-                             '<td>' + item.nameFamily + '</td>' +
+                             '<td>' + nameFamily + '</td>' +
+                             '<td>' + nameGiven + '</td>' +
                              '<td>' + item.email + '</td>' +
                              '<td><input type="checkbox" class="rem_user_ids" name="rem_user_ids" value='+item.userId+'></td></tr>';
                     $('#studentDetails').append(newrow);
@@ -107,7 +111,7 @@ function searchUsers(){
                 $('#searchResults').append('<br /><strong>Search Results:</strong>');
                 $.each(data.result, function(i, item){
                     result = '<div class="checkbox"><label><input type="checkbox" class="add_user_ids" name="add_user_ids" value='+item.userId+'>'+
-                             item.nameFamily+', '+item.nameGiven+' | '+item.handle+' | '+item.email+'</label></div>';
+                             item.handle+' | '+item.email+'</label></div>';
                     $('#searchResults').append(result);
                 });
                 $('#searchResults').append('<br /><button class="btn btn-primary" type="button" onclick="addStudents();">Add Selected Users</button> &nbsp; &nbsp;'+
