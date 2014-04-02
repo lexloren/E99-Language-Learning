@@ -324,14 +324,15 @@ class Course extends DatabaseRow
 		{
 			return static::set_error_description("Session user is not course owner.");
 		}
-		return $this->users_add($this->get_instructors(), "course_instructors", $user);
+		$instructors = $this->get_instructors();
+		return $this->users_add($instructors, "course_instructors", $user);
 	}
 	
 	public function students_add($user)
 	{
 		//$temp to avoid test error : Only variables should be passed by reference
-		$temp = $this->get_students(); 
-		return $this->users_add($temp, "course_students", $user);
+		$students = $this->get_students();
+		return $this->users_add($students, "course_students", $user);
 	}
 	
 	private function users_remove(&$array, $table, $user)
@@ -359,12 +360,14 @@ class Course extends DatabaseRow
 		{
 			return static::set_error_description("Session user is not course owner.");
 		}
-		return $this->users_remove($this->get_instructors(), "course_instructors", $user);
+		$instructors = $this->get_instructors();
+		return $this->users_remove($instructors, "course_instructors", $user);
 	}
 	
 	public function students_remove($user)
 	{
-		return $this->users_remove($this->get_students(), "course_students", $user);
+		$students = $this->get_students();
+		return $this->users_remove($students, "course_students", $user);
 	}
 	
 	public function assoc_for_json($privacy = null)
