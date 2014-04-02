@@ -329,7 +329,9 @@ class Course extends DatabaseRow
 	
 	public function students_add($user)
 	{
-		return $this->users_add($this->get_students(), "course_students", $user);
+		//$temp to avoid test error : Only variables should be passed by reference
+		$temp = $this->get_students(); 
+		return $this->users_add($temp, "course_students", $user);
 	}
 	
 	private function users_remove(&$array, $table, $user)

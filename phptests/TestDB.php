@@ -31,9 +31,9 @@ class TestDB
 	public static $word_1_pronun = 'Peace pronun in CN';
 	
 	public $user_entry_ids = Array();
+	public $annotation_ids = Array();
 	
-	public static $entry_annotation = 'Some user annotation';
-	public static $entry_annotation_id;
+	private static $entry_annotation = 'Some user annotation';
 
 	//lists table
 	public $list_ids = Array();
@@ -172,7 +172,7 @@ class TestDB
 				$user_entry_id, $link->escape_string(self::$entry_annotation)
 			));
 
-			self::$entry_annotation_id = $link->insert_id;
+			array_push($this->annotation_ids, $link->insert_id);
 		}
 		
 		return $list_id;

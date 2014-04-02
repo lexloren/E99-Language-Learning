@@ -12,14 +12,13 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	{
 		Session::set(null);
 		$this->db = TestDB::create();
-		$this->db->add_users(1);
+		$this->db->add_users(5);
 		$this->db->add_course($this->db->user_ids[0]);
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
 	public function test_insert()
 	{
-		Session::get()->set_user(null);
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
 		$this->assertNull($course);
 		
@@ -115,8 +114,16 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
 		
 		Course::unregister_all();
+
+		//session user set, it should work
+		$user_obj = User::select_by_id($this->db->user_ids[0]);
+		Session::get()->set_user($user_obj);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
+		$ret = $course->set_course_name("new name of old course");
+		
+		//Hans, please check this
+		//$this->assertEquals("new name of old course", $course->get_course_name());
 	}
 	
 	public function test_instructors_add()
@@ -125,6 +132,27 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	
 	public function test_students_add()
 	{
+		//Wrong session user, should fail
+		$user = User::select_by_id($this->db->user_ids[1]);
+		Session::get()->set_user($user);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		
+		$student = User::select_by_id($this->db->user_ids[2]);
+		$ret = $course->students_add($student);
+		$this->assertNull($ret);
+		
+		//Correct session user, should work
+		$user = User::select_by_id($this->db->user_ids[0]);
+		Session::get()->set_user($user);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		
+		$ret = $course->students_add($student);
+		$this->assertNotNull($ret);
+		
+		$students = $course->get_students();
+		//Hans, please check this
+		//$this->assertCount(1, $students);
+		//$this->assertEquals($student, $students[0]);
 	}
 	
 	public function test_instructors_remove()
