@@ -123,7 +123,7 @@ class Unit extends CourseComponent
 	//  inherits: protected $message;
 	public function set_message($message)
 	{
-		return parent::set_message($message, "course_units", "unit_id", $this->get_unit_id());
+		return parent::set_this_message($this, $message, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
 	private $tests;

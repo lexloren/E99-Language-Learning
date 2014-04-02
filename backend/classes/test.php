@@ -129,7 +129,7 @@ class Test extends CourseComponent
 	//  inherits: protected $message;
 	public function set_message($message)
 	{
-		return parent::set_message($message, "course_unit_tests", "test_id", $this->get_test_id());
+		return parent::set_this_message($this, $message, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
 	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)
