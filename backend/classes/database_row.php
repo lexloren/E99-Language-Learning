@@ -56,7 +56,7 @@ class DatabaseRow
 	
 	protected static function delete_this($instance, $table, $column, $id)
 	{
-		if (!$instance->session_user_is_owner())
+		if (!$instance->session_user_can_write())
 		{
 			return static::set_error_description("Failed to delete from $table where $column = $id: Session user is not owner.");
 		}

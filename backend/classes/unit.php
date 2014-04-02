@@ -24,9 +24,9 @@ class Unit extends CourseComponent
 		
 		if (!$course) return static::set_error_description(Course::get_error_description());
 		
-		if (!$course->session_user_is_instructor())
+		if (!$course->session_user_can_write())
 		{
-			return static::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		$unit_number = count($course->get_units()) + 1;
@@ -183,17 +183,15 @@ class Unit extends CourseComponent
 	
 	public function lists_add($list)
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		if (!$list->session_user_is_owner())
+		if (!($list = $list->copy_for_user($this->get_owner())))
 		{
-			return static::set_error_description("Session user is not owner of list.");
+			return static::set_error_description("Failed to add list: " . EntryList::get_error_description());
 		}
-		
-		$list = $list->copy_for_user($this->get_owner());
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -202,16 +200,17 @@ class Unit extends CourseComponent
 			$list->get_list_id()
 		));
 		
-		array_push($this->get_lists(), $list);
+		$lists = $this->get_lists();
+		array_push($lists, $list);
 		
 		return $this;
 	}
 	
 	public function lists_remove($list)
 	{
-		if (!$this->session_user_is_instructor())
+		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user is not instructor of course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();

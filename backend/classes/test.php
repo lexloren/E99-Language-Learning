@@ -18,9 +18,9 @@ class Test extends CourseComponent
 		
 		$unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)));
 		
-		if (!$unit->session_user_is_instructor())
+		if (!$unit->session_user_can_write())
 		{
-			return static::set_error_description("Session user is not course instructor.");
+			return static::set_error_description("Session user cannot edit course unit.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();

@@ -18,9 +18,9 @@ class Section extends DatabaseRow
 		
 		$test = Test::select_by_id(($test_id = intval($test_id, 10)));
 		
-		if (!$test->session_user_is_instructor())
+		if (!$test->session_user_can_write())
 		{
-			return static::set_error_description("Session user is not course instructor.");
+			return static::set_error_description("Session user cannot edit course unit test.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
