@@ -38,6 +38,10 @@ class APIUser extends APIBase
 			//  Should exit the script in either success or failure.
 			Session::get()->authenticate($_POST["handle"], $_POST["password"]);
 		}
+		else if (self::validate_request($_POST, array ("email", "password")))
+		{
+			Session::get()->authenticate($_POST["email"], $_POST["password"]);
+		}
 	}
 	
 	public function find()
