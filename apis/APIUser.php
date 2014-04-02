@@ -101,6 +101,7 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 
+		//  Nirmal, do you check for session_user_can_read() on the lists requested for practice?
 		$list_ids = array();
 		if (isset($_GET["list_ids"]))
 		{
@@ -123,7 +124,6 @@ class APIUser extends APIBase
 			$practice = Practice::generate($list_ids, $entries_count);
 			self::return_array_as_json($practice->get_entries());
 		}
-		return;
 	}
 
 	public function practice_response()
@@ -148,7 +148,6 @@ class APIUser extends APIBase
 				Session::get()->set_result_assoc($result->assoc_for_json());
 			}
 		}
-		return;
 	}
 	
 	//  needs back-end implementation

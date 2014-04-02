@@ -97,23 +97,16 @@ class APIList extends APIBase
 		{
 			if (self::validate_request($_POST, "entry_ids"))
 			{
-				if ($list->session_user_can_write())
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+					if (!$list->entries_add(Entry::select_by_id($entry_id)))
 					{
-						if (!$list->entries_add(Entry::select_by_id($entry_id)))
-						{
-							Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
-				}
+				
+				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -126,23 +119,16 @@ class APIList extends APIBase
 		{
 			if (self::validate_request($_POST, "entry_ids"))
 			{
-				if ($list->session_user_can_write())
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+					if (!$list->entries_remove(Entry::select_by_id($entry_id)))
 					{
-						if (!$list->entries_remove(Entry::select_by_id($entry_id)))
-						{
-							Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("List Modification", "Session user is not list owner.");
-				}
+				
+				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

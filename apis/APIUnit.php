@@ -3,7 +3,7 @@
 require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
-class APIUnit  extends APIBase
+class APIUnit extends APIBase
 {
 	public function __construct($user, $mysqli)
 	{	
@@ -18,8 +18,9 @@ class APIUnit  extends APIBase
 		{
 			$unit_name = isset($_POST["unit_name"]) && strlen($_POST["unit_name"]) > 0 ? $_POST["unit_name"] : null;
 			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($unit = Unit::insert($course_id, $unit_name, $timeframe)))
+			if (!($unit = Unit::insert($course_id, $unit_name, $timeframe, $message)))
 			{
 				Session::get()->set_error_assoc("Unit Insertion", Unit::get_error_description());
 			}
@@ -56,32 +57,29 @@ class APIUnit  extends APIBase
 		
 		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
-			if ($unit->session_user_can_write())
+			$updates = 0;
+			
+			if (isset($_POST["unit_name"]))
 			{
-				$updates = 0;
-				
-				if (isset($_POST["unit_name"]))
-				{
-					$updates += !!$unit->set_unit_name($_POST["unit_name"]);
-				}
-				
-				if (isset($_POST["message"]))
-				{
-					$updates += !!$unit->set_message($_POST["message"]);
-				}
-				
-				if (isset($_POST["open"]))
-				{
-					$updates += !!$unit->set_open($_POST["open"]);
-				}
-				
-				if (isset($_POST["close"]))
-				{
-					$updates += !!$unit->set_close($_POST["close"]);
-				}
-				
-				self::return_updates_as_json("Unit", Unit::get_error_description(), $updates ? $unit->assoc_for_json() : null);
+				$updates += !!$unit->set_unit_name($_POST["unit_name"]);
 			}
+			
+			if (isset($_POST["message"]))
+			{
+				$updates += !!$unit->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["open"]))
+			{
+				$updates += !!$unit->set_open($_POST["open"]);
+			}
+			
+			if (isset($_POST["close"]))
+			{
+				$updates += !!$unit->set_close($_POST["close"]);
+			}
+			
+			self::return_updates_as_json("Unit", Unit::get_error_description(), $updates ? $unit->assoc_for_json() : null);
 		}
 	}
 	
@@ -103,23 +101,16 @@ class APIUnit  extends APIBase
 		{
 			if (self::validate_request($_POST, "list_ids"))
 			{
-				if ($unit->session_user_can_write())
+				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
-					foreach (explode(",", $_POST["list_ids"]) as $list_id)
+					if (!$unit->lists_add(EntryList::select_by_id($list_id)))
 					{
-						if (!$unit->lists_add(EntryList::select_by_id($list_id)))
-						{
-							Session::get()->set_error_assoc("Unit-Lists Addition", Unit::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -132,23 +123,16 @@ class APIUnit  extends APIBase
 		{
 			if (self::validate_request($_POST, "list_ids"))
 			{
-				if ($unit->session_user_can_write())
+				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
-					foreach (explode(",", $_POST["list_ids"]) as $list_id)
+					if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
 					{
-						if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
-						{
-							Session::get()->set_error_assoc("Unit-Lists Removal", Unit::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

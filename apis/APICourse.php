@@ -3,7 +3,7 @@
 require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
-class APICourse  extends APIBase
+class APICourse extends APIBase
 {
 	public function __construct($user, $mysqli)
 	{	
@@ -24,7 +24,9 @@ class APICourse  extends APIBase
 			else
 			{
 				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
-				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null, $timeframe)))
+				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
+				
+				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null, $timeframe, $message)))
 				{
 					Session::get()->set_error_assoc("Course Insertion", Course::get_error_description());
 				}
@@ -46,32 +48,29 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if ($course->session_user_can_write())
+			$updates = 0;
+				
+			if (isset($_POST["course_name"]))
 			{
-				$updates = 0;
-				
-				if (isset($_POST["course_name"]))
-				{
-					$updates += !!$course->set_course_name($_POST["course_name"]);
-				}
-				
-				if (isset($_POST["message"]))
-				{
-					$updates += !!$course->set_message($_POST["message"]);
-				}
-				
-				if (isset($_POST["open"]))
-				{
-					$updates += !!$course->set_open($_POST["open"]);
-				}
-				
-				if (isset($_POST["close"]))
-				{
-					$updates += !!$course->set_close($_POST["close"]);
-				}
-				
-				self::return_updates_as_json("Course", Course::get_error_description(), $updates ? $course->assoc_for_json() : null);
+				$updates += !!$course->set_course_name($_POST["course_name"]);
 			}
+			
+			if (isset($_POST["message"]))
+			{
+				$updates += !!$course->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["open"]))
+			{
+				$updates += !!$course->set_open($_POST["open"]);
+			}
+			
+			if (isset($_POST["close"]))
+			{
+				$updates += !!$course->set_close($_POST["close"]);
+			}
+			
+			self::return_updates_as_json("Course", Course::get_error_description(), $updates ? $course->assoc_for_json() : null);
 		}
 	}
 	
@@ -142,23 +141,16 @@ class APICourse  extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				if ($course->session_user_can_write())
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					foreach (explode(",", $_POST["user_ids"]) as $user_id)
+					if (!$course->students_add(User::select_by_id($user_id)))
 					{
-						if (!$course->students_add(User::select_by_id($user_id)))
-						{
-							Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -181,23 +173,16 @@ class APICourse  extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				if ($course->session_user_is_owner())
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					foreach (explode(",", $_POST["user_ids"]) as $user_id)
+					if (!$course->instructors_add(User::select_by_id($user_id)))
 					{
-						if (!$course->instructors_add(User::select_by_id($user_id)))
-						{
-							Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Course Modification", "Session user is not course owner.");
-				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -210,23 +195,16 @@ class APICourse  extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				if ($course->session_user_can_write())
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					foreach (explode(",", $_POST["user_ids"]) as $user_id)
+					if (!$course->students_remove(User::select_by_id($user_id)))
 					{
-						if (!$course->students_remove(User::select_by_id($user_id)))
-						{
-							Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Course Edit", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -239,23 +217,16 @@ class APICourse  extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				if ($course->session_user_is_owner())
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					foreach (explode(",", $_POST["user_ids"]) as $user_id)
+					if (!$course->instructors_remove(User::select_by_id($user_id)))
 					{
-						if (!$course->instructors_remove(User::select_by_id($user_id)))
-						{
-							Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Course Edit", "Session user is not course owner.");
-				}
+				
+				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

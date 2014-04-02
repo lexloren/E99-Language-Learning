@@ -3,7 +3,7 @@
 require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
-class APITest  extends APIBase
+class APITest extends APIBase
 {
 	public function __construct($user, $mysqli)
 	{	
@@ -24,8 +24,9 @@ class APITest  extends APIBase
 			{
 				$test_name = isset($_POST["test_name"]) && strlen($_POST["test_name"]) > 0 ? $_POST["test_name"] : null;
 				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 				
-				if (!($test = Test::insert($unit_id, $test_name, $timeframe)))
+				if (!($test = Test::insert($unit_id, $test_name, $timeframe, $message)))
 				{
 					Session::get()->set_error_assoc("Test Insertion", Test::get_error_description());
 				}
@@ -64,32 +65,29 @@ class APITest  extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if ($test->session_user_can_write())
+			$updates = 0;
+				
+			if (isset($_POST["test_name"]))
 			{
-				$updates = 0;
-				
-				if (isset($_POST["test_name"]))
-				{
-					$updates += !!$test->set_test_name($_POST["test_name"]);
-				}
-				
-				if (isset($_POST["message"]))
-				{
-					$updates += !!$test->set_message($_POST["message"]);
-				}
-				
-				if (isset($_POST["open"]))
-				{
-					$updates += !!$test->set_open($_POST["open"]);
-				}
-				
-				if (isset($_POST["close"]))
-				{
-					$updates += !!$test->set_close($_POST["close"]);
-				}
-				
-				self::return_updates_as_json("Test", Test::get_error_description(), $updates ? $test->assoc_for_json() : null);
+				$updates += !!$test->set_test_name($_POST["test_name"]);
 			}
+			
+			if (isset($_POST["message"]))
+			{
+				$updates += !!$test->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["open"]))
+			{
+				$updates += !!$test->set_open($_POST["open"]);
+			}
+			
+			if (isset($_POST["close"]))
+			{
+				$updates += !!$test->set_close($_POST["close"]);
+			}
+			
+			self::return_updates_as_json("Test", Test::get_error_description(), $updates ? $test->assoc_for_json() : null);
 		}
 	}
 	
