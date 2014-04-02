@@ -7,8 +7,12 @@ class DatabaseRow
 {
 	protected static function set_error_description($error_description)
 	{
-		static::$error_description = $error_description;
+		static::$error_description = (!!static::$error_description ? static::$error_description . "\n" : "") . $error_description;
 		return null;
+	}
+	public static function unset_error_description()
+	{
+		return (static::$error_description = null);
 	}
 	public static function get_error_description()
 	{

@@ -136,6 +136,8 @@ class User extends DatabaseRow
 	}
 	public function set_email($email)
 	{
+		$email = strtolower($email);
+		
 		if (!self::validate_email($email))
 		{
 			return static::set_error_description("Email failed to conform to standard pattern.");

@@ -73,10 +73,36 @@ class APIUser extends APIBase
 	
 	public function update()
 	{
-		//  email
-		//  handle
-		//  name_given
-		//  name_family
+		if (!Session::get()->reauthenticate()) return;
+		
+		$user = Session::get()->get_user();
+		
+		$updates = 0;
+			
+		if (isset($_POST["email"]))
+		{
+			$updates += !!$user->set_email($_POST["email"]);
+		}
+		
+		if (isset($_POST["name_given"]))
+		{
+			$updates += !!$user->set_name_given($_POST["name_given"]);
+		}
+		
+		if (isset($_POST["name_family"]))
+		{
+			$updates += !!$user->set_name_family($_POST["name_family"]);
+		}
+		
+		if (!$updates)
+		{
+			$failure_message = !!User::get_error_description() ? User::get_error_description() : "User failed to update.";
+			Session::get()->set_error_assoc("User Modification", $failure_message);
+		}
+		else
+		{
+			Session::get()->set_result_assoc($user->assoc_for_json());
+		}
 	}
 	
 	public function practice()
