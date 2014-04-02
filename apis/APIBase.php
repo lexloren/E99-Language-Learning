@@ -47,7 +47,29 @@ class APIBase
 		return $object;
 	}
 	
-	protected static function return_array_as_assoc_for_json($array)
+	protected static function return_updates_as_json($class_name, $error_description, $result_assoc)
+	{
+		$error_title = "$class_name Modification";
+		if ($result_assoc)
+		{
+			if ($error_description)
+			{
+				Session::get()->set_mixed_assoc($error_title, $error_description, $result_assoc);
+			}
+			else
+			{
+				Session::get()->set_result_assoc($result_assoc);
+			}
+		}
+		else
+		{
+			if (!$error_description) $error_description = "No updates requested.";
+			
+			Session::get()->set_error_assoc($error_title, $error_description);
+		}
+	}
+	
+	protected static function return_array_as_json($array)
 	{
 		if (!is_array($array))
 		{

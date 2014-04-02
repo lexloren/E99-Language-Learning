@@ -70,15 +70,7 @@ class APICourse  extends APIBase
 					$updates += !!$course->set_close($_POST["close"]);
 				}
 				
-				if (!$updates)
-				{
-					$failure_message = !!Course::get_error_description() ? Course::get_error_description() : "Course failed to update.";
-					Session::get()->set_error_assoc("Course Modification", $failure_message);
-				}
-				else
-				{
-					Session::get()->set_result_assoc($course->assoc_for_json());
-				}
+				self::return_updates_as_json("Course", Course::get_error_description(), $updates ? $course->assoc_for_json() : null);
 			}
 		}
 	}
@@ -107,7 +99,7 @@ class APICourse  extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_assoc_for_json($course->get_lists());
+			self::return_array_as_json($course->get_lists());
 		}
 	}
 	
@@ -118,7 +110,7 @@ class APICourse  extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_assoc_for_json($course->get_tests());
+			self::return_array_as_json($course->get_tests());
 		}
 	}
 	
@@ -128,7 +120,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_assoc_for_json($course->get_units());
+			self::return_array_as_json($course->get_units());
 		}
 	}
 	
@@ -138,7 +130,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_assoc_for_json($course->get_students());
+			self::return_array_as_json($course->get_students());
 		}
 	}
 	
@@ -177,7 +169,7 @@ class APICourse  extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_assoc_for_json($course->get_instructors());
+			self::return_array_as_json($course->get_instructors());
 		}
 	}
 	

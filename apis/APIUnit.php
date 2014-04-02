@@ -80,15 +80,7 @@ class APIUnit  extends APIBase
 					$updates += !!$unit->set_close($_POST["close"]);
 				}
 				
-				if (!$updates)
-				{
-					$failure_message = !!Unit::get_error_description() ? Unit::get_error_description() : "Unit failed to update.";
-					Session::get()->set_error_assoc("Unit Modification", $failure_message);
-				}
-				else
-				{
-					Session::get()->set_result_assoc($unit->assoc_for_json());
-				}
+				self::return_updates_as_json("Unit", Unit::get_error_description(), $updates ? $unit->assoc_for_json() : null);
 			}
 		}
 	}
@@ -99,7 +91,7 @@ class APIUnit  extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_assoc_for_json($unit->get_lists());
+			self::return_array_as_json($unit->get_lists());
 		}
 	}
 	
@@ -167,7 +159,7 @@ class APIUnit  extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_assoc_for_json($unit->get_tests());
+			self::return_array_as_json($unit->get_tests());
 		}
 	}
 }

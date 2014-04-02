@@ -38,15 +38,7 @@ class APIList extends APIBase
 					$updates += !!$list->set_list_name($_POST["list_name"]);
 				}
 				
-				if (!$updates)
-				{
-					$failure_message = !!EntryList::get_error_description() ? EntryList::get_error_description() : "List failed to update.";
-					Session::get()->set_error_assoc("List Modification", $failure_message);
-				}
-				else
-				{
-					Session::get()->set_result_assoc($list->assoc_for_json());
-				}
+				self::return_updates_as_json("List", EntryList::get_error_description(), $updates ? $list->assoc_for_json() : null);
 			}
 			else
 			{

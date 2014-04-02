@@ -88,15 +88,7 @@ class APITest  extends APIBase
 					$updates += !!$test->set_close($_POST["close"]);
 				}
 				
-				if (!$updates)
-				{
-					$failure_message = !!Test::get_error_description() ? Test::get_error_description() : "Test failed to update.";
-					Session::get()->set_error_assoc("Test Modification", $failure_message);
-				}
-				else
-				{
-					Session::get()->set_result_assoc($test->assoc_for_json());
-				}
+				self::return_updates_as_json("Test", Test::get_error_description(), $updates ? $test->assoc_for_json() : null);
 			}
 		}
 	}
@@ -107,7 +99,7 @@ class APITest  extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			self::return_array_as_assoc_for_json($test->get_sections());
+			self::return_array_as_json($test->get_sections());
 		}
 	}
 }

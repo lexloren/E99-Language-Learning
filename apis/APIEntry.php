@@ -35,15 +35,7 @@ class APIEntry extends APIBase
 				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
 			}
 			
-			if (!$updates)
-			{
-				$failure_message = !!Entry::get_error_description() ? Entry::get_error_description() : "Entry failed to update.";
-				Session::get()->set_error_assoc("Entry Modification", $failure_message);
-			}
-			else
-			{
-				Session::get()->set_result_assoc($entry->assoc_for_json());
-			}
+			self::return_updates_as_json("Entry", Entry::get_error_description(), $updates ? $entry->assoc_for_json() : null);
 		}
 	}
 	
@@ -63,7 +55,7 @@ class APIEntry extends APIBase
 
 			if (($entries = Dictionary::query($_GET["query"], $langs, $pagination)))
 			{
-				self::return_array_as_assoc_for_json($entries);
+				self::return_array_as_json($entries);
 			}
 			else
 			{
@@ -80,7 +72,7 @@ class APIEntry extends APIBase
 		{
 			$entry = $entry->copy_for_session_user();
 			
-			self::return_array_as_assoc_for_json($entry->get_annotations());
+			self::return_array_as_json($entry->get_annotations());
 		}
 	}
 }

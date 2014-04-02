@@ -44,7 +44,7 @@ class APIUser extends APIBase
 	{
 		if (self::validate_request($_GET, "query"))
 		{
-			self::return_array_as_assoc_for_json(User::find($_GET["query"]));
+			self::return_array_as_json(User::find($_GET["query"]));
 		}
 	}
 	
@@ -67,7 +67,7 @@ class APIUser extends APIBase
 	public function lists()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_lists());
+		self::return_array_as_json(Session::get()->get_user()->get_lists());
 	}
 	
 	
@@ -94,15 +94,7 @@ class APIUser extends APIBase
 			$updates += !!$user->set_name_family($_POST["name_family"]);
 		}
 		
-		if (!$updates)
-		{
-			$failure_message = !!User::get_error_description() ? User::get_error_description() : "User failed to update.";
-			Session::get()->set_error_assoc("User Modification", $failure_message);
-		}
-		else
-		{
-			Session::get()->set_result_assoc($user->assoc_for_json());
-		}
+		self::return_updates_as_json("User", User::get_error_description(), $updates ? $user->assoc_for_json() : null);
 	}
 	
 	public function practice()
@@ -129,7 +121,7 @@ class APIUser extends APIBase
 		} else {
 			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
 			$practice = Practice::generate($list_ids, $entries_count);
-			self::return_array_as_assoc_for_json($practice->get_entries());
+			self::return_array_as_json($practice->get_entries());
 		}
 		return;
 	}
@@ -181,19 +173,19 @@ class APIUser extends APIBase
 	public function courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_courses());
+		self::return_array_as_json(Session::get()->get_user()->get_courses());
 	}
 	
 	public function student_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_student_courses());
+		self::return_array_as_json(Session::get()->get_user()->get_student_courses());
 	}
 	
 	public function instructor_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_assoc_for_json(Session::get()->get_user()->get_instructor_courses());
+		self::return_array_as_json(Session::get()->get_user()->get_instructor_courses());
 	}
 }
 
