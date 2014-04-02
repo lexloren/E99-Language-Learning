@@ -84,7 +84,7 @@ class Unit extends CourseComponent
 	}
 	public function set_unit_name($unit_name)
 	{
-		if (!self::update_this($this, "course_units", array ("unit_name", $unit_name), "unit_id", $this->get_unit_id()))
+		if (!self::update_this($this, "course_units", array ("unit_name" => $unit_name), "unit_id", $this->get_unit_id()))
 		{
 			return null;
 		}
@@ -92,7 +92,20 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
-	//  $message
+	private $message;
+	public function get_message()
+	{
+		return $this->message;
+	}
+	public function set_message($message)
+	{
+		if (!self::update_this($this, "course_units", array ("message" => $message), "unit_id", $this->get_unit_id()))
+		{
+			return null;
+		}
+		$this->message = $message;
+		return $this;
+	}
 	
 	private $tests;
 	public function get_tests()
@@ -107,12 +120,13 @@ class Unit extends CourseComponent
 		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
-	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null)
+	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null, $message = null)
 	{
 		$this->unit_id = intval($unit_id, 10);
 		$this->course_id = intval($course_id, 10);
 		$this->unit_number = intval($unit_number, 10);
 		$this->unit_name = !!$unit_name && strlen($unit_name) > 0 ? $unit_name : null;
+		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
 		self::register($this->unit_id, $this);
 	}
@@ -123,17 +137,19 @@ class Unit extends CourseComponent
 			"unit_id",
 			"course_id",
 			"unit_num",
-			"unit_name"
+			"unit_name",
+			"message"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Unit(
-			$result_assoc["unit_id"],
-			$result_assoc["course_id"],
-			$result_assoc["unit_num"],
-			!!$result_assoc["unit_name"] && strlen($result_assoc["unit_name"]) > 0 ? $result_assoc["unit_name"] : null
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Unit(
+				$result_assoc["unit_id"],
+				$result_assoc["course_id"],
+				$result_assoc["unit_num"],
+				$result_assoc["unit_name"],
+				$result_assoc["message"]
+			)
+			: null;
 	}
 	
 	public function delete()

@@ -44,6 +44,22 @@ class User extends DatabaseRow
 		return parent::select("users", "user_id", $user_id);
 	}
 	
+	public static function find($query)
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$query = $mysqli->escape_string($query);
+		
+		$result = $mysqli->query("SELECT * FROM users WHERE email LIKE '$query' OR handle LIKE '$query'");
+		
+		$users = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($users, User::from_mysql_result_assoc($result_assoc));
+		}
+		return $users;
+	}
+	
 	//  Inserts a row into users table and returns corresponding User object
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
@@ -65,13 +81,17 @@ class User extends DatabaseRow
 		}
 
 		//  Check whether requested handle conflicts with any existing handle
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE handle = '%s'",
-			$mysqli->escape_string($handle)
-		));
-		
-		if (($existing_user = $result->fetch_assoc()))
+		$existing_users = self::find($handle);
+		if (count($existing_users) > 0)
 		{
-			return self::set_error_description("The requested handle is already taken.");
+			return self::set_error_description("The requested handle is already in use.");
+		}
+
+		//  Check whether requested email conflicts with any existing email
+		$existing_users = self::find($email);
+		if (count($existing_users) > 0)
+		{
+			return self::set_error_description("The requested email is already in use.");
 		}
 		
 		//  Good to go, so insert the new user
@@ -110,11 +130,9 @@ class User extends DatabaseRow
 	}
 	
 	private $email = null;
-	public function get_email()
+	public function get_email($privacy = false)
 	{
-		if (!($this->is_session_user())) return null;
-		
-		return $this->email;
+		return $privacy ? null : $this->email;
 	}
 	public function set_email($email)
 	{
@@ -123,7 +141,7 @@ class User extends DatabaseRow
 			return self::set_error_description("Email failed to conform to standard pattern.");
 		}
 		
-		if (!self::update_this($this, "users", array ("email", $email), "user_id", $this->get_user_id()))
+		if (!self::update_this($this, "users", array ("email" => $email), "user_id", $this->get_user_id()))
 		{
 			return null;
 		}
@@ -132,15 +150,13 @@ class User extends DatabaseRow
 	}
 	
 	private $name_family = null;
-	public function get_name_family()
+	public function get_name_family($privacy = false)
 	{
-		if (!($this->is_session_user())) return null;
-		
-		return $this->name_family;
+		return $privacy ? null : $this->name_family;
 	}
 	public function set_name_family($name_family)
 	{
-		if (!self::update_this($this, "users", array ("name_family", $name_family), "user_id", $this->get_user_id()))
+		if (!self::update_this($this, "users", array ("name_family" => $name_family), "user_id", $this->get_user_id()))
 		{
 			return null;
 		}
@@ -149,15 +165,13 @@ class User extends DatabaseRow
 	}
 	
 	private $name_given = null;
-	public function get_name_given()
+	public function get_name_given($privacy = false)
 	{
-		if (!($this->is_session_user())) return null;
-		
-		return $this->name_given;
+		return $privacy ? null : $this->name_given;
 	}
 	public function set_name_given($name_given)
 	{
-		if (!self::update_this($this, "users", array ("name_given", $name_given), "user_id", $this->get_user_id()))
+		if (!self::update_this($this, "users", array ("name_given" => $name_given), "user_id", $this->get_user_id()))
 		{
 			return null;
 		}
@@ -198,15 +212,20 @@ class User extends DatabaseRow
 			"name_given"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new User(
-			$result_assoc["user_id"],
-			$result_assoc["handle"],
-			$result_assoc["email"],
-			$result_assoc["name_family"],
-			$result_assoc["name_given"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new User(
+				$result_assoc["user_id"],
+				$result_assoc["handle"],
+				$result_assoc["email"],
+				$result_assoc["name_family"],
+				$result_assoc["name_given"]
+			)
+			: null;
+	}
+	
+	public function delete()
+	{
+		return self::set_error_description("Failed to delete user.");
 	}
 	
 	private $lists;
@@ -263,10 +282,10 @@ class User extends DatabaseRow
 		return array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
-			"handle" => $this->handle,
-			"email" => $privacy ? null : $this->email,
-			"nameGiven" => $privacy ? null : $this->name_given,
-			"nameFamily" => $privacy ? null : $this->name_family
+			"handle" => $this->get_handle(),
+			"email" => $this->get_email($privacy),
+			"nameGiven" => $this->get_name_given($privacy),
+			"nameFamily" => $this->get_name_family($privacy)
 		);
 	}
 }

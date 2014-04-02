@@ -38,7 +38,7 @@ class Course extends DatabaseRow
 			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
 		));
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert course: " . $mysqli->error);
 		}
@@ -91,7 +91,7 @@ class Course extends DatabaseRow
 	}
 	public function set_course_name($course_name)
 	{
-		if (!self::update_this($this, "courses", array ("course_name", $course_name), "course_id", $this->get_course_id()))
+		if (!self::update_this($this, "courses", array ("course_name" => $course_name), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
@@ -124,8 +124,31 @@ class Course extends DatabaseRow
 	{
 		return !!$this->public;
 	}
+	public function set_is_public($public)
+	{
+		$public = !!$public;
+		if (!self::update_this($this, "courses", array ("public" => $public ? "1" : "0"), "course_id", $this->get_course_id()))
+		{
+			return null;
+		}
+		$this->public = $public;
+		return $this;
+	}
 	
-	//  $message
+	private $message;
+	public function get_message()
+	{
+		return $this->message;
+	}
+	public function set_message($message)
+	{
+		if (!self::update_this($this, "courses", array ("message" => $message), "course_id", $this->get_course_id()))
+		{
+			return null;
+		}
+		$this->message = $message;
+		return $this;
+	}
 	
 	private $instructors;
 	public function get_instructors()
@@ -135,7 +158,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		return !!Session::get() && Session::get()->get_user()->in_array($this->get_instructors());
+		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_instructors());
 	}
 	
 	private $students;
@@ -183,14 +206,15 @@ class Course extends DatabaseRow
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
-		$this->course_name = $course_name;
-		$this->public = intval($public, 10);
+		$this->course_name = !!$course_name && strlen($course_name) > 0 ? $course_name : null;
+		$this->message = !!$message && strlen($message) > 0 ? $message : null;
+		$this->public = !!$public;
 		
 		self::register($this->course_id, $this);
 	}
@@ -203,19 +227,21 @@ class Course extends DatabaseRow
 			"lang_id_0",
 			"lang_id_1",
 			"course_name",
-			"public"
+			"public",
+			"message"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Course(
-			$result_assoc["course_id"],
-			$result_assoc["user_id"],
-			$result_assoc["lang_id_0"],
-			$result_assoc["lang_id_1"],
-			$result_assoc["course_name"],
-			$result_assoc["public"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Course(
+				$result_assoc["course_id"],
+				$result_assoc["user_id"],
+				$result_assoc["lang_id_0"],
+				$result_assoc["lang_id_1"],
+				$result_assoc["course_name"],
+				$result_assoc["public"],
+				$result_assoc["message"]
+			)
+			: null;
 	}
 	
 	public function session_user_can_write()

@@ -11,8 +11,13 @@ class ListTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
+		Session::set(null);
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
+
+		$this->db->add_dictionary_entries(1);
+		$this->db->add_users(5);
+		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
 	}
 
 	public function test_insert()
@@ -22,7 +27,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$list = EntryList::insert($list_name);
 		$this->assertNull($list);
 		
-		$user_obj = User::select_by_id(TestDB::$user_id);
+		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		$list = EntryList::insert("test_list");
 		$this->assertNotNull($list);
@@ -31,25 +36,24 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_select()
 	{
-		$list = EntryList::select_by_id(TestDB::$list_id);
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		$this->assertEquals($list->get_list_id(), TestDB::$list_id);
+		$this->assertEquals($list->get_list_id(), $this->db->list_ids[0]);
 		$this->assertFalse($list->is_public());
 	}
 	
 	public function test_list_name()
 	{
-	
-		$list = EntryList::select_by_id(TestDB::$list_id);
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		$this->assertEquals($list->get_list_name(), TestDB::$list_name);
+		$this->assertEquals($list->get_list_name(), $this->db->list_names[0]);
 		$ret = $list->set_list_name("list_new_name");
 		$this->assertNull($ret);
-		$this->assertEquals($list->get_list_name(), TestDB::$list_name);
+		$this->assertEquals($list->get_list_name(), $this->db->list_names[0]);
 		
-		$user_obj = User::select_by_id(TestDB::$user_id);
+		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
-		$list = EntryList::select_by_id(TestDB::$list_id);
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		
 		/*
 		$ret = $list->set_list_name("list_new_name");
@@ -70,13 +74,18 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_delete()
 	{
-		$list = EntryList::select_by_id(TestDB::$list_to_delete_id);
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		/*
 		$ret = $list->delete();
-		$list = EntryList::select_by_id(TestDB::$list_to_delete_id);
-		$this->assertNull($list);
-		*/
+		$this->assertNull($ret);
+		
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$ret = $list->delete();
+
+		//$this->assertNotNull($ret);
+		//$this->assertNull(EntryList::select_by_id($this->db->list_id[0]));
+		//EntryList::unregister_all();
+		//$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 	}
 	
 	public function test_get_entries()

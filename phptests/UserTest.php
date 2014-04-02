@@ -3,7 +3,6 @@
 //Tests class User
 require_once './backend/classes/session.php';
 require_once './backend/classes/user.php';
-require_once './backend/classes/directory.php';
 require_once './phptests/TestDB.php';
 
 class UserTest extends PHPUnit_Framework_TestCase
@@ -12,6 +11,7 @@ class UserTest extends PHPUnit_Framework_TestCase
 
 	public function setup()
 	{
+		Session::set(null);
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
@@ -54,9 +54,10 @@ class UserTest extends PHPUnit_Framework_TestCase
 	
 	public function testSelect()
 	{
+		$this->db->add_users(5);
 		$link = $this->db->link;
 		$result = $link->query(sprintf("SELECT * FROM users WHERE handle LIKE '%s'",
-			$link->escape_string(TestDB::$handle)
+			$link->escape_string($this->db->handles[0])
 		));
 		
 		$user_assoc = $result->fetch_assoc();
@@ -66,24 +67,25 @@ class UserTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user_obj);
 		
 		$this->assertEquals($user_obj->get_user_id(), $user_assoc["user_id"]);
-		$this->assertEquals($user_obj->get_email(), TestDB::$email);
-		$this->assertEquals($user_obj->get_handle(), TestDB::$handle);
-		$this->assertEquals($user_obj->get_name_family(), TestDB::$name_family);
-		$this->assertEquals($user_obj->get_name_given(), TestDB::$name_given);
+		$this->assertEquals($user_obj->get_email(), $this->db->emails[0]);
+		$this->assertEquals($user_obj->get_handle(), $this->db->handles[0]);
+		$this->assertEquals($user_obj->get_name_family(), $this->db->names_family[0]);
+		$this->assertEquals($user_obj->get_name_given(), $this->db->names_given[0]);
 	}
 	
-	public function test_look_up()
+	public function test_find()
 	{
-		$result = UsersDirectory::look_up("");
+		$this->db->add_users(5);
+		$result = User::find("");
 		$this->assertCount(0, $result);
-		$result = UsersDirectory::look_up(TestDB::$email);
+		$result = User::find($this->db->emails[0]);
 		$this->assertNotNull($result);
 		$this->assertCount(1, $result);
-		$this->assertEquals($result[0]->get_user_id(), TestDB::$user_id);
-		$result = UsersDirectory::look_up(TestDB::$handle);
+		$this->assertEquals($result[0]->get_user_id(), $this->db->user_ids[0]);
+		$result = User::find($this->db->handles[0]);
 		$this->assertNotNull($result);
 		$this->assertCount(1, $result);
-		$this->assertEquals($result[0]->get_user_id(), TestDB::$user_id);
+		$this->assertEquals($result[0]->get_user_id(), $this->db->user_ids[0]);
 	}
 }
 ?>

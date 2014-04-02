@@ -44,7 +44,7 @@ class APIUser extends APIBase
 	{
 		if (self::validate_request($_GET, "query"))
 		{
-			self::return_array_as_assoc_for_json(UsersDirectory::look_up($_GET["query"]));
+			self::return_array_as_assoc_for_json(User::find($_GET["query"]));
 		}
 	}
 	
@@ -99,8 +99,9 @@ class APIUser extends APIBase
 		{
 			Session::get()->set_error_assoc("Request Invalid", "User-practice get must include list_ids.");
 		} else {
-			$entry_set = Practice::get_practice_entries($list_ids, $_GET["entries_count"]);
-			Session::get()->set_result_assoc($entry_set);
+			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
+			$practice = Practice::generate($list_ids, $entries_count);
+			self::return_array_as_assoc_for_json($practice->get_entries());
 		}
 		return;
 	}

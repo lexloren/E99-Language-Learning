@@ -23,7 +23,7 @@ class EntryList extends DatabaseRow
 			$mysqli->escape_string($list_name)
 		));
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
@@ -61,7 +61,7 @@ class EntryList extends DatabaseRow
 	}
 	public function set_list_name($list_name)
 	{
-		if (!self::update_this($this, "lists", array ("list_name", $list_name), "list_id", $this->get_list_id()))
+		if (!self::update_this($this, "lists", array ("list_name" => $list_name), "list_id", $this->get_list_id()))
 		{
 			return null;
 		}
@@ -81,7 +81,7 @@ class EntryList extends DatabaseRow
 		$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
 			Dictionary::language_code_columns(),
 			Dictionary::join(),
-			Session::get()->get_user()->get_user_id()
+			$this->get_user_id()
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
@@ -107,15 +107,14 @@ class EntryList extends DatabaseRow
 			"public"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-
-		
-		return new EntryList(
-			$result_assoc["list_id"],
-			$result_assoc["user_id"],
-			!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
-			$result_assoc["public"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new EntryList(
+				$result_assoc["list_id"],
+				$result_assoc["user_id"],
+				!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
+				$result_assoc["public"]
+			)
+			: null;
 	}
 	
 	//  Returns true iff Session::get()->get_user() can read this list for any reason

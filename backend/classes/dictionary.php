@@ -10,8 +10,12 @@ class Dictionary
 	public static $page_size = null;
 	public static $page_num = null;
 	
-	public static $look_up_last_count = null;
+	public static $find_last_count = null;
 	
+	public static function unregister_all()
+	{
+		self::$entries_by_id = array ();
+	}
 	//  Returns the join of the dictionary on the languages table
 	//      so that we can include language codes (which exist only in the languages table)
 	public static function join()
@@ -31,7 +35,7 @@ class Dictionary
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function look_up($word, $lang_codes, $pagination = null)
+	public static function find($word, $lang_codes, $pagination = null)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
@@ -68,8 +72,8 @@ class Dictionary
 		}
 		
 		//  Save information about query results in static properties
-		self::$look_up_last_count = $result->num_rows;
-		self::$page_size = self::$look_up_last_count;
+		self::$find_last_count = $result->num_rows;
+		self::$page_size = self::$find_last_count;
 		self::$page_num = 1;
 		
 		//  Use pagination only if we have both page size and page number

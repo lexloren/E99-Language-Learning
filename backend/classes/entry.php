@@ -42,7 +42,7 @@ class Entry extends DatabaseRow
 	public function get_words()
 	{
 		return $this->words;
-	}	
+	}
 
 	private $pronunciations = null;
 	public function get_pronunciations()
@@ -125,20 +125,20 @@ class Entry extends DatabaseRow
 			"word_1_pronun"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Entry(
-			$result_assoc["entry_id"],
-			$result_assoc["lang_code_0"],
-			$result_assoc["lang_code_1"],
-			$result_assoc["word_0"],
-			$result_assoc["word_1"],
-			!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
-			array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
-			array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
-			array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
-			array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Entry(
+				$result_assoc["entry_id"],
+				$result_assoc["lang_code_0"],
+				$result_assoc["lang_code_1"],
+				$result_assoc["word_0"],
+				$result_assoc["word_1"],
+				!!$result_assoc["word_1_pronun"] && strlen($result_assoc["word_1_pronun"]) > 0 ? $result_assoc["word_1_pronun"] : null,
+				array_key_exists("user_entry_id", $result_assoc) ? $result_assoc["user_entry_id"] : null,
+				array_key_exists("user_id", $result_assoc) ? $result_assoc["user_id"] : null,
+				array_key_exists("interval", $result_assoc) ? $result_assoc["interval"] : null, 
+				array_key_exists("efactor", $result_assoc) ? $result_assoc["efactor"] : null
+			)
+			: null;
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -177,11 +177,10 @@ class Entry extends DatabaseRow
 	
 	public function annotations_add($annotation_contents)
 	{
-		if (!Session::get()->get_user())
+		if (!($entry = $this->copy_for_session_user()))
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return self::set_error_description("Failed to add annotation: " . self::get_error_description());
 		}
-		$entry = $this->copy_for_session_user();
 		
 		$annotation = Annotation::insert($entry->get_entry_id(), $annotation_contents);
 		
@@ -251,42 +250,42 @@ class Entry extends DatabaseRow
 	
 	public function update_repetition_details($point)
 	{
-		if (!$this->session_user_can_write())
+		$failure_message = "Failed to update repetition details";
+		if (!($user_entry = $this->copy_for_session_user()))
 		{
-			Session::get()->set_error_assoc("Session user cannot edit entry.");
-			return;
+			return self::set_error_description("$failure_message: " . self::get_error_description());
 		}
+		
+		$user_entry_id = $user_entry->get_user_entry_id();
+		
 		$mysqli = Connection::get_shared_instance();
 
-		$_efactor = $this->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
+		$_efactor = $user_entry->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$iteration_result = $mysqli->query(sprintf(
-			"SELECT COUNT(*) AS row_count FROM user_entry_results WHERE user_id = %d ".
-			"AND entry_id = %d",
-			$this->user_id, $this->entry_id)
+		$iteration_result = $mysqli->query(
+			"SELECT COUNT(*) AS row_count FROM user_entry_results " .
+			"WHERE user_entry_id = $user_entry_id"
 		);
 		$iteration_assoc = $iteration_result->fetch_assoc();
 		$iteration_count = intval($iteration_assoc["row_count"], 10);
-		if ($iteration_count == 1)
+		if ($iteration_count == 0 || $iteration_count == 1)
 			$new_interval = 1;
 		else if ($iteration_count == 2)
 			$new_interval = 6;
 		else
-			$new_interval = round($this->interval * $new_efactor);
+			$new_interval = round($user_entry->interval * $new_efactor);
 
-		if(!$mysqli->query(sprintf(
-			"UPDATE user_entries SET `interval` = %d, efactor = %f ".
-			"WHERE user_id = %d AND entry_id = %d",
-			$new_interval, $new_efactor,
-			$this->user_id, $this->entry_id)))
+		if(!$mysqli->query(
+			"UPDATE user_entries SET `interval` = $new_interval, efactor = $new_efactor ".
+			"WHERE user_entry_id = $user_entry_id"
+			))
 		{
-			Session::get()->set_error_assoc("Failed to update interval details: " . $mysqli->error);
-			return;
+			return self::set_error_description("$failure_message: " . $mysqli->error);
 		}
-		
-		$this->interval = $new_interval;
-		$this->efactor = $new_efactor;
-		return true;
+
+		$user_entry->interval = $new_interval;
+		$user_entry->efactor = $new_efactor;
+		return $user_entry;
 	}
 
 	public function assoc_for_json()

@@ -32,12 +32,12 @@ class Section extends DatabaseRow
 		
 		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_num, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
 		
-		if ($mysqli->error)
+		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
 		
-		return !!($section = self::select_by_id($mysqli->insert_id)) ? $section : null;
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
 	public static function select_by_id($section_id)
@@ -83,7 +83,7 @@ class Section extends DatabaseRow
 	}
 	public function set_section_name($section_name)
 	{
-		if (!self::update_this($this, "course_unit_test_sections", array ("section_name", $section_name), "section_id", $this->get_section_id()))
+		if (!self::update_this($this, "course_unit_test_sections", array ("section_name" => $section_name), "section_id", $this->get_section_id()))
 		{
 			return null;
 		}
@@ -137,16 +137,16 @@ class Section extends DatabaseRow
 			"message"
 		);
 		
-		if (!self::assoc_contains_keys($result_assoc, $mysql_columns)) return null;
-		
-		return new Test(
-			$result_assoc["test_id"],
-			$result_assoc["unit_id"],
-			$result_assoc["test_name"],
-			$result_assoc["open"],
-			$result_assoc["close"],
-			$result_assoc["message"]
-		);
+		return self::assoc_contains_keys($result_assoc, $mysql_columns)
+			? new Test(
+				$result_assoc["test_id"],
+				$result_assoc["unit_id"],
+				$result_assoc["test_name"],
+				$result_assoc["open"],
+				$result_assoc["close"],
+				$result_assoc["message"]
+			)
+			: null;
 	}
 	
 	public function session_user_can_execute()
