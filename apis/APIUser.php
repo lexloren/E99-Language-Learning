@@ -31,6 +31,13 @@ class APIUser extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate() || !($user = Session::get()->get_user())) return;
+		
+		Session::get()->set_result_assoc($user->detailed_assoc_for_json(false));
+	}
+	
 	public function authenticate()
 	{
 		if (self::validate_request($_POST, array ("handle", "password")))

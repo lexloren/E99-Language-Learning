@@ -279,7 +279,7 @@ class EntryList extends DatabaseRow
 		return self::select_by_id($list_copy_id);
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return array (
 			"listId" => $this->list_id,
@@ -287,6 +287,15 @@ class EntryList extends DatabaseRow
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
 		);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["entries"] = self::array_for_json($this->get_entries());
+		
+		return $assoc;
 	}
 }
 

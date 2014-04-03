@@ -176,9 +176,34 @@ class DatabaseRow
 		return $this->session_user_can_write();
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return null;
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		return $this->assoc_for_json($privacy);
+	}
+	
+	protected static function array_for_json($array)
+	{
+		if (!is_array($array))
+		{
+			return static::set_error_description("Back end expected associative array of DatabaseRow objects but received '$array'.");
+		}
+		
+		$assocs = array ();
+		foreach ($array as $item)
+		{
+			if (!is_subclass_of($item, "DatabaseRow"))
+			{
+				return static::set_error_description("Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
+			}
+			array_push($assocs, $item->assoc_for_json());
+		}
+		
+		return $assocs;
 	}
 }
 

@@ -240,6 +240,17 @@ class Unit extends CourseComponent
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
 	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy);
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["tests"] = self::array_for_json($this->get_tests());
+		
+		return $assoc;
+	}
 }
 
 ?>

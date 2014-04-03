@@ -10,6 +10,16 @@ class APIEntry extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
+		{
+			Session::get()->set_result_assoc($entry->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function update()
 	{
 		if (!Session::get()->reauthenticate()) return;

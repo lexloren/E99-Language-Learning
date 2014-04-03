@@ -38,6 +38,16 @@ class APITest extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
+		{
+			Session::get()->set_result_assoc($test->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;

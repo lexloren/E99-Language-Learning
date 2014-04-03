@@ -37,6 +37,16 @@ class APISection extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($section = self::validate_selection_id($_GET, "section_id", "Section")))
+		{
+			Session::get()->set_result_assoc($section->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;

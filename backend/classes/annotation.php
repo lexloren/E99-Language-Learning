@@ -95,7 +95,7 @@ class Annotation extends DatabaseRow
 		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return array (
 			"annotationId" => $this->annotation_id,

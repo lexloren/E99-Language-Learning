@@ -10,6 +10,16 @@ class APIAnnotation extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($annotation = self::validate_selection_id($_GET, "annotation_id", "Annotation")))
+		{
+			Session::get()->set_result_assoc($annotation->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function insert()
 	{
 		if (!Session::get()->reauthenticate()) return;

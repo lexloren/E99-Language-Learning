@@ -253,6 +253,17 @@ class Entry extends DatabaseRow
 			"pronuncations" => $entry->get_pronunciations()
 		);
 	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
+		{
+			$user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false);
+			return $user_entry->detailed_assoc_for_json($privacy);
+		}
+		
+		return parent::detailed_assoc_for_json($privacy);
+	}
 }
 
 class UserEntry extends Entry
@@ -431,6 +442,12 @@ class UserEntry extends Entry
 	{
 		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
 		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
+	}
+	
+	private $lists;
+	public function get_lists()
+	{
+		return self::get_cached_collection($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
 	}
 
 	private function __construct($user_entry_id, $user_id, $entry_id,
@@ -658,6 +675,16 @@ class UserEntry extends Entry
 		$user_entry->interval = $new_interval;
 		$user_entry->efactor = $new_efactor;
 		return $user_entry;
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["annotations"] = self::array_for_json($this->get_annotations());
+		
+		return $assoc;
 	}
 }
 

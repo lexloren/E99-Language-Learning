@@ -38,6 +38,16 @@ class APICourse extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
+		{
+			Session::get()->set_result_assoc($course->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function update()
 	{
 		//  course_name

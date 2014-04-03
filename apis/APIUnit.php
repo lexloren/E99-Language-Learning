@@ -31,6 +31,16 @@ class APIUnit extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
+		{
+			Session::get()->set_result_assoc($unit->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;

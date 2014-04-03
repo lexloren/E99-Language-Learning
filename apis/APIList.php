@@ -23,6 +23,16 @@ class APIList extends APIBase
 		}
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
+		{
+			Session::get()->set_result_assoc($list->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function update()
 	{
 		if (!Session::get()->reauthenticate()) return;
