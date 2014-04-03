@@ -10,6 +10,16 @@ class APIAnnotation extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($annotation = self::validate_selection_id($_GET, "annotation_id", "Annotation")))
+		{
+			Session::get()->set_result_assoc($annotation->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function insert()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -22,7 +32,7 @@ class APIAnnotation extends APIBase
 				
 				if (!$entry->annotations_add($_POST["contents"]))
 				{
-					Session::get()->set_error_assoc("Annotation Insertion", Entry::get_error_description());
+					Session::get()->set_error_assoc("Annotation Insertion", Entry::unset_error_description());
 				}
 				else
 				{
@@ -40,7 +50,7 @@ class APIAnnotation extends APIBase
 		{
 			if (!$annotation->delete())
 			{
-				Session::get()->set_error_assoc("Annotation Deletion", Annotation::get_error_description());
+				Session::get()->set_error_assoc("Annotation Deletion", Annotation::unset_error_description());
 			}
 			else
 			{

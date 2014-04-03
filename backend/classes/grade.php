@@ -74,7 +74,7 @@ class Grade extends DatabaseRow
 		return static::set_error_description("Failed to delete grade.");
 	}
 
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return array (
 			"gradeId" => $this->get_grade_id(),

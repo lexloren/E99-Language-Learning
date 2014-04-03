@@ -63,11 +63,10 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		
 		$ret = $entry->annotations_remove($annotation);
 		
-		//Hans: Please fix this
-		//$this->assertNotNull($ret);
-		//$annotations = $entry->get_annotations();
-		//$this->assertNotNull($annotations);
-		//$this->assertCount(0, $annotations);
+		$this->assertNotNull($ret);
+		$annotations = $entry->get_annotations();
+		$this->assertNotNull($annotations);
+		$this->assertCount(0, $annotations);
 	}
 	
 	public function test_annotations_add()
@@ -84,7 +83,6 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		$ret = $entry->annotations_add($new_anno);
-		//Assert below is failing; Entry also looks like UserEntry
 		$this->assertNotNull($ret);
 	}
 	

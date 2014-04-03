@@ -28,13 +28,23 @@ class APICourse extends APIBase
 				
 				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null, $timeframe, $message)))
 				{
-					Session::get()->set_error_assoc("Course Insertion", Course::get_error_description());
+					Session::get()->set_error_assoc("Course Insertion", Course::unset_error_description());
 				}
 				else
 				{
 					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
 			}
+		}
+	}
+	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
+		{
+			Session::get()->set_result_assoc($course->detailed_assoc_for_json(false));
 		}
 	}
 	
@@ -70,7 +80,7 @@ class APICourse extends APIBase
 				$updates += !!$course->set_close($_POST["close"]);
 			}
 			
-			self::return_updates_as_json("Course", Course::get_error_description(), $updates ? $course->assoc_for_json() : null);
+			self::return_updates_as_json("Course", Course::unset_error_description(), $updates ? $course->assoc_for_json() : null);
 		}
 	}
 	
@@ -82,7 +92,7 @@ class APICourse extends APIBase
 		{
 			if (!$course->delete())
 			{
-				Session::get()->set_error_assoc("Course Deletion", Course::get_error_description());
+				Session::get()->set_error_assoc("Course Deletion", Course::unset_error_description());
 			}
 			else
 			{
@@ -145,7 +155,7 @@ class APICourse extends APIBase
 				{
 					if (!$course->students_add(User::select_by_id($user_id)))
 					{
-						Session::get()->set_error_assoc("Course-Students Addition", Course::get_error_description());
+						Session::get()->set_error_assoc("Course-Students Addition", Course::unset_error_description());
 						return;
 					}
 				}
@@ -177,7 +187,7 @@ class APICourse extends APIBase
 				{
 					if (!$course->instructors_add(User::select_by_id($user_id)))
 					{
-						Session::get()->set_error_assoc("Course-Instructors Addition", Course::get_error_description());
+						Session::get()->set_error_assoc("Course-Instructors Addition", Course::unset_error_description());
 						return;
 					}
 				}
@@ -199,7 +209,7 @@ class APICourse extends APIBase
 				{
 					if (!$course->students_remove(User::select_by_id($user_id)))
 					{
-						Session::get()->set_error_assoc("Course-Students Removal", Course::get_error_description());
+						Session::get()->set_error_assoc("Course-Students Removal", Course::unset_error_description());
 						return;
 					}
 				}
@@ -221,7 +231,7 @@ class APICourse extends APIBase
 				{
 					if (!$course->instructors_remove(User::select_by_id($user_id)))
 					{
-						Session::get()->set_error_assoc("Course-Instructors Removal", Course::get_error_description());
+						Session::get()->set_error_assoc("Course-Instructors Removal", Course::unset_error_description());
 						return;
 					}
 				}

@@ -10,6 +10,16 @@ class APIEntry extends APIBase
 		parent::__construct($user, $mysqli);
 	}
 	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
+		{
+			Session::get()->set_result_assoc($entry->detailed_assoc_for_json(false));
+		}
+	}
+	
 	public function update()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -35,7 +45,7 @@ class APIEntry extends APIBase
 				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
 			}
 			
-			self::return_updates_as_json("Entry", Entry::get_error_description(), $updates ? $entry->assoc_for_json() : null);
+			self::return_updates_as_json("Entry", Entry::unset_error_description(), $updates ? $entry->assoc_for_json() : null);
 		}
 	}
 	
@@ -59,7 +69,7 @@ class APIEntry extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Entry Find", Dictionary::get_error_description());
+				Session::get()->set_error_assoc("Entry Find", Dictionary::unset_error_description());
 			}
 		}
 	}

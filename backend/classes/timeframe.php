@@ -36,7 +36,7 @@ class Timeframe
 		return ($time = time()) > $open && $time < $close;
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return array (
 			"open" => $open,

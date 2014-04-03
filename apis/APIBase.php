@@ -41,7 +41,7 @@ class APIBase
 		}
 		else if (!($object = $class_name::select_by_id(($id = intval($array[$id_key], 10)))))
 		{
-			Session::get()->set_error_assoc("$class_name Selection", $class_name::get_error_description());
+			Session::get()->set_error_assoc("$class_name Selection", $class_name::unset_error_description());
 		}
 		
 		return $object;
@@ -73,7 +73,7 @@ class APIBase
 	{
 		if (!is_array($array))
 		{
-			Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects but received $array.");
+			Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects but received '$array'.");
 		}
 		else
 		{
@@ -82,7 +82,7 @@ class APIBase
 			{
 				if (!is_subclass_of($item, "DatabaseRow"))
 				{
-					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object in $array was $item.");
+					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
 					return;
 				}
 				array_push($returnable, $item->assoc_for_json());

@@ -22,12 +22,22 @@ class APIUnit extends APIBase
 			
 			if (!($unit = Unit::insert($course_id, $unit_name, $timeframe, $message)))
 			{
-				Session::get()->set_error_assoc("Unit Insertion", Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Insertion", Unit::unset_error_description());
 			}
 			else
 			{
 				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
+		}
+	}
+	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
+		{
+			Session::get()->set_result_assoc($unit->detailed_assoc_for_json(false));
 		}
 	}
 	
@@ -39,7 +49,7 @@ class APIUnit extends APIBase
 		{
 			if (!$unit->delete())
 			{
-				Session::get()->set_error_assoc("Unit Deletion", Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Deletion", Unit::unset_error_description());
 			}
 			else
 			{
@@ -79,7 +89,7 @@ class APIUnit extends APIBase
 				$updates += !!$unit->set_close($_POST["close"]);
 			}
 			
-			self::return_updates_as_json("Unit", Unit::get_error_description(), $updates ? $unit->assoc_for_json() : null);
+			self::return_updates_as_json("Unit", Unit::unset_error_description(), $updates ? $unit->assoc_for_json() : null);
 		}
 	}
 	
@@ -105,7 +115,7 @@ class APIUnit extends APIBase
 				{
 					if (!$unit->lists_add(EntryList::select_by_id($list_id)))
 					{
-						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::get_error_description());
+						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::unset_error_description());
 						return;
 					}
 				}
@@ -127,7 +137,7 @@ class APIUnit extends APIBase
 				{
 					if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
 					{
-						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::get_error_description());
+						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::unset_error_description());
 						return;
 					}
 				}

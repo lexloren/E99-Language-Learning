@@ -22,7 +22,7 @@ class Unit extends CourseComponent
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
 		
-		if (!$course) return static::set_error_description(Course::get_error_description());
+		if (!$course) return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
 		
 		if (!$course->session_user_can_write())
 		{
@@ -190,7 +190,7 @@ class Unit extends CourseComponent
 		
 		if (!($list = $list->copy_for_user($this->get_owner())))
 		{
-			return static::set_error_description("Failed to add list: " . EntryList::get_error_description());
+			return static::set_error_description("Failed to add list: " . EntryList::unset_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -239,6 +239,17 @@ class Unit extends CourseComponent
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy);
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["tests"] = self::array_for_json($this->get_tests());
+		
+		return $assoc;
 	}
 }
 

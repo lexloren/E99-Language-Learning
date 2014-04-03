@@ -138,7 +138,7 @@ class Course extends DatabaseRow
 	private $timeframe;
 	public function get_timeframe()
 	{
-		return $this->get_timeframe();
+		return $this->$timeframe;
 	}
 	public function set_timeframe($timeframe)
 	{
@@ -384,6 +384,17 @@ class Course extends DatabaseRow
 			"isPublic" => !$privacy ? $this->is_public() : null,
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["units"] = self::array_for_json($this->get_units());
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["tests"] = self::array_for_json($this->get_tests());
+		
+		return $assoc;
 	}
 }
 

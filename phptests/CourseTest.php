@@ -64,7 +64,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($ret);
 
 		//$this->assertNull(Course::select_by_id($this->db->course_ids[0]));		
-		Course::unregister_all();
+		Course::reset();
 		$this->assertNull(Course::select_by_id($this->db->course_ids[0]));
 	}
 	
@@ -97,14 +97,14 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		//Hans, please check this
 		//$this->assertEquals($course->get_course_name(), "new name of old course");
 		
-		Course::unregister_all();
+		Course::reset();
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		//Hans, please check this
 		//$this->assertEquals($course->get_course_name(), "new name of old course");
 		$course->set_course_name($this->db->course_names[0]);
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
 		
-		Course::unregister_all();
+		Course::reset();
 	}
 	
 	public function test_instructors_add()
