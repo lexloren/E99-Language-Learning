@@ -78,7 +78,27 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_entries_remove()
 	{
-		
+//Hans, please check this 
+		//No session user set
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
+//		$entries = $list->get_entries();
+//		$ret = $list->entries_remove($entries[0]);	
+//		$this->assertNull($ret);
+
+		//Session user set
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$entries = $list->get_entries();
+		$this->assertCount(7, $entries);
+
+//		$ret = $list->entries_remove($entries[0]);	
+//		$this->assertNotNull($ret);
+//		$ret = $list->entries_remove($entries[2]);	
+//		$this->assertNotNull($ret);
+//		$ret = $list->entries_remove($entries[4]);	
+//		$this->assertNotNull($ret);
+
+//		$entries = $list->get_entries();
+//		$this->assertCount(4, $entries);
 	}
 	
 	public function test_delete()
@@ -104,7 +124,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 	{
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		$entries = $ret = $list->get_entries();
+		$entries = $list->get_entries();
 		$this->assertCount(7, $entries);
 	}
 }
