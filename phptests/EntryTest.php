@@ -66,7 +66,6 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($ret);
 		$annotations = $entry->get_annotations();
 		$this->assertNotNull($annotations);
-		print_r($annotations);
 		$this->assertCount(0, $annotations);
 	}
 	
