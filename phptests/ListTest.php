@@ -122,6 +122,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$ret = $list->delete();
 
 		$this->assertNotNull($ret);
+		$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 		EntryList::reset();
 		$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 	}
