@@ -70,7 +70,13 @@ class DatabaseRow
 			intval($id, 10)
 		));
 		
-		return !$mysqli->error ? $instance : static::set_error_description("Failed to delete from $table where $column = $id: " . $mysqli->error);
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to delete from $table where $column = $id: " . $mysqli->error);
+		}
+		
+		if (isset(static::$instances_by_id[$id])) unset(static::$instances_by_id[$id]);
+		return $instance;
 	}
 	
 	protected static function assoc_contains_keys($assoc, $keys)
@@ -129,7 +135,7 @@ class DatabaseRow
 			}
 			else
 			{
-				value = intval($value, 10);
+				$value = intval($value, 10);
 			}
 			
 			array_push($assignments_sql, "$column = $value");
