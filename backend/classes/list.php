@@ -85,7 +85,7 @@ class EntryList extends DatabaseRow
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->entries, "Entry", $table, "list_id", $this->get_list_id());
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
 	}
 	
 	private function __construct($list_id, $user_id, $list_name = null, $public = false)
@@ -181,6 +181,11 @@ class EntryList extends DatabaseRow
 	//      Returns this list
 	public function entries_add($entry_to_add)
 	{
+		if (!$entry_to_add)
+		{
+			return static::set_error_description("List cannot add null entry.");
+		}
+		
 		if (!$this->session_user_can_write())
 		{
 			return static::set_error_description("Session user cannot edit list.");
@@ -210,6 +215,11 @@ class EntryList extends DatabaseRow
 	//      Returns this list
 	public function entries_remove($entry_to_remove)
 	{
+		if (!$entry_to_remove)
+		{
+			return static::set_error_description("List cannot remove null entry.");
+		}
+		
 		if (!$this->session_user_can_write())
 		{
 			return static::set_error_description("Session user cannot edit list.");

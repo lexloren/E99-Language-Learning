@@ -100,7 +100,7 @@ class Section extends DatabaseRow
 			Dictionary::join()
 		);
 		$table = "$section_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "Entry", $table, "section_id", $this->get_section_id());
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "section_id", $this->get_section_id());
 	}
 	
 	private $timer;
