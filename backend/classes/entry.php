@@ -17,7 +17,7 @@ class Entry extends DatabaseRow
 			&& Session::get() && Session::get()->get_user())
 		{
 			if (($user_entry =
-					UserEntry::select_by_user_entry_id(
+					UserEntry::select_by_user_id_entry_id(
 						Session::get()->get_user()->get_user_id(),
 						$entry_id,
 						false)
@@ -261,15 +261,30 @@ class UserEntry extends Entry
 	protected static $instances_by_id = array ();
 	protected static $instances_by_entry_id_by_user_id = array ();
 	
-	public static function unregister_all()
+	public static function reset()
 	{
-		parent::unregister_all();
+		parent::reset();
 		self::$instances_by_entry_id_by_user_id = array ();
 	}
 	
 	public static function select_by_user_entry_id($user_entry_id)
 	{
-		return self::select("user_entries", "user_entry_id", $user_entry_id);
+		$mysqli = Connection::get_shared_instance();
+		
+		$table = "user_entries";
+		$column = "user_entry_id";
+		$id = intval($user_entry_id, 10);
+		
+		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
+		
+		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error);
+		
+		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to select any rows from $table where $column = $id.");
+		}
+		
+		return self::select_by_user_id_entry_id($result_assoc["user_id"], $result_assoc["entry_id"]);
 	}
 	
 	protected static function entries_by_id_for_user_id($user_id)
@@ -320,9 +335,9 @@ class UserEntry extends Entry
 		
 		if (!$result || !($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " .
-				(!!$mysqli->error ? $mysqli->error : $query)
-			);
+			return $insert_if_necessary
+				? static::set_error_description("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " . (!!$mysqli->error ? $mysqli->error : $query))
+				: null;
 		}
 		
 		return self::from_mysql_result_assoc($result_assoc);
@@ -362,7 +377,7 @@ class UserEntry extends Entry
 	}
 	public function get_entry()
 	{
-		return parent::select_by_id($this->get_entry_id());
+		return Entry::select_by_id($this->get_entry_id(), false);
 	}
 	
 	public function get_word_0()
@@ -488,7 +503,7 @@ class UserEntry extends Entry
 		$pronunciations = $this->get_entry()->get_pronunciations();
 		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
-		return $succeeded ? $this : static::set_error_description("$failure_message: " . self::get_error_description());
+		return $succeeded ? $this : static::set_error_description("$failure_message: " . self::unset_error_description());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -540,7 +555,7 @@ class UserEntry extends Entry
 				array_push($annotations, $annotation);
 				return $entry;
 			}
-			return static::set_error_description(Annotation::get_error_description());
+			return static::set_error_description("Entry failed to add annotation: " . Annotation::unset_error_description());
 		}
 		
 		return null;
@@ -548,7 +563,7 @@ class UserEntry extends Entry
 	
 	public function annotations_remove($annotation)
 	{
-		if ($this->get_owner()->equals(Session::get()->get_user()))
+		if (!$this->get_owner()->equals(Session::get()->get_user()))
 		{
 			return static::set_error_description("Session user is not owner of user entry.");
 		}
@@ -558,7 +573,10 @@ class UserEntry extends Entry
 			return static::set_error_description("User entry is not associated with annotation.");
 		}
 		
-		$annotation->delete();
+		if (!$annotation->delete())
+		{
+			return static::set_error_description("Entry failed to remove annotation: " . Annotation::unset_error_description());
+		}
 		
 		unset($this->annotations);
 		
@@ -607,7 +625,7 @@ class UserEntry extends Entry
 		$failure_message = "Failed to update repetition details";
 		if (!($user_entry = $this->copy_for_session_user()))
 		{
-			return static::set_error_description("$failure_message: " . self::get_error_description());
+			return static::set_error_description("$failure_message: " . self::unset_error_description());
 		}
 		
 		$user_entry_id = $user_entry->get_user_entry_id();
