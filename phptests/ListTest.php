@@ -15,7 +15,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 
-		$this->db->add_dictionary_entries(1);
+		$this->db->add_dictionary_entries(7);
 		$this->db->add_users(5);
 		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
 	}
@@ -55,16 +55,25 @@ class ListTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user_obj);
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		
-		/*
 		$ret = $list->set_list_name("list_new_name");
-		$this->assertNotNull($ret);
-		$this->assertEquals($list->get_list_name(), "list_new_name");
-		*/
+		//Hans please check this
+		//$this->assertNotNull($ret);
+		//$this->assertEquals($list->get_list_name(), "list_new_name");
 	}
 	
 	public function test_entries_add()
 	{
+		$added = $this->db->add_dictionary_entries(5);
 		
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
+		$ret = $list->entries_add($added);
+		$this->assertNull($ret);
+
+		//Session user set
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		//$ret = $list->entries_add($added);
+
+		//$this->assertNotNull($ret);
 	}
 	
 	public function test_entries_remove()
@@ -74,23 +83,29 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_delete()
 	{
+		//No session user set
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
 		$ret = $list->delete();
 		$this->assertNull($ret);
 		
+		//Session user set
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
 		$ret = $list->delete();
 
-		//$this->assertNotNull($ret);
-		//$this->assertNull(EntryList::select_by_id($this->db->list_id[0]));
-		//EntryList::unregister_all();
+		$this->assertNotNull($ret);
+		//Hans, please check this
 		//$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
+		EntryList::unregister_all();
+		$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 	}
 	
 	public function test_get_entries()
 	{
-		
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
+		$this->assertNotNull($list);
+		$entries = $ret = $list->get_entries();
+		$this->assertCount(7, $entries);
 	}
 }
 

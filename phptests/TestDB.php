@@ -183,6 +183,7 @@ class TestDB
 		$count_start = count($this->word_0s);
 		$count_end = $count_start + $num_words;
 		$link = $this->link;
+		$added_entries = Array();
 		for ($i = $count_start; $i < $count_end; $i++) 
 		{
 			array_push($this->word_0s, self::$word_0.$i);
@@ -196,7 +197,9 @@ class TestDB
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 
 			array_push($this->entry_ids, $link->insert_id);
+			array_push($added_entries, $link->insert_id);
 		}
+		return $added_entries;
 	}
 	
 	public function add_course($user_id)
