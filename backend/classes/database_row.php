@@ -116,18 +116,27 @@ class DatabaseRow
 		return $cache;
 	}
 	
-	protected static function update_this($instance, $table, $assignments, $column, $id)
+	protected static function update_this($instance, $table, $assignments, $id_column, $id)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
 		$assignments_sql = array ();
 		foreach ($assignments as $column => $value)
 		{
-			array_push($assignments_sql, "$column = " . $mysqli->escape_string($value));
+			if (is_string($value))
+			{
+				$value = "'".$mysqli->escape_string($value)."'";
+			}
+			else
+			{
+				value = intval($value, 10);
+			}
+			
+			array_push($assignments_sql, "$column = $value");
 		}
 		$assignments_sql = implode(", ", $assignments_sql);
 		
-		$failure_message = "Failed to update $table setting $assignments_sql where $column = $id";
+		$failure_message = "Failed to update $table setting $assignments_sql where $id_column = $id";
 		
 		if (!$instance->session_user_can_write())
 		{
@@ -136,7 +145,7 @@ class DatabaseRow
 		
 		$id = intval($id, 10);
 		
-		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $column = $id");
+		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
 		
 		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error);
 	}
