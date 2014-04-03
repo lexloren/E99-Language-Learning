@@ -23,9 +23,10 @@ class Dictionary
 	
 	public static $find_last_count = null;
 	
-	public static function unregister_all()
+	public static function reset()
 	{
 		self::$entries_by_id = array ();
+		self::$error_description = null;
 	}
 	//  Returns the join of the dictionary on the languages table
 	//      so that we can include language codes (which exist only in the languages table)

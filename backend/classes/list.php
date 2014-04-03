@@ -191,7 +191,7 @@ class EntryList extends DatabaseRow
 		
 		if (!$entry_added)
 		{
-			return static::set_error_description(Entry::get_error_description());
+			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();

@@ -18,7 +18,7 @@ class APITest extends APIBase
 		{
 			if (!($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 			{
-				Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Selection", Unit::unset_error_description());
 			}
 			else
 			{
@@ -28,7 +28,7 @@ class APITest extends APIBase
 				
 				if (!($test = Test::insert($unit_id, $test_name, $timeframe, $message)))
 				{
-					Session::get()->set_error_assoc("Test Insertion", Test::get_error_description());
+					Session::get()->set_error_assoc("Test Insertion", Test::unset_error_description());
 				}
 				else
 				{
@@ -46,7 +46,7 @@ class APITest extends APIBase
 		{
 			if (!$test->delete())
 			{
-				Session::get()->set_error_assoc("Test Deletion", Test::get_error_description());
+				Session::get()->set_error_assoc("Test Deletion", Test::unset_error_description());
 			}
 			else
 			{
@@ -87,7 +87,7 @@ class APITest extends APIBase
 				$updates += !!$test->set_close($_POST["close"]);
 			}
 			
-			self::return_updates_as_json("Test", Test::get_error_description(), $updates ? $test->assoc_for_json() : null);
+			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->assoc_for_json() : null);
 		}
 	}
 	

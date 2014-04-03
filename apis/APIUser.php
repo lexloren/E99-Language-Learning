@@ -22,7 +22,7 @@ class APIUser extends APIBase
 			//  Finally, send the user information to the front end
 			if (!($user = User::insert($email, $handle, $password)))
 			{
-				Session::get()->set_error_assoc("User Insertion", User::get_error_description());
+				Session::get()->set_error_assoc("User Insertion", User::unset_error_description());
 			}
 			else
 			{
@@ -98,7 +98,7 @@ class APIUser extends APIBase
 			$updates += !!$user->set_name_family($_POST["name_family"]);
 		}
 		
-		self::return_updates_as_json("User", User::get_error_description(), $updates ? $user->assoc_for_json() : null);
+		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->assoc_for_json() : null);
 	}
 	
 	public function practice()

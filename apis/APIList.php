@@ -15,7 +15,7 @@ class APIList extends APIBase
 		
 		if (!($list = EntryList::insert(isset($_POST["list_name"]) ? $_POST["list_name"] : null)))
 		{
-			Session::get()->set_error_assoc("List Insertion", EntryList::get_error_description());
+			Session::get()->set_error_assoc("List Insertion", EntryList::unset_error_description());
 		}
 		else
 		{
@@ -38,11 +38,11 @@ class APIList extends APIBase
 					$updates += !!$list->set_list_name($_POST["list_name"]);
 				}
 				
-				self::return_updates_as_json("List", EntryList::get_error_description(), $updates ? $list->assoc_for_json() : null);
+				self::return_updates_as_json("List", EntryList::unset_error_description(), $updates ? $list->assoc_for_json() : null);
 			}
 			else
 			{
-				Session::get()->set_error_assoc("List Modification", EntryList::get_error_description());
+				Session::get()->set_error_assoc("List Modification", EntryList::unset_error_description());
 			}
 		}
 	}
@@ -55,7 +55,7 @@ class APIList extends APIBase
 		{
 			if (!$list->delete())
 			{
-				Session::get()->set_error_assoc("List Deletion", EntryList::get_error_description());
+				Session::get()->set_error_assoc("List Deletion", EntryList::unset_error_description());
 			}
 			else
 			{
@@ -101,7 +101,7 @@ class APIList extends APIBase
 				{
 					if (!$list->entries_add(Entry::select_by_id($entry_id)))
 					{
-						Session::get()->set_error_assoc("List-Entries Addition", EntryList::get_error_description());
+						Session::get()->set_error_assoc("List-Entries Addition", EntryList::unset_error_description());
 						return;
 					}
 				}
@@ -123,7 +123,7 @@ class APIList extends APIBase
 				{
 					if (!$list->entries_remove(Entry::select_by_id($entry_id)))
 					{
-						Session::get()->set_error_assoc("List-Entries Removal", EntryList::get_error_description());
+						Session::get()->set_error_assoc("List-Entries Removal", EntryList::unset_error_description());
 						return;
 					}
 				}

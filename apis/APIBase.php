@@ -41,7 +41,7 @@ class APIBase
 		}
 		else if (!($object = $class_name::select_by_id(($id = intval($array[$id_key], 10)))))
 		{
-			Session::get()->set_error_assoc("$class_name Selection", $class_name::get_error_description());
+			Session::get()->set_error_assoc("$class_name Selection", $class_name::unset_error_description());
 		}
 		
 		return $object;

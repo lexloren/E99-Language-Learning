@@ -12,7 +12,9 @@ class DatabaseRow
 	}
 	public static function unset_error_description()
 	{
-		return (static::$error_description = null);
+		$error_description = static::$error_description;
+		static::$error_description = null;
+		return $error_description;
 	}
 	public static function get_error_description()
 	{
@@ -29,9 +31,10 @@ class DatabaseRow
 		static::$instances_by_id[$id] = $instance;
 	}
 	
-	public static function unregister_all()
+	public static function reset()
 	{
 		static::$instances_by_id = array ();
+		return static::unset_error_description();
 	}
 	
 	protected static function select($table, $column, $id)
@@ -104,7 +107,7 @@ class DatabaseRow
 				if (!($member = $member_class::from_mysql_result_assoc($result_assoc)))
 				{
 					unset ($cache);
-					return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::get_error_description());
+					return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::unset_error_description());
 				}
 				array_push($cache, $member);
 			}

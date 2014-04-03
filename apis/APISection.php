@@ -18,7 +18,7 @@ class APISection extends APIBase
 		{
 			if (!($test = self::validate_selection_id($_POST, "test_id", "Test")))
 			{
-				Session::get()->set_error_assoc("Test Selection", Test::get_error_description());
+				Session::get()->set_error_assoc("Test Selection", Test::unset_error_description());
 			}
 			else
 			{
@@ -27,7 +27,7 @@ class APISection extends APIBase
 				
 				if (!($section = Section::insert($test_id, $section_name, $message)))
 				{
-					Session::get()->set_error_assoc("Section Insertion", Section::get_error_description());
+					Session::get()->set_error_assoc("Section Insertion", Section::unset_error_description());
 				}
 				else
 				{
@@ -45,7 +45,7 @@ class APISection extends APIBase
 		{
 			if (!$section->delete())
 			{
-				Session::get()->set_error_assoc("Section Deletion", Section::get_error_description());
+				Session::get()->set_error_assoc("Section Deletion", Section::unset_error_description());
 			}
 			else
 			{
@@ -75,7 +75,7 @@ class APISection extends APIBase
 				$updates += !!$section->set_message($_POST["message"]);
 			}
 			
-			self::return_updates_as_json("Section", Section::get_error_description(), $updates ? $section->assoc_for_json() : null);
+			self::return_updates_as_json("Section", Section::unset_error_description(), $updates ? $section->assoc_for_json() : null);
 		}
 	}
 }

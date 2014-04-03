@@ -58,16 +58,16 @@ class TestDB
 	//Creates empty test database with data only in languages table
 	public static function create()
 	{
-		User::unregister_all();
-		Grade::unregister_all();
-		//Entry::unregister_all();  //Does not use the cache
-		Course::unregister_all();
-		Dictionary::unregister_all();
-		Unit::unregister_all();
-		EntryList::unregister_all();
-		Test::unregister_all();
-		Section::unregister_all();
-		Annotation::unregister_all();
+		User::reset();
+		Grade::reset();
+		//Entry::reset();  //Does not use the cache
+		Course::reset();
+		Dictionary::reset();
+		Unit::reset();
+		EntryList::reset();
+		Test::reset();
+		Section::reset();
+		Annotation::reset();
 	
 		$testdb = new TestDB();
 		

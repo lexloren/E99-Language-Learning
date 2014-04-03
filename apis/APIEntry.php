@@ -35,7 +35,7 @@ class APIEntry extends APIBase
 				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
 			}
 			
-			self::return_updates_as_json("Entry", Entry::get_error_description(), $updates ? $entry->assoc_for_json() : null);
+			self::return_updates_as_json("Entry", Entry::unset_error_description(), $updates ? $entry->assoc_for_json() : null);
 		}
 	}
 	
@@ -59,7 +59,7 @@ class APIEntry extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Entry Find", Dictionary::get_error_description());
+				Session::get()->set_error_assoc("Entry Find", Dictionary::unset_error_description());
 			}
 		}
 	}

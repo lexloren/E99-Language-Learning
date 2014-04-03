@@ -22,7 +22,7 @@ class Unit extends CourseComponent
 		$course_id = intval($course_id, 10);
 		$course = Course::select_by_id($course_id);
 		
-		if (!$course) return static::set_error_description(Course::get_error_description());
+		if (!$course) return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
 		
 		if (!$course->session_user_can_write())
 		{
@@ -190,7 +190,7 @@ class Unit extends CourseComponent
 		
 		if (!($list = $list->copy_for_user($this->get_owner())))
 		{
-			return static::set_error_description("Failed to add list: " . EntryList::get_error_description());
+			return static::set_error_description("Failed to add list: " . EntryList::unset_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();

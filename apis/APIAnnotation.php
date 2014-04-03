@@ -22,7 +22,7 @@ class APIAnnotation extends APIBase
 				
 				if (!$entry->annotations_add($_POST["contents"]))
 				{
-					Session::get()->set_error_assoc("Annotation Insertion", Entry::get_error_description());
+					Session::get()->set_error_assoc("Annotation Insertion", Entry::unset_error_description());
 				}
 				else
 				{
@@ -40,7 +40,7 @@ class APIAnnotation extends APIBase
 		{
 			if (!$annotation->delete())
 			{
-				Session::get()->set_error_assoc("Annotation Deletion", Annotation::get_error_description());
+				Session::get()->set_error_assoc("Annotation Deletion", Annotation::unset_error_description());
 			}
 			else
 			{

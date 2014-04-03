@@ -96,7 +96,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($ret);
 		//Hans, please check this
 		//$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
-		EntryList::unregister_all();
+		EntryList::reset();
 		$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 	}
 	
