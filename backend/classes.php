@@ -1,5 +1,6 @@
 <?php
 
+require_once "./backend/classes/timeframe.php";
 require_once "./backend/classes/database_row.php";
 require_once "./backend/classes/dictionary.php";
 require_once "./backend/classes/session.php";
