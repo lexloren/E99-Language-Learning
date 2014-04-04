@@ -37,6 +37,8 @@ class Test extends CourseComponent
 			return static::set_error_description("Failed to insert test: " . $mysqli->error);
 		}
 		
+		$unit->uncache_all();
+		
 		return self::select_by_id($mysqli->insert_id);
 	}
 	
@@ -82,6 +84,11 @@ class Test extends CourseComponent
 	{
 		return $this->get_unit()->get_course();
 	}
+
+	protected function uncache_all()
+	{
+		if (isset($this->sections)) unset($this->sections);
+	}
 	
 	private $sections;
 	public function get_sections()
@@ -98,7 +105,7 @@ class Test extends CourseComponent
 		return $sections_by_number;
 	}
 	
-	private $timeframe;
+	private $timeframe = null;
 	public function get_timeframe()
 	{
 		return $this->timeframe;
@@ -173,6 +180,7 @@ class Test extends CourseComponent
 	
 	public function delete()
 	{
+		$this->get_unit()->uncache_all();
 		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	

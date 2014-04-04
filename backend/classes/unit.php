@@ -38,6 +38,8 @@ class Unit extends CourseComponent
 		
 		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
 		
+		$course->uncache_all();
+		
 		return self::select_by_id($mysqli->insert_id);
 	}
 	
@@ -124,6 +126,12 @@ class Unit extends CourseComponent
 	{
 		return parent::set_this_message($this, $message, "course_units", "unit_id", $this->get_unit_id());
 	}
+
+	protected function uncache_all()
+	{
+		if (isset($this->tests)) unset($this->tests);
+		if (isset($this->lists)) unset($this->lists);
+	}
 	
 	private $tests;
 	public function get_tests()
@@ -177,6 +185,7 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
+		$this->get_course()->uncache_all();
 		return self::delete_this($this, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
@@ -202,6 +211,8 @@ class Unit extends CourseComponent
 		$lists = $this->get_lists();
 		array_push($lists, $list);
 		
+		$list->uncache_all();
+		
 		return $this;
 	}
 	
@@ -220,6 +231,8 @@ class Unit extends CourseComponent
 		));
 		
 		unset($this->lists);
+		
+		$list->uncache_all();
 		
 		return $this;
 	}

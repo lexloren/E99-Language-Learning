@@ -28,6 +28,8 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
 		
+		Session::get()->get_user()->uncache_all();
+		
 		return self::select_by_id($mysqli->insert_id);
 	}
 	
@@ -73,6 +75,11 @@ class EntryList extends DatabaseRow
 	public function is_public()
 	{
 		return !!$this->public;
+	}
+	
+	protected function uncache_all()
+	{
+		if (isset($this->entries)) unset($this->entries);
 	}
 	
 	private $entries;
@@ -174,6 +181,7 @@ class EntryList extends DatabaseRow
 	
 	public function delete()
 	{
+		$this->get_owner()->uncache_all();
 		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
@@ -208,6 +216,8 @@ class EntryList extends DatabaseRow
 			$entry_added->get_user_entry_id()
 		));
 		
+		$entry_added->uncache_all();
+		
 		return $this;
 	}
 	
@@ -237,6 +247,8 @@ class EntryList extends DatabaseRow
 				));
 				
 				unset($this->entries);
+				
+				$entry_removed->uncache_all();
 				
 				return $this;
 			}
@@ -278,8 +290,15 @@ class EntryList extends DatabaseRow
 		$insertion_values = array ();
 		foreach ($this->get_entries() as $entry)
 		{
-			$user_entry_copy_id = $entry->copy_for_user($user)->get_user_entry_id();
-			array_push($insertion_values, "($list_copy_id, $user_entry_copy_id)");
+			if (($entry_copy = $entry->copy_for_user($user, $this)))
+			{
+				$user_entry_copy_id = $entry_copy->get_user_entry_id();
+				array_push($insertion_values, "($list_copy_id, $user_entry_copy_id)");
+			}
+			else
+			{
+				return static::set_error_description("List failed to copy for user: " . Entry::unset_error_description());
+			}
 		}
 		
 		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES %s",

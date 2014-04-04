@@ -151,22 +151,25 @@ class ListTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user0);
 		$course->students_add($user1);
 		$courses = $user1->get_student_courses();
-		//Hans please check
-		//$this->assertCount(1, $courses);
+		$this->assertCount(1, $courses);
 		$lists = $course->get_lists();
 
+		//  Copies the list by virtue of its readability in the course
 		$copied_list = $lists[0]->copy_for_user($user1);
-		$this->assertNull($copied_list);
+		$this->assertNotNull($copied_list);
 		
+		//  Copies the list a second time
 		Session::get()->set_user($user1);
-
 		$copied_list = $lists[0]->copy_for_user($user1);
-		
-		//Hans please check
-		//$this->assertNotNull($copied_list);
+		$this->assertNotNull($copied_list);
 
-		//$entries = $copied_list->get_entries();
-		//$this->assertCount(7, $entries);
+		//  Arunabha, this test doesn't seem quite right to me:
+		//      Both lists appear to have just one entry
+		//      Please verify.  Thanks
+		$entries = $copied_list->get_entries();
+		print_r($lists[0]->get_entries());
+		print_r($entries);
+		$this->assertCount(7, $entries);
 	}
 }
 

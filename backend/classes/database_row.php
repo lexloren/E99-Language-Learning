@@ -96,6 +96,10 @@ class DatabaseRow
 		return true;
 	}
 	
+	protected function uncache_all()
+	{
+	}
+	
 	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*")
 	{
 		if (!isset($cache))

@@ -53,6 +53,8 @@ class Course extends DatabaseRow
 			Session::get()->get_user()->get_user_id()
 		));
 		
+		Session::get()->get_user()->uncache_all();
+		
 		return $course;
 	}
 	
@@ -82,6 +84,13 @@ class Course extends DatabaseRow
 	{
 		return !!Session::get() && !!Session::get()->get_user()
 			&& Session::get()->get_user()->equals($this->get_owner());
+	}
+	
+	protected function uncache_all()
+	{
+		if (isset($this->instructors)) unset($this->instructors);
+		if (isset($this->students)) unset($this->studenst);
+		if (isset($this->units)) unset($this->units);
 	}
 	
 	private $course_name = null;
@@ -291,6 +300,14 @@ class Course extends DatabaseRow
 	
 	public function delete()
 	{
+		foreach (array_merge(array ($this->get_owner()), $this->get_students(), $this->get_instructors()) as $user)
+		{
+			$user->uncache_all();
+		}
+		foreach ($this->get_lists() as $list)
+		{
+			$list->uncache_all();
+		}
 		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
 	
@@ -314,6 +331,8 @@ class Course extends DatabaseRow
 		));
 		
 		array_push($array, $user);
+		
+		$user->uncache_all();
 		
 		return $this;
 	}
@@ -350,6 +369,8 @@ class Course extends DatabaseRow
 		));
 		
 		unset($array);
+		
+		$user->uncache_all();
 		
 		return $this;
 	}

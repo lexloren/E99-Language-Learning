@@ -436,6 +436,12 @@ class UserEntry extends Entry
 			? $this->pronunciations
 			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
 	}
+	
+	protected function uncache_all()
+	{
+		if (isset($this->annotations)) unset($this->annotations);
+		if (isset($this->lists)) unset($this->lists);
+	}
 
 	private $annotations;
 	public function get_annotations()
@@ -611,7 +617,46 @@ class UserEntry extends Entry
 		return $this->copy_for_user($session_user);
 	}
 	
-	public function copy_for_user($user)
+	public function user_can_read($user, $list = null)
+	{
+		return parent::user_can_read($user)
+			|| $this->user_can_read_via_list($user, $list)
+			|| $this->user_can_read_via_course($user);
+	}
+	
+	private function user_can_read_via_list($user, $list)
+	{
+		if (!$user || !$list) return false;
+		
+		return $this->in_list($list) && $list->user_can_read($user);
+	}
+	
+	public function in_list($list)
+	{
+		if (!$list) return false;
+		
+		foreach ($list->get_entries() as $entry)
+		{
+			if ($entry->get_user_entry_id() === $this->get_user_entry_id()) return true;
+		}
+		
+		return false;
+	}
+	
+	private function user_can_read_via_course($user)
+	{
+		foreach (array_merge($user->get_student_courses(), $user->get_instructor_courses()) as $course)
+		{
+			foreach ($course->get_lists() as $list)
+			{
+				if ($this->user_can_read_via_list($user, $list)) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public function copy_for_user($user, $list = null)
 	{
 		if ($this->get_owner()->equals($user)) return $this;
 		
@@ -620,7 +665,7 @@ class UserEntry extends Entry
 			return static::set_error_description("Failed to copy entry for null user.");
 		}
 		
-		if (!$this->user_can_read($user))
+		if (!$this->user_can_read($user, $list))
 		{
 			return static::set_error_description("User cannot read user entry to copy.");
 		}
