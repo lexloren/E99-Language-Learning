@@ -3,7 +3,7 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Section extends DatabaseRow
+class Section extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
 	protected static $error_description = null;
@@ -69,11 +69,15 @@ class Section extends DatabaseRow
 	}
 	public function get_unit_id()
 	{
-		return $this->get_unit()->get_unit_id();
+		return $this->get_test()->get_unit_id();
 	}
 	public function get_course()
 	{
 		return $this->get_test()->get_course();
+	}
+	public function get_course_id()
+	{
+		return $this->get_test()->get_course_id();
 	}
 	
 	private $section_name = null;
@@ -169,7 +173,7 @@ class Section extends DatabaseRow
 			"sectionId" => $this->get_section_id(),
 			"sectionName" => !$privacy ? $this->get_section_name() : null,
 			"testId" => !$privacy ? $this->get_test_id() : null,
-			"testName" => !$privacy ? $this->get_test_name() : null,
+			"testName" => !$privacy ? $this->get_test()->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
 			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
