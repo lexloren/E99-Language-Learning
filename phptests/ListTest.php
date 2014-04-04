@@ -63,26 +63,26 @@ class ListTest extends PHPUnit_Framework_TestCase
 	public function test_entries_add()
 	{
 		$added = $this->db->add_dictionary_entries(5);
-		
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
-		
-		/*
-		Arunabha, entries_add() doesn't accept arrays
-		I'm not sure of the type of $added, but I'm assuming it's an array
-		foreach ($added as $entry)
-		{
-			print_r($entry); // It's not an Entry object
-			Session::get()->set_user(null);
-			$ret = $list->entries_add($entry);
-			$this->assertNull($ret);
 
-			//Session user set
-			Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-			$ret = $list->entries_add($entry);
+		$ret = $list->entries_add(null);
+		$this->assertNull($ret);
+		$entry = Entry::select_by_id($added[0]);
+		$ret = $list->entries_add($entry);
+		$this->assertNull($ret);
+
+		//Session user set
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
 			
+		foreach ($added as $entry_id)
+		{
+			$entry = Entry::select_by_id($entry_id);
+			$ret = $list->entries_add($entry);
 			$this->assertNotNull($ret);
 		}
-		*/
+		
+		$entries = $list->get_entries();
+		$this->assertCount(12, $entries);
 	}
 	
 	public function test_entries_remove()
@@ -133,6 +133,40 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($list);
 		$entries = $list->get_entries();
 		$this->assertCount(7, $entries);
+	}
+	
+	public function test_copy_for_user()
+	{
+		$user0 = User::select_by_id($this->db->user_ids[0]);
+		$user1 = User::select_by_id($this->db->user_ids[1]);
+
+		//try to copy a list added by user0 for user1; should fail
+		$list = EntryList::select_by_id($this->db->list_ids[0]);
+		$copied_list = $list->copy_for_user($user1);
+		$this->assertNull($copied_list);
+		
+		//Create a course, add user1 as student
+		$course_id = $this->db->add_course($user0->get_user_id());
+		$course = Course::select_by_id($course_id);
+		Session::get()->set_user($user0);
+		$course->students_add($user1);
+		$courses = $user1->get_student_courses();
+		//Hans please check
+		//$this->assertCount(1, $courses);
+		$lists = $course->get_lists();
+
+		$copied_list = $lists[0]->copy_for_user($user1);
+		$this->assertNull($copied_list);
+		
+		Session::get()->set_user($user1);
+
+		$copied_list = $lists[0]->copy_for_user($user1);
+		
+		//Hans please check
+		//$this->assertNotNull($copied_list);
+
+		//$entries = $copied_list->get_entries();
+		//$this->assertCount(7, $entries);
 	}
 }
 

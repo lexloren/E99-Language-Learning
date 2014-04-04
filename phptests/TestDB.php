@@ -239,6 +239,8 @@ class TestDB
 			$course_unit_id,
 			$list_id
 		));
+		
+		return $course_id;
 	}
 
 	public function add_practice_data($user_id, $num_lists, $num_entries)
