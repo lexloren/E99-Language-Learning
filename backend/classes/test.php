@@ -101,7 +101,7 @@ class Test extends CourseComponent
 	private $timeframe;
 	public function get_timeframe()
 	{
-		return $this->get_timeframe();
+		return $this->timeframe;
 	}
 	public function set_timeframe($timeframe)
 	{
