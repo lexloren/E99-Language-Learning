@@ -16,12 +16,6 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public function tearDown()
-	{
-		//if (isset($this->db))
-		//	$this->db->close();
-	}
-
 	public function testInsert()
 	{
 		$email = "some1@somewhere.com";
@@ -64,6 +58,14 @@ class UserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($user_obj->get_handle(), $handle);
 		$this->assertEquals($user_obj->get_name_family(), $family);
 		$this->assertEquals($user_obj->get_name_given(), $given);
+		
+		//Reuse email/handle
+		$user_obj = User::insert("some2@somewhere.com", $handle, $password, $family, $given);
+		$this->assertNull($user_obj);
+		$user_obj = User::insert($email, "username2", $password, $family, $given);
+		$this->assertNull($user_obj);
+		$user_obj = User::insert("some2@somewhere.com", "username2", $password, $family, $given);
+		$this->assertNotNull($user_obj);
 	}
 	
 	public function testSelect()
@@ -114,12 +116,11 @@ class UserTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$ret = $user->set_email("newemail@domain.com");
 		
-		//Hans, please check this
-		//$this->assertNotNull($ret);
-		//$this->assertEquals("newemail@domain.com", $user->get_email());
-		//User::reset();
-		//$user = User::select_by_id($this->db->user_ids[0]);
-		//$this->assertEquals("newemail@domain.com", $user->get_email());
+		$this->assertNotNull($ret);
+		$this->assertEquals("newemail@domain.com", $user->get_email());
+		User::reset();
+		$user = User::select_by_id($this->db->user_ids[0]);
+		$this->assertEquals("newemail@domain.com", $user->get_email());
 	}
 	
 	public function test_set_name_given()
@@ -132,12 +133,11 @@ class UserTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$ret = $user->set_name_given("newName");
 		
-		//Hans, please check this
-		//$this->assertNotNull($ret);
-		//$this->assertEquals("newName", $user->get_name_given());
-		//User::reset();
-		//$user = User::select_by_id($this->db->user_ids[0]);
-		//$this->assertEquals("newName", $user->get_name_given());
+		$this->assertNotNull($ret);
+		$this->assertEquals("newName", $user->get_name_given());
+		User::reset();
+		$user = User::select_by_id($this->db->user_ids[0]);
+		$this->assertEquals("newName", $user->get_name_given());
 	}
 	
 	public function test_set_name_family()
@@ -150,12 +150,11 @@ class UserTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$ret = $user->set_name_family("newFamilyName");
 		
-		//Hans, please check this
-		//$this->assertNotNull($ret);
-		//$this->assertEquals("newName", $user->get_name_family());
-		//User::reset();
-		//$user = User::select_by_id($this->db->user_ids[0]);
-		//$this->assertEquals("newName", $user->get_name_family());
+		$this->assertNotNull($ret);
+		$this->assertEquals("newFamilyName", $user->get_name_family());
+		User::reset();
+		$user = User::select_by_id($this->db->user_ids[0]);
+		$this->assertEquals("newFamilyName", $user->get_name_family());
 	}
 	
 	public function test_get_name_full()
