@@ -137,7 +137,7 @@ class Section extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Test(
+			? new Section(
 				$result_assoc["section_id"],
 				$result_assoc["test_id"],
 				$result_assoc["section_name"],
