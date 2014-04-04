@@ -20,7 +20,7 @@ class APIUnit extends APIBase
 			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($unit = Unit::insert($course_id, $unit_name, $timeframe, $message)))
+			if (!($unit = Unit::insert($course->get_course_id(), $unit_name, $timeframe, $message)))
 			{
 				Session::get()->set_error_assoc("Unit Insertion", Unit::unset_error_description());
 			}

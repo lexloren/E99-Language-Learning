@@ -14,26 +14,19 @@ class APITest extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (self::validate_request($_POST, "unit_id"))
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
-			if (!($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
+			$test_name = isset($_POST["test_name"]) && strlen($_POST["test_name"]) > 0 ? $_POST["test_name"] : null;
+			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
+			
+			if (!($test = Test::insert($unit->get_unit_id(), $test_name, $timeframe, $message)))
 			{
-				Session::get()->set_error_assoc("Unit Selection", Unit::unset_error_description());
+				Session::get()->set_error_assoc("Test Insertion", Test::unset_error_description());
 			}
 			else
 			{
-				$test_name = isset($_POST["test_name"]) && strlen($_POST["test_name"]) > 0 ? $_POST["test_name"] : null;
-				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
-				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
-				
-				if (!($test = Test::insert($unit_id, $test_name, $timeframe, $message)))
-				{
-					Session::get()->set_error_assoc("Test Insertion", Test::unset_error_description());
-				}
-				else
-				{
-					Session::get()->set_result_assoc($test->assoc_for_json());
-				}
+				Session::get()->set_result_assoc($test->assoc_for_json());
 			}
 		}
 	}

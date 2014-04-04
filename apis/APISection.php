@@ -14,25 +14,18 @@ class APISection extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (self::validate_request($_POST, "test_id"))
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if (!($test = self::validate_selection_id($_POST, "test_id", "Test")))
+			$section_name = isset($_POST["section_name"]) && strlen($_POST["section_name"]) > 0 ? $_POST["section_name"] : null;
+			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
+			
+			if (!($section = Section::insert($test->get_test_id(), $section_name, $message)))
 			{
-				Session::get()->set_error_assoc("Test Selection", Test::unset_error_description());
+				Session::get()->set_error_assoc("Section Insertion", Section::unset_error_description());
 			}
 			else
 			{
-				$section_name = isset($_POST["section_name"]) && strlen($_POST["section_name"]) > 0 ? $_POST["section_name"] : null;
-				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
-				
-				if (!($section = Section::insert($test_id, $section_name, $message)))
-				{
-					Session::get()->set_error_assoc("Section Insertion", Section::unset_error_description());
-				}
-				else
-				{
-					Session::get()->set_result_assoc($section->assoc_for_json());
-				}
+				Session::get()->set_result_assoc($section->assoc_for_json());
 			}
 		}
 	}

@@ -16,7 +16,7 @@ class Timeframe
 	
 	public function __construct($arg)
 	{
-		if (count(array_diff(array ("open","close"), array_keys($arg))) === 0)
+		if (in_array("open", array_keys($arg)) && in_array("close", array_keys($arg)))
 		{
 			$open = $arg["open"];
 			$close = $arg["close"];
