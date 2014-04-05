@@ -57,11 +57,11 @@ class APIListTest extends PHPUnit_Framework_TestCase
 			$this->assertNotNull($result);
 			
 			$this->assertArrayHasKey('listId', $result);
-			$this->assertArrayHasKey('listName', $result);
+			$this->assertArrayHasKey('name', $result);
 			$this->assertArrayHasKey('owner', $result);
 			$this->assertArrayHasKey('isPublic', $result);
 			
-			$this->assertEquals($result["listName"], $i == 0 ? null : $_POST["name"]);
+			$this->assertEquals($result["name"], $i == 0 ? null : $_POST["name"]);
 			$this->assertEquals($result["owner"]["handle"], $this->db->handles[0]);
 		}
 	}
@@ -86,7 +86,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertEquals($result["listName"], $this->db->list_names[0]);*/
+		$this->assertEquals($result["name"], $this->db->list_names[0]);*/
 	}
 
 	public function test_delete_no_id()

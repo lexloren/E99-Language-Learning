@@ -196,11 +196,9 @@ class Test extends CourseComponent
 		
 		return array (
 			"testId" => $this->get_test_id(),
-			"testName" => !$privacy ? $this->get_test_name() : null,
+			"name" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
-			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);

@@ -27,10 +27,10 @@ class Section extends CourseComponent
 		
 		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$section_number = count($test->get_sections()) + 1;
+		$number = count($test->get_sections()) + 1;
 		$timer = intval($timer, 10);
 		
-		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, name, num, timer, message) VALUES ($test_id, $name, $section_number, $timer, $message)");
+		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, name, num, timer, message) VALUES ($test_id, $name, $number, $timer, $message)");
 		
 		if (!!$mysqli->error)
 		{
@@ -82,6 +82,12 @@ class Section extends CourseComponent
 		return $this->get_test()->get_course_id();
 	}
 	
+	private $number = null;
+	public function get_number()
+	{
+		return $this->number;
+	}
+	
 	private $name = null;
 	public function get_section_name()
 	{
@@ -126,11 +132,12 @@ class Section extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
-	private function __construct($section_id, $test_id, $name = null, $timer = null, $message = null)
+	private function __construct($section_id, $test_id, $number, $name = null, $timer = null, $message = null)
 	{
 		$this->section_id = intval($section_id, 10);
 		$this->test_id = intval($test_id, 10);
 		$this->name = !!$name && strlen($name) > 0 ? $name : null;
+		$this->number = $number;
 		$this->timer = intval($timer, 10);
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
@@ -142,6 +149,7 @@ class Section extends CourseComponent
 		$mysql_columns = array (
 			"section_id",
 			"test_id",
+			"num",
 			"name",
 			"timer",
 			"message"
@@ -151,6 +159,7 @@ class Section extends CourseComponent
 			? new Section(
 				$result_assoc["section_id"],
 				$result_assoc["test_id"],
+				$result_assoc["num"],
 				$result_assoc["name"],
 				$result_assoc["timer"],
 				$result_assoc["message"]
@@ -179,13 +188,11 @@ class Section extends CourseComponent
 		
 		return array (
 			"sectionId" => $this->get_section_id(),
-			"sectionName" => !$privacy ? $this->get_section_name() : null,
+			"number" => $this->get_number(),
+			"name" => !$privacy ? $this->get_section_name() : null,
 			"testId" => !$privacy ? $this->get_test_id() : null,
-			"testName" => !$privacy ? $this->get_test()->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
-			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timer" => !$privacy ? $this->get_timer() : null,
 			"message" => !$privacy ? $this->get_message() : null

@@ -407,7 +407,7 @@ class Course extends DatabaseRow
 		
 		return array (
 			"courseId" => $this->get_course_id(),
-			"courseName" => !$privacy ? $this->get_course_name() : null,
+			"name" => !$privacy ? $this->get_course_name() : null,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => !$privacy ? $this->is_public() : null,
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null

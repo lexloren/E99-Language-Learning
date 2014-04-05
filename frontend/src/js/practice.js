@@ -22,9 +22,9 @@ $.mockjax({
 	"errorDescription":null,
 	"result":[
 		{"listId" : 1,
-		"listName" : "Lesson 1: Family"},
+		"name" : "Lesson 1: Family"},
 		{"listId" : 2,
-		"listName" : "Lesson 2: Animals"}],
+		"name" : "Lesson 2: Animals"}],
 	},
 });
 
@@ -240,7 +240,7 @@ function getLists() {
 		} else {
 			$.each( data.result, function( ) {
 				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
-				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.listName + ' </label></div>');
+				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');
 			});
 		}
 	})

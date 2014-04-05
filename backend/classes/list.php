@@ -312,7 +312,7 @@ class EntryList extends DatabaseRow
 	{
 		return array (
 			"listId" => $this->list_id,
-			"listName" => $this->name,
+			"name" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
 		);

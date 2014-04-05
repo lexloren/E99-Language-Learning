@@ -161,11 +161,11 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(1, $result);
 		
 		$this->assertArrayHasKey('listId', $result[0]);
-		$this->assertArrayHasKey('listName', $result[0]);
+		$this->assertArrayHasKey('name', $result[0]);
 		$this->assertArrayHasKey('owner', $result[0]);
 		$this->assertArrayHasKey('isPublic', $result[0]);
 		
-		$this->assertEquals($result[0]["listName"], $this->db->list_names[0]);
+		$this->assertEquals($result[0]["name"], $this->db->list_names[0]);
 		$this->assertEquals($result[0]["owner"]["handle"], $this->db->handles[0]);
 	}
 

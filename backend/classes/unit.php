@@ -28,7 +28,7 @@ class Unit extends CourseComponent
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		$unit_number = count($course->get_units()) + 1;
+		$number = count($course->get_units()) + 1;
 		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
 		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
@@ -36,7 +36,7 @@ class Unit extends CourseComponent
 		$mysqli->query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
 			$course_id,
 			!!$name && strlen($name) > 0 ? "'$name'" : "NULL",
-			$unit_number,
+			$number,
 			$open, $close,
 			$message
 		));
@@ -71,16 +71,16 @@ class Unit extends CourseComponent
 		return $this->unit_id;
 	}
 	
-	private $unit_number = null;
-	public function get_unit_number()
+	private $number = null;
+	public function get_number()
 	{
-		return $this->unit_number;
+		return $this->number;
 	}
-	public function set_unit_number($unit_number)
+	public function set_number($number)
 	{
 		return null;
-		//  Verify that $unit_number <= count of units in the course
-		//  Set this unit's number to $unit_number, pushing all subsequent units down by one
+		//  Verify that $number <= count of units in the course
+		//  Set this unit's number to $number, pushing all subsequent units down by one
 	}
 	
 	private $name = null;
@@ -154,11 +154,11 @@ class Unit extends CourseComponent
 		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
-	private function __construct($unit_id, $course_id, $unit_number, $name = null, $open = null, $close = null, $message = null)
+	private function __construct($unit_id, $course_id, $number, $name = null, $open = null, $close = null, $message = null)
 	{
 		$this->unit_id = intval($unit_id, 10);
 		$this->course_id = intval($course_id, 10);
-		$this->unit_number = intval($unit_number, 10);
+		$this->number = intval($number, 10);
 		$this->name = !!$name && strlen($name) > 0 ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
@@ -254,7 +254,7 @@ class Unit extends CourseComponent
 		
 		return array (
 			"unitId" => $this->get_unit_id(),
-			"unitName" => !$privacy ? $this->get_unit_name() : null,
+			"name" => !$privacy ? $this->get_unit_name() : null,
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null

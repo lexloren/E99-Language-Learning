@@ -54,7 +54,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$unit_actual = Unit::select_by_id($unit_expect->get_unit_id());
 		$this->assertNotNull($unit_actual);
 		$this->assertEquals($unit_expect->get_unit_name(), $unit_actual->get_unit_name());
-		$this->assertEquals($unit_expect->get_unit_number(), $unit_actual->get_unit_number());
+		$this->assertEquals($unit_expect->get_number(), $unit_actual->get_number());
 		$this->assertEquals($unit_expect->get_course_id(), $unit_actual->get_course_id());
 		$this->assertEquals($unit_expect->get_course(), $unit_actual->get_course());
 		$this->assertEquals($unit_expect->get_lists(), $unit_actual->get_lists());
