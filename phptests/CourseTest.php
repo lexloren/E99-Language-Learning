@@ -49,6 +49,10 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
 		$this->assertEquals($course->get_lang_id_0(), TestDB::$lang_id_0);
 		$this->assertEquals($course->get_lang_id_1(), TestDB::$lang_id_1);
+		$this->assertEquals($course->get_lang_code_0(), TestDB::$lang_code_0);
+		$this->assertEquals($course->get_lang_code_1(), TestDB::$lang_code_1);
+		$this->assertEquals($course->get_message(), $this->db->course_messages[0]);
+		$this->assertFalse($course->is_public());
 	}
 	
 	public function test_delete()
@@ -94,13 +98,12 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
 		$course->set_course_name("new name of old course");
 		
-		//Hans, please check this
-		//$this->assertEquals($course->get_course_name(), "new name of old course");
+		$this->assertEquals($course->get_course_name(), "new name of old course");
 		
 		Course::reset();
+
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		//Hans, please check this
-		//$this->assertEquals($course->get_course_name(), "new name of old course");
+		$this->assertEquals($course->get_course_name(), "new name of old course");
 		$course->set_course_name($this->db->course_names[0]);
 		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
 		
@@ -142,6 +145,96 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	
 	public function test_students_remove()
 	{
+	}
+	
+	public function test_is_public()
+	{
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$this->assertFalse($course->is_public());
+
+		//Session user not set
+		$course->set_is_public(true);
+		$this->assertFalse($course->is_public());
+
+		//Session user set
+		$user = User::select_by_id($this->db->user_ids[0]);
+		Session::get()->set_user($user);
+		$course->set_is_public(true);
+		$this->assertTrue($course->is_public());
+		$course->set_is_public(false);
+		$this->assertFalse($course->is_public());
+	}
+	
+	public function test_time_frame()
+	{
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$time_frame = $course->get_timeframe();
+		$this->assertNull($time_frame);
+		$week = (7 * 24 * 60 * 60);
+		$prevWeek = time() - $week;
+		$nextWeek = time() + $week;
+		$time_frame_to_set = new Timeframe($prevWeek, $nextWeek);
+		
+		//Session user not set
+		$course->set_timeframe($time_frame_to_set);
+		$time_frame = $course->get_timeframe();
+		$this->assertNull($time_frame);
+
+		//Session user set
+		$user = User::select_by_id($this->db->user_ids[0]);
+		Session::get()->set_user($user);
+		$course->set_timeframe($time_frame_to_set);
+		$time_frame = $course->get_timeframe();
+		$this->assertNotNull($time_frame);
+		$this->assertEquals(time() - $week, $time_frame->get_open());
+		$this->assertEquals(time() + $week, $time_frame->get_close());
+		$course->set_open(time());
+		$time_frame = $course->get_timeframe();
+		$this->assertEquals(time(), $time_frame->get_open());
+		$this->assertEquals(time() + $week, $time_frame->get_close());
+		$course->set_close(time() + $week * 2);
+		$time_frame = $course->get_timeframe();
+		$this->assertEquals(time(), $time_frame->get_open());
+		$this->assertEquals(time() + $week * 2, $time_frame->get_close());
+	}
+	
+	public function	test_session_user_can_read()
+	{
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$this->assertFalse($course->session_user_can_read());
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$this->assertTrue($course->session_user_can_read());
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
+		$this->assertFalse($course->session_user_can_read());
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$ret = $course->students_add(User::select_by_id($this->db->user_ids[1]));
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
+		//$this->assertTrue($course->session_user_can_read());
+	}
+
+	public function test_course_test()
+	{
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$this->assertCount(0, $course->get_tests());
+	}
+	
+	public function test_set_message()
+	{
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$this->assertNotNull($course->get_message());
+
+		$message = "new course message";
+		
+		//Session user not set, should fail
+		$ret = $course->set_message($message);
+		$this->assertNull($ret);
+		$this->assertEquals($this->db->course_messages[0], $course->get_message());
+
+		//Session user set, should work
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$ret = $course->set_message($message);
+		$this->assertNotNull($ret);
+		$this->assertEquals($message, $course->get_message());
 	}
 }
 
