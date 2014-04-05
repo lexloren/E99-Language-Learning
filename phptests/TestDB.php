@@ -43,7 +43,9 @@ class TestDB
 	//courses table
 	public $course_ids = Array();
 	public $course_names = Array();
+	public $course_messages = Array();
 	private static $course_name = 'some course';
+	private static $course_message = 'some course message';
 	private static $course_unit_name = 'some unit';
 	
 	public $practice_list_ids = array();
@@ -149,30 +151,49 @@ class TestDB
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 		
-		array_push($this->list_ids, $link->insert_id);
+		$list_id = $link->insert_id;
+
+		array_push($this->list_ids, $list_id);
 		array_push($this->list_names, $list_name);
 		
-		$list_id = $link->insert_id;
 	
 		foreach($entry_ids as $entry_id)
 		{
-			$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-				$entry_id, $user_id
-			));
-			
-			$user_entry_id = $link->insert_id;
-			array_push($this->user_entry_ids, $user_entry_id);
+			$user_entry_id = 0;
+			$result = $link->query(sprintf("SELECT user_entry_id FROM user_entries WHERE entry_id = %d AND user_id = %d",
+					$entry_id, $user_id
+				));
+			if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+			}
+			else
+			{
+				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
+					$entry_id, $user_id
+				));
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 
+				$user_entry_id = $link->insert_id;
+				array_push($this->user_entry_ids, $user_entry_id);
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+
+				$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+					$user_entry_id, $link->escape_string(self::$entry_annotation)
+				));
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				array_push($this->annotation_ids, $link->insert_id);
+			}
+			
 			$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 				$list_id,
 				$user_entry_id
 			));
-
-			$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
-				$user_entry_id, $link->escape_string(self::$entry_annotation)
-			));
-
-			array_push($this->annotation_ids, $link->insert_id);
 		}
 		
 		return $list_id;
@@ -207,12 +228,14 @@ class TestDB
 		$link = $this->link;
 		$suffix = count($this->course_ids);
 		$course_name = self::$course_name.$suffix;
+		$message = self::$course_message.$suffix;
 		
-		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1) VALUES (%d, '%s', %d, %d)",
+		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1, message) VALUES (%d, '%s', %d, %d, '%s')",
 			$user_id,
 			$link->escape_string($course_name),
 			self::$lang_id_0,
-			self::$lang_id_1
+			self::$lang_id_1,
+			$link->escape_string($message)
 		));
 
 		if (!$link->insert_id)
@@ -221,6 +244,7 @@ class TestDB
 		$course_id = $link->insert_id;
 		array_push($this->course_ids, $course_id);
 		array_push($this->course_names, $course_name);
+		array_push($this->course_messages, $message);
 		
 		$link->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, '%s', %d)",
 			$course_id,

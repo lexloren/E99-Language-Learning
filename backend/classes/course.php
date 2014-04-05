@@ -206,7 +206,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		return !!Session::get() && Session::get()->get_user()->in_array($this->get_students());
+		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_students());
 	}
 	
 	private $units;

@@ -14,9 +14,9 @@ class Timeframe
 		return $this->close;
 	}
 	
-	public function __construct($arg)
+	public function __construct($open, $close)
 	{
-		if (in_array("open", array_keys($arg)) && in_array("close", array_keys($arg)))
+		/*if (in_array("open", array_keys($arg)) && in_array("close", array_keys($arg)))
 		{
 			$open = $arg["open"];
 			$close = $arg["close"];
@@ -25,7 +25,7 @@ class Timeframe
 		{
 			$open = $arg[0];
 			$close = $arg[1];
-		}
+		}*/
 		
 		$this->open = intval($open, 10);
 		$this->close = intval($close, 10);
