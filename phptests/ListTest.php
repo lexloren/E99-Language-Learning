@@ -135,12 +135,12 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(7, $entries);
 	}
 	
-	public function test_copy_for_user()
+	public function test_copy_for_session_user()
 	{
 		$user0 = User::select_by_id($this->db->user_ids[0]);
 		$user1 = User::select_by_id($this->db->user_ids[1]);
 
-		//try to copy a list added by user0 for user1; should fail
+		//Try to copy a private list of user0 for user1; should fail
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$copied_list = $list->copy_for_user($user1);
 		$this->assertNull($copied_list);
@@ -152,24 +152,28 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$course->students_add($user1);
 		$courses = $user1->get_student_courses();
 		$this->assertCount(1, $courses);
+		
+		//Copy course's list
 		$lists = $course->get_lists();
+		$this->assertCount(1, $lists);
+		$course_list = $lists[0];
+		$this->assertTrue($course_list->session_user_can_read());
+		$entries = $course_list->get_entries();
+		$this->assertCount(7, $entries);
 
 		//  Copies the list by virtue of its readability in the course
-		$copied_list = $lists[0]->copy_for_user($user1);
+		$copied_list = $course_list->copy_for_user($user1);
 		$this->assertNotNull($copied_list);
 		
 		//  Copies the list a second time
 		Session::get()->set_user($user1);
-		$copied_list = $lists[0]->copy_for_user($user1);
+		$this->assertTrue($course_list->session_user_can_read());
+		$copied_list = $course_list->copy_for_session_user();
 		$this->assertNotNull($copied_list);
-
-		//  Arunabha, this test doesn't seem quite right to me:
-		//      Both lists appear to have just one entry
-		//      Please verify.  Thanks
+		$this->assertEquals($user1, $copied_list->get_owner());
 		$entries = $copied_list->get_entries();
-		print_r($lists[0]->get_entries());
-		print_r($entries);
 		$this->assertCount(7, $entries);
+		
 	}
 }
 

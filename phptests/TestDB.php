@@ -149,30 +149,49 @@ class TestDB
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 		
-		array_push($this->list_ids, $link->insert_id);
+		$list_id = $link->insert_id;
+
+		array_push($this->list_ids, $list_id);
 		array_push($this->list_names, $list_name);
 		
-		$list_id = $link->insert_id;
 	
 		foreach($entry_ids as $entry_id)
 		{
-			$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-				$entry_id, $user_id
-			));
-			
-			$user_entry_id = $link->insert_id;
-			array_push($this->user_entry_ids, $user_entry_id);
+			$user_entry_id = 0;
+			$result = $link->query(sprintf("SELECT user_entry_id FROM user_entries WHERE entry_id = %d AND user_id = %d",
+					$entry_id, $user_id
+				));
+			if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+			}
+			else
+			{
+				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
+					$entry_id, $user_id
+				));
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 
+				$user_entry_id = $link->insert_id;
+				array_push($this->user_entry_ids, $user_entry_id);
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+
+				$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+					$user_entry_id, $link->escape_string(self::$entry_annotation)
+				));
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				array_push($this->annotation_ids, $link->insert_id);
+			}
+			
 			$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 				$list_id,
 				$user_entry_id
 			));
-
-			$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
-				$user_entry_id, $link->escape_string(self::$entry_annotation)
-			));
-
-			array_push($this->annotation_ids, $link->insert_id);
 		}
 		
 		return $list_id;
