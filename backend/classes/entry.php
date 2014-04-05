@@ -635,9 +635,18 @@ class UserEntry extends Entry
 	{
 		if (!$list) return false;
 		
-		foreach ($list->get_entries() as $entry)
+		//  Quick check
+		if (in_array($this, ($list_entries = $list->get_entries()))) return true;
+		
+		//  Robustness, in case of unexpected duplicate UserEntry
+		foreach ($list_entries as $entry)
 		{
-			if ($entry->get_user_entry_id() === $this->get_user_entry_id()) return true;
+			if ($entry->get_user_entry_id() === $this->get_user_entry_id())
+			{
+				//  Unexpected error
+				EntryList::set_error_description("List whose list_id = " . $list->get_list_id() . " appears to contain a duplicate UserEntry whose user_entry_id = " . $this->get_user_entry_id());
+				return true;
+			}
 		}
 		
 		return false;
