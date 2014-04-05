@@ -92,7 +92,7 @@ class Course extends DatabaseRow
 	protected function uncache_all()
 	{
 		if (isset($this->instructors)) unset($this->instructors);
-		if (isset($this->students)) unset($this->studenst);
+		if (isset($this->students)) unset($this->students);
 		if (isset($this->units)) unset($this->units);
 	}
 	
@@ -331,12 +331,17 @@ class Course extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT IGNORE INTO $table (course_id, user_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		array_push($array, $user);
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to add course user: " . $mysqli->error);
+		}
+		
+		if (isset($array)) array_push($array, $user);
 		
 		$user->uncache_all();
 		
@@ -349,15 +354,13 @@ class Course extends DatabaseRow
 		{
 			return static::set_error_description("Session user is not course owner.");
 		}
-		$instructors = $this->get_instructors();
-		return $this->users_add($instructors, "course_instructors", $user);
+		
+		return $this->users_add($this->instructors, "course_instructors", $user);
 	}
 	
 	public function students_add($user)
 	{
-		//$temp to avoid test error : Only variables should be passed by reference
-		$students = $this->get_students();
-		return $this->users_add($students, "course_students", $user);
+		return $this->users_add($this->students, "course_students", $user);
 	}
 	
 	private function users_remove(&$array, $table, $user)
@@ -374,7 +377,12 @@ class Course extends DatabaseRow
 			$user->get_user_id()
 		));
 		
-		unset($array);
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to remove course user: " . $mysqli->error);
+		}
+		
+		if (isset($array)) unset($array);
 		
 		$user->uncache_all();
 		
@@ -387,14 +395,12 @@ class Course extends DatabaseRow
 		{
 			return static::set_error_description("Session user is not course owner.");
 		}
-		$instructors = $this->get_instructors();
-		return $this->users_remove($instructors, "course_instructors", $user);
+		return $this->users_remove($this->instructors, "course_instructors", $user);
 	}
 	
 	public function students_remove($user)
 	{
-		$students = $this->get_students();
-		return $this->users_remove($students, "course_students", $user);
+		return $this->users_remove($this->students, "course_students", $user);
 	}
 	
 	public function assoc_for_json($privacy = null)

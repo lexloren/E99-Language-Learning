@@ -130,13 +130,13 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		
+		$this->assertCount(0, $course->get_students());
 		$ret = $course->students_add($student);
 		$this->assertNotNull($ret);
 		
 		$students = $course->get_students();
-		//Hans, please check this
-		//$this->assertCount(1, $students);
-		//$this->assertEquals($student, $students[0]);
+		$this->assertCount(1, $students);
+		$this->assertEquals($student, $students[0]);
 	}
 	
 	public function test_instructors_remove()
@@ -209,7 +209,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
 		$ret = $course->students_add(User::select_by_id($this->db->user_ids[1]));
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
-		//$this->assertTrue($course->session_user_can_read());
+		$this->assertTrue($course->session_user_can_read());
 	}
 
 	public function test_course_test()

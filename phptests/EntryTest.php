@@ -105,8 +105,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$user_obj = User::select_by_id($this->db->user_ids[1]);
         Session::get()->set_user($user_obj);
 		$result = $entry->update_repetition_details(4);
-		//$this->assertNull($entry->get_error_description());
-
+		
 		$this->assertEquals($result->get_entry_id(), $entry->get_entry_id());
 		$this->assertEquals($result->get_words(), $entry->get_words());
 		$this->assertEquals($result->get_interval(), 1);
