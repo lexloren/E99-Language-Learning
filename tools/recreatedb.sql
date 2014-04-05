@@ -2,8 +2,8 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- V\344rd: 68.178.216.146
--- Skapad: 05 april 2014 kl 09:33
+-- Värd: 68.178.216.146
+-- Skapad: 05 april 2014 kl 10:06
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -16,7 +16,7 @@ SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `courses`
+-- Struktur för tabell `courses`
 --
 
 DROP TABLE IF EXISTS `courses`;
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_instructors`
+-- Struktur för tabell `course_instructors`
 --
 
 DROP TABLE IF EXISTS `course_instructors`;
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `course_instructors` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_students`
+-- Struktur för tabell `course_students`
 --
 
 DROP TABLE IF EXISTS `course_students`;
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_units`
+-- Struktur för tabell `course_units`
 --
 
 DROP TABLE IF EXISTS `course_units`;
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS `course_units` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_unit_lists`
+-- Struktur för tabell `course_unit_lists`
 --
 
 DROP TABLE IF EXISTS `course_unit_lists`;
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_lists` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_unit_tests`
+-- Struktur för tabell `course_unit_tests`
 --
 
 DROP TABLE IF EXISTS `course_unit_tests`;
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_unit_test_sections`
+-- Struktur för tabell `course_unit_test_sections`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_sections`;
@@ -155,23 +155,23 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sections` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_unit_test_section_entries`
+-- Struktur för tabell `course_unit_test_section_entries`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_section_entries`;
 CREATE TABLE IF NOT EXISTS `course_unit_test_section_entries` (
   `test_entry_id` bigint(20) unsigned NOT NULL auto_increment,
   `section_id` bigint(20) unsigned NOT NULL,
-  `entry_id` bigint(20) unsigned NOT NULL,
+  `user_entry_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY  (`test_entry_id`),
   KEY `test_id` (`section_id`),
-  KEY `entry_id` (`entry_id`)
+  KEY `entry_id` (`user_entry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `course_unit_test_section_entry_results`
+-- Struktur för tabell `course_unit_test_section_entry_results`
 --
 
 DROP TABLE IF EXISTS `course_unit_test_section_entry_results`;
@@ -189,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_section_entry_results` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `dictionary`
+-- Struktur för tabell `dictionary`
 --
 
 DROP TABLE IF EXISTS `dictionary`;
@@ -208,12 +208,12 @@ CREATE TABLE IF NOT EXISTS `dictionary` (
   FULLTEXT KEY `lang_unknw` (`word_1`),
   FULLTEXT KEY `lang_known` (`word_0`),
   FULLTEXT KEY `pronunciation` (`word_1_pronun`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=847826 ;
 
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `grades`
+-- Struktur för tabell `grades`
 --
 
 DROP TABLE IF EXISTS `grades`;
@@ -229,7 +229,7 @@ CREATE TABLE IF NOT EXISTS `grades` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `languages`
+-- Struktur för tabell `languages`
 --
 
 DROP TABLE IF EXISTS `languages`;
@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS `languages` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `language_names`
+-- Struktur för tabell `language_names`
 --
 
 DROP TABLE IF EXISTS `language_names`;
@@ -260,7 +260,7 @@ CREATE TABLE IF NOT EXISTS `language_names` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `lists`
+-- Struktur för tabell `lists`
 --
 
 DROP TABLE IF EXISTS `lists`;
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `list_entries`
+-- Struktur för tabell `list_entries`
 --
 
 DROP TABLE IF EXISTS `list_entries`;
@@ -289,12 +289,12 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
   PRIMARY KEY  (`list_entry_id`),
   UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
 
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `users`
+-- Struktur för tabell `users`
 --
 
 DROP TABLE IF EXISTS `users`;
@@ -320,7 +320,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `user_entries`
+-- Struktur för tabell `user_entries`
 --
 
 DROP TABLE IF EXISTS `user_entries`;
@@ -346,7 +346,7 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `user_entry_annotations`
+-- Struktur för tabell `user_entry_annotations`
 --
 
 DROP TABLE IF EXISTS `user_entry_annotations`;
@@ -362,7 +362,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_annotations` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `user_entry_results`
+-- Struktur för tabell `user_entry_results`
 --
 
 DROP TABLE IF EXISTS `user_entry_results`;
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_results` (
 -- --------------------------------------------------------
 
 --
--- Struktur f\366r tabell `user_languages`
+-- Struktur för tabell `user_languages`
 --
 
 DROP TABLE IF EXISTS `user_languages`;
@@ -394,11 +394,11 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Restriktioner f\366r dumpade tabeller
+-- Restriktioner för dumpade tabeller
 --
 
 --
--- Restriktioner f\366r tabell `courses`
+-- Restriktioner för tabell `courses`
 --
 ALTER TABLE `courses`
   ADD CONSTRAINT `courses_ibfk_1` FOREIGN KEY (`lang_id_0`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE,
@@ -406,98 +406,99 @@ ALTER TABLE `courses`
   ADD CONSTRAINT `courses_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_instructors`
+-- Restriktioner för tabell `course_instructors`
 --
 ALTER TABLE `course_instructors`
   ADD CONSTRAINT `course_instructors_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_instructors_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_students`
+-- Restriktioner för tabell `course_students`
 --
 ALTER TABLE `course_students`
   ADD CONSTRAINT `course_students_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_students_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_units`
+-- Restriktioner för tabell `course_units`
 --
 ALTER TABLE `course_units`
   ADD CONSTRAINT `course_units_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_unit_lists`
+-- Restriktioner för tabell `course_unit_lists`
 --
 ALTER TABLE `course_unit_lists`
   ADD CONSTRAINT `course_unit_lists_ibfk_2` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_lists_ibfk_3` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_unit_tests`
+-- Restriktioner för tabell `course_unit_tests`
 --
 ALTER TABLE `course_unit_tests`
   ADD CONSTRAINT `course_unit_tests_ibfk_1` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_unit_test_sections`
+-- Restriktioner för tabell `course_unit_test_sections`
 --
 ALTER TABLE `course_unit_test_sections`
   ADD CONSTRAINT `course_unit_test_sections_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_unit_test_section_entries`
+-- Restriktioner för tabell `course_unit_test_section_entries`
 --
 ALTER TABLE `course_unit_test_section_entries`
+  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_4` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_section_entries_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `course_unit_test_sections` (`section_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `course_unit_test_section_entry_results`
+-- Restriktioner för tabell `course_unit_test_section_entry_results`
 --
 ALTER TABLE `course_unit_test_section_entry_results`
   ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_section_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `course_students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `language_names`
+-- Restriktioner för tabell `language_names`
 --
 ALTER TABLE `language_names`
   ADD CONSTRAINT `language_names_ibfk_1` FOREIGN KEY (`lang_id`) REFERENCES `languages` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `language_names_ibfk_2` FOREIGN KEY (`lang_id_name`) REFERENCES `language_names` (`lang_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `lists`
+-- Restriktioner för tabell `lists`
 --
 ALTER TABLE `lists`
   ADD CONSTRAINT `lists_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `list_entries`
+-- Restriktioner för tabell `list_entries`
 --
 ALTER TABLE `list_entries`
   ADD CONSTRAINT `list_entries_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `user_entries`
+-- Restriktioner för tabell `user_entries`
 --
 ALTER TABLE `user_entries`
   ADD CONSTRAINT `user_entries_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `user_entry_annotations`
+-- Restriktioner för tabell `user_entry_annotations`
 --
 ALTER TABLE `user_entry_annotations`
   ADD CONSTRAINT `user_entry_annotations_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `user_entry_results`
+-- Restriktioner för tabell `user_entry_results`
 --
 ALTER TABLE `user_entry_results`
   ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_entry_results_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner f\366r tabell `user_languages`
+-- Restriktioner för tabell `user_languages`
 --
 ALTER TABLE `user_languages`
   ADD CONSTRAINT `user_languages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
