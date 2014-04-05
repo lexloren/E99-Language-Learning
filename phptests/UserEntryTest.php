@@ -44,11 +44,13 @@ class UserEntryTest extends PHPUnit_Framework_TestCase
 	public function test_set_words()
 	{
 		$user_entry = UserEntry::select_by_user_entry_id($this->db->user_entry_ids[0]);
-		$user_entry->set_word_0("new word 0");
-		$user_entry->set_word_1("new word 1");
+		$word_0 = $user_entry->get_word_0();
+		$word_1 = $user_entry->get_word_1();
+		$this->assertNull($user_entry->set_word_0("new word 0"));
+		$this->assertNull($user_entry->set_word_1("new word 1"));
 
-		$this->assertEquals($this->db->word_0s[0], $user_entry->get_word_0());
-		$this->assertEquals($this->db->word_1s[0], $user_entry->get_word_1());
+		$this->assertEquals($word_0, $user_entry->get_word_0());
+		$this->assertEquals($word_1, $user_entry->get_word_1());
 		
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));			
 		
@@ -57,9 +59,8 @@ class UserEntryTest extends PHPUnit_Framework_TestCase
 		$ret = $user_entry->set_word_1("new word 1");
 		$this->assertNotNull($ret);
 
-		//Hans please check
-//		$this->assertEquals("new word 0", $user_entry->get_word_0());
-//		$this->assertEquals("new word 1", $user_entry->get_word_1());
+		$this->assertEquals("new word 0", $user_entry->get_word_0());
+		$this->assertEquals("new word 1", $user_entry->get_word_1());
 	}
 	
 	public function test_set_pronunciations()

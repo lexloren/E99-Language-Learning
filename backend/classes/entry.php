@@ -31,7 +31,7 @@ class Entry extends DatabaseRow
 	
 	/***    INSTANCE    ***/
 
-	private $entry_id = null;
+	protected $entry_id = null;
 	public function get_entry_id()
 	{
 		return $this->entry_id;
@@ -49,25 +49,25 @@ class Entry extends DatabaseRow
 		return null;
 	}
 	
-	private $word_0;
+	protected $word_0;
 	public function get_word_0()
 	{
 		return $this->word_0;
 	}
 	
-	private $word_1;
+	protected $word_1;
 	public function get_word_1()
 	{
 		return $this->word_1;
 	}
 	
-	private $lang_code_0;
+	protected $lang_code_0;
 	public function get_lang_code_0()
 	{
 		return $this->lang_code_0;
 	}
 	
-	private $lang_code_1;
+	protected $lang_code_1;
 	public function get_lang_code_1()
 	{
 		return $this->lang_code_1;
@@ -88,7 +88,7 @@ class Entry extends DatabaseRow
 		);
 	}
 
-	private $pronunciations = null;
+	protected $pronunciations = null;
 	public function get_pronunciations()
 	{
 		return $this->pronunciations;
@@ -382,27 +382,9 @@ class UserEntry extends Entry
 		return $this->efactor;
 	}
 	
-	public function get_entry_id()
-	{
-		return $this->entry_id;
-	}
 	public function get_entry()
 	{
 		return Entry::select_by_id($this->get_entry_id(), false);
-	}
-	
-	public function get_word_0()
-	{
-		return isset($this->word_0) && !!$this->word_0
-			? $this->word_0
-			: !!$this->get_entry() ? $this->get_entry()->get_word_0() : null;
-	}
-	
-	public function get_word_1()
-	{
-		return isset($this->word_1) && !!$this->word_1
-			? $this->word_1
-			: !!$this->get_entry() ? $this->get_entry()->get_word_1() : null;
 	}
 	
 	public function get_lang_code_0()
