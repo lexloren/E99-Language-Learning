@@ -16,10 +16,10 @@ class APISection extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			$section_name = isset($_POST["section_name"]) && strlen($_POST["section_name"]) > 0 ? $_POST["section_name"] : null;
+			$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
 			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($section = Section::insert($test->get_test_id(), $section_name, $message)))
+			if (!($section = Section::insert($test->get_test_id(), $name, $message)))
 			{
 				Session::get()->set_error_assoc("Section Insertion", Section::unset_error_description());
 			}
@@ -59,7 +59,7 @@ class APISection extends APIBase
 	
 	public function update()
 	{
-		//  section_name
+		//  name
 		//  message
 		
 		if (!Session::get()->reauthenticate()) return;
@@ -68,9 +68,9 @@ class APISection extends APIBase
 		{
 			$updates = 0;
 				
-			if (isset($_POST["section_name"]))
+			if (isset($_POST["name"]))
 			{
-				$updates += !!$section->set_section_name($_POST["section_name"]);
+				$updates += !!$section->set_section_name($_POST["name"]);
 			}
 			
 			if (isset($_POST["message"]))

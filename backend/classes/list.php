@@ -9,7 +9,7 @@ class EntryList extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($list_name = null)
+	public static function insert($name = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -18,9 +18,9 @@ class EntryList extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
 			Session::get()->get_user()->get_user_id(),
-			$mysqli->escape_string($list_name)
+			$mysqli->escape_string($name)
 		));
 		
 		if (!!$mysqli->error)
@@ -56,18 +56,18 @@ class EntryList extends DatabaseRow
 		return User::select_by_id($this->get_user_id());
 	}
 	
-	private $list_name;
+	private $name;
 	public function get_list_name()
 	{
-		return $this->list_name;
+		return $this->name;
 	}
-	public function set_list_name($list_name)
+	public function set_list_name($name)
 	{
-		if (!self::update_this($this, "lists", array ("list_name" => $list_name), "list_id", $this->get_list_id()))
+		if (!self::update_this($this, "lists", array ("name" => $name), "list_id", $this->get_list_id()))
 		{
 			return null;
 		}
-		$this->list_name = $list_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -95,11 +95,11 @@ class EntryList extends DatabaseRow
 		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
 	}
 	
-	private function __construct($list_id, $user_id, $list_name = null, $public = false)
+	private function __construct($list_id, $user_id, $name = null, $public = false)
 	{
 		$this->list_id = intval($list_id, 10);
 		$this->user_id = intval($user_id, 10);
-		$this->list_name = $list_name;
+		$this->name = $name;
 		$this->public = !!$public;
 		
 		self::register($this->list_id, $this);
@@ -110,7 +110,7 @@ class EntryList extends DatabaseRow
 		$mysql_columns = array (
 			"list_id",
 			"user_id",
-			"list_name",
+			"name",
 			"public"
 		);
 		
@@ -118,7 +118,7 @@ class EntryList extends DatabaseRow
 			? new EntryList(
 				$result_assoc["list_id"],
 				$result_assoc["user_id"],
-				!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
+				!!$result_assoc["name"] && strlen($result_assoc["name"]) > 0 ? $result_assoc["name"] : null,
 				$result_assoc["public"]
 			)
 			: null;
@@ -280,7 +280,7 @@ class EntryList extends DatabaseRow
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) SELECT %d, list_name FROM lists WHERE list_id = %d",
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
 			$user->get_user_id(),
 			$this->get_list_id()
 		));
@@ -312,7 +312,7 @@ class EntryList extends DatabaseRow
 	{
 		return array (
 			"listId" => $this->list_id,
-			"listName" => $this->list_name,
+			"listName" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
 		);

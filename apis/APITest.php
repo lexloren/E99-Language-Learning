@@ -16,11 +16,11 @@ class APITest extends APIBase
 		
 		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
-			$test_name = isset($_POST["test_name"]) && strlen($_POST["test_name"]) > 0 ? $_POST["test_name"] : null;
+			$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
 			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($test = Test::insert($unit->get_unit_id(), $test_name, $timeframe, $message)))
+			if (!($test = Test::insert($unit->get_unit_id(), $name, $timeframe, $message)))
 			{
 				Session::get()->set_error_assoc("Test Insertion", Test::unset_error_description());
 			}
@@ -60,7 +60,7 @@ class APITest extends APIBase
 	
 	public function update()
 	{
-		//  test_name
+		//  name
 		//  timeframe
 		//  message
 		
@@ -70,9 +70,9 @@ class APITest extends APIBase
 		{
 			$updates = 0;
 				
-			if (isset($_POST["test_name"]))
+			if (isset($_POST["name"]))
 			{
-				$updates += !!$test->set_test_name($_POST["test_name"]);
+				$updates += !!$test->set_test_name($_POST["name"]);
 			}
 			
 			if (isset($_POST["message"]))

@@ -9,7 +9,7 @@ class Test extends CourseComponent
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($unit_id, $test_name = null, $timeframe = null, $message = null)
+	public static function insert($unit_id, $name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -25,12 +25,12 @@ class Test extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$test_name = $test_name !== null ? "'" . $mysqli->escape_string($test_name) . "'" : "NULL";
+		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
 		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
 		
-		$mysqli->query("INSERT INTO course_unit_tests (unit_id, test_name, open, close, message) VALUES ($unit_id, $test_name, $open, $close, $message)");
+		$mysqli->query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
 		
 		if (!!$mysqli->error)
 		{
@@ -55,18 +55,18 @@ class Test extends CourseComponent
 		return $this->test_id;
 	}
 	
-	private $test_name = null;
+	private $name = null;
 	public function get_test_name()
 	{
-		return $this->test_name;
+		return $this->name;
 	}
-	public function set_test_name($test_name)
+	public function set_test_name($name)
 	{
-		if (!self::update_this($this, "course_unit_tests", array ("test_name" => $test_name), "test_id", $this->get_test_id()))
+		if (!self::update_this($this, "course_unit_tests", array ("name" => $name), "test_id", $this->get_test_id()))
 		{
 			return null;
 		}
-		$this->test_name = $test_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -142,11 +142,11 @@ class Test extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
-	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)
+	private function __construct($test_id, $unit_id, $name = null, $open = null, $close = null, $message = null)
 	{
 		$this->test_id = intval($test_id, 10);
 		$this->unit_id = intval($unit_id, 10);
-		$this->test_name = !!$test_name ? $test_name : null;
+		$this->name = !!$name ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
@@ -158,7 +158,7 @@ class Test extends CourseComponent
 		$mysql_columns = array (
 			"test_id",
 			"unit_id",
-			"test_name",
+			"name",
 			"open",
 			"close",
 			"message"
@@ -168,7 +168,7 @@ class Test extends CourseComponent
 			? new Test(
 				$result_assoc["test_id"],
 				$result_assoc["unit_id"],
-				$result_assoc["test_name"],
+				$result_assoc["name"],
 				$result_assoc["open"],
 				$result_assoc["close"],
 				$result_assoc["message"]

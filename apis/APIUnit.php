@@ -16,11 +16,11 @@ class APIUnit extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			$unit_name = isset($_POST["unit_name"]) && strlen($_POST["unit_name"]) > 0 ? $_POST["unit_name"] : null;
+			$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
 			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($unit = Unit::insert($course->get_course_id(), $unit_name, $timeframe, $message)))
+			if (!($unit = Unit::insert($course->get_course_id(), $name, $timeframe, $message)))
 			{
 				Session::get()->set_error_assoc("Unit Insertion", Unit::unset_error_description());
 			}
@@ -60,8 +60,8 @@ class APIUnit extends APIBase
 	
 	public function update()
 	{
-		//  unit_name
-		//  unit_num
+		//  name
+		//  num
 		
 		if (!Session::get()->reauthenticate()) return;
 		
@@ -69,9 +69,9 @@ class APIUnit extends APIBase
 		{
 			$updates = 0;
 			
-			if (isset($_POST["unit_name"]))
+			if (isset($_POST["name"]))
 			{
-				$updates += !!$unit->set_unit_name($_POST["unit_name"]);
+				$updates += !!$unit->set_unit_name($_POST["name"]);
 			}
 			
 			if (isset($_POST["message"]))

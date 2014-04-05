@@ -23,15 +23,15 @@ class ListTest extends PHPUnit_Framework_TestCase
 	public function test_insert()
 	{
 		Session::get()->set_user(null);
-		$list_name = "test_list";
-		$list = EntryList::insert($list_name);
+		$name = "test_list";
+		$list = EntryList::insert($name);
 		$this->assertNull($list);
 		
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		$list = EntryList::insert("test_list");
 		$this->assertNotNull($list);
-		$this->assertEquals($list->get_list_name(), $list_name);
+		$this->assertEquals($list->get_list_name(), $name);
 	}
 	
 	public function test_select()

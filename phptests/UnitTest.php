@@ -22,33 +22,33 @@ class UnitTest extends PHPUnit_Framework_TestCase
 	public function test_unit_insert()
 	{
 		Session::get()->set_user(null);
-                $unit_name = "test_unit1";
-                $unit = Unit::insert($this->db->course_ids[0], $unit_name);
+                $name = "test_unit1";
+                $unit = Unit::insert($this->db->course_ids[0], $name);
                 $this->assertNull($unit);
                 
 		// user-don't-have-write-access
                 $user_obj = User::select_by_id($this->db->user_ids[1]);
                 Session::get()->set_user($user_obj);
-                $unit = Unit::insert($this->db->course_ids[0], $unit_name);
+                $unit = Unit::insert($this->db->course_ids[0], $name);
                 $this->assertNull($unit);
 
 		// course-id-not-present
                 $user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);
-                $unit = Unit::insert(100, $unit_name);
+                $unit = Unit::insert(100, $name);
                 $this->assertNull($unit);
 
-                $unit = Unit::insert($this->db->course_ids[0], $unit_name);
+                $unit = Unit::insert($this->db->course_ids[0], $name);
                 $this->assertNotNull($unit);
-                $this->assertEquals($unit->get_unit_name(), $unit_name);
+                $this->assertEquals($unit->get_unit_name(), $name);
 	}
 
 	public function test_unit_select()
 	{
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);
-                $unit_name = "test_unit1";
-		$unit_expect = Unit::insert($this->db->course_ids[0], $unit_name);
+                $name = "test_unit1";
+		$unit_expect = Unit::insert($this->db->course_ids[0], $name);
 		$this->assertNotNull($unit_expect);
 
 		$unit_actual = Unit::select_by_id($unit_expect->get_unit_id());

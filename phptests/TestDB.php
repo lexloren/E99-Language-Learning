@@ -124,28 +124,28 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
 
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English')));
 		
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_0, self::$lang_id_1, $link->escape_string('English in Chinese')));
 			
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_1, self::$lang_id_0, $link->escape_string('Chinese in English')));
 
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_1, self::$lang_id_1, $link->escape_string('Chinese in Chinese')));
 	}
 	
 	public function add_list($user_id, $entry_ids)
 	{
 		$suffix = count($this->list_ids);
-		$list_name = self::$list_name.$suffix;
+		$name = self::$list_name.$suffix;
 		
 		$link = $this->link;
-		$link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+		$link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
 			$user_id,
-			$link->escape_string($list_name)
+			$link->escape_string($name)
 		));
 
 		if (!$link->insert_id)
@@ -154,7 +154,7 @@ class TestDB
 		$list_id = $link->insert_id;
 
 		array_push($this->list_ids, $list_id);
-		array_push($this->list_names, $list_name);
+		array_push($this->list_names, $name);
 		
 	
 		foreach($entry_ids as $entry_id)
@@ -227,12 +227,12 @@ class TestDB
 	{
 		$link = $this->link;
 		$suffix = count($this->course_ids);
-		$course_name = self::$course_name.$suffix;
+		$name = self::$course_name.$suffix;
 		$message = self::$course_message.$suffix;
 		
-		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1, message) VALUES (%d, '%s', %d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO courses (user_id, name, lang_id_0, lang_id_1, message) VALUES (%d, '%s', %d, %d, '%s')",
 			$user_id,
-			$link->escape_string($course_name),
+			$link->escape_string($name),
 			self::$lang_id_0,
 			self::$lang_id_1,
 			$link->escape_string($message)
@@ -243,10 +243,10 @@ class TestDB
 		
 		$course_id = $link->insert_id;
 		array_push($this->course_ids, $course_id);
-		array_push($this->course_names, $course_name);
+		array_push($this->course_names, $name);
 		array_push($this->course_messages, $message);
 		
-		$link->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, '%s', %d)",
+		$link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
 			$course_id,
 			self::$course_unit_name,
 			1
@@ -272,7 +272,7 @@ class TestDB
 		$link = $this->link;
                 for ($i = 1; $i <= $num_lists; $i++)
                 {
-                        $link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+                        $link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
                                 $user_id,
                                 $link->escape_string(self::$list_name).$i
                         ));

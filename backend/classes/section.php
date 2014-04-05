@@ -9,7 +9,7 @@ class Section extends CourseComponent
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($test_id, $section_name = null, $timer = null, $message = null)
+	public static function insert($test_id, $name = null, $timer = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -25,12 +25,12 @@ class Section extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$section_name = $section_name !== null ? "'" . $mysqli->escape_string($section_name) . "'" : "NULL";
+		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		$section_number = count($test->get_sections()) + 1;
 		$timer = intval($timer, 10);
 		
-		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_num, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
+		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, name, num, timer, message) VALUES ($test_id, $name, $section_number, $timer, $message)");
 		
 		if (!!$mysqli->error)
 		{
@@ -82,18 +82,18 @@ class Section extends CourseComponent
 		return $this->get_test()->get_course_id();
 	}
 	
-	private $section_name = null;
+	private $name = null;
 	public function get_section_name()
 	{
-		return $this->section_name;
+		return $this->name;
 	}
-	public function set_section_name($section_name)
+	public function set_section_name($name)
 	{
-		if (!self::update_this($this, "course_unit_test_sections", array ("section_name" => $section_name), "section_id", $this->get_section_id()))
+		if (!self::update_this($this, "course_unit_test_sections", array ("name" => $name), "section_id", $this->get_section_id()))
 		{
 			return null;
 		}
-		$this->section_name = $section_name;
+		$this->name = $name;
 		return $this;
 	}
 
@@ -126,11 +126,11 @@ class Section extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
-	private function __construct($section_id, $test_id, $section_name = null, $timer = null, $message = null)
+	private function __construct($section_id, $test_id, $name = null, $timer = null, $message = null)
 	{
 		$this->section_id = intval($section_id, 10);
 		$this->test_id = intval($test_id, 10);
-		$this->section_name = !!$section_name && strlen($section_name) > 0 ? $section_name : null;
+		$this->name = !!$name && strlen($name) > 0 ? $name : null;
 		$this->timer = intval($timer, 10);
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
@@ -142,7 +142,7 @@ class Section extends CourseComponent
 		$mysql_columns = array (
 			"section_id",
 			"test_id",
-			"section_name",
+			"name",
 			"timer",
 			"message"
 		);
@@ -151,7 +151,7 @@ class Section extends CourseComponent
 			? new Section(
 				$result_assoc["section_id"],
 				$result_assoc["test_id"],
-				$result_assoc["section_name"],
+				$result_assoc["name"],
 				$result_assoc["timer"],
 				$result_assoc["message"]
 			)

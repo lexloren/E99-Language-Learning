@@ -9,7 +9,7 @@ class Course extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $course_name = null, $timeframe = null, $message = null)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -30,15 +30,15 @@ class Course extends DatabaseRow
 		
 		$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
 		
-		$course_name = ($course_name !== null && strlen($course_name) > 0)
-			? "'".$mysqli->escape_string($course_name)."'"
+		$name = ($name !== null && strlen($name) > 0)
+			? "'".$mysqli->escape_string($name)."'"
 			: "NULL";
 		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
 		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name, open, close, message) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name, $open, $close, $message FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message FROM $languages_join ON $language_codes_match"
 		));
 		
 		if (!!$mysqli->error)
@@ -96,18 +96,18 @@ class Course extends DatabaseRow
 		if (isset($this->units)) unset($this->units);
 	}
 	
-	private $course_name = null;
+	private $name = null;
 	public function get_course_name()
 	{
-		return $this->course_name;
+		return $this->name;
 	}
-	public function set_course_name($course_name)
+	public function set_course_name($name)
 	{
-		if (!self::update_this($this, "courses", array ("course_name" => $course_name), "course_id", $this->get_course_id()))
+		if (!self::update_this($this, "courses", array ("name" => $name), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
-		$this->course_name = $course_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -249,13 +249,13 @@ class Course extends DatabaseRow
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false, $open = null, $close = null, $message = null)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $open = null, $close = null, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
-		$this->course_name = !!$course_name && strlen($course_name) > 0 ? $course_name : null;
+		$this->name = !!$name && strlen($name) > 0 ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		$this->public = !!$public;
@@ -270,7 +270,7 @@ class Course extends DatabaseRow
 			"user_id",
 			"lang_id_0",
 			"lang_id_1",
-			"course_name",
+			"name",
 			"public",
 			"open",
 			"close",
@@ -283,7 +283,7 @@ class Course extends DatabaseRow
 				$result_assoc["user_id"],
 				$result_assoc["lang_id_0"],
 				$result_assoc["lang_id_1"],
-				$result_assoc["course_name"],
+				$result_assoc["name"],
 				$result_assoc["public"],
 				$result_assoc["open"],
 				$result_assoc["close"],

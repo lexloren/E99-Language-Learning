@@ -26,7 +26,7 @@ class APICourse extends APIBase
 				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 				
-				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["course_name"]) ? $_POST["course_name"] : null, $timeframe, $message)))
+				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["name"]) ? $_POST["name"] : null, $timeframe, $message)))
 				{
 					Session::get()->set_error_assoc("Course Insertion", Course::unset_error_description());
 				}
@@ -50,7 +50,7 @@ class APICourse extends APIBase
 	
 	public function update()
 	{
-		//  course_name
+		//  name
 		//  timeframe
 		//  message
 		
@@ -60,9 +60,9 @@ class APICourse extends APIBase
 		{
 			$updates = 0;
 				
-			if (isset($_POST["course_name"]))
+			if (isset($_POST["name"]))
 			{
-				$updates += !!$course->set_course_name($_POST["course_name"]);
+				$updates += !!$course->set_course_name($_POST["name"]);
 			}
 			
 			if (isset($_POST["message"]))

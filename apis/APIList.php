@@ -13,7 +13,7 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!($list = EntryList::insert(isset($_POST["list_name"]) ? $_POST["list_name"] : null)))
+		if (!($list = EntryList::insert(isset($_POST["name"]) ? $_POST["name"] : null)))
 		{
 			Session::get()->set_error_assoc("List Insertion", EntryList::unset_error_description());
 		}
@@ -43,9 +43,9 @@ class APIList extends APIBase
 			{
 				$updates = 0;
 				
-				if (isset($_POST["list_name"]))
+				if (isset($_POST["name"]))
 				{
-					$updates += !!$list->set_list_name($_POST["list_name"]);
+					$updates += !!$list->set_list_name($_POST["name"]);
 				}
 				
 				self::return_updates_as_json("List", EntryList::unset_error_description(), $updates ? $list->assoc_for_json() : null);

@@ -9,7 +9,7 @@ class Unit extends CourseComponent
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($course_id, $unit_name = null, $timeframe = null, $message = null)
+	public static function insert($course_id, $name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -18,7 +18,7 @@ class Unit extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		if ($unit_name !== null) $unit_name = $mysqli->escape_string($unit_name);
+		if ($name !== null) $name = $mysqli->escape_string($name);
 		$course = Course::select_by_id(($course_id = intval($course_id, 10)));
 		
 		if (!$course) return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
@@ -33,9 +33,9 @@ class Unit extends CourseComponent
 		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
+		$mysqli->query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
 			$course_id,
-			!!$unit_name && strlen($unit_name) > 0 ? "'$unit_name'" : "NULL",
+			!!$name && strlen($name) > 0 ? "'$name'" : "NULL",
 			$unit_number,
 			$open, $close,
 			$message
@@ -83,18 +83,18 @@ class Unit extends CourseComponent
 		//  Set this unit's number to $unit_number, pushing all subsequent units down by one
 	}
 	
-	private $unit_name = null;
+	private $name = null;
 	public function get_unit_name()
 	{
-		return $this->unit_name;
+		return $this->name;
 	}
-	public function set_unit_name($unit_name)
+	public function set_unit_name($name)
 	{
-		if (!self::update_this($this, "course_units", array ("unit_name" => $unit_name), "unit_id", $this->get_unit_id()))
+		if (!self::update_this($this, "course_units", array ("name" => $name), "unit_id", $this->get_unit_id()))
 		{
 			return null;
 		}
-		$this->unit_name = $unit_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -154,12 +154,12 @@ class Unit extends CourseComponent
 		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
-	private function __construct($unit_id, $course_id, $unit_number, $unit_name = null, $open = null, $close = null, $message = null)
+	private function __construct($unit_id, $course_id, $unit_number, $name = null, $open = null, $close = null, $message = null)
 	{
 		$this->unit_id = intval($unit_id, 10);
 		$this->course_id = intval($course_id, 10);
 		$this->unit_number = intval($unit_number, 10);
-		$this->unit_name = !!$unit_name && strlen($unit_name) > 0 ? $unit_name : null;
+		$this->name = !!$name && strlen($name) > 0 ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
@@ -171,8 +171,8 @@ class Unit extends CourseComponent
 		$mysql_columns = array (
 			"unit_id",
 			"course_id",
-			"unit_num",
-			"unit_name",
+			"num",
+			"name",
 			"open",
 			"close",
 			"message"
@@ -182,8 +182,8 @@ class Unit extends CourseComponent
 			? new Unit(
 				$result_assoc["unit_id"],
 				$result_assoc["course_id"],
-				$result_assoc["unit_num"],
-				$result_assoc["unit_name"],
+				$result_assoc["num"],
+				$result_assoc["name"],
 				$result_assoc["open"],
 				$result_assoc["close"],
 				$result_assoc["message"]
