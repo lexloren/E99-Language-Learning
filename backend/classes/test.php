@@ -115,9 +115,13 @@ class Test extends CourseComponent
 		if (!self::update_this(
 			$this,
 			"course_unit_tests",
-			array ("open" => $timeframe->get_open(), "close" => $timeframe->get_close()),
+			array (
+				"open" => "FROM_UNIXTIME(" . $timeframe->get_open() . ")",
+				"close" => "FROM_UNIXTIME(" . $timeframe->get_close() . ")"
+			),
 			"test_id",
-			$this->get_test_id()
+			$this->get_test_id(),
+			true
 		)) return null;
 		
 		$this->timeframe = $timeframe;
