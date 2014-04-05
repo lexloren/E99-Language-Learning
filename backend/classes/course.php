@@ -324,11 +324,6 @@ class Course extends DatabaseRow
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		if ($user->in_array($array))
-		{
-			return static::set_error_description("Course cannot add user.");
-		}
-		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
@@ -382,7 +377,7 @@ class Course extends DatabaseRow
 			return static::set_error_description("Failed to remove course user: " . $mysqli->error);
 		}
 		
-		if (isset($array)) unset($array);
+		if (isset($array)) $array = array_diff($array, array ($user));
 		
 		$user->uncache_all();
 		
