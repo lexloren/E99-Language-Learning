@@ -33,9 +33,12 @@ class Course extends DatabaseRow
 		$course_name = ($course_name !== null && strlen($course_name) > 0)
 			? "'".$mysqli->escape_string($course_name)."'"
 			: "NULL";
+		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
+		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name, open, close, message) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name, $open, $close, $message FROM $languages_join ON $language_codes_match"
 		));
 		
 		if (!!$mysqli->error)
@@ -154,9 +157,13 @@ class Course extends DatabaseRow
 		if (!self::update_this(
 			$this,
 			"courses",
-			array ("open" => $timeframe->get_open(), "close" => $timeframe->get_close()),
+			array (
+				"open" => "FROM_UNIXTIME(" . $timeframe->get_open() . ")",
+				"close" => "FROM_UNIXTIME(" . $timeframe->get_close() . ")"
+			),
 			"course_id",
-			$this->get_course_id()
+			$this->get_course_id(),
+			true
 		)) return null;
 		
 		$this->timeframe = $timeframe;

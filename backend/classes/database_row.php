@@ -126,20 +126,23 @@ class DatabaseRow
 		return $cache;
 	}
 	
-	protected static function update_this($instance, $table, $assignments, $id_column, $id)
+	protected static function update_this($instance, $table, $assignments, $id_column, $id, $override_safety = false)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
 		$assignments_sql = array ();
 		foreach ($assignments as $column => $value)
 		{
-			if (is_string($value))
+			if (!$override_safety)
 			{
-				$value = "'".$mysqli->escape_string($value)."'";
-			}
-			else
-			{
-				$value = intval($value, 10);
+				if (is_string($value))
+				{
+					$value = "'".$mysqli->escape_string($value)."'";
+				}
+				else
+				{
+					$value = intval($value, 10);
+				}
 			}
 			
 			array_push($assignments_sql, "$column = $value");

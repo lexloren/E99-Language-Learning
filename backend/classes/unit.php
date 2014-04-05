@@ -29,11 +29,16 @@ class Unit extends CourseComponent
 		}
 		
 		$unit_number = count($course->get_units()) + 1;
+		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
+		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, %s, %d)",
+		$mysqli->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
 			$course_id,
 			!!$unit_name && strlen($unit_name) > 0 ? "'$unit_name'" : "NULL",
-			$unit_number
+			$unit_number,
+			$open, $close,
+			$message
 		));
 		
 		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
