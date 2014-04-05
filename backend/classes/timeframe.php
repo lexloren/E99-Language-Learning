@@ -36,11 +36,19 @@ class Timeframe
 		return ($time = time()) > $open && $time < $close;
 	}
 	
+	public function mysql_assignments()
+	{
+		return array (
+			"open" => !!$this->get_open() ? "FROM_UNIXTIME(" . $this->get_open() . ")" : "NULL",
+			"close" => $this->get_close() ? "FROM_UNIXTIME(" . $this->get_close() . ")" : "NULL"
+		);
+	}
+	
 	public function assoc_for_json($privacy = null)
 	{
 		return array (
-			"open" => $open,
-			"close" => $close,
+			"open" => $this->get_open(),
+			"close" => $this->get_close(),
 			"isCurrent" => $this->is_current()
 		);
 	}

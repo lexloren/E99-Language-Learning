@@ -157,10 +157,9 @@ class Course extends DatabaseRow
 		if (!self::update_this(
 			$this,
 			"courses",
-			array (
-				"open" => "FROM_UNIXTIME(" . $timeframe->get_open() . ")",
-				"close" => "FROM_UNIXTIME(" . $timeframe->get_close() . ")"
-			),
+			!!$timeframe
+				? $timeframe->mysql_assignments()
+				: array ("open" => "NULL", "close" => "NULL"),
 			"course_id",
 			$this->get_course_id(),
 			true

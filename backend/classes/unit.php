@@ -108,10 +108,9 @@ class Unit extends CourseComponent
 		if (!self::update_this(
 			$this,
 			"course_units",
-			array (
-				"open" => "FROM_UNIXTIME(" . $timeframe->get_open() . ")",
-				"close" => "FROM_UNIXTIME(" . $timeframe->get_close() . ")"
-			),
+			!!$timeframe
+				? $timeframe->mysql_assignments()
+				: array ("open" => "NULL", "close" => "NULL"),
 			"unit_id",
 			$this->get_unit_id(),
 			true
