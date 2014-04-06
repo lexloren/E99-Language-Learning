@@ -27,8 +27,8 @@ class Test extends CourseComponent
 		
 		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		
 		$mysqli->query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
 		
@@ -37,7 +37,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Failed to insert test: " . $mysqli->error);
 		}
 		
-		$unit->uncache_all();
+		$unit->uncache_tests();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -85,9 +85,13 @@ class Test extends CourseComponent
 		return $this->get_unit()->get_course();
 	}
 
-	protected function uncache_all()
+	public function uncache_sections()
 	{
 		if (isset($this->sections)) unset($this->sections);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_sections();
 	}
 	
 	private $sections;
@@ -129,11 +133,11 @@ class Test extends CourseComponent
 	}
 	public function set_open($open)
 	{
-		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+		return $this->set_timeframe(new Timeframe($open, !!$this->get_timeframe() ? $this->get_timeframe()->get_close() : null));
 	}
 	public function set_close($close)
 	{
-		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+		return $this->set_timeframe(new Timeframe(!!$this->get_timeframe() ? $this->get_timeframe()->get_open() : null, $close));
 	}
 	
 	//  inherits: protected $message;
@@ -178,30 +182,39 @@ class Test extends CourseComponent
 	
 	public function session_user_can_execute()
 	{
-		return (!$this->get_timeframe() || $this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		return $this->session_user_can_read(); // && $this->session_user_unfinished();
 	}
 	
 	public function delete()
 	{
-		$this->get_unit()->uncache_all();
+		$this->get_unit()->uncache_tests();
 		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_owner();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_read();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"testId" => $this->get_test_id(),
 			"name" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"message" => $this->get_message()
+		), array (0 => "testId"), $privacy);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["unit"] = $this->get_unit()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["sections"] = $this->session_user_can_execute() ? self::array_for_json($this->get_sections()) : null;
+		
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

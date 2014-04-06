@@ -53,7 +53,6 @@ class APIEntry extends APIBase
 	{
 		if (self::validate_request($_GET, array ("query", "langs")))
 		{
-			$langs = $_GET["langs"];		
 			$pagination = null;
 			if (isset($_GET["page_size"]) && isset($_GET["page_num"]))
 			{
@@ -62,8 +61,10 @@ class APIEntry extends APIBase
 					"num" => $_GET["page_num"]
 				);
 			}
+			
+			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
 
-			if (($entries = Dictionary::query($_GET["query"], $langs, $pagination)))
+			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination, $exact_matches_only)))
 			{
 				self::return_array_as_json($entries);
 			}

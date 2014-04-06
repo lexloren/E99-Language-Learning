@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 05 april 2014 kl 10:06
+-- Skapad: 06 april 2014 kl 14:46
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `lang_id_0` bigint(20) unsigned NOT NULL,
   `lang_id_1` bigint(20) unsigned NOT NULL,
   `public` tinyint(1) NOT NULL default '0',
-  `open` datetime default NULL,
-  `close` datetime default NULL,
+  `open` bigint(20) unsigned default NULL,
+  `close` bigint(20) unsigned default NULL,
   `message` text,
   PRIMARY KEY  (`course_id`),
   KEY `lang_id_0` (`lang_id_0`),
@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS `course_units` (
   `course_id` bigint(20) unsigned NOT NULL,
   `num` smallint(5) unsigned NOT NULL,
   `name` char(255) default NULL,
-  `open` datetime default NULL,
-  `close` datetime default NULL,
+  `open` bigint(20) unsigned default NULL,
+  `close` bigint(20) unsigned default NULL,
   `message` text,
   PRIMARY KEY  (`unit_id`),
   UNIQUE KEY `course_id` (`course_id`,`num`),
@@ -123,8 +123,8 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   `test_id` bigint(20) unsigned NOT NULL auto_increment,
   `unit_id` bigint(20) unsigned NOT NULL,
   `name` char(255) default NULL,
-  `open` datetime default NULL,
-  `close` datetime default NULL,
+  `open` bigint(20) unsigned default NULL,
+  `close` bigint(20) unsigned default NULL,
   `message` text,
   PRIMARY KEY  (`test_id`),
   KEY `unit_id` (`unit_id`),
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `dictionary` (
   FULLTEXT KEY `lang_unknw` (`word_1`),
   FULLTEXT KEY `lang_known` (`word_0`),
   FULLTEXT KEY `pronunciation` (`word_1_pronun`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=847826 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -289,7 +289,7 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
   PRIMARY KEY  (`list_entry_id`),
   UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 

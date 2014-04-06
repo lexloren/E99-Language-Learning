@@ -76,12 +76,14 @@ class Grade extends DatabaseRow
 
 	public function assoc_for_json($privacy = null)
 	{
-		return array (
+		$assoc = array (
 			"gradeId" => $this->get_grade_id(),
 			"point" => $this->get_point(),
-			"descShort" => $this->get_desc_short(),
-			"descLong" => $this->get_desc_long()
+			"descriptionShort" => $this->get_desc_short(),
+			"descriptionLong" => $this->get_desc_long()
 		);
+		
+		return $this->privacy_mask($assoc, array_keys($assoc), false);
 	}
 }
 

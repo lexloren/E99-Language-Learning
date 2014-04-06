@@ -37,7 +37,7 @@ class Section extends CourseComponent
 			return static::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
 		
-		$test->uncache_all();
+		$test->uncache_sections();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -103,9 +103,13 @@ class Section extends CourseComponent
 		return $this;
 	}
 
-	protected function uncache_all()
+	public function uncache_entries()
 	{
 		if (isset($this->entries)) unset($this->entries);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_entries();
 	}
 
 	private $entries;
@@ -170,25 +174,20 @@ class Section extends CourseComponent
 	public function session_user_can_execute()
 	{
 		//  Need to add another check whether this section is the next section available in the test
-		return $this->get_test()->session_user_can_execute();
+		return $this->get_test()->session_user_can_execute(); // && $this->session_user_unfinished();
 	}
 	
 	public function delete()
 	{
-		$this->get_test()->uncache_all();
+		$this->get_test()->uncache_sections();
 		return self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_owner();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_execute();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"sectionId" => $this->get_section_id(),
-			"number" => $this->get_number(),
+			"number" => !$privacy ? $this->get_number() : null,
 			"name" => !$privacy ? $this->get_section_name() : null,
 			"testId" => !$privacy ? $this->get_test_id() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
@@ -196,7 +195,21 @@ class Section extends CourseComponent
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timer" => !$privacy ? $this->get_timer() : null,
 			"message" => !$privacy ? $this->get_message() : null
-		);
+		), array (0 => "sectionId"), $privacy);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["unit"] = $this->get_unit()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["test"] = $this->get_test()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["entries"] = $this->session_user_can_execute() ? self::array_for_json($this->get_entries()) : null;
+		
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

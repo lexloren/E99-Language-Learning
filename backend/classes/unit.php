@@ -29,8 +29,8 @@ class Unit extends CourseComponent
 		}
 		
 		$number = count($course->get_units()) + 1;
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
 		$mysqli->query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
@@ -43,7 +43,7 @@ class Unit extends CourseComponent
 		
 		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
 		
-		$course->uncache_all();
+		$course->uncache_units();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -135,10 +135,18 @@ class Unit extends CourseComponent
 		return parent::set_this_message($this, $message, "course_units", "unit_id", $this->get_unit_id());
 	}
 
-	protected function uncache_all()
+	public function uncache_tests()
 	{
 		if (isset($this->tests)) unset($this->tests);
+	}
+	public function uncache_lists()
+	{
 		if (isset($this->lists)) unset($this->lists);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_tests();
+		$this->uncache_lists();
 	}
 	
 	private $tests;
@@ -193,7 +201,7 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
-		$this->get_course()->uncache_all();
+		$this->get_course()->uncache_units();
 		return self::delete_this($this, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
@@ -219,7 +227,7 @@ class Unit extends CourseComponent
 		$lists = $this->get_lists();
 		array_push($lists, $list);
 		
-		$list->uncache_all();
+		$list->uncache_courses();
 		
 		return $this;
 	}
@@ -240,36 +248,34 @@ class Unit extends CourseComponent
 		
 		if (isset($this->lists)) array_drop($this->lists, $list);
 		
-		$list->uncache_all();
+		$list->uncache_courses();
 		
 		return $this;
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_instructor();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_is_student();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"unitId" => $this->get_unit_id(),
-			"name" => !$privacy ? $this->get_unit_name() : null,
+			"name" => $this->get_unit_name(),
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"message" => $this->get_message()
+		), array (0 => "unitId"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
-		$assoc["course"] = $this->get_course()->assoc_for_json($privacy);
+		$public_keys = array_keys($assoc);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

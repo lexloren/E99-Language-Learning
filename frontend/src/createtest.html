@@ -27,7 +27,9 @@
       $(document).ready(function(){
         $("#success").hide();
         $("#failure").hide();
-        $("#navbar").load("navbar.html");
+        $("#navbar").load("navbar.html", function(){
+            $("#nav-tests").addClass("active")
+        });
       });
 
       // url parameter grabbing code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript

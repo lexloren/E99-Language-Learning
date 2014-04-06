@@ -230,13 +230,32 @@ class User extends DatabaseRow
 		return static::set_error_description("Failed to delete user.");
 	}
 	
-
-	protected function uncache_all()
+	public function uncache_lists()
 	{
 		if (isset($this->lists)) unset($this->lists);
+	}
+	public function uncache_all_courses()
+	{
+		$this->uncache_courses();
+		$this->uncache_instructor_courses();
+		$this->uncache_student_courses();
+	}
+	public function uncache_courses()
+	{
 		if (isset($this->courses)) unset($this->courses);
+	}
+	public function uncache_instructor_courses()
+	{
 		if (isset($this->instructor_courses)) unset($this->instructor_courses);
+	}
+	public function uncache_student_courses()
+	{
 		if (isset($this->student_courses)) unset($this->student_courses);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_lists();
+		$this->uncache_all_courses();
 	}
 	
 	private $lists;
@@ -276,6 +295,21 @@ class User extends DatabaseRow
 		return false;
 	}
 	
+	public function user_can_read($user)
+	{
+		return parent::user_can_read($user)
+			|| $this->user_can_read_via_course($user);
+	}
+	
+	public function user_can_read_via_course($user)
+	{
+		foreach ($this->get_courses() as $course)
+		{
+			if ($course->user_can_read($user)) return true;
+		}
+		return false;
+	}
+	
 	public function equals($user)
 	{
 		return $this === $user || (!!$user && $user->get_user_id() === $this->get_user_id());
@@ -288,16 +322,26 @@ class User extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		if ($privacy === null) $privacy = !($this->is_session_user());
-		
-		return array (
+		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy)
-		);
+		), array (0 => "userId"), $privacy);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["courses"] = self::array_for_json($this->get_courses());
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		
+		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
 	}
 }
 

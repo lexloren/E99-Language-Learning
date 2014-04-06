@@ -70,14 +70,20 @@ class APICourse extends APIBase
 				$updates += !!$course->set_message($_POST["message"]);
 			}
 			
-			if (isset($_POST["open"]))
+			if (isset($_POST["open"]) && isset($_POST["close"]))
 			{
-				$updates += !!$course->set_open($_POST["open"]);
+				$updates += !!$course->set_timeframe(new Timeframe($_POST["open"], $_POST["close"]));
 			}
-			
-			if (isset($_POST["close"]))
+			else
 			{
-				$updates += !!$course->set_close($_POST["close"]);
+				if (isset($_POST["open"]))
+				{
+					$updates += !!$course->set_open($_POST["open"]);
+				}
+				if (isset($_POST["close"]))
+				{
+					$updates += !!$course->set_close($_POST["close"]);
+				}
 			}
 			
 			self::return_updates_as_json("Course", Course::unset_error_description(), $updates ? $course->assoc_for_json() : null);

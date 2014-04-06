@@ -69,7 +69,7 @@ class APIBase
 		}
 	}
 	
-	protected static function return_array_as_json($array)
+	protected static function return_array_as_json($array, $privacy = null)
 	{
 		if (!is_array($array))
 		{
@@ -85,7 +85,7 @@ class APIBase
 					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
 					return;
 				}
-				array_push($returnable, $item->assoc_for_json());
+				array_push($returnable, $item->assoc_for_json($privacy));
 			}
 			
 			Session::get()->set_result_assoc($returnable);

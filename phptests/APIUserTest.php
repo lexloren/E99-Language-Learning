@@ -38,12 +38,6 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->obj, "Null APIUser");
 	}
 	
-	public function tearDown()
-	{
-		//if (isset($this->db))
-		//	$this->db->close();
-	}
-	
 	public function testRegister()
 	{
 		$_POST["email"] = "someone@somewhere.com";
@@ -138,10 +132,17 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNull(Session::get()->get_user());
 	}
 	
-	/*public function test_deuthenticate()
+	public function test_deuthenticate()
 	{
 		$this->obj->deauthenticate();
-	}*/
+		$result_assoc = Session::get()->get_result_assoc();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$_SESSION["handle"] = $this->db->handles[0];
+		Session::get()->reauthenticate();
+		$this->assertNull(Session::get()->get_user());
+		$this->assertTrue(Session::get()->has_error());
+	}
 	
 	public function test_lists()
 	{
@@ -225,74 +226,132 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(Session::get()->has_error());
 	}
 
-        public function testPracticeResponse()
-        {
+	public function testPracticeResponse()
+	{
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
-                $_SESSION["handle"] = $this->db->handles[0];
+		$_SESSION["handle"] = $this->db->handles[0];
 
-                $_GET["entry_id"] = $this->db->practice_entry_ids[0];
-                $_GET["grade_id"] = 5;
-                $this->obj->practice_response();
-                $this->assertFalse(Session::get()->has_error());
+		$_GET["entry_id"] = $this->db->practice_entry_ids[0];
+		$_GET["grade_id"] = 5;
+		$this->obj->practice_response();
+		$this->assertFalse(Session::get()->has_error());
 		$entry = Session::get()->get_result_assoc();
 		$this->assertNotNull($entry["result"]);
 
-                $this->assertNotNull($entry["result"]["owner"]);
+		$this->assertNotNull($entry["result"]["owner"]);
 
-                $this->assertNotNull($entry["result"]["words"]);
-                $this->assertCount(2, $entry["result"]["words"]);
-                $this->assertEquals($entry["result"]["entryId"], $this->db->practice_entry_ids[0]);
-        }
+		$this->assertNotNull($entry["result"]["words"]);
+		$this->assertCount(2, $entry["result"]["words"]);
+		$this->assertEquals($entry["result"]["entryId"], $this->db->practice_entry_ids[0]);
+	}
 
-        public function testPracticeResponseWrongEntryId()
-        {
-                $_SESSION["handle"] = $this->db->handles[0];
-                $_GET["grade_id"] = 5;
+	public function testPracticeResponseWrongEntryId()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["grade_id"] = 5;
 
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["entry_id"] = '0';
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$_GET["entry_id"] = '0';
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["entry_id"] = 'x';
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$_GET["entry_id"] = 'x';
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["entry_id"] = -2;
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
-        }
+		$_GET["entry_id"] = -2;
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
+	}
 
-        public function testPracticeResponseWrongGradeId()
-        {
+	public function testPracticeResponseWrongGradeId()
+	{
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
-                $_SESSION["handle"] = $this->db->handles[0];
-                $_GET["entry_id"] =  $this->db->practice_entry_ids[0];
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["entry_id"] =  $this->db->practice_entry_ids[0];
 
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["grade_id"] = '0';
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$_GET["grade_id"] = '0';
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["grade_id"] = 'x';
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
+		$_GET["grade_id"] = 'x';
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
 
-                $_GET["grade_id"] = -2;
-                Session::get()->set_result_assoc(null);
-                $this->obj->practice_response();
-                $this->assertTrue(Session::get()->has_error());
-        }
+		$_GET["grade_id"] = -2;
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
+	}
+	
+	private function find($query, $should_find)
+	{
+		$_GET["query"] = $query;
+		
+		$this->obj->find();
+		$this->assertFalse(Session::get()->has_error());
 
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		
+		if ($should_find)
+		{
+			$this->assertCount(1, $result);
+			$result0 = $result[0];
+			$this->assertEquals($this->db->handles[0], $result0["handle"]);
+		}
+		else
+			$this->assertCount(0, $result);
+	}
+	public function testFind()
+	{
+		$this->find("junk", false);
+		$this->find($this->db->handles[0], true);
+		$this->find($this->db->emails[0], true);
+	}
+	
+	public function testUpdate()
+	{
+		$_POST["email"] = "newemail1@domain.com";
+		$_POST["name_given"] = "NewGiven";
+		$_POST["name_family"] = "NewFamily";
+		$_POST["email"] = "newemail1@domain.com";
+
+		//Session not set
+		$this->obj->update();
+		$this->assertTrue(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		//Session set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->update();
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$this->assertFalse(Session::get()->has_error());
+		$this->assertNotNull(Session::get()->get_user());
+		$this->assertEquals($_POST["email"], Session::get()->get_user()->get_email());
+		
+		$result = $result_assoc["result"];
+		$this->assertEquals($result["email"], $_POST["email"]);
+		$this->assertEquals($result["nameGiven"], $_POST["name_given"]);
+		$this->assertEquals($result["nameFamily"], $_POST["name_family"]);
+	}
 }
 
 

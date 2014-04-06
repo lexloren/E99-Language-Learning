@@ -33,8 +33,8 @@ class Course extends DatabaseRow
 		$name = ($name !== null && strlen($name) > 0)
 			? "'".$mysqli->escape_string($name)."'"
 			: "NULL";
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
 		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",
@@ -89,11 +89,23 @@ class Course extends DatabaseRow
 			&& Session::get()->get_user()->equals($this->get_owner());
 	}
 	
-	protected function uncache_all()
+	public function uncache_instructors()
 	{
 		if (isset($this->instructors)) unset($this->instructors);
+	}
+	public function uncache_students()
+	{
 		if (isset($this->students)) unset($this->students);
+	}
+	public function uncache_units()
+	{
 		if (isset($this->units)) unset($this->units);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_instructors();
+		$this->uncache_students();
+		$this->uncache_units();
 	}
 	
 	private $name = null;
@@ -176,6 +188,10 @@ class Course extends DatabaseRow
 	public function set_close($close)
 	{
 		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+	}
+	public function is_current()
+	{
+		return !$this->get_timeframe() || $this->get_timeframe()->is_current();
 	}
 	
 	private $message;
@@ -308,11 +324,11 @@ class Course extends DatabaseRow
 	{
 		foreach (array_merge(array ($this->get_owner()), $this->get_students(), $this->get_instructors()) as $user)
 		{
-			$user->uncache_all();
+			$user->uncache_all_courses();
 		}
 		foreach ($this->get_lists() as $list)
 		{
-			$list->uncache_all();
+			$list->uncache_courses();
 		}
 		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
@@ -338,7 +354,7 @@ class Course extends DatabaseRow
 		
 		if (isset($array)) array_push($array, $user);
 		
-		$user->uncache_all();
+		$user->uncache_all_courses();
 		
 		return $this;
 	}
@@ -379,7 +395,7 @@ class Course extends DatabaseRow
 		
 		if (isset($array)) array_drop($array, $user);
 		
-		$user->uncache_all();
+		$user->uncache_all_courses();
 		
 		return $this;
 	}
@@ -398,31 +414,42 @@ class Course extends DatabaseRow
 		return $this->users_remove($this->students, "course_students", $user);
 	}
 	
+	protected function privacy()
+	{
+		if (!$this->session_user_can_write()
+				&& ($this->session_user_can_read() && !$this->is_current()))
+		{
+			return true;
+		}
+		else
+		{
+			return parent::privacy();
+		}
+	}
+	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_owner();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_read();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
-			"name" => !$privacy ? $this->get_course_name() : null,
+			"name" => $this->get_course_name(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => !$privacy ? $this->is_public() : null,
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+			"isPublic" => $this->is_public(),
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"message" => $this->get_message()
+		), array (0 => "courseId"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
+		$public_keys = array_keys($assoc);
+		
 		$assoc["units"] = self::array_for_json($this->get_units());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 
