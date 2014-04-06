@@ -193,15 +193,15 @@ class DatabaseRow
 	
 	public function session_user_can_read()
 	{
-		return $this->session_user_can_write();
+		return !!Session::get() && $this->user_can_read(Session::get()->get_user());
 	}
 	public function session_user_can_write()
 	{
-		return $this->session_user_is_owner();
+		return !!Session::get() && $this->user_can_write(Session::get()->get_user());
 	}
 	public function session_user_can_execute()
 	{
-		return null; //!!Session::get() && $this->user_can_execute(Session::get()->get_user());
+		return !!Session::get() && $this->user_can_execute(Session::get()->get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)

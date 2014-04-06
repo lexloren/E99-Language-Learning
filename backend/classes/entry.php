@@ -260,10 +260,8 @@ class Entry extends DatabaseRow
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		
-		//  If $this is a UserEntry and we want privacy, get the underlying Entry.
-		$entry = !!$privacy && ($dictionary_entry = self::select_by_id($this->get_entry_id(), false))
-			? $dictionary_entry
-			: $this;
+		$entry = !!$privacy ? self::select_by_id($this->get_entry_id(), false) : $this;
+		$privacy = false;
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
