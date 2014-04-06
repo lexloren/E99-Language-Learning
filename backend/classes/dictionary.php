@@ -15,6 +15,12 @@ class Dictionary
 	{
 		return static::$error_description;
 	}
+	public static function unset_error_description()
+	{
+		$error_description = static::$error_description;
+		static::$error_description = null;
+		return $error_description;
+	}
 
 	private static $entries_by_id = array ();
 
@@ -47,13 +53,13 @@ class Dictionary
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function query($word, $lang_codes, $pagination = null)
+	public static function query($query, $lang_codes, $pagination = null)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
 		//  Now perform the query
 		//      First, decode the query and make sure it's safe
-		$query = $mysqli->escape_string($word);
+		$query = $mysqli->escape_string($query);
 		
 		//  Make sure the language codes are safe
 		foreach ($lang_codes as &$lang_code)
