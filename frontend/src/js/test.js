@@ -30,7 +30,7 @@ function verifyTestForm(){
     opendate = Date.parse(opendate);
     closedate = Date.parse(closedate);
 
-    if(closedate <= opendate){
+    if(closedate < opendate){
 		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
 	      showFailure();
         return;
@@ -128,13 +128,19 @@ function getTestInfo(){
                         showFailure();
                     }
                     else{
-                        $("#testname").html(data.result.name);
+                        $("#testname").val(data.result.name);
                         if(data.result.message != "null"){
-                            $("#instructions").html(data.result.message);
+                            $("#instructions").val(data.result.message);
                         }
                         if(data.result.timeframe != "null"){
-                            $("#opendate").html(data.result.timeframe.open);
-                            $("#closedate").html(data.result.timeframe.close);
+                            if(data.result.timeframe.open != "null"){
+                                opendate = new Date(data.result.timeframe.open);
+                                $("#opendate").val(opendate);
+                            }
+                            if(data.result.timeframe.close != "null"){
+                                closedate = new Date(data.result.timeframe.close);
+                                $("#closedate").val(closedate);
+                            }
                         }
                     }		
             });
@@ -171,6 +177,47 @@ function deleteTest(){
         else{
             $("#testData").html("Test was successfully deleted.");
         }
+    });
+    return; 
+}
+
+function updateTest(){
+    if(urlParams.test == null){
+        $("#failure").html("The test to be updated must be specified. Go to the associated test's page to update it.");
+        showFailure(); 
+        return;
+    }
+    // should refactor this out into a separate function since create form uses it too
+    var testname = $("#testname").val();
+    var instructions = $("#instructions").val();
+    var opendate = $("#opendate").val();
+    var closedate = $("#closedate").val();
+    
+	  if(testname == "" || instructions == "" || opendate == "" || closedate == ""){
+		    $("#failure").html("Please provide test name, instructions, and open/close dates.");	
+	      showFailure();
+        return;
+    }
+    opendate = Date.parse(opendate);
+    closedate = Date.parse(closedate);
+
+    if(closedate < opendate){
+		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
+	      showFailure();
+        return;
+    }
+    $.post('../../test_update.php', 
+        { test_id: urlParams.test, name: testname, open: opendate, close: closedate, message: instructions } )
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "Test could not be updated.";
+                // not sure of error titles yet
+                $("#failure").html(errorMsg);
+                showFailure();
+            }
+            else{
+                location.reload(true);
+            }
     });
     return; 
 }
