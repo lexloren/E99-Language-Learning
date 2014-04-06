@@ -14,7 +14,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 		$this->db->add_users(3);
-		$this->db->add_dictionary_entries(10);
+		$this->db->add_dictionary_entries(5);
 		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
 		
 		$this->obj = new APIList(null, $this->db->link);
@@ -117,10 +117,13 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertCount(10, $result);
+		$this->assertCount(5, $result);
 		
-		//TODO : Result is wrong
-		//print_r($result);
+		//Hans, pleace check this. Result is wrong, 'words' are empty. 
+		//print_r($result[0]);
+		//$this->assertCount(2, $result[0]["words"]);
+		//$this->assertNotNull($result[0]["words"][TestDB::$lang_code_0]);
+		//$this->assertNotNull($result[0]["words"][TestDB::$lang_code_1]);
 	}
 	
 	public function test_select()
@@ -179,12 +182,41 @@ class APIListTest extends PHPUnit_Framework_TestCase
 	
 	public function test_entries_add()
 	{
+		$new_entries = $this->db->add_dictionary_entries(2);
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_POST["list_id"] = $this->db->list_ids[0];
+		$_POST["entry_ids"] = implode(",", $new_entries);
 		
+		$this->obj->entries_add();	
+
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		
+		//TODO: Check database
 	}
 	
 	public function test_entries_remove()
 	{
+		$entries_to_remove = Array($this->db->entry_ids[0], $this->db->entry_ids[4]);
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_POST["list_id"] = $this->db->list_ids[0];
+		$_POST["entry_ids"] = implode(",", $entries_to_remove);
 		
+		$this->obj->entries_remove();	
+
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		//TODO: Check database
 	}
 }
 ?>
