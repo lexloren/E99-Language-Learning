@@ -27,8 +27,8 @@ function verifyTestForm(){
 	      showFailure();
         return;
     }
-    opendate = new Date(Date.parse(opendate));
-    closedate = new Date(Date.parse(closedate));
+    opendate = Date.parse(opendate);
+    closedate = Date.parse(closedate);
 
     if(closedate <= opendate){
 		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -46,52 +46,52 @@ function verifySectionForm(){
     }
     var sectionname = $("#sectionname").val();
     var instructions = $("#sectioninstructions").val();
-    var questions = $("#questions").val();
+    //var questions = $("#questions").val();
     
-	  if(sectionname == "" || instructions == "" || questions == ""){
-		    $("#failure").html("Please provide section name, instructions, and questions.");	
+	  if(sectionname == "" || instructions == ""){
+		    $("#failure").html("Please provide section name and instructions.");	
 	      showFailure();
         return;
     }
 
-    submitCreateSectionForm(sectionname, instructions, questions);
+    submitCreateSectionForm(sectionname, instructions);
 }
 
 function submitCreateTestForm(testname, instructions, opendate, closedate){
-    var mockJSON = '{"testId":"123","name":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
-    $.mockjax({
-        url: '../../unit/tests',  
-        contentType: 'text/json',
-        responseText: mockJSON
-    });	
-
-    $.post('../../unit/tests', function(data){
+    $.post('../../test_insert.php', 
+        { unit_id: urlParams.unit, name: testname, open: opendate, close: closedate, message: instructions } )
+        .done(function(data){
             if(data.isError){
                 var errorMsg = "Test could not be created: ";
-                // don't know the error titles yet
+                if(data.errorTitle == "Unit Selection"){
+                    errorMsg += "Unit does not exist.";
+                }
+                else if(data.errorTitle == "Test Insertion"){
+                    errorMsg += "Please refresh the page and try again.";
+                }
                 $("#failure").html(errorMsg);
                 showFailure();
             }
             else{
-            nextUrl = "test.html"+"?test="+data.testId;
-            window.location.replace(nextUrl);
+                nextUrl = "test.html"+"?test="+data.result.testId;
+                window.location.replace(nextUrl);
             }
     });
-    $.mockjaxClear();
     return; 
 }
 
-function submitCreateSectionForm(sectionname, instructions, questions){
-    var mockJSON = '{"sectionId":"1","name":"Nouns","instructions":"some instructions", "questions": ""}';
-    $.mockjax({
-        url: '../../unit/tests',  
-        contentType: 'text/json',
-        responseText: mockJSON
-    });	
-    $.post('../../unit/tests', function(data){
+function submitCreateSectionForm(sectionname, instructions){
+    $.post('../../section_insert.php', 
+        { test_id: urlParams.test, name: sectionname, message: instructions })
+        .done(function(data){
         if(data.isError){
             var errorMsg = "Section could not be created: ";
-            // don't know the error titles yet
+            if(data.errorTitle == "Test Selection"){
+                errorMsg += "Test does not exist.";
+            }
+            else if(data.errorTitle == "Section Insertion"){
+                errorMsg += "Please refresh the page and try again.";
+            }
             $("#failure").html(errorMsg);
             showFailure();
         }
@@ -110,44 +110,36 @@ function getTestInfo(){
         return;
     }
 
-    var mockJSON = '{"testId":"123","name":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
-    $.mockjax({
-        url: '../../unit/tests', 
-        contentType: 'text/json',
-        responseText: mockJSON
+    $.getJSON('../../test_select.php', 
+        {test_id: urlParams.test},
+        function(data){
+            if(data.isError){
+                $("#failure").html("Information for this test could not be retrieved.");
+                showFailure();
+            }
+            else{
+                $("#testname").html(data.result.name);
+                if(data.result.message != "null"){
+                    $("#instructions").html(data.result.message);
+                }
+                if(data.result.timeframe != "null"){
+                    $("#opendate").html(data.result.timeframe.open);
+                    $("#closedate").html(data.result.timeframe.close);
+                }
+            }		
     });
 
-    $.getJSON('../../unit/tests', function(data){
-        if(data.isError){
-            $("#failure").html("Information for this test could not be retrieved.");
-            showFailure();
-        }
-        else{
-            $("#testname").html(data.name);
-            $("#instructions").html(data.instructions);
-            $("#opendate").html(data.timeframe.open);
-            $("#closedate").html(data.timeframe.close);
-        }		
-    });
-
-    $.mockjaxClear();
-
-    var mockJSONsec = '[{"sectionId":"1","name":"Nouns","instructions":"some instructions", "questions": ""}]';
-    $.mockjax({ 
-        url: '../../unit/tests', 
-        contentType: 'text/json',
-        responseText: mockJSONsec
-    });
-
-    $.getJSON('../../unit/tests', function(data){
-        if(data.isError){
-            $("#sections").html("Section information unavailable.");
-        }
-        else{
-	          $.each(data, function(i, item){
-			          $('#sections').append(item.name);
-            });
-        }		
+    $.getJSON('../../test_sections.php', 
+        {test_id: urlParams.test},
+        function(data){
+            if(data.isError){
+                $("#sections").html("Section information unavailable.");
+            }
+            else{
+                $.each(data, function(i, item){
+                    $('#sections').append(item.name);
+                });
+            }		
     });
 }
 
