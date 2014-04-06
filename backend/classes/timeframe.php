@@ -33,7 +33,7 @@ class Timeframe
 	
 	public function is_current()
 	{
-		return ($time = time()) > $open && $time < $close;
+		return ($time = time()) > $this->open && $time < $this->close;
 	}
 	
 	public function mysql_assignments()
