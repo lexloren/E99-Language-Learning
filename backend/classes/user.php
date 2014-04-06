@@ -329,7 +329,7 @@ class User extends DatabaseRow
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy)
-		), array (0 => "userId"), $privacy);
+		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
