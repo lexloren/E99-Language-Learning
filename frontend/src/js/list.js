@@ -77,6 +77,7 @@ function getLists() {
 	});
 }
 
+
 function viewList(listid) {
 
 	var currentURL = URL + 'list_entries.php?list_id=' + listid;
