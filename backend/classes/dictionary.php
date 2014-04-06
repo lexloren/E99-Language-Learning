@@ -5,6 +5,17 @@ require_once "./backend/classes.php";
 
 class Dictionary
 {
+	protected static $error_description = null;
+	protected static function set_error_description($error_description)
+	{
+		static::$error_description = $error_description;
+		return null;
+	}
+	public static function get_error_description()
+	{
+		return static::$error_description;
+	}
+
 	private static $entries_by_id = array ();
 
 	public static $page_size = null;
@@ -12,9 +23,10 @@ class Dictionary
 	
 	public static $find_last_count = null;
 	
-	public static function unregister_all()
+	public static function reset()
 	{
 		self::$entries_by_id = array ();
+		self::$error_description = null;
 	}
 	//  Returns the join of the dictionary on the languages table
 	//      so that we can include language codes (which exist only in the languages table)
@@ -35,7 +47,7 @@ class Dictionary
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function find($word, $lang_codes, $pagination = null)
+	public static function query($word, $lang_codes, $pagination = null)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
@@ -64,11 +76,9 @@ class Dictionary
 			implode("','", $lang_codes)
 		);
 		
-		$result = $mysqli->query($query);
-		if (!$result)
+		if (!($result = $mysqli->query($query)))
 		{
-			Session::get()->set_error_assoc("Database Error", $mysqli->error);
-			return null;
+			return static::set_error_description("Failed to find entry: " . $mysqli->error);
 		}
 		
 		//  Save information about query results in static properties
@@ -106,7 +116,7 @@ class Dictionary
 	}
 	
 	//  Gets an entry from the dictionary by entry_id
-	public static function select_entry($entry_id)
+	public static function select_entry_by_id($entry_id)
 	{
 		$entry_id = intval($entry_id, 10);
 		
@@ -121,7 +131,7 @@ class Dictionary
 			
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				return null;
+				return static::set_error_description("Failed to select dictionary entry where entry_id = $entry_id.");
 			}
 			
 			self::$entries_by_id[$entry_id] = Entry::from_mysql_result_assoc($result_assoc);
@@ -143,7 +153,7 @@ class Dictionary
 			return $result_assoc["lang_code"];
 		}
 		
-		return null;
+		return static::set_error_description("Failed to select language where language_id = $lang_id.");
 	}
 	
 	public static function get_lang_id($lang_code)
@@ -159,7 +169,7 @@ class Dictionary
 			return intval($result_assoc["lang_id"], 10);
 		}
 		
-		return null;
+		return static::set_error_description("Failed to select language where language_code = '$lang_code'.");
 	}
 }
 

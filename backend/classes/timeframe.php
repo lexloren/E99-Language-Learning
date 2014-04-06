@@ -14,9 +14,9 @@ class Timeframe
 		return $this->close;
 	}
 	
-	public function __construct($arg)
+	public function __construct($open, $close)
 	{
-		if (count(array_diff(array ("open","close"), array_keys($arg))) === 0)
+		/*if (in_array("open", array_keys($arg)) && in_array("close", array_keys($arg)))
 		{
 			$open = $arg["open"];
 			$close = $arg["close"];
@@ -25,10 +25,10 @@ class Timeframe
 		{
 			$open = $arg[0];
 			$close = $arg[1];
-		}
+		}*/
 		
-		$this->open = strtotime($open);
-		$this->close = strtotime($close);
+		$this->open = intval($open, 10);
+		$this->close = intval($close, 10);
 	}
 	
 	public function is_current()
@@ -36,11 +36,19 @@ class Timeframe
 		return ($time = time()) > $open && $time < $close;
 	}
 	
-	public function assoc_for_json()
+	public function mysql_assignments()
 	{
 		return array (
-			"open" => $open,
-			"close" => $close,
+			"open" => !!$this->get_open() ? "FROM_UNIXTIME(" . $this->get_open() . ")" : "NULL",
+			"close" => $this->get_close() ? "FROM_UNIXTIME(" . $this->get_close() . ")" : "NULL"
+		);
+	}
+	
+	public function assoc_for_json($privacy = null)
+	{
+		return array (
+			"open" => $this->get_open(),
+			"close" => $this->get_close(),
 			"isCurrent" => $this->is_current()
 		);
 	}

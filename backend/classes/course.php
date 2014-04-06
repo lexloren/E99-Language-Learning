@@ -9,11 +9,11 @@ class Course extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $course_name = null, $timeframe = null, $message = null)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -30,17 +30,20 @@ class Course extends DatabaseRow
 		
 		$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
 		
-		$course_name = ($course_name !== null && strlen($course_name) > 0)
-			? "'".$mysqli->escape_string($course_name)."'"
+		$name = ($name !== null && strlen($name) > 0)
+			? "'".$mysqli->escape_string($name)."'"
 			: "NULL";
+		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
+		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, course_name) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $course_name FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message FROM $languages_join ON $language_codes_match"
 		));
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert course: " . $mysqli->error);
+			return static::set_error_description("Failed to insert course: " . $mysqli->error);
 		}
 		
 		if (!($course = self::select_by_id($mysqli->insert_id)))
@@ -52,6 +55,8 @@ class Course extends DatabaseRow
 			$course->get_course_id(),
 			Session::get()->get_user()->get_user_id()
 		));
+		
+		Session::get()->get_user()->uncache_all();
 		
 		return $course;
 	}
@@ -84,18 +89,25 @@ class Course extends DatabaseRow
 			&& Session::get()->get_user()->equals($this->get_owner());
 	}
 	
-	private $course_name = null;
+	protected function uncache_all()
+	{
+		if (isset($this->instructors)) unset($this->instructors);
+		if (isset($this->students)) unset($this->students);
+		if (isset($this->units)) unset($this->units);
+	}
+	
+	private $name = null;
 	public function get_course_name()
 	{
-		return $this->course_name;
+		return $this->name;
 	}
-	public function set_course_name($course_name)
+	public function set_course_name($name)
 	{
-		if (!self::update_this($this, "courses", array ("course_name" => $course_name), "course_id", $this->get_course_id()))
+		if (!self::update_this($this, "courses", array ("name" => $name), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
-		$this->course_name = $course_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -135,6 +147,37 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
+	private $timeframe;
+	public function get_timeframe()
+	{
+		return $this->timeframe;
+	}
+	public function set_timeframe($timeframe)
+	{
+		if (!self::update_this(
+			$this,
+			"courses",
+			!!$timeframe
+				? $timeframe->mysql_assignments()
+				: array ("open" => "NULL", "close" => "NULL"),
+			"course_id",
+			$this->get_course_id(),
+			true
+		)) return null;
+		
+		$this->timeframe = $timeframe;
+		
+		return $this;
+	}
+	public function set_open($open)
+	{
+		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+	}
+	public function set_close($close)
+	{
+		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+	}
+	
 	private $message;
 	public function get_message()
 	{
@@ -169,7 +212,7 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		return !!Session::get() && Session::get()->get_user()->in_array($this->get_students());
+		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_students());
 	}
 	
 	private $units;
@@ -206,13 +249,14 @@ class Course extends DatabaseRow
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $course_name = null, $public = false, $message = null)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $open = null, $close = null, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
 		$this->lang_id_0 = $lang_id_0;
 		$this->lang_id_1 = $lang_id_1;
-		$this->course_name = !!$course_name && strlen($course_name) > 0 ? $course_name : null;
+		$this->name = !!$name && strlen($name) > 0 ? $name : null;
+		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		$this->public = !!$public;
 		
@@ -226,8 +270,10 @@ class Course extends DatabaseRow
 			"user_id",
 			"lang_id_0",
 			"lang_id_1",
-			"course_name",
+			"name",
 			"public",
+			"open",
+			"close",
 			"message"
 		);
 		
@@ -237,8 +283,10 @@ class Course extends DatabaseRow
 				$result_assoc["user_id"],
 				$result_assoc["lang_id_0"],
 				$result_assoc["lang_id_1"],
-				$result_assoc["course_name"],
+				$result_assoc["name"],
 				$result_assoc["public"],
+				$result_assoc["open"],
+				$result_assoc["close"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -258,6 +306,14 @@ class Course extends DatabaseRow
 	
 	public function delete()
 	{
+		foreach (array_merge(array ($this->get_owner()), $this->get_students(), $this->get_instructors()) as $user)
+		{
+			$user->uncache_all();
+		}
+		foreach ($this->get_lists() as $list)
+		{
+			$list->uncache_all();
+		}
 		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
 	
@@ -265,22 +321,24 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit course.");
-		}
-		
-		if ($user->in_array($array))
-		{
-			return self::set_error_description("Course cannot add user.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT IGNORE INTO $table (course_id, user_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		array_push($array, $user);
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to add course user: " . $mysqli->error);
+		}
+		
+		if (isset($array)) array_push($array, $user);
+		
+		$user->uncache_all();
 		
 		return $this;
 	}
@@ -289,21 +347,22 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return self::set_error_description("Session user is not course owner.");
+			return static::set_error_description("Session user is not course owner.");
 		}
-		return $this->users_add($this->get_instructors(), "course_instructors", $user);
+		
+		return $this->users_add($this->instructors, "course_instructors", $user);
 	}
 	
 	public function students_add($user)
 	{
-		return $this->users_add($this->get_students(), "course_students", $user);
+		return $this->users_add($this->students, "course_students", $user);
 	}
 	
 	private function users_remove(&$array, $table, $user)
 	{
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit course.");
+			return static::set_error_description("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -313,7 +372,14 @@ class Course extends DatabaseRow
 			$user->get_user_id()
 		));
 		
-		unset($array);
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to remove course user: " . $mysqli->error);
+		}
+		
+		if (isset($array)) array_drop($array, $user);
+		
+		$user->uncache_all();
 		
 		return $this;
 	}
@@ -322,14 +388,14 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return self::set_error_description("Session user is not course owner.");
+			return static::set_error_description("Session user is not course owner.");
 		}
-		return $this->users_remove($this->get_instructors(), "course_instructors", $user);
+		return $this->users_remove($this->instructors, "course_instructors", $user);
 	}
 	
 	public function students_remove($user)
 	{
-		return $this->users_remove($this->get_students(), "course_students", $user);
+		return $this->users_remove($this->students, "course_students", $user);
 	}
 	
 	public function assoc_for_json($privacy = null)
@@ -341,11 +407,22 @@ class Course extends DatabaseRow
 		
 		return array (
 			"courseId" => $this->get_course_id(),
-			"courseName" => !$privacy ? $this->get_course_name() : null,
+			"name" => !$privacy ? $this->get_course_name() : null,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => !$privacy ? $this->is_public() : null,
-			"timeframe" => null // Not yet implemented
+			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
 		);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["units"] = self::array_for_json($this->get_units());
+		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["tests"] = self::array_for_json($this->get_tests());
+		
+		return $assoc;
 	}
 }
 

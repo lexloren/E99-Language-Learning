@@ -23,7 +23,7 @@ function getDeckInfo(){
             }
             else{
                 $.each(data.result, function(i, item){
-                    newrow = '<tr><td>' + item.list_name + '</td></tr>';
+                    newrow = '<tr><td>' + item.name + '</td></tr>';
                     $('#deckDetails').append(newrow);
                 });
             }
@@ -46,7 +46,7 @@ function getTestInfo(){
             }
             else{
                 $.each(data.result, function(i, item){
-                    newrow = '<tr><td>' + item.test_name + '</td></tr>';
+                    newrow = '<tr><td>' + item.name + '</td></tr>';
                     $('#testDetails').append(newrow);
                 });
             }

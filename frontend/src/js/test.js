@@ -58,7 +58,7 @@ function verifySectionForm(){
 }
 
 function submitCreateTestForm(testname, instructions, opendate, closedate){
-    var mockJSON = '{"testId":"123","testName":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
+    var mockJSON = '{"testId":"123","name":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
     $.mockjax({
         url: '../../unit/tests',  
         contentType: 'text/json',
@@ -82,7 +82,7 @@ function submitCreateTestForm(testname, instructions, opendate, closedate){
 }
 
 function submitCreateSectionForm(sectionname, instructions, questions){
-    var mockJSON = '{"sectionId":"1","sectionName":"Nouns","instructions":"some instructions", "questions": ""}';
+    var mockJSON = '{"sectionId":"1","name":"Nouns","instructions":"some instructions", "questions": ""}';
     $.mockjax({
         url: '../../unit/tests',  
         contentType: 'text/json',
@@ -110,7 +110,7 @@ function getTestInfo(){
         return;
     }
 
-    var mockJSON = '{"testId":"123","testName":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
+    var mockJSON = '{"testId":"123","name":"Chinese Exam 1","timeframe":{"open":"2014/01/01 08:00","close":"2014/01/01 09:00"},"instructions":"some instructions"}';
     $.mockjax({
         url: '../../unit/tests', 
         contentType: 'text/json',
@@ -123,7 +123,7 @@ function getTestInfo(){
             showFailure();
         }
         else{
-            $("#testname").html(data.testName);
+            $("#testname").html(data.name);
             $("#instructions").html(data.instructions);
             $("#opendate").html(data.timeframe.open);
             $("#closedate").html(data.timeframe.close);
@@ -132,7 +132,7 @@ function getTestInfo(){
 
     $.mockjaxClear();
 
-    var mockJSONsec = '[{"sectionId":"1","sectionName":"Nouns","instructions":"some instructions", "questions": ""}]';
+    var mockJSONsec = '[{"sectionId":"1","name":"Nouns","instructions":"some instructions", "questions": ""}]';
     $.mockjax({ 
         url: '../../unit/tests', 
         contentType: 'text/json',
@@ -145,7 +145,7 @@ function getTestInfo(){
         }
         else{
 	          $.each(data, function(i, item){
-			          $('#sections').append(item.sectionName);
+			          $('#sections').append(item.name);
             });
         }		
     });

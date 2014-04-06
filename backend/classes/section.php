@@ -3,39 +3,41 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Section extends DatabaseRow
+class Section extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($test_id, $section_name = null, $timer = null, $message = null)
+	public static function insert($test_id, $name = null, $timer = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$test = Test::select_by_id(($test_id = intval($test_id, 10)));
 		
-		if (!$test->session_user_is_instructor())
+		if (!$test->session_user_can_write())
 		{
-			return self::set_error_description("Session user is not course instructor.");
+			return static::set_error_description("Session user cannot edit course unit test.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$section_name = $section_name !== null ? "'" . $mysqli->escape_string($section_name) . "'" : "NULL";
+		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$section_number = count($test->get_sections()) + 1;
+		$number = count($test->get_sections()) + 1;
 		$timer = intval($timer, 10);
 		
-		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, section_name, section_num, timer, message) VALUES ($test_id, $section_name, $section_number, $timer, $message)");
+		$mysqli->query("INSERT INTO course_unit_test_sections (test_id, name, num, timer, message) VALUES ($test_id, $name, $number, $timer, $message)");
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert section: " . $mysqli->error);
+			return static::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
+		
+		$test->uncache_all();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -69,26 +71,41 @@ class Section extends DatabaseRow
 	}
 	public function get_unit_id()
 	{
-		return $this->get_unit()->get_unit_id();
+		return $this->get_test()->get_unit_id();
 	}
 	public function get_course()
 	{
 		return $this->get_test()->get_course();
 	}
+	public function get_course_id()
+	{
+		return $this->get_test()->get_course_id();
+	}
 	
-	private $section_name = null;
+	private $number = null;
+	public function get_number()
+	{
+		return $this->number;
+	}
+	
+	private $name = null;
 	public function get_section_name()
 	{
-		return $this->section_name;
+		return $this->name;
 	}
-	public function set_section_name($section_name)
+	public function set_section_name($name)
 	{
-		if (!self::update_this($this, "course_unit_test_sections", array ("section_name" => $section_name), "section_id", $this->get_section_id()))
+		if (!self::update_this($this, "course_unit_test_sections", array ("name" => $name), "section_id", $this->get_section_id()))
 		{
 			return null;
 		}
-		$this->section_name = $section_name;
+		$this->name = $name;
 		return $this;
+	}
+
+	protected function uncache_all()
+	{
+		if (isset($this->entries)) unset($this->entries);
 	}
 
 	private $entries;
@@ -100,7 +117,7 @@ class Section extends DatabaseRow
 			Dictionary::join()
 		);
 		$table = "$section_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "Entry", $table, "section_id", $this->get_section_id());
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "section_id", $this->get_section_id());
 	}
 	
 	private $timer;
@@ -109,41 +126,42 @@ class Section extends DatabaseRow
 		return $this->timer;
 	}
 	
-	private $message;
-	public function get_message()
+	//  inherits: protected $message;
+	public function set_message($message)
 	{
-		return $this->message;
+		return parent::set_this_message($this, $message, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
-	private function __construct($test_id, $unit_id, $test_name = null, $open = null, $close = null, $message = null)
+	private function __construct($section_id, $test_id, $number, $name = null, $timer = null, $message = null)
 	{
+		$this->section_id = intval($section_id, 10);
 		$this->test_id = intval($test_id, 10);
-		$this->unit_id = intval($unit_id, 10);
-		$this->test_name = !!$test_name ? $test_name : null;
-		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
-		$this->message = !!$message ? $message : null;
+		$this->name = !!$name && strlen($name) > 0 ? $name : null;
+		$this->number = $number;
+		$this->timer = intval($timer, 10);
+		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
-		self::register($this->unit_id, $this);
+		self::register($this->section_id, $this);
 	}
 	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
 		$mysql_columns = array (
+			"section_id",
 			"test_id",
-			"unit_id",
-			"test_name",
-			"open",
-			"close",
+			"num",
+			"name",
+			"timer",
 			"message"
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Test(
+			? new Section(
+				$result_assoc["section_id"],
 				$result_assoc["test_id"],
-				$result_assoc["unit_id"],
-				$result_assoc["test_name"],
-				$result_assoc["open"],
-				$result_assoc["close"],
+				$result_assoc["num"],
+				$result_assoc["name"],
+				$result_assoc["timer"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -151,11 +169,13 @@ class Section extends DatabaseRow
 	
 	public function session_user_can_execute()
 	{
-		return false; //(!$this->get_timeframe() || ($this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		//  Need to add another check whether this section is the next section available in the test
+		return $this->get_test()->session_user_can_execute();
 	}
 	
 	public function delete()
 	{
+		$this->get_test()->uncache_all();
 		return self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
@@ -168,13 +188,11 @@ class Section extends DatabaseRow
 		
 		return array (
 			"sectionId" => $this->get_section_id(),
-			"sectionName" => !$privacy ? $this->get_section_name() : null,
+			"number" => $this->get_number(),
+			"name" => !$privacy ? $this->get_section_name() : null,
 			"testId" => !$privacy ? $this->get_test_id() : null,
-			"testName" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
-			"unitName" => !$privacy ? $this->get_unit()->get_unit_name() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"courseName" => !$privacy ? $this->get_course()->get_course_name() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timer" => !$privacy ? $this->get_timer() : null,
 			"message" => !$privacy ? $this->get_message() : null

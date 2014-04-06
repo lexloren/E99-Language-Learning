@@ -9,24 +9,26 @@ class EntryList extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($list_name = null)
+	public static function insert($name = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
 			Session::get()->get_user()->get_user_id(),
-			$mysqli->escape_string($list_name)
+			$mysqli->escape_string($name)
 		));
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to insert list: " . $mysqli->error);
+			return static::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
+		
+		Session::get()->get_user()->uncache_all();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -54,18 +56,18 @@ class EntryList extends DatabaseRow
 		return User::select_by_id($this->get_user_id());
 	}
 	
-	private $list_name;
+	private $name;
 	public function get_list_name()
 	{
-		return $this->list_name;
+		return $this->name;
 	}
-	public function set_list_name($list_name)
+	public function set_list_name($name)
 	{
-		if (!self::update_this($this, "lists", array ("list_name" => $list_name), "list_id", $this->get_list_id()))
+		if (!self::update_this($this, "lists", array ("name" => $name), "list_id", $this->get_list_id()))
 		{
 			return null;
 		}
-		$this->list_name = $list_name;
+		$this->name = $name;
 		return $this;
 	}
 	
@@ -73,6 +75,11 @@ class EntryList extends DatabaseRow
 	public function is_public()
 	{
 		return !!$this->public;
+	}
+	
+	protected function uncache_all()
+	{
+		if (isset($this->entries)) unset($this->entries);
 	}
 	
 	private $entries;
@@ -85,14 +92,14 @@ class EntryList extends DatabaseRow
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->entries, "Entry", $table, "list_id", $this->get_list_id());
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
 	}
 	
-	private function __construct($list_id, $user_id, $list_name = null, $public = false)
+	private function __construct($list_id, $user_id, $name = null, $public = false)
 	{
 		$this->list_id = intval($list_id, 10);
 		$this->user_id = intval($user_id, 10);
-		$this->list_name = $list_name;
+		$this->name = $name;
 		$this->public = !!$public;
 		
 		self::register($this->list_id, $this);
@@ -103,7 +110,7 @@ class EntryList extends DatabaseRow
 		$mysql_columns = array (
 			"list_id",
 			"user_id",
-			"list_name",
+			"name",
 			"public"
 		);
 		
@@ -111,7 +118,7 @@ class EntryList extends DatabaseRow
 			? new EntryList(
 				$result_assoc["list_id"],
 				$result_assoc["user_id"],
-				!!$result_assoc["list_name"] && strlen($result_assoc["list_name"]) > 0 ? $result_assoc["list_name"] : null,
+				!!$result_assoc["name"] && strlen($result_assoc["name"]) > 0 ? $result_assoc["name"] : null,
 				$result_assoc["public"]
 			)
 			: null;
@@ -120,20 +127,38 @@ class EntryList extends DatabaseRow
 	//  Returns true iff Session::get()->get_user() can read this list for any reason
 	public function session_user_can_read()
 	{
-		return $this->session_user_can_write()
-			|| $this->session_user_can_read_via_course()
+		return !!Session::get()
+			&& !!($session_user = Session::get()->get_user())
+			&& $this->user_can_read($session_user);
+	}
+	
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user)
+			|| $this->user_can_read_via_course($user)
 			|| $this->is_public();
 	}
 	
-	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
-	private function session_user_can_read_via_course()
+	public function user_can_write($user)
 	{
-		foreach ($this->get_owner()->get_student_courses() as $student_course)
+		return parent::user_can_write($user)
+			|| $this->user_can_write_via_course($user);
+	}
+	
+	public function session_user_can_write()
+	{
+		return !!Session::get() && $this->user_can_write(Session::get()->get_user());
+	}
+	
+	private function user_affiliated_via_courses($user, $courses)
+	{
+		foreach ($courses as $course)
 		{
-			foreach ($student_course->get_lists() as $list)
+			foreach ($course->get_lists() as $list)
 			{
-				if ($list->list_id === $this->list_id
-					&& $list->get_owner()->in_array($student_course->get_instructors()))
+				if ($list->list_id === $this->list_id)
+					//  Should now be true for all lists associated with all courses:
+					//  && $list->get_owner()->equals($course->get_owner()))
 				{
 					return true;
 				}
@@ -143,8 +168,20 @@ class EntryList extends DatabaseRow
 		return false;
 	}
 	
+	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
+	private function user_can_read_via_course($user)
+	{
+		return !!$user && $this->user_affiliated_via_courses($user, $user->get_student_courses());
+	}
+	
+	private function user_can_write_via_course($user)
+	{
+		return !!$user && $this->user_affiliated_via_courses($user, $user->get_instructor_courses());
+	}
+	
 	public function delete()
 	{
+		$this->get_owner()->uncache_all();
 		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
@@ -152,9 +189,14 @@ class EntryList extends DatabaseRow
 	//      Returns this list
 	public function entries_add($entry_to_add)
 	{
+		if (!$entry_to_add)
+		{
+			return static::set_error_description("List cannot add null entry.");
+		}
+		
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit list.");
+			return static::set_error_description("Session user cannot edit list.");
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
@@ -162,7 +204,7 @@ class EntryList extends DatabaseRow
 		
 		if (!$entry_added)
 		{
-			return self::set_error_description(Entry::get_error_description());
+			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -174,6 +216,8 @@ class EntryList extends DatabaseRow
 			$entry_added->get_user_entry_id()
 		));
 		
+		$entry_added->uncache_all();
+		
 		return $this;
 	}
 	
@@ -181,9 +225,14 @@ class EntryList extends DatabaseRow
 	//      Returns this list
 	public function entries_remove($entry_to_remove)
 	{
+		if (!$entry_to_remove)
+		{
+			return static::set_error_description("List cannot remove null entry.");
+		}
+		
 		if (!$this->session_user_can_write())
 		{
-			return self::set_error_description("Session user cannot edit list.");
+			return static::set_error_description("Session user cannot edit list.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -199,52 +248,83 @@ class EntryList extends DatabaseRow
 				
 				unset($this->entries);
 				
+				$entry_removed->uncache_all();
+				
 				return $this;
 			}
 		}
 		
-		return self::set_error_description("List failed to remove entry.");
+		return static::set_error_description("List failed to remove entry.");
 	}
 	
 	//  Copies this list, setting the copy's owner to some other user
 	//      Returns the copy
 	public function copy_for_session_user()
 	{
-		if (!Session::get() || !$this->session_user_can_read())
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return self::set_error_description("Session user cannot read list.");
+			return static::set_error_description("Session user has not reauthenticated.");
 		}
+		
+		return $this->copy_for_user($session_user);
+	}
+	
+	public function copy_for_user($user)
+	{
+		if (!$this->user_can_read($user))
+		{
+			return static::set_error_description("User cannot read list.");
+		}
+		
+		if ($this->get_owner()->equals($user)) return $this;
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, list_name) SELECT %d, list_name FROM lists WHERE list_id = %d",
-			Session::get()->get_user()->get_user_id(),
+		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
+			$user->get_user_id(),
 			$this->get_list_id()
 		));
 		
-		$copy_id = $mysqli->insert_id;
+		$list_copy_id = $mysqli->insert_id;
 		
+		$insertion_values = array ();
 		foreach ($this->get_entries() as $entry)
 		{
-			$entry->copy_for_session_user();
+			if (($entry_copy = $entry->copy_for_user($user, $this)))
+			{
+				$user_entry_copy_id = $entry_copy->get_user_entry_id();
+				array_push($insertion_values, "($list_copy_id, $user_entry_copy_id)");
+			}
+			else
+			{
+				return static::set_error_description("List failed to copy for user: " . Entry::unset_error_description());
+			}
 		}
 		
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) SELECT %d, user_entry_id FROM list_entries WHERE list_id = %d",
-			$copy_id,
-			$this->get_list_id()
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES %s",
+			implode(", ", $insertion_values)
 		));
 		
-		return self::select_by_id($copy_id);
+		return self::select_by_id($list_copy_id);
 	}
 	
-	public function assoc_for_json()
+	public function assoc_for_json($privacy = null)
 	{
 		return array (
 			"listId" => $this->list_id,
-			"listName" => $this->list_name,
+			"name" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
 		);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$assoc["entries"] = self::array_for_json($this->get_entries());
+		
+		return $assoc;
 	}
 }
 

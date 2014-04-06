@@ -47,6 +47,26 @@ class CourseComponent extends DatabaseRow
 	{
 		return !!($course = $this->get_course()) ? $course->session_user_can_read() : false;
 	}
+	
+	protected $message;
+	public function get_message()
+	{
+		return $this->message;
+	}
+	public function set_message($message)
+	{
+		return static::set_error_description("CourseComponent subclass failed to override default implementation of set_message.");
+	}
+	protected static function set_this_message($instance, $message, $table, $column, $id)
+	{
+		if (!self::update_this($instance, $table, array ("message" => $message), $column, $id))
+		{
+			return null;
+		}
+		$instance->message = $message;
+		return $instance;
+	}
+	
 }
 
 ?>

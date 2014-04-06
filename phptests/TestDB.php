@@ -31,9 +31,9 @@ class TestDB
 	public static $word_1_pronun = 'Peace pronun in CN';
 	
 	public $user_entry_ids = Array();
+	public $annotation_ids = Array();
 	
-	public static $entry_annotation = 'Some user annotation';
-	public static $entry_annotation_id;
+	private static $entry_annotation = 'Some user annotation';
 
 	//lists table
 	public $list_ids = Array();
@@ -43,7 +43,10 @@ class TestDB
 	//courses table
 	public $course_ids = Array();
 	public $course_names = Array();
+	public $course_messages = Array();
+	public $course_tests = Array();
 	private static $course_name = 'some course';
+	private static $course_message = 'some course message';
 	private static $course_unit_name = 'some unit';
 	
 	public $practice_list_ids = array();
@@ -58,16 +61,16 @@ class TestDB
 	//Creates empty test database with data only in languages table
 	public static function create()
 	{
-		User::unregister_all();
-		Grade::unregister_all();
-		//Entry::unregister_all();  //Does not use the cache
-		Course::unregister_all();
-		Dictionary::unregister_all();
-		Unit::unregister_all();
-		EntryList::unregister_all();
-		Test::unregister_all();
-		Section::unregister_all();
-		Annotation::unregister_all();
+		User::reset();
+		Grade::reset();
+		//Entry::reset();  //Does not use the cache
+		Course::reset();
+		Dictionary::reset();
+		Unit::reset();
+		EntryList::reset();
+		Test::reset();
+		Section::reset();
+		Annotation::reset();
 	
 		$testdb = new TestDB();
 		
@@ -122,57 +125,76 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
 
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_0, self::$lang_id_0, $link->escape_string('English in English')));
 		
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_0, self::$lang_id_1, $link->escape_string('English in Chinese')));
 			
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_1, self::$lang_id_0, $link->escape_string('Chinese in English')));
 
-		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, lang_name) VALUES (%d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO language_names (lang_id, lang_id_name, name) VALUES (%d, %d, '%s')",
 			self::$lang_id_1, self::$lang_id_1, $link->escape_string('Chinese in Chinese')));
 	}
 	
 	public function add_list($user_id, $entry_ids)
 	{
 		$suffix = count($this->list_ids);
-		$list_name = self::$list_name.$suffix;
+		$name = self::$list_name.$suffix;
 		
 		$link = $this->link;
-		$link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+		$link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
 			$user_id,
-			$link->escape_string($list_name)
+			$link->escape_string($name)
 		));
 
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 		
-		array_push($this->list_ids, $link->insert_id);
-		array_push($this->list_names, $list_name);
-		
 		$list_id = $link->insert_id;
+
+		array_push($this->list_ids, $list_id);
+		array_push($this->list_names, $name);
+		
 	
 		foreach($entry_ids as $entry_id)
 		{
-			$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-				$entry_id, $user_id
-			));
-			
-			$user_entry_id = $link->insert_id;
-			array_push($this->user_entry_ids, $user_entry_id);
+			$user_entry_id = 0;
+			$result = $link->query(sprintf("SELECT user_entry_id FROM user_entries WHERE entry_id = %d AND user_id = %d",
+					$entry_id, $user_id
+				));
+			if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+			}
+			else
+			{
+				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
+					$entry_id, $user_id
+				));
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 
+				$user_entry_id = $link->insert_id;
+				array_push($this->user_entry_ids, $user_entry_id);
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+
+				$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+					$user_entry_id, $link->escape_string(self::$entry_annotation)
+				));
+
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				array_push($this->annotation_ids, $link->insert_id);
+			}
+			
 			$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 				$list_id,
 				$user_entry_id
 			));
-
-			$link->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
-				$user_entry_id, $link->escape_string(self::$entry_annotation)
-			));
-
-			self::$entry_annotation_id = $link->insert_id;
 		}
 		
 		return $list_id;
@@ -183,6 +205,7 @@ class TestDB
 		$count_start = count($this->word_0s);
 		$count_end = $count_start + $num_words;
 		$link = $this->link;
+		$added_entries = Array();
 		for ($i = $count_start; $i < $count_end; $i++) 
 		{
 			array_push($this->word_0s, self::$word_0.$i);
@@ -196,20 +219,24 @@ class TestDB
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 
 			array_push($this->entry_ids, $link->insert_id);
+			array_push($added_entries, $link->insert_id);
 		}
+		return $added_entries;
 	}
 	
 	public function add_course($user_id)
 	{
 		$link = $this->link;
 		$suffix = count($this->course_ids);
-		$course_name = self::$course_name.$suffix;
+		$name = self::$course_name.$suffix;
+		$message = self::$course_message.$suffix;
 		
-		$link->query(sprintf("INSERT INTO courses (user_id, course_name, lang_id_0, lang_id_1) VALUES (%d, '%s', %d, %d)",
+		$link->query(sprintf("INSERT INTO courses (user_id, name, lang_id_0, lang_id_1, message) VALUES (%d, '%s', %d, %d, '%s')",
 			$user_id,
-			$link->escape_string($course_name),
+			$link->escape_string($name),
 			self::$lang_id_0,
-			self::$lang_id_1
+			self::$lang_id_1,
+			$link->escape_string($message)
 		));
 
 		if (!$link->insert_id)
@@ -217,9 +244,10 @@ class TestDB
 		
 		$course_id = $link->insert_id;
 		array_push($this->course_ids, $course_id);
-		array_push($this->course_names, $course_name);
+		array_push($this->course_names, $name);
+		array_push($this->course_messages, $message);
 		
-		$link->query(sprintf("INSERT INTO course_units (course_id, unit_name, unit_num) VALUES (%d, '%s', %d)",
+		$link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
 			$course_id,
 			self::$course_unit_name,
 			1
@@ -236,14 +264,53 @@ class TestDB
 			$course_unit_id,
 			$list_id
 		));
+		
+		return $course_id;
 	}
 
+	public function add_course_student($course_id, $user_id)
+	{
+		$this->link->query(sprintf("INSERT INTO course_students (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+	}
+	
+	public function add_course_instructor($course_id, $user_id)
+	{
+		$this->link->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+	}
+	
+	public function add_unit_test($unit_id)
+	{
+		$test_name = "course test ".count($course_tests);
+		$this->link->query(sprintf("INSERT IGNORE INTO course_unit_tests (unit_id, test_name) VALUES (%d, %d)",
+			$unit_id,
+			$test_name
+		));
+		
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			
+		array_push($course_tests, $link->insert_id);
+		return $link->insert_id;
+	}
+	
 	public function add_practice_data($user_id, $num_lists, $num_entries)
         {
 		$link = $this->link;
                 for ($i = 1; $i <= $num_lists; $i++)
                 {
-                        $link->query(sprintf("INSERT INTO lists (user_id, list_name) VALUES (%d, '%s')",
+                        $link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
                                 $user_id,
                                 $link->escape_string(self::$list_name).$i
                         ));

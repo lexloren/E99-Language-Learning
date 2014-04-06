@@ -21,7 +21,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		$codes = Array();
 		array_push($codes, TestDB::$lang_code_0);
 		array_push($codes, TestDB::$lang_code_1);
-		$result = Dictionary::find($this->db->word_0s[0], $codes);
+		$result = Dictionary::query($this->db->word_0s[0], $codes);
 		$this->assertNotNull($result);
 	
 		$this->assertCount(1, $result);
@@ -40,7 +40,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 	public function test_select_entry()
 	{
 		$this->db->add_dictionary_entries(10);
-		$entry = Dictionary::select_entry($this->db->entry_ids[5]);
+		$entry = Dictionary::select_entry_by_id($this->db->entry_ids[5]);
 		$this->assertNotNull($entry);
 		
 		$this->assertNull($entry->get_owner());

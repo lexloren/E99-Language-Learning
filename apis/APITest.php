@@ -3,7 +3,7 @@
 require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
-class APITest  extends APIBase
+class APITest extends APIBase
 {
 	public function __construct($user, $mysqli)
 	{	
@@ -14,25 +14,30 @@ class APITest  extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (self::validate_request($_POST, "unit_id"))
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
 		{
-			if (!($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
+			$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
+			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
+			
+			if (!($test = Test::insert($unit->get_unit_id(), $name, $timeframe, $message)))
 			{
-				Session::get()->set_error_assoc("Unit Selection", Unit::get_error_description());
+				Session::get()->set_error_assoc("Test Insertion", Test::unset_error_description());
 			}
 			else
 			{
-				$test_name = isset($_POST["test_name"]) && strlen($_POST["test_name"]) > 0 ? $_POST["test_name"] : null;
-				
-				if (!($test = Test::insert($unit_id, $test_name)))
-				{
-					Session::get()->set_error_assoc("Test Insertion", Test::get_error_description());
-				}
-				else
-				{
-					Session::get()->set_result_assoc($test->assoc_for_json());
-				}
+				Session::get()->set_result_assoc($test->assoc_for_json());
 			}
+		}
+	}
+	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
+		{
+			Session::get()->set_result_assoc($test->detailed_assoc_for_json(false));
 		}
 	}
 	
@@ -44,7 +49,7 @@ class APITest  extends APIBase
 		{
 			if (!$test->delete())
 			{
-				Session::get()->set_error_assoc("Test Deletion", Test::get_error_description());
+				Session::get()->set_error_assoc("Test Deletion", Test::unset_error_description());
 			}
 			else
 			{
@@ -55,9 +60,38 @@ class APITest  extends APIBase
 	
 	public function update()
 	{
-		//  test_name
+		//  name
 		//  timeframe
 		//  message
+		
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			$updates = 0;
+				
+			if (isset($_POST["name"]))
+			{
+				$updates += !!$test->set_test_name($_POST["name"]);
+			}
+			
+			if (isset($_POST["message"]))
+			{
+				$updates += !!$test->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["open"]))
+			{
+				$updates += !!$test->set_open($_POST["open"]);
+			}
+			
+			if (isset($_POST["close"]))
+			{
+				$updates += !!$test->set_close($_POST["close"]);
+			}
+			
+			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->assoc_for_json() : null);
+		}
 	}
 	
 	public function sections()
@@ -66,7 +100,7 @@ class APITest  extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			self::return_array_as_assoc_for_json($test->get_sections());
+			self::return_array_as_json($test->get_sections());
 		}
 	}
 }

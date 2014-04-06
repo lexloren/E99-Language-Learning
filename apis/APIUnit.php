@@ -3,7 +3,7 @@
 require_once "./apis/APIBase.php";
 require_once "./backend/classes.php";
 
-class APIUnit  extends APIBase
+class APIUnit extends APIBase
 {
 	public function __construct($user, $mysqli)
 	{	
@@ -16,16 +16,28 @@ class APIUnit  extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			$unit_name = isset($_POST["unit_name"]) && strlen($_POST["unit_name"]) > 0 ? $_POST["unit_name"] : null;
+			$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
+			$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
+			$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 			
-			if (!($unit = Unit::insert($course_id, $unit_name)))
+			if (!($unit = Unit::insert($course->get_course_id(), $name, $timeframe, $message)))
 			{
-				Session::get()->set_error_assoc("Unit Insertion", Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Insertion", Unit::unset_error_description());
 			}
 			else
 			{
 				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
+		}
+	}
+	
+	public function select()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
+		{
+			Session::get()->set_result_assoc($unit->detailed_assoc_for_json(false));
 		}
 	}
 	
@@ -37,7 +49,7 @@ class APIUnit  extends APIBase
 		{
 			if (!$unit->delete())
 			{
-				Session::get()->set_error_assoc("Unit Deletion", Unit::get_error_description());
+				Session::get()->set_error_assoc("Unit Deletion", Unit::unset_error_description());
 			}
 			else
 			{
@@ -48,8 +60,37 @@ class APIUnit  extends APIBase
 	
 	public function update()
 	{
-		//  unit_name
-		//  unit_num
+		//  name
+		//  num
+		
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_POST, "unit_id", "Unit")))
+		{
+			$updates = 0;
+			
+			if (isset($_POST["name"]))
+			{
+				$updates += !!$unit->set_unit_name($_POST["name"]);
+			}
+			
+			if (isset($_POST["message"]))
+			{
+				$updates += !!$unit->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["open"]))
+			{
+				$updates += !!$unit->set_open($_POST["open"]);
+			}
+			
+			if (isset($_POST["close"]))
+			{
+				$updates += !!$unit->set_close($_POST["close"]);
+			}
+			
+			self::return_updates_as_json("Unit", Unit::unset_error_description(), $updates ? $unit->assoc_for_json() : null);
+		}
 	}
 	
 	public function lists()
@@ -58,7 +99,7 @@ class APIUnit  extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_assoc_for_json($unit->get_lists());
+			self::return_array_as_json($unit->get_lists());
 		}
 	}
 	
@@ -70,23 +111,16 @@ class APIUnit  extends APIBase
 		{
 			if (self::validate_request($_POST, "list_ids"))
 			{
-				if ($unit->session_user_can_write())
+				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
-					foreach (explode(",", $_POST["list_ids"]) as $list_id)
+					if (!$unit->lists_add(EntryList::select_by_id($list_id)))
 					{
-						if (!$unit->lists_add(EntryList::select_by_id($list_id)))
-						{
-							Session::get()->set_error_assoc("Unit-Lists Addition", Unit::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::unset_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -99,23 +133,16 @@ class APIUnit  extends APIBase
 		{
 			if (self::validate_request($_POST, "list_ids"))
 			{
-				if ($unit->session_user_can_write())
+				foreach (explode(",", $_POST["list_ids"]) as $list_id)
 				{
-					foreach (explode(",", $_POST["list_ids"]) as $list_id)
+					if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
 					{
-						if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
-						{
-							Session::get()->set_error_assoc("Unit-Lists Removal", Unit::get_error_description());
-							return;
-						}
+						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::unset_error_description());
+						return;
 					}
-					
-					Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
-				else
-				{
-					Session::get()->set_error_assoc("Unit Modification", "Session user is not course instructor.");
-				}
+				
+				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -126,7 +153,7 @@ class APIUnit  extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_assoc_for_json($unit->get_tests());
+			self::return_array_as_json($unit->get_tests());
 		}
 	}
 }

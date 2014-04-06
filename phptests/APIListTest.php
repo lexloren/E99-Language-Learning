@@ -44,7 +44,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		for($i=0; $i<2; $i++)
 		{
 			if (1 == $i)
-				$_POST["list_name"] = 'new_list1';
+				$_POST["name"] = 'new_list1';
 
 			$this->obj->insert();
 		
@@ -57,18 +57,18 @@ class APIListTest extends PHPUnit_Framework_TestCase
 			$this->assertNotNull($result);
 			
 			$this->assertArrayHasKey('listId', $result);
-			$this->assertArrayHasKey('listName', $result);
+			$this->assertArrayHasKey('name', $result);
 			$this->assertArrayHasKey('owner', $result);
 			$this->assertArrayHasKey('isPublic', $result);
 			
-			$this->assertEquals($result["listName"], $i == 0 ? null : $_POST["list_name"]);
+			$this->assertEquals($result["name"], $i == 0 ? null : $_POST["name"]);
 			$this->assertEquals($result["owner"]["handle"], $this->db->handles[0]);
 		}
 	}
 	
 	public function test_insert_no_session()
 	{
-		$_POST["list_name"] = 'new_list1';
+		$_POST["name"] = 'new_list1';
 		$this->obj->insert();	
 		$this->assertTrue(Session::get()->has_error());
 	}
@@ -86,7 +86,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertEquals($result["listName"], $this->db->list_names[0]);*/
+		$this->assertEquals($result["name"], $this->db->list_names[0]);*/
 	}
 
 	public function test_delete_no_id()
