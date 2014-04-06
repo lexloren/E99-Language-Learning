@@ -200,6 +200,7 @@ class Test extends CourseComponent
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"sectionsCount" => count($this->get_sections()),
 			"message" => $this->get_message()
 		), array (0 => "testId"), $privacy);
 	}

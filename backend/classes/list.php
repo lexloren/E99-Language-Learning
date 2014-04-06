@@ -347,7 +347,8 @@ class EntryList extends DatabaseRow
 			"listId" => $this->list_id,
 			"name" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => $this->is_public()
+			"isPublic" => $this->is_public(),
+			"entriesCount" => count($this->get_entries()),
 		), array (0 => "listId"), $privacy);
 	}
 	

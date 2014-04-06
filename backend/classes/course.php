@@ -435,6 +435,11 @@ class Course extends DatabaseRow
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"instructorsCount" => count($this->get_instructors()),
+			"studentsCount" => count($this->get_students()),
+			"unitsCount" => count($this->get_units()),
+			"listsCount" => count($this->get_lists()),
+			"testsCount" => count($this->get_tests()),
 			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}
@@ -445,6 +450,8 @@ class Course extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
+		$assoc["instructors"] = self::array_for_json($this->get_instructors());
+		$assoc["students"] = self::array_for_json($this->get_students());
 		$assoc["units"] = self::array_for_json($this->get_units());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());

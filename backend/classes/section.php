@@ -194,6 +194,7 @@ class Section extends CourseComponent
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timer" => !$privacy ? $this->get_timer() : null,
+			"entriesCount" => count($this->get_entries()),
 			"message" => !$privacy ? $this->get_message() : null
 		), array (0 => "sectionId"), $privacy);
 	}
