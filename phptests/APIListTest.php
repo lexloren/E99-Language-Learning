@@ -78,7 +78,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$_SESSION["handle"] = $this->db->handles[0];
 		$_POST["list_id"] = $this->db->list_ids[0];
 		$this->obj->delete();
-		/*$this->assertFalse(Session::get()->has_error());
+		$this->assertFalse(Session::get()->has_error());
 
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
@@ -86,7 +86,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		$this->assertEquals($result["name"], $this->db->list_names[0]);*/
+		$this->assertEquals($result["name"], $this->db->list_names[0]);
 	}
 
 	public function test_delete_no_id()
@@ -117,8 +117,64 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];		
 		$this->assertNotNull($result);
 
-		//TODO
+		$this->assertCount(10, $result);
+		
+		//TODO : Result is wrong
 		//print_r($result);
+	}
+	
+	public function test_select()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["list_id"] = $this->db->list_ids[0];
+		$this->obj->select();
+		$this->assertFalse(Session::get()->has_error());
+
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+
+		$this->assertNotNull($result);
+		$this->assertEquals($result["name"], $this->db->list_names[0]);
+	}
+	
+	public function test_select_no_session()
+	{
+		$_GET["list_id"] = $this->db->list_ids[0];
+		$this->obj->select();
+		$this->assertTrue(Session::get()->has_error());
+	}
+	
+	public function test_select_wrong_id()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["list_id"] = 0;
+		$this->obj->select();
+		$this->assertTrue(Session::get()->has_error());
+	}
+	
+	public function test_update()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_POST["list_id"] = $this->db->list_ids[0];
+		$_POST["name"] = "new-list-Name";
+		$this->obj->update();
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];	
+		$this->assertEquals("new-list-Name", $result["name"]);
+	}
+	
+	public function test_update_no_session()
+	{
+		$_POST["list_id"] = $this->db->list_ids[0];
+		$_POST["name"] = "new-list-Name";
+		$this->obj->update();
+		
+		$this->assertTrue(Session::get()->has_error());
 	}
 	
 	public function test_entries_add()
