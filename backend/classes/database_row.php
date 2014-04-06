@@ -178,24 +178,30 @@ class DatabaseRow
 		return !!Session::get() && $this->user_is_owner(Session::get()->get_user());
 	}
 	
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user);
+	}
 	public function user_can_write($user)
 	{
 		return $this->user_is_owner($user);
 	}
-	
-	public function session_user_can_write()
+	public function user_can_execute($user)
 	{
-		return $this->session_user_is_owner();
-	}
-	
-	public function user_can_read($user)
-	{
-		return $this->user_can_write($user);
+		return null;
 	}
 	
 	public function session_user_can_read()
 	{
 		return $this->session_user_can_write();
+	}
+	public function session_user_can_write()
+	{
+		return $this->session_user_is_owner();
+	}
+	public function session_user_can_execute()
+	{
+		return null; //!!Session::get() && $this->user_can_execute(Session::get()->get_user());
 	}
 	
 	public function assoc_for_json($privacy = null)
@@ -217,14 +223,22 @@ class DatabaseRow
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		
+		if ($privacy)
+		{
+			foreach ($array as $key => $value)
+			{
+				if (!in_array($key, $exceptions)) $array[$key] = null;
+			}
+		}
+		
 		$array["hiddenFromSessionUser"] = $privacy;
 		
-		if (!$privacy) return $array;
+		$array["sessionUserPermissions"] = array (
+			"read" => $this->session_user_can_read(),
+			"write" => $this->session_user_can_write(),
+			"execute" => $this->session_user_can_execute()
+		);
 		
-		foreach ($array as $key => $value)
-		{
-			if (!in_array($key, $exceptions)) $array[$key] = null;
-		}
 		return $array;
 	}
 	

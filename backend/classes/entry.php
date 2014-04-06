@@ -255,13 +255,15 @@ class Entry extends DatabaseRow
 			? $dictionary_entry
 			: $this;
 		
-		return array (
+		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
 			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations()
 		);
+		
+		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
