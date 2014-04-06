@@ -168,8 +168,8 @@ function get_dictionary(word) {
 			console.log(data.errorDescription);
 		} else {
 			$.each( data.result, function() {
-			$('#translation-panel-inner').append('<div>' + this.word + ' : ' + this.translation +
-				' : ' + this.pronunciation + '</div>');
+			$('#translation-panel-inner').append('<div>' + this.words[this.languages[1]] + ' : ' + this.words[this.languages[0]] +
+				' : ' + this.pronuncations[this.languages[1]] + '</div>');
 			});
 		}
 	});
