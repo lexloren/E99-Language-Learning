@@ -11,12 +11,12 @@
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#practice">Practice</a></li>
-            <li><a href="#review">Review</a></li>
-            <li><a href="#tests">Tests</a></li>
-            <li><a href="#progress">Progress</a></li>
-            <li class="dropdown">
+            <li id="nav-home"><a href="#">Home</a></li>
+            <li id="nav-practice"><a href="#practice">Practice</a></li>
+            <li id="nav-review"><a href="#review">Review</a></li>
+            <li id="nav-tests"><a href="#tests">Tests</a></li>
+            <li id="nav-progress"><a href="#progress">Progress</a></li>
+            <li id="nav-classes" class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classes <b class="caret"></b></a>
               <ul class="dropdown-menu">
 			          <li class="dropdown-header">Current classes</li>
@@ -28,7 +28,9 @@
                 <li><a href="#">Search for Classes</a></li>
               </ul>
             </li>
+            <li id="nav-signout"><a href="#" onclick="signout();">Sign out</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div><br />
+    <script src="js/common.js"></script>
