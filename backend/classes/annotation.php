@@ -32,7 +32,7 @@ class Annotation extends DatabaseRow
 	}
 	public function get_user_entry()
 	{
-		return UserEntry::select_by_id($this->get_user_entry_id());
+		return UserEntry::select_by_user_entry_id($this->get_user_entry_id());
 	}
 	
 	private $user_id;
