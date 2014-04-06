@@ -109,40 +109,68 @@ function getTestInfo(){
         showFailure(); 
         return;
     }
-
-    $.getJSON('../../test_select.php', 
-        {test_id: urlParams.test},
-        function(data){
-            if(data.isError){
-                $("#failure").html("Information for this test could not be retrieved.");
-                showFailure();
-            }
-            else{
-                $("#testname").html(data.result.name);
-                if(data.result.message != "null"){
-                    $("#instructions").html(data.result.message);
-                }
-                if(data.result.timeframe != "null"){
-                    $("#opendate").html(data.result.timeframe.open);
-                    $("#closedate").html(data.result.timeframe.close);
-                }
-            }		
-    });
-
-    $.getJSON('../../test_sections.php', 
-        {test_id: urlParams.test},
-        function(data){
+    $.post('../../test_sections.php', 
+        {test_id: urlParams.test})
+        .done(function(data){
             if(data.isError){
                 $("#sections").html("Section information unavailable.");
             }
             else{
-                $.each(data, function(i, item){
-                    $('#sections').append(item.name);
+                $.each(data.result, function(i, item){
+                    $('#sections').append("<br /> &nbsp; &nbsp; "+item.name);
                 });
             }		
+            $.getJSON('../../test_select.php', 
+                {test_id: urlParams.test},
+                function(data){
+                    if(data.isError){
+                        $("#failure").html("Information for this test could not be retrieved.");
+                        showFailure();
+                    }
+                    else{
+                        $("#testname").html(data.result.name);
+                        if(data.result.message != "null"){
+                            $("#instructions").html(data.result.message);
+                        }
+                        if(data.result.timeframe != "null"){
+                            $("#opendate").html(data.result.timeframe.open);
+                            $("#closedate").html(data.result.timeframe.close);
+                        }
+                    }		
+            });
     });
 }
 
 function showSectionForm(){
     $("#sectionData").load("createsection.html");
+}
+
+function deleteTest(){
+    if(urlParams.test == null){
+        $("#failure").html("The test to be deleted must be specified. Go to the associated test's page to delete it.");
+        showFailure(); 
+        return;
+    }
+    if(!confirm("Are you sure you want to delete this test?")){
+        return;
+    }
+    $.post('../../test_delete.php', 
+        { test_id: urlParams.test })
+        .done(function(data){
+        if(data.isError){
+            var errorMsg = "Test could not be deleted: ";
+            if(data.errorTitle == "Test Selection"){
+                errorMsg += "Test does not exist.";
+            }
+            else if(data.errorTitle == "Test Deletion"){
+                errorMsg += "Please refresh the page and try again.";
+            }
+            $("#failure").html(errorMsg);
+            showFailure();
+        }
+        else{
+            $("#testData").html("Test was successfully deleted.");
+        }
+    });
+    return; 
 }
