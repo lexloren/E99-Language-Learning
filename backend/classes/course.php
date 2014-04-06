@@ -377,7 +377,19 @@ class Course extends DatabaseRow
 			return static::set_error_description("Failed to remove course user: " . $mysqli->error);
 		}
 		
-		if (isset($array)) $array = array_diff($array, array ($user));
+		//array_diff needs string
+		//if (isset($array)) $array = array_diff($array, array ($user));
+		
+		if (isset($array))
+		{
+			$array_new = Array();
+			foreach($array as $u)
+			{
+				if ($u != $user)
+					array_push($array_new, $u);
+			}
+			$array = $array_new;
+		}
 		
 		$user->uncache_all();
 		

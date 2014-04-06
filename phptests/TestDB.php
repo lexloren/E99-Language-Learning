@@ -44,6 +44,7 @@ class TestDB
 	public $course_ids = Array();
 	public $course_names = Array();
 	public $course_messages = Array();
+	public $course_tests = Array();
 	private static $course_name = 'some course';
 	private static $course_message = 'some course message';
 	private static $course_unit_name = 'some unit';
@@ -267,6 +268,43 @@ class TestDB
 		return $course_id;
 	}
 
+	public function add_course_student($course_id, $user_id)
+	{
+		$this->link->query(sprintf("INSERT INTO course_students (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+	}
+	
+	public function add_course_instructor($course_id, $user_id)
+	{
+		$this->link->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+	}
+	
+	public function add_unit_test($unit_id)
+	{
+		$test_name = "course test ".count($course_tests);
+		$this->link->query(sprintf("INSERT IGNORE INTO course_unit_tests (unit_id, test_name) VALUES (%d, %d)",
+			$unit_id,
+			$test_name
+		));
+		
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			
+		array_push($course_tests, $link->insert_id);
+		return $link->insert_id;
+	}
+	
 	public function add_practice_data($user_id, $num_lists, $num_entries)
         {
 		$link = $this->link;

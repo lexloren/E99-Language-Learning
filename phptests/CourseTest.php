@@ -110,10 +110,6 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Course::reset();
 	}
 	
-	public function test_instructors_add()
-	{
-	}
-	
 	public function test_students_add()
 	{
 		//Wrong session user, should fail
@@ -139,12 +135,85 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($student, $students[0]);
 	}
 	
-	public function test_instructors_remove()
-	{
-	}
-	
 	public function test_students_remove()
 	{
+		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
+		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
+		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[3]);
+		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[4]);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$students = $course->get_students();
+		$this->assertCount(4, $students);
+		
+		//Session user is not set
+		$course->students_remove($students[0]);
+		$students = $course->get_students();
+		$this->assertCount(4, $students);
+
+		//Session user set
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$students = $course->get_students();
+		$student1 = $students[1];
+		$student2 = $students[2];
+		$course->students_remove($students[0]);
+		$course->students_remove($students[3]);
+		$students = $course->get_students();
+		$this->assertCount(2, $students);
+		$this->assertTrue(in_array($student1, $students));
+		$this->assertTrue(in_array($student2, $students));
+	}
+	
+	public function test_instructors_add()
+	{
+		//Wrong session user, should fail
+		$user = User::select_by_id($this->db->user_ids[1]);
+		Session::get()->set_user($user);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		
+		$instructor = User::select_by_id($this->db->user_ids[2]);
+		$ret = $course->instructors_add($instructor);
+		$this->assertNull($ret);
+		
+		//Correct session user, should work
+		$user = User::select_by_id($this->db->user_ids[0]);
+		Session::get()->set_user($user);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		
+		$this->assertCount(0, $course->get_instructors());
+		$ret = $course->instructors_add($instructor);
+		$this->assertNotNull($ret);
+		
+		$instructors = $course->get_instructors();
+		$this->assertCount(1, $instructors);
+		$this->assertEquals($instructor, $instructors[0]);
+	}
+	
+	public function test_instructors_remove()
+	{
+		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[1]);
+		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[2]);
+		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[3]);
+		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[4]);
+		$course = Course::select_by_id($this->db->course_ids[0]);
+		$instructors = $course->get_instructors();
+		$this->assertCount(4, $instructors);
+		
+		//Session user is not set
+		$course->instructors_remove($instructors[0]);
+		$instructors = $course->get_instructors();
+		$this->assertCount(4, $instructors);
+
+		//Session user set
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$instructors = $course->get_instructors();
+		$instructor1 = $instructors[1];
+		$instructor2 = $instructors[2];
+		$course->instructors_remove($instructors[0]);
+		$course->instructors_remove($instructors[3]);
+		$instructors = $course->get_instructors();
+		$this->assertCount(2, $instructors);
+		$this->assertTrue(in_array($instructor1, $instructors));
+		$this->assertTrue(in_array($instructor2, $instructors));
 	}
 	
 	public function test_is_public()
