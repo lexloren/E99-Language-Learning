@@ -228,6 +228,16 @@ class Entry extends DatabaseRow
 			: null;
 	}
 	
+	public function user_can_read($user)
+	{
+		return true;
+	}
+	
+	public function user_can_write($user)
+	{
+		return true;
+	}
+	
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
@@ -616,7 +626,7 @@ class UserEntry extends Entry
 	
 	public function user_can_read($user, $list = null)
 	{
-		return parent::user_can_read($user)
+		return $this->user_can_write($user)
 			|| $this->user_can_read_via_list($user, $list)
 			|| $this->user_can_read_via_course($user);
 	}
