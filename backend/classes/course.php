@@ -434,7 +434,8 @@ class Course extends DatabaseRow
 			"name" => $this->get_course_name(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}
 	
