@@ -17,6 +17,9 @@ function removeStudents(){
                     errorMsg += "Course does not exist.";
                 }
                 // don't know all the error titles yet
+                else{
+                    errorMsg += "Please refresh the page and try again.";
+                }
                 $("#failure").html(errorMsg);
                 showFailure();
             }
@@ -40,7 +43,9 @@ function addStudents(){
                 if(data.errorTitle == "Course Selection"){
                     errorMsg += "Course does not exist.";
                 }
-                // don't know all the error titles yet
+                else if(data.errorTitle == "Course-Students Addition"){
+                    errorMsg += "Please refresh the page and try again.";
+                }
                 $("#failure").html(errorMsg);
                 showFailure();
             }
@@ -76,11 +81,10 @@ function getStudentInfo(){
                     newrow = '<tr><td>' + item.handle + '</td>' +
                              '<td>' + nameFamily + '</td>' +
                              '<td>' + nameGiven + '</td>' +
-                             '<td>' + item.email + '</td>' +
                              '<td><input type="checkbox" class="rem_user_ids" name="rem_user_ids" value='+item.userId+'></td></tr>';
                     $('#studentDetails').append(newrow);
                 });
-                $('#studentDetails').append('<tr><td></td><td></td><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeStudents();">Remove Selected Users</button></td></tr>');
+                $('#studentDetails').append('<tr><td></td><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeStudents();">Remove Selected Users</button></td></tr>');
             }		
     }); 
 }
@@ -110,8 +114,14 @@ function searchUsers(){
             else{
                 $('#searchResults').append('<br /><strong>Search Results:</strong>');
                 $.each(data.result, function(i, item){
-                    result = '<div class="checkbox"><label><input type="checkbox" class="add_user_ids" name="add_user_ids" value='+item.userId+'>'+
-                             item.handle+' | '+item.email+'</label></div>';
+                    if($(".rem_user_ids:checkbox[value="+item.userId+"]").length > 0){
+                        disabled = " disabled";
+                    }
+                    else{
+                        disabled = "";
+                    }
+                    result = '<div class="checkbox"><label><input type="checkbox" class="add_user_ids" name="add_user_ids" value='+item.userId+disabled+'>'+
+                             item.handle+'</label></div>';
                     $('#searchResults').append(result);
                 });
                 $('#searchResults').append('<br /><button class="btn btn-primary" type="button" onclick="addStudents();">Add Selected Users</button> &nbsp; &nbsp;'+

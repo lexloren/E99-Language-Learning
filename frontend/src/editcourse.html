@@ -23,14 +23,26 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script type="text/javascript">
+      // url parameter grabbing code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+      var urlParams;
+      (window.onpopstate = function () {
+          var match,
+              pl     = /\+/g,  // Regex for replacing addition symbol with a space
+              search = /([^&=]+)=?([^&]*)/g,
+              decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+              query  = window.location.search.substring(1);
+      
+          urlParams = {};
+          while (match = search.exec(query))
+             urlParams[decode(match[1])] = decode(match[2]);
+      })();
+	  
       $(document).ready(function(){
         $("#success").hide();
         $("#failure").hide();
-		$("#createnew").hide();
-		$("#displayCourse").show();
 		$('#dtStartDate').datetimepicker();
 		$('#dtEndDate').datetimepicker();
-		displayCourseForm('#displayCourse');
+		displayEditCourseForm();
       });
     </script>
   </head>
@@ -53,27 +65,24 @@
    
 	
     <div class="container">
-      <form id="courseForm" class="form-course" role="form">
         <div id="failure" class="alert alert-danger">
         </div>
-		<h2 class="form-course-heading">Courses</h2>
-		<div id="displayCourse" class="table-responsive">
-			
-		</div>
-		<div class="container-left" >
-		<button class="btn btn-primary" type="button" onclick="submitCreateNew();">Create New</button>
-		</div>
-		
-		</form>	
+		<h2 class="form-course-heading">Edit Courses</h2>
     </div>
 	<div class="container-left" role="main">
-		<div id="createnew">
-			<form id="createCourseForm" role="form">
-			  <h3 class="form-signin-heading">Create Course</h3><br />
+		<div id="editcourse">
+			<form id="editCourseForm" role="form">
 			  <div class="form-group">
 				<label for="coursename">Course Name</label>
 				<input type="text" class="form-control" id="coursename" placeholder="Enter the name of the Course" required autofocus>
 			  </div>
+			  <div class="btn-group" data-toggle="buttons">
+				<label class="btn btn-default">
+				<input type="radio" name="inputPublic" id="inputPublic" value="public" checked>Public </label>
+				<label class="btn btn-default">
+				<input type="radio" name="inputPrivate" id="inputPrivate" value="private">Private </label>
+				</div>
+			
 			  <div class="form-group">
 				<label for="coursedetails">Course Details</label>
 				<textarea class="form-control" id="coursedetails" rows="5"placeholder="Enter the Course Details" required></textarea>
@@ -107,9 +116,12 @@
 				<label for="closedate">Close Date</label>
 				<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
 				<script>$('#closedate').datetimepicker();</script>
-			  </div><br />
+			  </div>
 			  
-			  <button type="button" stype="button" class="btn" onclick="resetForm('#createCourseForm');">Reset</button>&nbsp;
+			  <br />
+			  <br />
+			  
+			  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Reset</button>&nbsp;
 			  <button class="btn btn-primary" type="button" onclick="insertNew();">Submit</button> <br /><br />     
 			</form>	
 			
