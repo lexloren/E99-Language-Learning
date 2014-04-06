@@ -96,7 +96,7 @@ class DatabaseRow
 		return true;
 	}
 	
-	protected function uncache_all()
+	public function uncache_all()
 	{
 	}
 	

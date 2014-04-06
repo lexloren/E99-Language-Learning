@@ -43,7 +43,7 @@ class Unit extends CourseComponent
 		
 		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
 		
-		$course->uncache_all();
+		$course->uncache_units();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -135,10 +135,18 @@ class Unit extends CourseComponent
 		return parent::set_this_message($this, $message, "course_units", "unit_id", $this->get_unit_id());
 	}
 
-	protected function uncache_all()
+	public function uncache_tests()
 	{
 		if (isset($this->tests)) unset($this->tests);
+	}
+	public function uncache_lists()
+	{
 		if (isset($this->lists)) unset($this->lists);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_tests();
+		$this->uncache_lists();
 	}
 	
 	private $tests;
@@ -193,7 +201,7 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
-		$this->get_course()->uncache_all();
+		$this->get_course()->uncache_units();
 		return self::delete_this($this, "course_units", "unit_id", $this->get_unit_id());
 	}
 	
@@ -219,7 +227,7 @@ class Unit extends CourseComponent
 		$lists = $this->get_lists();
 		array_push($lists, $list);
 		
-		$list->uncache_all();
+		$list->uncache_courses();
 		
 		return $this;
 	}
@@ -240,7 +248,7 @@ class Unit extends CourseComponent
 		
 		if (isset($this->lists)) array_drop($this->lists, $list);
 		
-		$list->uncache_all();
+		$list->uncache_courses();
 		
 		return $this;
 	}

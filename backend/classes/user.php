@@ -230,13 +230,32 @@ class User extends DatabaseRow
 		return static::set_error_description("Failed to delete user.");
 	}
 	
-
-	protected function uncache_all()
+	public function uncache_lists()
 	{
 		if (isset($this->lists)) unset($this->lists);
+	}
+	public function uncache_all_courses()
+	{
+		$this->uncache_courses();
+		$this->uncache_instructor_courses();
+		$this->uncache_student_courses();
+	}
+	public function uncache_courses()
+	{
 		if (isset($this->courses)) unset($this->courses);
+	}
+	public function uncache_instructor_courses()
+	{
 		if (isset($this->instructor_courses)) unset($this->instructor_courses);
+	}
+	public function uncache_student_courses()
+	{
 		if (isset($this->student_courses)) unset($this->student_courses);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_lists();
+		$this->uncache_all_courses();
 	}
 	
 	private $lists;

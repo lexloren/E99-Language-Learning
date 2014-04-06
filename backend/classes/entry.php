@@ -419,10 +419,18 @@ class UserEntry extends Entry
 			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
 	}
 	
-	protected function uncache_all()
+	public function uncache_annotations()
 	{
 		if (isset($this->annotations)) unset($this->annotations);
+	}
+	public function uncache_lists()
+	{
 		if (isset($this->lists)) unset($this->lists);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_annotations();
+		$this->uncache_lists();
 	}
 
 	private $annotations;

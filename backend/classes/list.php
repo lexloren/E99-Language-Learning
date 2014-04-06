@@ -28,7 +28,7 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Failed to insert list: " . $mysqli->error);
 		}
 		
-		Session::get()->get_user()->uncache_all();
+		Session::get()->get_user()->uncache_lists();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -77,9 +77,18 @@ class EntryList extends DatabaseRow
 		return !!$this->public;
 	}
 	
-	protected function uncache_all()
+	public function uncache_entries()
 	{
 		if (isset($this->entries)) unset($this->entries);
+	}
+	public function uncache_courses()
+	{
+		if (isset($this->courses)) unset($this->courses);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_entries();
+		$this->uncache_courses();
 	}
 	
 	private $entries;
@@ -93,6 +102,29 @@ class EntryList extends DatabaseRow
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
 		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
+	}
+	
+	private $courses;
+	public function get_courses()
+	{
+		if (!isset($this->courses))
+		{
+			$table = "(course_unit_lists LEFT JOIN course_units USING (unit_id)) LEFT JOIN courses USING (course_id)";
+			if (self::get_cached_collection($this->courses, "Course", $table, "list_id", $this->get_list_id()))
+			{
+				$courses_unique = array ();
+				foreach ($this->courses as $course)
+				{
+					if (!in_array($course, $courses_unique)) array_push($courses_unique, $course);
+				}
+				$this->courses = $courses_unique;
+			}
+			else
+			{
+				return null;
+			}
+		}
+		return $this->courses;
 	}
 	
 	private function __construct($list_id, $user_id, $name = null, $public = false)
@@ -181,7 +213,8 @@ class EntryList extends DatabaseRow
 	
 	public function delete()
 	{
-		$this->get_owner()->uncache_all();
+		$this->get_owner()->uncache_lists();
+		//  Don't need to uncache course_lists() because key constraints prevent deleting lists needed by courses
 		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
@@ -216,7 +249,7 @@ class EntryList extends DatabaseRow
 			$entry_added->get_user_entry_id()
 		));
 		
-		$entry_added->uncache_all();
+		$entry_added->uncache_lists();
 		
 		return $this;
 	}
@@ -246,9 +279,9 @@ class EntryList extends DatabaseRow
 					$entry_removed->get_user_entry_id()
 				));
 				
-				unset($this->entries);
+				array_drop($this->entries, $entry_removed);
 				
-				$entry_removed->uncache_all();
+				$entry_removed->uncache_lists();
 				
 				return $this;
 			}

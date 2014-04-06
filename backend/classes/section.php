@@ -37,7 +37,7 @@ class Section extends CourseComponent
 			return static::set_error_description("Failed to insert section: " . $mysqli->error);
 		}
 		
-		$test->uncache_all();
+		$test->uncache_sections();
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
@@ -103,9 +103,13 @@ class Section extends CourseComponent
 		return $this;
 	}
 
-	protected function uncache_all()
+	public function uncache_entries()
 	{
 		if (isset($this->entries)) unset($this->entries);
+	}
+	public function uncache_all()
+	{
+		$this->uncache_entries();
 	}
 
 	private $entries;
@@ -175,7 +179,7 @@ class Section extends CourseComponent
 	
 	public function delete()
 	{
-		$this->get_test()->uncache_all();
+		$this->get_test()->uncache_sections();
 		return self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id());
 	}
 	
