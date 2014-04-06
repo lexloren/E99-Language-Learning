@@ -255,29 +255,26 @@ class Unit extends CourseComponent
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_instructor();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_is_student();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"unitId" => $this->get_unit_id(),
-			"name" => !$privacy ? $this->get_unit_name() : null,
+			"name" => $this->get_unit_name(),
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
+		), array (0 => "unitId"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
-		$assoc["course"] = $this->get_course()->assoc_for_json($privacy);
+		$public_keys = array_keys($assoc);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

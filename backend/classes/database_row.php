@@ -208,6 +208,24 @@ class DatabaseRow
 		return $this->assoc_for_json($privacy);
 	}
 	
+	protected function privacy()
+	{
+		return $this->session_user_can_write() ? false : !$this->session_user_can_read();
+	}
+	
+	protected function privacy_mask($array, $exceptions = array (), $privacy = null)
+	{
+		if ($privacy === null) $privacy = $this->privacy();
+		
+		if (!$privacy) return $array;
+		
+		foreach ($array as $key => $value)
+		{
+			if (!in_array($key, $exceptions)) $array[$key] = null;
+		}
+		return $array;
+	}
+	
 	protected static function array_for_json($array)
 	{
 		if (!is_array($array))

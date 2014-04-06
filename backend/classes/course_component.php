@@ -15,6 +15,16 @@ class CourseComponent extends DatabaseRow
 		return !!($course = $this->get_course()) ? $course->get_owner() : null;
 	}
 	
+	public function get_timeframe()
+	{
+		return null;
+	}
+	
+	public function is_current()
+	{
+		return !$this->get_timeframe() || $this->get_timeframe()->is_current();
+	}
+	
 	public function get_course_id()
 	{
 		return !!($course = $this->get_course()) ? $course->get_course_id() : null;
@@ -67,6 +77,18 @@ class CourseComponent extends DatabaseRow
 		return $instance;
 	}
 	
+	protected function privacy()
+	{
+		if (!$this->session_user_can_write()
+				&& ($this->session_user_can_read() && !$this->is_current()))
+		{
+			return true;
+		}
+		else
+		{
+			return parent::privacy();
+		}
+	}
 }
 
 ?>

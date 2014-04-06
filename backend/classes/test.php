@@ -182,7 +182,7 @@ class Test extends CourseComponent
 	
 	public function session_user_can_execute()
 	{
-		return (!$this->get_timeframe() || $this->get_timeframe()->is_current()) && $this->session_user_is_student();
+		return $this->session_user_can_read(); // && $this->session_user_unfinished();
 	}
 	
 	public function delete()
@@ -193,19 +193,27 @@ class Test extends CourseComponent
 	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_owner();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_read();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"testId" => $this->get_test_id(),
 			"name" => !$privacy ? $this->get_test_name() : null,
 			"unitId" => !$privacy ? $this->get_unit_id() : null,
 			"courseId" => !$privacy ? $this->get_course_id() : null,
 			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
 			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+		), array (0 => "testId"), $privacy);
+	}
+	
+	public function detailed_assoc_for_json($privacy = null)
+	{
+		$assoc = $this->assoc_for_json($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["unit"] = $this->get_unit()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["sections"] = $this->session_user_can_execute() ? self::array_for_json($this->get_sections()) : null;
+		
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

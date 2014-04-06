@@ -343,21 +343,23 @@ class EntryList extends DatabaseRow
 	
 	public function assoc_for_json($privacy = null)
 	{
-		return array (
+		return $this->privacy_mask(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->is_public()
-		);
+		), array (0 => "listId"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
+		$public_keys = array_keys($assoc);
+		
 		$assoc["entries"] = self::array_for_json($this->get_entries());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

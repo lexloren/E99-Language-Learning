@@ -189,6 +189,10 @@ class Course extends DatabaseRow
 	{
 		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
 	}
+	public function is_current()
+	{
+		return !$this->get_timeframe() || $this->get_timeframe()->is_current();
+	}
 	
 	private $message;
 	public function get_message()
@@ -410,31 +414,41 @@ class Course extends DatabaseRow
 		return $this->users_remove($this->students, "course_students", $user);
 	}
 	
+	protected function privacy()
+	{
+		if (!$this->session_user_can_write()
+				&& ($this->session_user_can_read() && !$this->is_current()))
+		{
+			return true;
+		}
+		else
+		{
+			return parent::privacy();
+		}
+	}
+	
 	public function assoc_for_json($privacy = null)
 	{
-		$omniscience = $this->session_user_is_owner();
-		
-		if ($omniscience) $privacy = false;
-		else if ($privacy === null) $privacy = !$this->session_user_can_read();
-		
-		return array (
+		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
-			"name" => !$privacy ? $this->get_course_name() : null,
+			"name" => $this->get_course_name(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => !$privacy ? $this->is_public() : null,
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
-		);
+			"isPublic" => $this->is_public(),
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null
+		), array (0 => "courseId"), $privacy);
 	}
 	
 	public function detailed_assoc_for_json($privacy = null)
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
+		$public_keys = array_keys($assoc);
+		
 		$assoc["units"] = self::array_for_json($this->get_units());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

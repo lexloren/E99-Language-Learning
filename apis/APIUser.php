@@ -55,7 +55,7 @@ class APIUser extends APIBase
 	{
 		if (self::validate_request($_GET, "query"))
 		{
-			self::return_array_as_json(User::find($_GET["query"]));
+			self::return_array_as_json(User::find($_GET["query"]), false);
 		}
 	}
 	

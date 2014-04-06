@@ -98,12 +98,16 @@ class Entry extends DatabaseRow
 	{
 		if (!!Session::get()
 			&& !!($session_user = Session::get()->get_user())
-			&& ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+			)
 		{
-			return $user_entry->get_annotations();
+			$error_description = self::get_error_description();
+			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+			{
+				return $user_entry->get_annotations();
+			}
+			self::unset_error_description();
+			self::set_error_description($error_description);
 		}
-		
-		self::set_error_description(null);
 		
 		return array ();
 	}
@@ -125,9 +129,15 @@ class Entry extends DatabaseRow
 	{
 		if (!!Session::get()
 			&& !!($session_user = Session::get()->get_user())
-			&& ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+			)
 		{
-			return $user_entry->revert();
+			$error_description = self::get_error_description();
+			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+			{
+				return $user_entry->revert();
+			}
+			self::unset_error_description();
+			self::set_error_description($error_description);
 		}
 		
 		return $this;
@@ -238,7 +248,7 @@ class Entry extends DatabaseRow
 
 	public function assoc_for_json($privacy = null)
 	{
-		if ($privacy === null) $privacy = !!$this->get_owner() && !$this->session_user_is_owner();
+		if ($privacy === null) $privacy = $this->privacy();
 		
 		//  If $this is a UserEntry and we want privacy, get the underlying Entry.
 		$entry = !!$privacy && ($dictionary_entry = self::select_by_id($this->get_entry_id(), false))
@@ -258,8 +268,10 @@ class Entry extends DatabaseRow
 	{
 		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
 		{
-			$user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false);
-			return $user_entry->detailed_assoc_for_json($privacy);
+			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
+			{
+				return $user_entry->detailed_assoc_for_json($privacy);
+			}
 		}
 		
 		return parent::detailed_assoc_for_json($privacy);
@@ -555,6 +567,8 @@ class UserEntry extends Entry
 	
 	public function annotations_add($annotation_contents)
 	{
+		self::set_error_description("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
+		
 		if (!$this->session_user_can_read())
 		{
 			return static::set_error_description("Session user cannot read entry.");
@@ -576,7 +590,9 @@ class UserEntry extends Entry
 	
 	public function annotations_remove($annotation)
 	{
-		if (!$this->get_owner()->equals(Session::get()->get_user()))
+		self::set_error_description("Called deprecated method UserEntry.annotations_remove() (use instead Annotation.delete()).");
+		
+		if (!$this->session_user_is_owner())
 		{
 			return static::set_error_description("Session user is not owner of user entry.");
 		}
@@ -594,17 +610,6 @@ class UserEntry extends Entry
 		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
 		
 		return $this;
-	}
-	
-	//  Returns a copy of $this owned and editable by the Session User
-	public function copy_for_session_user()
-	{
-		if (!Session::get() || !($session_user = Session::get()->get_user()))
-		{
-			return static::set_error_description("Session user has not reauthenticated.");
-		}
-		
-		return $this->copy_for_user($session_user);
 	}
 	
 	public function user_can_read($user, $list = null)
@@ -657,12 +662,12 @@ class UserEntry extends Entry
 	
 	public function copy_for_user($user, $list = null)
 	{
-		if ($this->get_owner()->equals($user)) return $this;
-		
 		if (!$user)
 		{
 			return static::set_error_description("Failed to copy entry for null user.");
 		}
+		
+		if ($this->user_is_owner($user)) return $this;
 		
 		if (!$this->user_can_read($user, $list))
 		{
@@ -725,10 +730,12 @@ class UserEntry extends Entry
 	{
 		$assoc = $this->assoc_for_json($privacy);
 		
+		$public_keys = array_keys($assoc);
+		
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["annotations"] = self::array_for_json($this->get_annotations());
 		
-		return $assoc;
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 
