@@ -9,7 +9,7 @@ class Course extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -36,9 +36,10 @@ class Course extends DatabaseRow
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+		$public = $public ? 1 : 0;
 		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
 		));
 		
 		if (!!$mysqli->error)
