@@ -303,7 +303,7 @@ class User extends DatabaseRow
 	
 	public function user_can_read_via_course($user)
 	{
-		foreach ($this->get_courses() as $course)
+		foreach (array_merge($this->get_courses(), $this->get_instructor_courses(), $this->get_student_courses()) as $course)
 		{
 			if ($course->user_can_read($user)) return true;
 		}
