@@ -217,6 +217,8 @@ class DatabaseRow
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		
+		$array["hiddenFromSessionUser"] = $privacy;
+		
 		if (!$privacy) return $array;
 		
 		foreach ($array as $key => $value)
