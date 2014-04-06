@@ -238,7 +238,7 @@ class Unit extends CourseComponent
 			$list->get_list_id()
 		));
 		
-		unset($this->lists);
+		if (isset($this->lists)) array_drop($this->lists, $list);
 		
 		$list->uncache_all();
 		

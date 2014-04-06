@@ -16,4 +16,12 @@ require_once "./backend/classes/unit.php";
 require_once "./backend/classes/test.php";
 require_once "./backend/classes/section.php";
 
+function array_drop(&$array, $item)
+{
+	foreach ($array as $key => $value)
+	{
+		if ($array[$key] === $item) unset($array[$key]);
+	}
+}
+
 ?>

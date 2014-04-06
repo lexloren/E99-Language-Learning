@@ -583,7 +583,7 @@ class UserEntry extends Entry
 			return static::set_error_description("Entry failed to remove annotation: " . Annotation::unset_error_description());
 		}
 		
-		unset($this->annotations);
+		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
 		
 		return $this;
 	}
