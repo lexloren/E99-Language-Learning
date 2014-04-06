@@ -61,8 +61,10 @@ class APIEntry extends APIBase
 					"num" => $_GET["page_num"]
 				);
 			}
+			
+			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
 
-			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination)))
+			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination, $exact_matches_only)))
 			{
 				self::return_array_as_json($entries);
 			}

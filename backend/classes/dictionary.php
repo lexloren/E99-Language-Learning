@@ -53,7 +53,7 @@ class Dictionary
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function query($query, $lang_codes, $pagination = null)
+	public static function query($query, $lang_codes, $pagination = null, $exact_matches_only = false)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
@@ -67,9 +67,6 @@ class Dictionary
 			$lang_code = $mysqli->escape_string($lang_code);
 		}
 		
-		//  If the query contains three characters or fewer,
-		//      then should we require exact matches to limit the results?
-		$exact_matches_only = false; //strlen(urldecode($_GET["query"])) > 3;
 		$wildcard = $exact_matches_only ? "" : "%%";
 		
 		//      Second, take all the pieces created above and run the SQL query
