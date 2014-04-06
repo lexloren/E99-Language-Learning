@@ -29,8 +29,8 @@ class Unit extends CourseComponent
 		}
 		
 		$number = count($course->get_units()) + 1;
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
 		$mysqli->query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",

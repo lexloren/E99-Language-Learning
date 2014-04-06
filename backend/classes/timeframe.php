@@ -16,31 +16,20 @@ class Timeframe
 	
 	public function __construct($open, $close)
 	{
-		/*if (in_array("open", array_keys($arg)) && in_array("close", array_keys($arg)))
-		{
-			$open = $arg["open"];
-			$close = $arg["close"];
-		}
-		else if (count($arg) === 2)
-		{
-			$open = $arg[0];
-			$close = $arg[1];
-		}*/
-		
 		$this->open = intval($open, 10);
 		$this->close = intval($close, 10);
 	}
 	
 	public function is_current()
 	{
-		return ($time = time()) > $this->open && $time < $this->close;
+		return ($time = time()) > $this->get_open() && $time < $this->get_close();
 	}
 	
 	public function mysql_assignments()
 	{
 		return array (
-			"open" => !!$this->get_open() ? "FROM_UNIXTIME(" . $this->get_open() . ")" : "NULL",
-			"close" => $this->get_close() ? "FROM_UNIXTIME(" . $this->get_close() . ")" : "NULL"
+			"open" => !!$this->get_open() ? $this->get_open() : "NULL",
+			"close" => !!$this->get_close() ? $this->get_close() : "NULL"
 		);
 	}
 	

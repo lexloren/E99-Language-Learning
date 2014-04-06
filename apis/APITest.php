@@ -80,14 +80,20 @@ class APITest extends APIBase
 				$updates += !!$test->set_message($_POST["message"]);
 			}
 			
-			if (isset($_POST["open"]))
+			if (isset($_POST["open"]) && isset($_POST["close"]))
 			{
-				$updates += !!$test->set_open($_POST["open"]);
+				$updates += !!$test->set_timeframe(new Timeframe($_POST["open"], $_POST["close"]));
 			}
-			
-			if (isset($_POST["close"]))
+			else
 			{
-				$updates += !!$test->set_close($_POST["close"]);
+				if (isset($_POST["open"]))
+				{
+					$updates += !!$test->set_open($_POST["open"]);
+				}
+				if (isset($_POST["close"]))
+				{
+					$updates += !!$test->set_close($_POST["close"]);
+				}
 			}
 			
 			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->assoc_for_json() : null);

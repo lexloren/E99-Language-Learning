@@ -33,8 +33,8 @@ class Course extends DatabaseRow
 		$name = ($name !== null && strlen($name) > 0)
 			? "'".$mysqli->escape_string($name)."'"
 			: "NULL";
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
 		
 		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",

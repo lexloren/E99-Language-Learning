@@ -27,8 +27,8 @@ class Test extends CourseComponent
 		
 		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$open = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_open() . ")" : "NULL";
-		$close = !!$timeframe ? "FROM_UNIXTIME(" . $timeframe->get_close() . ")" : "NULL";
+		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		
 		$mysqli->query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
 		
@@ -133,11 +133,11 @@ class Test extends CourseComponent
 	}
 	public function set_open($open)
 	{
-		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+		return $this->set_timeframe(new Timeframe($open, !!$this->get_timeframe() ? $this->get_timeframe()->get_close() : null));
 	}
 	public function set_close($close)
 	{
-		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+		return $this->set_timeframe(new Timeframe(!!$this->get_timeframe() ? $this->get_timeframe()->get_open() : null, $close));
 	}
 	
 	//  inherits: protected $message;
