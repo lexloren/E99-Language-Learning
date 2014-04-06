@@ -10,9 +10,11 @@ var showTrans = false;
 var wordList = [];
 
 /* mockjax for testing */
+
+/*
 var listsURL = URL + 'user_lists.php';
 var practiceURL = URL + 'user_practice.php';
-var dictionaryURL = URL + 'query_dictionary.php';
+var dictionaryURL = URL + 'entry_find.php';
 
 $.mockjax({
   url: listsURL,
@@ -112,7 +114,7 @@ $.mockjax({
 		"pronunciation":"Pronunciation 7"}],
 	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
 });
-
+*/
 /* end mockjax */
 
 /* prepare */
@@ -128,6 +130,7 @@ $( document ).ready(function() {
 function setupDoc() {
 	$("#success").hide();
     $("#failure").hide();
+	$("#loader").hide();
     $("#navbar").load("navbar.html");
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
@@ -182,7 +185,7 @@ function handleClicks() {
 	
 	/* char/word lookup */
 	$(document).on('click', '.char-of-word', function () {
-		get_dictionary(this.name);
+		get_dictionary(this.innerHTML);
 	});
 	
 	/* hide lookup panel */
@@ -225,19 +228,24 @@ function shiftCards() {
 	wordList.shift();
 }
 
-
 /* request a list of the user's decks from the backend and populate the "select
 your decks" form */
 function getLists() {
 
 	$('#deck-selection-form').html('');
-
+	$("#loader").show();
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		if (data.isError === true) {
-			console.log(data.errorTitle);
-			console.log(data.errorDescription);
+			$("#failure").html(data.errorTitle + '<br/>' + data.errorDescription);
+			$("#failure").show();
+			$('#deck-selection-container').hide();
+		} else if (data.result.length === 0) {
+			$("#failure").html("You don't have any lists to practice with.");
+			$("#failure").show();
+			$('#deck-selection-container').hide();
 		} else {
+			$('#deck-selection-container').show();
 			$.each( data.result, function( ) {
 				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
 				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.listName + ' </label></div>');
@@ -245,7 +253,9 @@ function getLists() {
 		}
 	})
 	 .fail(function(error) {
-		console.log(error.responseText);
+		$("#failure").html('Something has gone wrong. Please hit the back button on your browser and try again.');
+		$("#failure").show();
+		$('#deck-selection-container').hide();
 	});
 }
 
@@ -253,8 +263,12 @@ function getLists() {
 function get_dictionary(word) {
 	$('#translation-panel').show();
 	$('#translation-panel-inner').html('');
-	var currentURL = URL + 'query_dictionary.php';
-	$.getJSON( currentURL, {query : word }, function( data ) {
+	var currentURL = URL + 'entry_find.php';
+	var langcodes = wordList[0].languages[0] + ',' + wordList[0].languages[1];
+	$.getJSON( currentURL, {
+		query : word,
+		langs : langcodes		
+	}, function( data ) {
 		if (data.isError === true) {
 			console.log(data.errorTitle);
 			console.log(data.errorDescription);
@@ -358,7 +372,7 @@ function practice_complete() {
 
 /* send student ratings to the backend */
 function send_rating(value) {
-	var currentURL = URL + 'entry_results_insert.php';
+	var currentURL = URL + 'user_practice_response.php';
 	$.post(currentURL, 
         { 'entry_id' : wordList[0].entryId, 'correctness' : value });
 }
