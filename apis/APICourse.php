@@ -54,6 +54,7 @@ class APICourse extends APIBase
 		//  name
 		//  timeframe
 		//  message
+		//  public
 		
 		if (!Session::get()->reauthenticate()) return;
 		
@@ -69,6 +70,11 @@ class APICourse extends APIBase
 			if (isset($_POST["message"]))
 			{
 				$updates += !!$course->set_message($_POST["message"]);
+			}
+			
+			if (isset($_POST["public"]))
+			{
+				$updates += !!$course->set_public(intval($_POST["public"], 10));
 			}
 			
 			if (isset($_POST["open"]) && isset($_POST["close"]))

@@ -39,7 +39,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
 		$this->assertEquals($list->get_list_id(), $this->db->list_ids[0]);
-		$this->assertFalse($list->is_public());
+		$this->assertFalse($list->get_public());
 	}
 	
 	public function test_list_name()

@@ -72,9 +72,13 @@ class EntryList extends DatabaseRow
 	}
 	
 	private $public;
-	public function is_public()
+	public function get_public()
 	{
 		return !!$this->public;
+	}
+	public function set_public($public)
+	{
+		return self::set_error_description("List.set_public() not yet implemented.");
 	}
 	
 	public function uncache_entries()
@@ -168,7 +172,7 @@ class EntryList extends DatabaseRow
 	{
 		return $this->user_can_write($user)
 			|| $this->user_can_read_via_course($user)
-			|| $this->is_public();
+			|| $this->get_public();
 	}
 	
 	public function user_can_write($user)
@@ -347,7 +351,7 @@ class EntryList extends DatabaseRow
 			"listId" => $this->list_id,
 			"name" => $this->name,
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => $this->is_public(),
+			"isPublic" => $this->get_public(),
 			"entriesCount" => count($this->get_entries()),
 		), array (0 => "listId"), $privacy);
 	}

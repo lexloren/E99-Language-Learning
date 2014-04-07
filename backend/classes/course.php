@@ -145,14 +145,14 @@ class Course extends DatabaseRow
 	}
 	
 	private $public = null;
-	public function is_public()
+	public function get_public()
 	{
 		return !!$this->public;
 	}
-	public function set_is_public($public)
+	public function set_public($public)
 	{
-		$public = !!$public;
-		if (!self::update_this($this, "courses", array ("public" => $public ? "1" : "0"), "course_id", $this->get_course_id()))
+		$public = $public ? 1 : 0;
+		if (!self::update_this($this, "courses", array ("public" => $public), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
@@ -434,7 +434,7 @@ class Course extends DatabaseRow
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => $this->is_public(),
+			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
 			"instructorsCount" => count($this->get_instructors()),
 			"studentsCount" => count($this->get_students()),
