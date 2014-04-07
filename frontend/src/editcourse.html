@@ -38,11 +38,7 @@
       })();
 	  
       $(document).ready(function(){
-        $("#success").hide();
-        $("#failure").hide();
-		$('#dtStartDate').datetimepicker();
-		$('#dtEndDate').datetimepicker();
-		displayEditCourseForm();
+        setupMaintUnit();
       });
     </script>
   </head>
@@ -67,10 +63,16 @@
     <div class="container">
         <div id="failure" class="alert alert-danger">
         </div>
-		<h2 class="form-course-heading">Edit Courses</h2>
+		<h2 class="form-course-heading">Course Maintenance</h2>
     </div>
-	<div class="container-left" role="main">
-		<div id="editcourse">
+	<div  role="main">
+		<div class="container-left" role="main">
+			 
+			<button class="btn btn-primary" type="button" onclick="setupMaintCourse();">Update Course</button> 
+			<button class="btn btn-primary" type="button" onclick="setupMaintUnit();">Maintain Units</button> 
+			<br/>
+			<div id="editcourse">
+		
 			<form id="editCourseForm" role="form">
 			  <div class="form-group">
 				<label for="coursename">Course Name</label>
@@ -122,10 +124,38 @@
 			  <br />
 			  
 			  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Reset</button>&nbsp;
-			  <button class="btn btn-primary" type="button" onclick="insertNew();">Submit</button> <br /><br />     
+			  <button class="btn btn-primary" type="button" onclick="insertNew();">Update Course</button> <br /><br />     
+			</form>	
+			</div>
+			
+			
+			<div id="unitmaint">
+				<div id="units">
+				</div>
+				<div class="container-right" role="main">
+				<form id="createUnit" role="form">
+				<h3 class="form-signin-heading">Create Unit</h3><br />
+				<div class="form-group">
+					<label for="unitname">Unit Name</label>
+					<input type="text" class="form-control" id="unitname" placeholder="Enter the name of the Unit" required autofocus>
+				</div>
+				<div class="form-group">
+					<label for="opendate">Open Date</label>
+					<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
+					<script>$('#opendate').datetimepicker();</script>
+				</div>
+				<div class="form-group">
+					<label for="closedate">Close Date</label>
+					<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
+					<script>$('#closedate').datetimepicker();</script>
+			  </div><br />
+			  
+			  <button type="button" stype="button" class="btn" onclick="resetForm('#createUnit');">Reset</button>&nbsp;
+			  <button class="btn btn-primary" type="button" onclick="insertNewUnit('#units');">Create Unit</button> <br /><br />     
 			</form>	
 			
-			
+				</div>
+			</div>
 		</div>
 	</div>
        <!-- /container -->
