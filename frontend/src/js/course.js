@@ -8,6 +8,36 @@ function resetForm(frm){
 	$("#displayCourse").show();
 }
 
+function setupMaintCourse(){
+	$("#success").hide();
+    $("#failure").hide();
+	$("#editcourse").show();
+	$("#unitmaint").hide();
+	$('#dtStartDate').datetimepicker();
+	$('#dtEndDate').datetimepicker();
+	displayEditCourseForm();
+}
+
+function setupMaintUnit(){
+	$("#success").hide();
+    $("#failure").hide();
+	
+	$("#editcourse").hide();
+	$("#unitmaint").show();
+	$('#dtStartDate').datetimepicker();
+	$('#dtEndDate').datetimepicker();
+	if(urlParams.course == null){
+        $("#editcourse").hide();
+        $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
+         $("#failure").show();
+        return;
+    }
+	
+	displayUnits('#units',urlParams.course);
+	$("#units").show();
+}
+
+
 function submitCreateNew(){
 	$("#failure").html("");
 	$("#failure").hide();
@@ -74,7 +104,7 @@ function insertNew() {
     }
 	
     $.post('../../course_insert.php', 
-        {   lang_known: knownLang, lang_unknw: unknownLang ,course_name: courseName})
+        {   lang_known: knownLang, lang_unknw: unknownLang ,name: courseName})
         .done(function(data){
             if(data.isError){
                 $("#failure").html("The course could not be created: " + data.errorDescription);
@@ -168,4 +198,77 @@ function displayEditCourseForm() {
                 $('#studentDetails').append('<tr><td></td><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeStudents();">Remove Selected Users</button></td></tr>');
             }		
     }); 
+}
+
+function insertNewUnit(sourceDiv) {
+    var unitName = $("#unitname").val();
+    var startDate = $("#dtStartDate").val();
+    var endDate = $("#dtEndDate").val();
+	
+	if(urlParams.course == null){
+        $("#editcourse").hide();
+        $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
+         $("#failure").show();
+        return;
+    }
+    if(unitName == "" ){
+        $("#failure").html("Please enter unit name");
+        displayAlert("#failure", "#createUnit");
+        return;
+    }
+	
+	if(startDate == "" ){
+        $("#failure").html("Please enter unit start date");
+        displayAlert("#failure", "#createUnit");
+        return;
+    }
+	
+	if(endDate == "" ){
+        $("#failure").html("Please enter unit end date");
+        displayAlert("#failure", "#createUnit");
+        return;
+    }
+	
+	
+    $.post('../../unit_insert.php', 
+        { course_id: urlParams.course,  unit_name: unitName, open: startDate ,close: endDate})
+        .done(function(data){
+            if(data.isError){
+                $("#failure").html("The unit could not be created: " + data.errorDescription);
+                displayAlert("#failure", "#createUnit");
+            }
+            else{
+				resetForm("#createUnit");
+            }
+    });
+	displayUnits(sourceDiv, urlParams.course);
+    return; 
+}
+
+function displayUnits(sourceDiv, courseID){
+
+	$.getJSON('../../course_units.php', 
+        {course_id: courseID},
+		function(data){
+        if(data.isError){
+            $("#failure").html("Sorry unable to get the units please try again.");
+            showFailure();
+        }
+        else{
+			var unitHTML ='';
+			if (data.result.length >0) {
+				unitHTML ='<br/><table class="table"><tr><th>Name</th><th>Timeframe</th><th>Delete</th></tr>';
+			}
+            $.each( data.result, function() {
+				unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
+				unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
+				unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId +'");">Delete</button></td>';
+				unitHTML = unitHTML + '</tr>';
+			});
+			if (data.result.length >0) {
+				unitHTML =unitHTML + '</table>';
+			}
+			$(sourceDiv).html(unitHTML);
+		}
+	});   
 }
