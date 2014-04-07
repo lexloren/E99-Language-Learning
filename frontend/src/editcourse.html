@@ -38,7 +38,7 @@
       })();
 	  
       $(document).ready(function(){
-        setupMaintUnit();
+        setupMaintCourse();
       });
     </script>
   </head>
@@ -68,8 +68,8 @@
 	<div  role="main">
 		<div class="container-left" role="main">
 			 
-			<button class="btn btn-primary" type="button" onclick="setupMaintCourse();">Update Course</button> 
-			<button class="btn btn-primary" type="button" onclick="setupMaintUnit();">Maintain Units</button> 
+			<button class="btn btn-primary" type="button" onclick="showEditCourse();">Update Course</button> 
+			<button class="btn btn-primary" type="button" onclick="showEditUnits();">Maintain Units</button> 
 			<br/>
 			<div id="editcourse">
 		
@@ -140,14 +140,14 @@
 					<input type="text" class="form-control" id="unitname" placeholder="Enter the name of the Unit" required autofocus>
 				</div>
 				<div class="form-group">
-					<label for="opendate">Open Date</label>
-					<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
-					<script>$('#opendate').datetimepicker();</script>
+					<label for="openUnitdate">Open Date</label>
+					<input type="text" class="form-control form-control-date" id="openUnitdate" placeholder="Select open date/time" required>
+					<script>$('#openUnitdate').datetimepicker();</script>
 				</div>
 				<div class="form-group">
-					<label for="closedate">Close Date</label>
-					<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
-					<script>$('#closedate').datetimepicker();</script>
+					<label for="closeUnitdate">Close Date</label>
+					<input type="text" class="form-control form-control-date" id="closeUnitdate" placeholder="Select close date/time" required>
+					<script>$('#closeUnitdate').datetimepicker();</script>
 			  </div><br />
 			  
 			  <button type="button" stype="button" class="btn" onclick="resetForm('#createUnit');">Reset</button>&nbsp;

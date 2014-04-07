@@ -9,23 +9,35 @@ function resetForm(frm){
 }
 
 function setupMaintCourse(){
+	showEditUnits();
+	displayEditCourseForm();
+}
+
+function showEditCourse(){
 	$("#success").hide();
     $("#failure").hide();
 	$("#editcourse").show();
 	$("#unitmaint").hide();
-	$('#dtStartDate').datetimepicker();
-	$('#dtEndDate').datetimepicker();
-	displayEditCourseForm();
+	$('#closedate').datetimepicker();
+	$('#opendate').datetimepicker();
+	$('#closeUnitdate').datetimepicker();
+	$('#openUnitdate').datetimepicker();
 }
 
-function setupMaintUnit(){
+function showEditUnits() {
 	$("#success").hide();
     $("#failure").hide();
 	
 	$("#editcourse").hide();
 	$("#unitmaint").show();
-	$('#dtStartDate').datetimepicker();
-	$('#dtEndDate').datetimepicker();
+
+	$('#closedate').datetimepicker();
+	$('#opendate').datetimepicker();
+	$('#closeUnitdate').datetimepicker();
+	$('#openUnitdate').datetimepicker();
+}
+function setupMaintUnit(){
+	showEditUnits();
 	if(urlParams.course == null){
         $("#editcourse").hide();
         $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
@@ -123,7 +135,7 @@ function displayAlert(div, frm){
     $("#failure").hide();
     $("#success").hide();
     $(div).show();
-    if($("#failure").is(":visible")){
+    if($("#failure").is(":visible"))	{
         $("#success").hide();
     }
     else{
@@ -136,8 +148,8 @@ function displayAlert(div, frm){
 function displayCourseForm(sourceDiv){
 	$.getJSON('../../user_courses.php', function(data){
         if(data.isError){
-            $("#failure").html("Sorry unable to get the Courses please try again.");
-            showFailure();
+            $("#failure").html('Sorry unable to get the Courses please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
+            $("#failure").show();
         }
         else{
 			var courseHTML ='';
@@ -145,12 +157,19 @@ function displayCourseForm(sourceDiv){
 				courseHTML ='<br/><table class="table"><tr><th>Name</th><th>Dates</th><th>Enrolled Status</th><th>Action</th></tr>';
 			}
             $.each( data.result, function() {
-				courseHTML = courseHTML + '<tr><td><a href="editcourse.html?course=' + this.courseId +'">' + this.name +'</a><br/>';
+				courseHTML = courseHTML + '<tr><td><a href="editcourse.html?course=' + this.courseId +'">' + this.name +'</a>';
 				if (this.isPublic) {
-					courseHTML = courseHTML +'<img src="images/lock_yellow.png" height="20" width="20"/>';
+					courseHTML = courseHTML +'<br/><img src="images/lock_yellow.png" height="20" width="20"/>';
 				}
-				courseHTML = courseHTML +'</td><td>' + this.timeframe + '</td>';
-				courseHTML = courseHTML +'<td>20 Students TBD<br/>10 Units <br/><a href="editcourse.html?course=' + this.courseId +'">view details</a></td>';
+				if (this.message != null) {
+					courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
+				}
+				if (this.timeframe != null) {
+					courseHTML = courseHTML +'</td><td>' + this.timeframe + '</td>';
+				} else {
+					courseHTML = courseHTML +'</td><td> No Dates are set</td>';
+				}
+				courseHTML = courseHTML +'<td>' + this.studentsCount + ' Students <br/>' + this.unitsCount + ' Units <br/>' + this.listsCount + ' Lists <br/>' + this.testsCount + ' Test <br/><a href="editcourse.html?course=' + this.courseId +'">view details</a></td>';
 				courseHTML = courseHTML + '<td>';
 				if (this.isSessionUser) {
 					courseHTML = courseHTML + '<a href="">continue</a><br/>';
@@ -175,7 +194,7 @@ function displayEditCourseForm() {
         return;
     }
 
-	$.getJSON('../../user_courses.php', 
+	$.getJSON('../../course_select.php', 
         {course_id: urlParams.course},
         function(data){
             if(data.isError){
@@ -183,19 +202,30 @@ function displayEditCourseForm() {
                  $("#failure").show();
             }
             else{
-                $("#editcourse").show();
-                $.each(data.result, function(i, item){
-                    if(item.nameGiven != "null"){nameGiven="";}
-                    else{nameGiven=item.nameGiven;}
-                    if(item.nameFamily != "null"){nameFamily="";}
-                    else{nameFamily=item.nameFamily;}
-                    newrow = '<tr><td>' + item.handle + '</td>' +
-                             '<td>' + nameFamily + '</td>' +
-                             '<td>' + nameGiven + '</td>' +
-                             '<td><input type="checkbox" class="rem_user_ids" name="rem_user_ids" value='+item.userId+'></td></tr>';
-                    $('#studentDetails').append(newrow);
-                });
-                $('#studentDetails').append('<tr><td></td><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeStudents();">Remove Selected Users</button></td></tr>');
+				$("#coursename").val(data.result.name);
+				if (data.result.isPublic) {
+					$("#inputPublic")
+				} else {
+				}
+				$("#coursedetails").val(data.result.message);
+				
+				var unitHTML ='';
+				if (data.result.units.length >0) {
+					unitHTML ='<br/><table class="table"><tr><th>Name</th><th>Timeframe</th><th>Lists</th><th>Tests</th><th>Delete</th></tr>';
+				}
+				$.each( data.result.units, function() {
+					unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
+					unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
+					unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unit=' + this.unitId + '">Edit Unit</a></td>';
+					unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="test.html?unit=' + this.unitId + '">Add Test</a></td>';
+					unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId +'");">Delete</button></td>';
+					unitHTML = unitHTML + '</tr>';
+				});
+				if (data.result.units.length >0) {
+					unitHTML =unitHTML + '</table>';
+				}
+				$("#units").html(unitHTML);
+				
             }		
     }); 
 }
@@ -252,7 +282,7 @@ function displayUnits(sourceDiv, courseID){
 		function(data){
         if(data.isError){
             $("#failure").html("Sorry unable to get the units please try again.");
-            showFailure();
+            $("#failure").show();
         }
         else{
 			var unitHTML ='';
