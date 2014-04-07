@@ -64,7 +64,8 @@ function submitLoginForm(){
                 $("#failure").show();
             }
             else{
-                window.location.replace("welcome.html");
+                // temporarily redirecting to course page
+                window.location.replace("course.html");
             }
     });
     return; 

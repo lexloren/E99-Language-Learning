@@ -74,9 +74,9 @@ function getStudentInfo(){
             else{
                 $("#newStudent").show();
                 $.each(data.result, function(i, item){
-                    if(item.nameGiven != "null"){nameGiven="";}
+                    if(item.nameGiven == null){nameGiven="";}
                     else{nameGiven=item.nameGiven;}
-                    if(item.nameFamily != "null"){nameFamily="";}
+                    if(item.nameFamily == null){nameFamily="";}
                     else{nameFamily=item.nameFamily;}
                     newrow = '<tr><td>' + item.handle + '</td>' +
                              '<td>' + nameFamily + '</td>' +
