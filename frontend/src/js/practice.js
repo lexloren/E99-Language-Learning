@@ -79,9 +79,9 @@ function handleClicks() {
 	
 	/* char/word lookup */
 	$(document).on('click', '.char-of-word', function () {
-		get_dictionary(this.innerHTML);
+		get_dictionary(this.innerHTML, 1);
 	});
-	
+		
 	/* hide lookup panel */
 	$(document).on('click', '.dictionary-close', function () {
 		$('#translation-panel').hide();
@@ -144,6 +144,7 @@ function getLists() {
 				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
 				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');
 			});
+			$("#loader").hide();
 		}
 	})
 	 .fail(function(error) {
@@ -154,27 +155,34 @@ function getLists() {
 }
 
 /*  */
-function get_dictionary(word) {
+function get_dictionary(word, page) {
 	$('#translation-panel').show();
 	$('#translation-panel-inner').html('');
 	var currentURL = URL + 'entry_find.php';
 	var langcodes = wordList[0].languages[0] + ',' + wordList[0].languages[1];
 	$.getJSON( currentURL, {
 		query : word,
-		langs : langcodes		
+		langs : langcodes,
+		page_size : 5,
+		page_num : page
 	}, function( data ) {
 		if (data.isError === true) {
 			console.log(data.errorTitle);
 			console.log(data.errorDescription);
 		} else {
+			
 			$.each( data.result, function() {
 			$('#translation-panel-inner').append('<div>' + this.words[this.languages[1]] + ' : ' + this.words[this.languages[0]] +
 				' : ' + this.pronuncations[this.languages[1]] + '</div>');
 			});
+			$('#translation-panel-inner').append('<div><a href="#" id="next_dict">[next page]</a></div>');
+			$('#next_dict').on('click', function (event) {
+				event.preventDefault();
+				get_dictionary(word, page + 1);
+			});
 		}
 	});
 }
-
 
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
@@ -236,6 +244,7 @@ function nextCard() {
 	if (wordList.length === 0) {
 		practice_complete();
 	} else {
+		$('#translation-panel-inner').html('Want to know more? Click on a character to find related words.');
 		if (showWord) {
 			populate_word();
 		} else {
