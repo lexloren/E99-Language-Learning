@@ -44,7 +44,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert course: " . $mysqli->error);
+			return static::set_error_description("Failed to insert course: " . $mysqli->error . ".");
 		}
 		
 		if (!($course = self::select_by_id($mysqli->insert_id)))
@@ -350,7 +350,7 @@ class Course extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to add course user: " . $mysqli->error);
+			return static::set_error_description("Failed to add course user: " . $mysqli->error . ".");
 		}
 		
 		if (isset($array)) array_push($array, $user);
@@ -391,7 +391,7 @@ class Course extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to remove course user: " . $mysqli->error);
+			return static::set_error_description("Failed to remove course user: " . $mysqli->error . ".");
 		}
 		
 		if (isset($array)) array_drop($array, $user);

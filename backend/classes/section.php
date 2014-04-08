@@ -37,7 +37,7 @@ class Section extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert section: " . $mysqli->error);
+			return static::set_error_description("Failed to insert section: " . $mysqli->error . ".");
 		}
 		
 		$test->uncache_sections();

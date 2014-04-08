@@ -109,7 +109,7 @@ class Practice
 		if (!$mysqli->insert_id ||
 			!($grade_result = $mysqli->query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id"))))
 		{
-			Session::get()->set_error_assoc("response", "Failed to update practice response details, ".$mysqli->error);
+			Session::get()->set_error_assoc("response", "Failed to update practice response details: " . $mysqli->error . ".");
 			return;
 		}
 		
@@ -117,7 +117,7 @@ class Practice
 		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
 		if (!$grade_point || !$user_entry)
 		{
-			Session::get()->set_error_assoc("response", "Failed to update practice response details, ".$mysqli->error);
+			Session::get()->set_error_assoc("response", "Failed to update practice response details: " . $mysqli->error . ".");
 			return;
 		}
 		return $user_entry->update_repetition_details($grade_point->get_point());

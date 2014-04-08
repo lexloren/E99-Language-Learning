@@ -81,7 +81,7 @@ class Dictionary
 		
 		if (!($result = $mysqli->query($query)))
 		{
-			return static::set_error_description("Failed to find entry: " . $mysqli->error);
+			return static::set_error_description("Failed to find entry: " . $mysqli->error . ".");
 		}
 		
 		//  Save information about query results in static properties

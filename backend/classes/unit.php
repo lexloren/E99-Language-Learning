@@ -41,7 +41,7 @@ class Unit extends CourseComponent
 			$message
 		));
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error);
+		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error . ".");
 		
 		$course->uncache_units();
 		

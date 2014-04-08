@@ -84,7 +84,7 @@ class Annotation extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error);
+			return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error . ".");
 		}
 		
 		return self::select_by_id($mysqli->insert_id);

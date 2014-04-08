@@ -25,7 +25,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert list: " . $mysqli->error);
+			return static::set_error_description("Failed to insert list: " . $mysqli->error . ".");
 		}
 		
 		Session::get()->get_user()->uncache_lists();

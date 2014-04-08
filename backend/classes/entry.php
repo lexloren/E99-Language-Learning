@@ -306,7 +306,7 @@ class UserEntry extends Entry
 		
 		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error);
+		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error . ".");
 		
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
 		{
@@ -755,7 +755,7 @@ class UserEntry extends Entry
 			"WHERE user_entry_id = $user_entry_id"
 			))
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error);
+			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
 		}
 
 		$user_entry->interval = $new_interval;

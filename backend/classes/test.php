@@ -37,7 +37,7 @@ class Test extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert test: " . $mysqli->error);
+			return static::set_error_description("Failed to insert test: " . $mysqli->error . ".");
 		}
 		
 		$unit->uncache_tests();
