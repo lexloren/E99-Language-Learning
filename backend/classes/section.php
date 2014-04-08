@@ -16,7 +16,10 @@ class Section extends CourseComponent
 			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$test = Test::select_by_id(($test_id = intval($test_id, 10)));
+		if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
+		{
+			return static::set_error_description("Failure to insert section: " . Test::unset_error_description());
+		}
 		
 		if (!$test->session_user_can_write())
 		{

@@ -16,13 +16,12 @@ class Test extends CourseComponent
 			return static::set_error_description("Session user has not reauthenticated.");
 		}
 		
-		$unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)));
-		
-		if (!$unit)
+		if (!($unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)))))
 		{
-			return static::set_error_description("No unit present with given id ".$unit_id);
+			return static::set_error_description("Failure to insert test: " . Unit::unset_error_description());
 		}
-		else if (!$unit->session_user_can_write())
+		
+		if (!$unit->session_user_can_write())
 		{
 			return static::set_error_description("Session user cannot edit course unit.");
 		}

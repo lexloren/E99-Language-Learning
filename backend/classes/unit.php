@@ -18,10 +18,10 @@ class Unit extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		if ($name !== null) $name = $mysqli->escape_string($name);
-		$course = Course::select_by_id(($course_id = intval($course_id, 10)));
-		
-		if (!$course) return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
+		if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
+		{
+			return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
+		}
 		
 		if (!$course->session_user_can_write())
 		{
