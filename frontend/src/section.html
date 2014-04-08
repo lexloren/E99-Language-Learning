@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Test</title>
+    <title>Section</title>
 
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
     <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
@@ -24,14 +24,6 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script>
-      $(document).ready(function(){
-        $("#success").hide();
-        $("#failure").hide();
-        $("#navbar").load("navbar.html", function(){
-            //$("#nav-tests").addClass("active")
-        });
-      });
-
       // url parameter grabbing code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
       var urlParams;
       (window.onpopstate = function () {
@@ -45,6 +37,15 @@
           while (match = search.exec(query))
              urlParams[decode(match[1])] = decode(match[2]);
       })();
+
+      $(document).ready(function(){
+        $("#success").hide();
+        $("#failure").hide();
+        $("#navbar").load("navbar.html", function(){
+            //$("#nav-tests").addClass("active")
+        });
+        getSectionInfo();
+      });
     </script>
   </head>
   <body role="document">
@@ -57,30 +58,20 @@
       </div>
       <div id="failure" class="alert alert-danger">
       </div>
-      <div id="testData">
-        <form id="createTestForm" role="form">
-          <h3 class="form-signin-heading">Create Test</h3><br />
+      <div id="sectionData">
+        <form id="updateSectionForm" role="form">
+          <h3 class="form-signin-heading">Edit Section</h3><br />
           <div class="form-group">
-            <label for="testname">Test Name</label>
-            <input type="text" class="form-control" id="testname" placeholder="Enter the name of the test" required autofocus>
+            <label for="sectionname">Section Name</label>
+            <input type="text" class="form-control" id="sectionname">
           </div>
           <div class="form-group">
-            <label for="instructions">Test Instructions</label>
-            <textarea class="form-control" id="instructions" rows="5"placeholder="Enter the instructions for the test" required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="opendate">Open Date</label>
-            <input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
-            <script>$('#opendate').datetimepicker();</script>
-          </div>
-          <div class="form-group">
-            <label for="closedate">Close Date</label>
-            <input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
-            <script>$('#closedate').datetimepicker();</script>
+            <label for="instructions">Section Instructions</label>
+            <textarea class="form-control" id="instructions" rows="5"></textarea>
           </div><br />
-          <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
-          <button type="button" stype="button" class="btn" onclick="resetForm('#createTestForm');">Reset</button><br /><br />     
-        </form>	
+        <button class="btn btn-primary" type="button" onclick="updateSection();">Update Section</button> &nbsp;
+        <button class="btn btn-primary" type="button" onclick="deleteSection();">Delete Section</button><br /><br /> 
+        </form> 
       </div>
     </div> <!-- /container -->
 
