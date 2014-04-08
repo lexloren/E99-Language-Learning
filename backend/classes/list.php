@@ -237,7 +237,7 @@ class EntryList extends DatabaseRow
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
-		$entry_added = $entry_to_add->copy_for_session_user();
+		$entry_added = $entry_to_add->copy_for_user($this->get_owner());
 		
 		if (!$entry_added)
 		{

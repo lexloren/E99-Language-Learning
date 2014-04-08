@@ -233,11 +233,6 @@ class Entry extends DatabaseRow
 		return true;
 	}
 	
-	public function user_can_write($user)
-	{
-		return true;
-	}
-	
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
@@ -630,11 +625,40 @@ class UserEntry extends Entry
 			|| $this->user_can_read_via_course($user);
 	}
 	
+	public function user_can_write($user, $list = null)
+	{
+		return parent::user_can_write($user)
+			|| $this->user_can_write_via_list($user, $list)
+			|| $this->user_can_write_via_course($user);
+	}
+	
 	private function user_can_read_via_list($user, $list)
 	{
 		if (!$user || !$list) return false;
 		
 		return $this->in_list($list) && $list->user_can_read($user);
+	}
+	
+	private function user_can_write_via_list($user, $list)
+	{
+		if (!$user || !$list) return false;
+		
+		return $this->in_list($list) && $list->user_can_write($user);
+	}
+	
+	private function user_can_write_via_course($user)
+	{
+		if (!$user) return false;
+		
+		foreach (array_merge($user->get_courses(), $user->get_instructor_courses()) as $course)
+		{
+			foreach ($course->get_lists() as $list)
+			{
+				if ($this->user_can_write_via_list($user, $list)) return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public function in_list($list)
@@ -660,6 +684,8 @@ class UserEntry extends Entry
 	
 	private function user_can_read_via_course($user)
 	{
+		if (!$user) return false;
+		
 		foreach (array_merge($user->get_student_courses(), $user->get_instructor_courses()) as $course)
 		{
 			foreach ($course->get_lists() as $list)
