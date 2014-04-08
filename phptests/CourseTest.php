@@ -67,7 +67,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$ret = $course->delete();
 		$this->assertNotNull($ret);
 
-		//$this->assertNull(Course::select_by_id($this->db->course_ids[0]));		
+		$this->assertNull(Course::select_by_id($this->db->course_ids[0]));		
 		Course::reset();
 		$this->assertNull(Course::select_by_id($this->db->course_ids[0]));
 	}

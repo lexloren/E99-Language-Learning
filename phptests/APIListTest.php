@@ -119,11 +119,9 @@ class APIListTest extends PHPUnit_Framework_TestCase
 
 		$this->assertCount(5, $result);
 		
-		//Hans, pleace check this. Result is wrong, 'words' are empty. 
-		//print_r($result[0]);
-		//$this->assertCount(2, $result[0]["words"]);
-		//$this->assertNotNull($result[0]["words"][TestDB::$lang_code_0]);
-		//$this->assertNotNull($result[0]["words"][TestDB::$lang_code_1]);
+		$this->assertCount(2, $result[0]["words"]);
+		$this->assertNotNull($result[0]["words"][TestDB::$lang_code_0]);
+		$this->assertNotNull($result[0]["words"][TestDB::$lang_code_1]);
 	}
 	
 	public function test_select()

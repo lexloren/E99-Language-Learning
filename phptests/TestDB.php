@@ -170,8 +170,8 @@ class TestDB
 			}
 			else
 			{
-				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id) VALUES (%d, %d)",
-					$entry_id, $user_id
+				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) SELECT entry_id, %d, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
+					$user_id, $entry_id
 				));
 				if (!$link->insert_id)
 					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
@@ -306,83 +306,83 @@ class TestDB
 	}
 	
 	public function add_practice_data($user_id, $num_lists, $num_entries)
-        {
+	{
 		$link = $this->link;
-                for ($i = 1; $i <= $num_lists; $i++)
-                {
-                        $link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
-                                $user_id,
-                                $link->escape_string(self::$list_name).$i
-                        ));
-                        $list_id = $link->insert_id;
-                        array_push($this->practice_list_ids, $list_id);
-
-                        for ($j = 1; $j <= $num_entries; $j++)
-                        {
-                                $link->query(sprintf(
-                                        "INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
-                                        self::$lang_id_0, self::$lang_id_1, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j));
-
-                                $entry_id = $link->insert_id;
-                                array_push($this->practice_entry_ids, $entry_id);
-
-                                $link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
-                                        $entry_id, $user_id, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j
-                                ));
-
-                                $user_entry_id = $link->insert_id;
-
-                                $link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
-                                        $list_id,
-                                        $user_entry_id
-                                ));
-
-                                if (!$link->insert_id)
-                                        exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
-                        }
-                }
-        }
-
-        public function add_grades()
-        {
+		for ($i = 1; $i <= $num_lists; $i++)
+		{
+			$link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
+								 $user_id,
+								 $link->escape_string(self::$list_name).$i
+								 ));
+			$list_id = $link->insert_id;
+			array_push($this->practice_list_ids, $list_id);
+			
+			for ($j = 1; $j <= $num_entries; $j++)
+			{
+				$link->query(sprintf(
+									 "INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+									 self::$lang_id_0, self::$lang_id_1, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j));
+				
+				$entry_id = $link->insert_id;
+				array_push($this->practice_entry_ids, $entry_id);
+				
+				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+									 $entry_id, $user_id, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j
+									 ));
+				
+				$user_entry_id = $link->insert_id;
+				
+				$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
+									 $list_id,
+									 $user_entry_id
+									 ));
+				
+				if (!$link->insert_id)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+			}
+		}
+	}
+	
+	public function add_grades()
+	{
 		$link = $this->link;
-                $grade_entries = array();
-                $grade_entries[] = array(
-                        "point" => 0,
-                        "desc_short" => 'No-Clue',
-                        "desc_long" => 'Complete blackout; Student doesn’t even recall ever knowing the answer'
-                );
-                $grade_entries[] = array(
-                        "point" => 1,
-                        "desc_short" => 'Fail',
-                        "desc_long" => 'Wrong answer; but the student seems to be familiar with the correct answer'
-                );
-                $grade_entries[] = array(
-                        "point" => 2,
-                        "desc_short" => 'Ok',
-                        "desc_long" => 'Wrong answer; but showing the answer makes the student to go like ‘I knew it!’'
-                );
-                $grade_entries[] = array(
-                        "point" => 3,
-                        "desc_short" => 'Fine',
-                        "desc_long" => 'Correct answer; student gave the correct response after some consideration'
-                );
-                $grade_entries[] = array(
-                        "point" => 4,
-                        "desc_short" => 'Nailed-it',
-                        "desc_long" => 'Correct answer; student answered it right away without any hesitation'
-                );
-                foreach ($grade_entries as $grade)
-                {
-                        $link->query(sprintf(
-                                "INSERT into grades (point, desc_short, desc_long) values (%d, '%s', '%s')",
-                                $grade["point"], $grade["desc_short"], $grade["desc_long"])
-                        );
-                         if (!$link->insert_id)
-                                exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
-
-                }
-        }
+		$grade_entries = array();
+		$grade_entries[] = array(
+								 "point" => 0,
+								 "desc_short" => 'No-Clue',
+								 "desc_long" => 'Complete blackout; Student doesn’t even recall ever knowing the answer'
+								 );
+		$grade_entries[] = array(
+								 "point" => 1,
+								 "desc_short" => 'Fail',
+								 "desc_long" => 'Wrong answer; but the student seems to be familiar with the correct answer'
+								 );
+		$grade_entries[] = array(
+								 "point" => 2,
+								 "desc_short" => 'Ok',
+								 "desc_long" => 'Wrong answer; but showing the answer makes the student to go like ‘I knew it!’'
+								 );
+		$grade_entries[] = array(
+								 "point" => 3,
+								 "desc_short" => 'Fine',
+								 "desc_long" => 'Correct answer; student gave the correct response after some consideration'
+								 );
+		$grade_entries[] = array(
+								 "point" => 4,
+								 "desc_short" => 'Nailed-it',
+								 "desc_long" => 'Correct answer; student answered it right away without any hesitation'
+								 );
+		foreach ($grade_entries as $grade)
+		{
+			$link->query(sprintf(
+								 "INSERT into grades (point, desc_short, desc_long) values (%d, '%s', '%s')",
+								 $grade["point"], $grade["desc_short"], $grade["desc_long"])
+						 );
+			if (!$link->insert_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+			
+		}
+	}
 
 }
 	

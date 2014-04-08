@@ -9,24 +9,24 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 {
 	private $db;
 
-        public function setup()
-        {
-                Session::set(null);
-                $this->db = TestDB::create();
-                $this->assertNotNull($this->db, "failed to create test database");
+	public function setup()
+	{
+			Session::set(null);
+			$this->db = TestDB::create();
+			$this->assertNotNull($this->db, "failed to create test database");
 
-		$this->db->add_users(1);
-		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
-		$this->db->add_grades();
-		$user_obj = User::select_by_id($this->db->user_ids[0]);
-                Session::get()->set_user($user_obj);
-        }
-        
-        public function tearDown()
-        {
-                //if (isset($this->db))
-                //      $this->db->close();
-        }
+	$this->db->add_users(1);
+	$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
+	$this->db->add_grades();
+	$user_obj = User::select_by_id($this->db->user_ids[0]);
+			Session::get()->set_user($user_obj);
+	}
+	
+	public function tearDown()
+	{
+			//if (isset($this->db))
+			//      $this->db->close();
+	}
 
 	public function testGenerate()
 	{

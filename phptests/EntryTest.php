@@ -88,6 +88,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 	
 	public function test_annotations_remove()
 	{
+		//  Already tested in test_get_annotations()
 	}
 	
 	public function test_copy_for_session_user()
