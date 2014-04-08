@@ -18,7 +18,11 @@ class Test extends CourseComponent
 		
 		$unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)));
 		
-		if (!$unit->session_user_can_write())
+		if (!$unit)
+		{
+			return static::set_error_description("No unit present with given id ".$unit_id);
+		}
+		else if (!$unit->session_user_can_write())
 		{
 			return static::set_error_description("Session user cannot edit course unit.");
 		}
