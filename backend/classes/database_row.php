@@ -7,7 +7,7 @@ class DatabaseRow
 {
 	protected static function set_error_description($error_description)
 	{
-		static::$error_description = (!!static::$error_description ? static::$error_description . "\n" : "") . $error_description;
+		static::$error_description = (!!static::$error_description ? static::$error_description . "\n\n" : "") . $error_description;
 		return null;
 	}
 	public static function unset_error_description()
@@ -37,17 +37,21 @@ class DatabaseRow
 		return static::unset_error_description();
 	}
 	
-	protected static function select($table, $column, $id)
+	protected static function select($table, $column, $id, $override_safety = false)
 	{
-		$id = intval($id, 10);
+		$mysqli = Connection::get_shared_instance();
+		
+		if (!$override_safety)
+		{
+			if (is_string($id)) $id = "'".$mysqli->escape_string($id)."'";
+			else $id = intval($id, 10);
+		}
 		
 		if (isset(static::$instances_by_id[$id])) return static::$instances_by_id[$id];
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error);
+		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error . ".");
 		
 		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
@@ -72,7 +76,7 @@ class DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to delete from $table where $column = $id: " . $mysqli->error);
+			return static::set_error_description("Failed to delete from $table where $column = $id: " . $mysqli->error . ".");
 		}
 		
 		if (isset(static::$instances_by_id[$id])) unset(static::$instances_by_id[$id]);
@@ -160,7 +164,7 @@ class DatabaseRow
 		
 		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
 		
-		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error);
+		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error . ".");
 	}
 	
 	protected function get_owner()

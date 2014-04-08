@@ -81,6 +81,57 @@ class APIUser extends APIBase
 		self::return_array_as_json(Session::get()->get_user()->get_lists());
 	}
 	
+	public function languages()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		self::return_array_as_json(Session::get()->get_user()->get_languages());
+	}
+	
+	//  needs back-end implementation
+	public function languages_add()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (self::validate_request($_POST, array ("langs", "langs")))
+		{
+			$user = Session::get()->get_user();
+			
+			$updates = 0;
+			
+			foreach (explode(",", $_POST["langs"]) as $lang_code)
+			{
+				if (($language = Language::select_by_code($lang_code)))
+				{
+					$updates += !!$user->languages_add($language);
+				}
+			}
+		
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->assoc_for_json() : null);
+		}
+	}
+	
+	//  needs back-end implementation
+	public function languages_remove()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (self::validate_request($_POST, array ("langs", "langs")))
+		{
+			$user = Session::get()->get_user();
+			
+			$updates = 0;
+			
+			foreach (explode(",", $_POST["langs"]) as $lang_code)
+			{
+				if (($language = Language::select_by_code($lang_code)))
+				{
+					$updates += !!$user->languages_remove($language);
+				}
+			}
+		
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->assoc_for_json() : null);
+		}
+	}
 	
 	public function update()
 	{
@@ -159,24 +210,6 @@ class APIUser extends APIBase
 				Session::get()->set_result_assoc($result->assoc_for_json());
 			}
 		}
-	}
-	
-	//  needs back-end implementation
-	public function languages()
-	{
-	
-	}
-	
-	//  needs back-end implementation
-	public function languages_add()
-	{
-	
-	}
-	
-	//  needs back-end implementation
-	public function languages_remove()
-	{
-	
 	}
 	
 	//  Courses owned by the user

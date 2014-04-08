@@ -105,7 +105,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert user: " . $mysqli->error);
+			return static::set_error_description("Failed to insert user: " . $mysqli->error . ".");
 		}
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -270,6 +270,70 @@ class User extends DatabaseRow
 		return self::get_cached_collection($this->courses, "Course", "courses", "user_id", $this->get_user_id());
 	}
 	
+	private $languages;
+	public function get_languages()
+	{
+		$table = "user_languages LEFT JOIN languages USING (lang_id)";
+		return self::get_cached_collection($this->languages, "Language", $table, "user_id", $this->get_user_id());
+	}
+	public function languages_add($language)
+	{
+		if (!$language)
+		{
+			return static::set_error_description("Failed to add null user language.");
+		}
+		
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit user.");
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("INSERT INTO user_languages " .
+							   "(user_id, lang_id) VALUES (%d, %d)",
+			$this->get_user_id(),
+			$language->get_lang_id()
+		));
+		
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to add user language: " . $mysqli->error . ".");
+		}
+		
+		if (isset($this->languages)) array_push($this->languages, $language);
+		
+		return $this;
+	}
+	public function languages_remove($language)
+	{
+		if (!$language)
+		{
+			return static::set_error_description("Failed to remove null user language.");
+		}
+		
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit user.");
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("DELETE FROM user_languages " .
+							   "WHERE user_id = %d AND lang_id = %d",
+			$this->get_user_id(),
+			$language->get_lang_id()
+		));
+		
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to remove user language: " . $mysqli->error . ".");
+		}
+		
+		if (isset($this->languages)) array_drop($this->languages, $language);
+		
+		return $this;
+	}
 	
 	private $instructor_courses;
 	public function get_instructor_courses()
@@ -329,6 +393,7 @@ class User extends DatabaseRow
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy),
+			"languagesCount" => count($this->get_languages()),
 			"coursesCount" => count($this->get_courses()),
 			"listsCount" => count($this->get_lists()),
 		), array ("userId", "handle", "isSessionUser"), $privacy);
@@ -342,6 +407,7 @@ class User extends DatabaseRow
 		
 		$assoc["courses"] = self::array_for_json($this->get_courses());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["languages"] = self::array_for_json($this->get_languages());
 		
 		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
 	}

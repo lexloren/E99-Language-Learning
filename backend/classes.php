@@ -2,6 +2,7 @@
 
 require_once "./backend/classes/timeframe.php";
 require_once "./backend/classes/database_row.php";
+require_once "./backend/classes/language.php";
 require_once "./backend/classes/dictionary.php";
 require_once "./backend/classes/session.php";
 require_once "./backend/classes/user.php";
