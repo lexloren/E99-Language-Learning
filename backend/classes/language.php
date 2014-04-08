@@ -98,7 +98,6 @@ class Language extends DatabaseRow
 	public function assoc_for_json($privacy = null)
 	{
 		return array (
-			"languageId" => $this->get_lang_id(),
 			"code" => $this->get_lang_code(),
 			"names" => $this->get_names()
 		);
