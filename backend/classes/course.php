@@ -9,7 +9,7 @@ class Course extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -36,9 +36,10 @@ class Course extends DatabaseRow
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+		$public = $public ? 1 : 0;
 		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message FROM $languages_join ON $language_codes_match"
+		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
+			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
 		));
 		
 		if (!!$mysqli->error)
@@ -144,14 +145,14 @@ class Course extends DatabaseRow
 	}
 	
 	private $public = null;
-	public function is_public()
+	public function get_public()
 	{
 		return !!$this->public;
 	}
-	public function set_is_public($public)
+	public function set_public($public)
 	{
-		$public = !!$public;
-		if (!self::update_this($this, "courses", array ("public" => $public ? "1" : "0"), "course_id", $this->get_course_id()))
+		$public = $public ? 1 : 0;
+		if (!self::update_this($this, "courses", array ("public" => $public), "course_id", $this->get_course_id()))
 		{
 			return null;
 		}
@@ -433,8 +434,13 @@ class Course extends DatabaseRow
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
 			"owner" => $this->get_owner()->assoc_for_json(),
-			"isPublic" => $this->is_public(),
+			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"instructorsCount" => count($this->get_instructors()),
+			"studentsCount" => count($this->get_students()),
+			"unitsCount" => count($this->get_units()),
+			"listsCount" => count($this->get_lists()),
+			"testsCount" => count($this->get_tests()),
 			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}
@@ -445,6 +451,8 @@ class Course extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
+		$assoc["instructors"] = self::array_for_json($this->get_instructors());
+		$assoc["students"] = self::array_for_json($this->get_students());
 		$assoc["units"] = self::array_for_json($this->get_units());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());

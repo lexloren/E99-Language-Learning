@@ -52,7 +52,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($course->get_lang_code_0(), TestDB::$lang_code_0);
 		$this->assertEquals($course->get_lang_code_1(), TestDB::$lang_code_1);
 		$this->assertEquals($course->get_message(), $this->db->course_messages[0]);
-		$this->assertFalse($course->is_public());
+		$this->assertFalse($course->get_public());
 	}
 	
 	public function test_delete()
@@ -216,22 +216,22 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(in_array($instructor2, $instructors));
 	}
 	
-	public function test_is_public()
+	public function test_get_public()
 	{
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$this->assertFalse($course->is_public());
+		$this->assertFalse($course->get_public());
 
 		//Session user not set
-		$course->set_is_public(true);
-		$this->assertFalse($course->is_public());
+		$course->set_public(true);
+		$this->assertFalse($course->get_public());
 
 		//Session user set
 		$user = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user);
-		$course->set_is_public(true);
-		$this->assertTrue($course->is_public());
-		$course->set_is_public(false);
-		$this->assertFalse($course->is_public());
+		$course->set_public(true);
+		$this->assertTrue($course->get_public());
+		$course->set_public(false);
+		$this->assertFalse($course->get_public());
 	}
 	
 	public function test_time_frame()

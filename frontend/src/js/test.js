@@ -96,7 +96,22 @@ function submitCreateSectionForm(sectionname, instructions){
             showFailure();
         }
         else{
-            location.reload(true);
+            $("#sections").html("");
+            resetForm('#createSectionForm');
+            $("#sectionData").html('<button class="btn btn-primary" type="button" onclick="showSectionForm();">Add Test Section</button>');
+            $.post('../../test_sections.php', 
+                {test_id: urlParams.test})
+                .done(function(data){
+                    if(data.isError){
+                        $("#sections").html("Section information unavailable.");
+                    }
+                    else{
+                        $.each(data.result, function(i, item){
+                            sectionlink = '<a href="section.html?section='+item.sectionId+'">';
+                            $('#sections').append("<br /> &nbsp; &nbsp; "+sectionlink+item.name+"</a>");
+                        });
+                    }		
+            });
         }
     });
     return; 
@@ -117,7 +132,8 @@ function getTestInfo(){
             }
             else{
                 $.each(data.result, function(i, item){
-                    $('#sections').append("<br /> &nbsp; &nbsp; "+item.name);
+                    sectionlink = '<a href="section.html?section='+item.sectionId+'">';
+                    $('#sections').append("<br /> &nbsp; &nbsp; "+sectionlink+item.name+"</a>");
                 });
             }		
             $.getJSON('../../test_select.php', 
@@ -129,15 +145,15 @@ function getTestInfo(){
                     }
                     else{
                         $("#testname").val(data.result.name);
-                        if(data.result.message != "null"){
+                        if(data.result.message != null){
                             $("#instructions").val(data.result.message);
                         }
-                        if(data.result.timeframe != "null"){
-                            if(data.result.timeframe.open != "null"){
+                        if(data.result.timeframe != null){
+                            if(data.result.timeframe.open != null){
                                 opendate = new Date(data.result.timeframe.open);
                                 $("#opendate").val(opendate);
                             }
-                            if(data.result.timeframe.close != "null"){
+                            if(data.result.timeframe.close != null){
                                 closedate = new Date(data.result.timeframe.close);
                                 $("#closedate").val(closedate);
                             }
@@ -211,6 +227,90 @@ function updateTest(){
         .done(function(data){
             if(data.isError){
                 var errorMsg = "Test could not be updated.";
+                // not sure of error titles yet
+                $("#failure").html(errorMsg);
+                showFailure();
+            }
+            else{
+                location.reload(true);
+            }
+    });
+    return; 
+}
+
+function getSectionInfo(){
+    if(urlParams.section == null){
+        $("#sectionData").hide();
+        $("#failure").html("The section must be specified. Go to the test page and select a section to view.");
+        showFailure(); 
+        return;
+    }	
+    $.getJSON('../../section_select.php', 
+        {section_id: urlParams.section},
+        function(data){
+            if(data.isError){
+                $("#failure").html("Information for this section could not be retrieved.");
+                showFailure();
+            }
+            else{
+                $("#sectionname").val(data.result.name);
+                if(data.result.message != null){
+                    $("#instructions").val(data.result.message);
+                }
+            }		
+    });
+}
+
+function deleteSection(){
+    if(urlParams.section == null){
+        $("#failure").html("The section to be deleted must be specified. Go to the associated section's page to delete it.");
+        showFailure(); 
+        return;
+    }
+    if(!confirm("Are you sure you want to delete this section?")){
+        return;
+    }
+    $.post('../../section_delete.php', 
+        { section_id: urlParams.section })
+        .done(function(data){
+        if(data.isError){
+            var errorMsg = "Section could not be deleted: ";
+            if(data.errorTitle == "Section Selection"){
+                errorMsg += "Section does not exist.";
+            }
+            else if(data.errorTitle == "Section Deletion"){
+                errorMsg += "Please refresh the page and try again.";
+            }
+            $("#failure").html(errorMsg);
+            showFailure();
+        }
+        else{
+            $("#sectionData").html("Section was successfully deleted.");
+        }
+    });
+    return; 
+}
+
+function updateSection(){
+    if(urlParams.section == null){
+        $("#failure").html("The section to be updated must be specified. Go to the associated section's page to update it.");
+        showFailure(); 
+        return;
+    }
+    // should refactor this out into a separate function since create form uses it too
+    var sectionname = $("#sectionname").val();
+    var instructions = $("#instructions").val();
+    
+	  if(sectionname == "" || instructions == ""){
+		    $("#failure").html("Please provide section name and instructions.");	
+	      showFailure();
+        return;
+    }
+    $.post('../../section_update.php', 
+        { section_id: urlParams.section, name: sectionname, message: instructions } )
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "Section could not be updated.";
                 // not sure of error titles yet
                 $("#failure").html(errorMsg);
                 showFailure();

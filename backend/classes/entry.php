@@ -268,7 +268,8 @@ class Entry extends DatabaseRow
 			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
-			"pronuncations" => $entry->get_pronunciations()
+			"pronuncations" => $entry->get_pronunciations(),
+			"annotationsCount" => count($this->get_annotations())
 		);
 		
 		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);

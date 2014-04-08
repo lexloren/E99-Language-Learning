@@ -328,7 +328,9 @@ class User extends DatabaseRow
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
-			"nameFamily" => $this->get_name_family($privacy)
+			"nameFamily" => $this->get_name_family($privacy),
+			"coursesCount" => count($this->get_courses()),
+			"listsCount" => count($this->get_lists()),
 		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
 	
