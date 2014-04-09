@@ -30,6 +30,7 @@ function getDeckInfo(){
     }); 
 }
 
+/*
 function getUnitInfo(){
     if(urlParams.unit == null){
         $("#unitData").hide();
@@ -73,7 +74,62 @@ function getUnitInfo(){
                     }			
             });
     });
+}*/
+function getUnitInfo(){
+    if(urlParams.unit == null){
+        $("#unitData").hide();
+        $("#failure").html("The unit must be specified. Go to the course page and select a unit to view.");
+        showFailure(); 
+        return;
+    }
+	
+    $.getJSON('../../unit_select.php', 
+        {unit_id: urlParams.unit})
+        .done(function(data){
+            if(data.isError){
+                $("#failure").html("Information for this unit could not be retrieved.");
+            }
+            else{
+                $("#unitname").val(data.result.name);
+                if(data.result.message != null){
+                    $("#instructions").val(data.result.message);
+                }
+                if(data.result.timeframe != null){
+                    if(data.result.timeframe.open != null){
+                        opendate = new Date(data.result.timeframe.open);
+                        $("#opendate").val(opendate);
+                    }
+                    if(data.result.timeframe.close != null){
+                        closedate = new Date(data.result.timeframe.close);
+                        $("#closedate").val(closedate);
+                    }
+                }
+                $.each(data.result.tests, function(i, item){
+                    testlink = '<a href="test.html?test='+item.testId+'">';
+                    $('#tests').append("<br /> &nbsp; &nbsp; "+testlink+item.name+"</a>");
+                });
+            }			
+    });
+
 }
+
+/*
+function getTestInfo(){
+    $.getJSON('../../unit_tests.php', 
+        {unit_id: urlParams.unit})
+        .done(function(data){
+            if(data.isError){
+                $("#tests").html("Test data could not be retrieved for this unit.");
+            }
+            else{
+                $.each(data.result, function(i, item){
+                    testlink = '<a href="test.html?test='+item.testId+'">';
+                    $('#tests').append("<br /> &nbsp; &nbsp; "+testlink+item.name+"</a>");
+                });
+            }		
+    });
+
+}*/
 
 function deleteUnit(){
     if(urlParams.unit == null){
@@ -140,7 +196,7 @@ function updateUnit(){
                 showFailure();
             }
             else{
-                location.reload(true);
+                document.location.reload(true);
             }
     });
     return; 
