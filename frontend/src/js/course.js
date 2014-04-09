@@ -218,7 +218,7 @@ function displayEditCourseForm() {
 					unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
 					unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unit=' + this.unitId + '">Edit Unit</a></td>';
 					unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="test.html?unit=' + this.unitId + '">Add Test</a></td>';
-					unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId +'");">Delete</button></td>';
+					unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit(' + this.unitId +');">Delete</button></td>';
 					unitHTML = unitHTML + '</tr>';
 				});
 				if (data.result.units.length >0) {
@@ -261,7 +261,7 @@ function insertNewUnit(sourceDiv) {
 	
 	
     $.post('../../unit_insert.php', 
-        { course_id: urlParams.course,  unit_name: unitName, open: startDate ,close: endDate})
+        { course_id: urlParams.course,  name: unitName, open: startDate ,close: endDate})
         .done(function(data){
             if(data.isError){
                 $("#failure").html("The unit could not be created: " + data.errorDescription);
@@ -292,13 +292,27 @@ function displayUnits(sourceDiv, courseID){
             $.each( data.result, function() {
 				unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
 				unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
-				unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId +'");">Delete</button></td>';
+				unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId + '","' + sourceDiv +'","' +  courseID +'");>Delete</button></td>';
 				unitHTML = unitHTML + '</tr>';
 			});
 			if (data.result.length >0) {
 				unitHTML =unitHTML + '</table>';
 			}
 			$(sourceDiv).html(unitHTML);
+		}
+	});   
+}
+
+function removeUnit(unitId) {
+	$.post('../../unit_delete.php', 
+        {unit_id: unitId},
+		function(data){
+        if(data.isError){
+            $("#failure").html("Sorry unable to delete units please try again.");
+            $("#failure").show();
+        }
+        else{
+			displayEditCourseForm();
 		}
 	});   
 }
