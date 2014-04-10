@@ -124,42 +124,34 @@ function getTestInfo(){
         showFailure(); 
         return;
     }
-    $.post('../../test_sections.php', 
-        {test_id: urlParams.test})
-        .done(function(data){
+	
+    $.getJSON('../../test_select.php', 
+        {test_id: urlParams.test},
+        function(data){
             if(data.isError){
-                $("#sections").html("Section information unavailable.");
+                $("#failure").html("Information for this test could not be retrieved.");
+                showFailure();
             }
             else{
-                $.each(data.result, function(i, item){
+                $("#testname").val(data.result.name);
+                if(data.result.message != null){
+                    $("#instructions").val(data.result.message);
+                }
+                if(data.result.timeframe != null){
+                    if(data.result.timeframe.open != null){
+                        opendate = new Date(data.result.timeframe.open);
+                        $("#opendate").val(opendate);
+                    }
+                    if(data.result.timeframe.close != null){
+                        closedate = new Date(data.result.timeframe.close);
+                        $("#closedate").val(closedate);
+                    }
+                }
+                $.each(data.result.sections, function(i, item){
                     sectionlink = '<a href="section.html?section='+item.sectionId+'">';
                     $('#sections').append("<br /> &nbsp; &nbsp; "+sectionlink+item.name+"</a>");
                 });
             }		
-            $.getJSON('../../test_select.php', 
-                {test_id: urlParams.test},
-                function(data){
-                    if(data.isError){
-                        $("#failure").html("Information for this test could not be retrieved.");
-                        showFailure();
-                    }
-                    else{
-                        $("#testname").val(data.result.name);
-                        if(data.result.message != null){
-                            $("#instructions").val(data.result.message);
-                        }
-                        if(data.result.timeframe != null){
-                            if(data.result.timeframe.open != null){
-                                opendate = new Date(data.result.timeframe.open);
-                                $("#opendate").val(opendate);
-                            }
-                            if(data.result.timeframe.close != null){
-                                closedate = new Date(data.result.timeframe.close);
-                                $("#closedate").val(closedate);
-                            }
-                        }
-                    }		
-            });
     });
 }
 
@@ -232,7 +224,7 @@ function updateTest(){
                 showFailure();
             }
             else{
-                location.reload(true);
+                document.location.reload(true);
             }
     });
     return; 
@@ -251,9 +243,11 @@ function getSectionInfo(){
             if(data.isError){
                 $("#failure").html("Information for this section could not be retrieved.");
                 showFailure();
+                $("#button-back").hide();
             }
             else{
                 $("#sectionname").val(data.result.name);
+                $("#button-back").click(function(){window.location.href='test.html?test='+data.result.testId;});
                 if(data.result.message != null){
                     $("#instructions").val(data.result.message);
                 }
@@ -316,7 +310,7 @@ function updateSection(){
                 showFailure();
             }
             else{
-                location.reload(true);
+                document.location.reload(true);
             }
     });
     return; 
