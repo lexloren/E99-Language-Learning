@@ -8,7 +8,7 @@ function resetForm(frm){
   cleanupMessage(); 
   $(frm)[0].reset()
   $("#createnew").hide();
-	$("#displayCourse").show();
+	$("#coursesOwned").show();
 }
 
 function setupMaintCourse(){
@@ -56,13 +56,13 @@ function setupMaintUnit(){
 function submitCreateNew(){
 	cleanupMessage();
 	$("#createnew").show();
-	$("#displayCourse").hide();
+	$("#coursesOwned").hide();
 }	
 
 function cancelInsert() {
 	cleanupMessage();
 	$("#createnew").hide();
-	$("#displayCourse").show();
+	$("#coursesOwned").show();
 }
 
 function displayAlert(div, frm){
@@ -127,21 +127,23 @@ function insertNew() {
                 $("#success").html('The course has been successfully created.Review <a href="course.html" class="alert-link">All Courses</a>');
                 displayAlert("#success", "#courseForm");
 				resetForm("#courseForm");
-				displayCourseForm('#displayCourse');
+       			displayCourses('#coursesOwned', '../../user_courses.php');
+       			displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
+       			displayCourses('#coursesStudied', '../../user_student_courses.php');
             }
     });
     return; 
 }
 
-function displayCourseForm(sourceDiv){
+function displayCourses(sourceDiv, scriptAddress){
 	cleanupMessage();
 	$("#createnew").hide();
-	$("#displayCourse").show();
+	$("#coursesOwned").show();
 	$('#dtStartDate').datetimepicker();
 	$('#dtEndDate').datetimepicker();
 	$(sourceDiv).html('<img src="/frontend/src/images/loader.gif"> loading...');
 	
-	$.getJSON('../../user_courses.php', function(data){
+	$.getJSON(scriptAddress, function(data){
         if(data.isError){
             $("#failure").html('Sorry unable to get the Courses please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
             $("#failure").show();
