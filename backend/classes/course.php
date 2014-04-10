@@ -433,6 +433,8 @@ class Course extends DatabaseRow
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
+			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->assoc_for_json(),
+			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->assoc_for_json(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
