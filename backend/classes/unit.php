@@ -78,9 +78,33 @@ class Unit extends CourseComponent
 	}
 	public function set_number($number)
 	{
-		return null;
-		//  Verify that $number <= count of units in the course
-		//  Set this unit's number to $number, pushing all subsequent units down by one
+		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit course unit.");
+		
+		if ($number === null || ($number = intval($number, 10)) < 1) return self::set_error_description("Course unit cannot set number to null or nonpositive integer.");
+		
+		if ($number > ($units_count = count($this->get_course()->get_units()))) $number = $units_count;
+		
+		if ($number === $this->get_number()) return $this;
+			
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
+		
+		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+		
+		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
+		
+		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		
+		if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
+		
+		$this->number = $number;
+		
+		return $this;
 	}
 	
 	private $name = null;

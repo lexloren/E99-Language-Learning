@@ -74,6 +74,11 @@ class APIUnit extends APIBase
 				$updates += !!$unit->set_unit_name($_POST["name"]);
 			}
 			
+			if (isset($_POST["num"]))
+			{
+				$updates += !!$unit->set_number($_POST["num"]);
+			}
+			
 			if (isset($_POST["message"]))
 			{
 				$updates += !!$unit->set_message($_POST["message"]);
