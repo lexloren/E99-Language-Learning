@@ -1,21 +1,24 @@
+function cleanupMessage() {
+	$("#success").hide();
+    $("#failure").hide();
+	$("#failure").html("");
+    $("#success").html("");
+}
 function resetForm(frm){
-  $("#failure").html("");
-  $("#success").html("");
-  $("#failure").hide();
-  $("#success").hide(); 
+  cleanupMessage(); 
   $(frm)[0].reset()
   $("#createnew").hide();
 	$("#displayCourse").show();
 }
 
 function setupMaintCourse(){
+	cleanupMessage();
 	showEditUnits();
 	displayEditCourseForm();
 }
 
 function showEditCourse(){
-	$("#success").hide();
-    $("#failure").hide();
+	cleanupMessage();
 	$("#editcourse").show();
 	$("#unitmaint").hide();
 	$('#closedate').datetimepicker();
@@ -25,8 +28,7 @@ function showEditCourse(){
 }
 
 function showEditUnits() {
-	$("#success").hide();
-    $("#failure").hide();
+	cleanupMessage();
 	
 	$("#editcourse").hide();
 	$("#unitmaint").show();
@@ -37,6 +39,7 @@ function showEditUnits() {
 	$('#openUnitdate').datetimepicker();
 }
 function setupMaintUnit(){
+
 	showEditUnits();
 	if(urlParams.course == null){
         $("#editcourse").hide();
@@ -51,22 +54,19 @@ function setupMaintUnit(){
 
 
 function submitCreateNew(){
-	$("#failure").html("");
-	$("#failure").hide();
+	cleanupMessage();
 	$("#createnew").show();
 	$("#displayCourse").hide();
 }	
 
 function cancelInsert() {
-	$("#failure").html("");
-	$("#failure").hide();
+	cleanupMessage();
 	$("#createnew").hide();
 	$("#displayCourse").show();
 }
 
 function displayAlert(div, frm){
-    $("#failure").hide();
-    $("#success").hide();
+    cleanupMessage();
     $(div).show();
     if($("#failure").is(":visible")){
         $("#success").hide();
@@ -79,6 +79,7 @@ function displayAlert(div, frm){
 }
 
 function insertNew() {
+	cleanupMessage();
     var courseName = $("#coursename").val();
     var startDate = $("#dtStartDate").val();
     var endDate = $("#dtEndDate").val();
@@ -126,30 +127,25 @@ function insertNew() {
                 $("#success").html('The course has been successfully created.Review <a href="course.html" class="alert-link">All Courses</a>');
                 displayAlert("#success", "#courseForm");
 				resetForm("#courseForm");
+				displayCourseForm('#displayCourse');
             }
     });
     return; 
 }
 
-function displayAlert(div, frm){
-    $("#failure").hide();
-    $("#success").hide();
-    $(div).show();
-    if($("#failure").is(":visible"))	{
-        $("#success").hide();
-    }
-    else{
-        $("#failure").hide();   
-        $(frm)[0].reset();   
-    }
-    return;
-}
-
 function displayCourseForm(sourceDiv){
+	cleanupMessage();
+	$("#createnew").hide();
+	$("#displayCourse").show();
+	$('#dtStartDate').datetimepicker();
+	$('#dtEndDate').datetimepicker();
+	$(sourceDiv).html('<img src="/frontend/src/images/loader.gif"> loading...');
+	
 	$.getJSON('../../user_courses.php', function(data){
         if(data.isError){
             $("#failure").html('Sorry unable to get the Courses please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
             $("#failure").show();
+			$(sourceDiv).html('');
         }
         else{
 			var courseHTML ='';
@@ -187,6 +183,7 @@ function displayCourseForm(sourceDiv){
 }
 
 function displayEditCourseForm() {
+	cleanupMessage();
 	if(urlParams.course == null){
         $("#editcourse").hide();
         $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
@@ -194,12 +191,15 @@ function displayEditCourseForm() {
         return;
     }
 
+	$("#units").html('<img src="/frontend/src/images/loader.gif"> loading...');
+	
 	$.getJSON('../../course_select.php', 
         {course_id: urlParams.course},
         function(data){
             if(data.isError){
                 $("#failure").html("Sorry unable to get the Courses please try again.");
                  $("#failure").show();
+				 $("#units").html('');
             }
             else{
 				$("#coursename").val(data.result.name);
@@ -217,7 +217,7 @@ function displayEditCourseForm() {
 					unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
 					unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
 					unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unit=' + this.unitId + '">Edit Unit</a></td>';
-					unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="test.html?unit=' + this.unitId + '">Add Test</a></td>';
+					unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="createtest.html?unit=' + this.unitId + '">Add Test</a></td>';
 					unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit(' + this.unitId +');">Delete</button></td>';
 					unitHTML = unitHTML + '</tr>';
 				});
@@ -231,6 +231,7 @@ function displayEditCourseForm() {
 }
 
 function insertNewUnit(sourceDiv) {
+	cleanupMessage();
     var unitName = $("#unitname").val();
     var startDate = $("#dtStartDate").val();
     var endDate = $("#dtEndDate").val();
@@ -259,8 +260,8 @@ function insertNewUnit(sourceDiv) {
         return;
     }
 	
-	
-    $.post('../../unit_insert.php', 
+	$("#unitscreatemsg").html('<img src="/frontend/src/images/loader.gif"> loading...');
+	$.post('../../unit_insert.php', 
         { course_id: urlParams.course,  name: unitName, open: startDate ,close: endDate})
         .done(function(data){
             if(data.isError){
@@ -271,12 +272,14 @@ function insertNewUnit(sourceDiv) {
 				resetForm("#createUnit");
             }
     });
+	$("#unitscreatemsg").html('');
+	
 	displayUnits(sourceDiv, urlParams.course);
     return; 
 }
 
 function displayUnits(sourceDiv, courseID){
-
+	cleanupMessage();
 	$.getJSON('../../course_units.php', 
         {course_id: courseID},
 		function(data){
@@ -304,6 +307,7 @@ function displayUnits(sourceDiv, courseID){
 }
 
 function removeUnit(unitId) {
+	cleanupMessage();
 	$.post('../../unit_delete.php', 
         {unit_id: unitId},
 		function(data){
@@ -313,6 +317,8 @@ function removeUnit(unitId) {
         }
         else{
 			displayEditCourseForm();
+			$("#success").html("Unit successfully deleted");
+			$("#success").show();
 		}
 	});   
 }

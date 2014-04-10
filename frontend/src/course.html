@@ -24,13 +24,7 @@
     <![endif]-->
     <script type="text/javascript">
       $(document).ready(function(){
-        $("#success").hide();
-        $("#failure").hide();
-		$("#createnew").hide();
-		$("#displayCourse").show();
-		$('#dtStartDate').datetimepicker();
-		$('#dtEndDate').datetimepicker();
-		displayCourseForm('#displayCourse');
+       	displayCourseForm('#displayCourse');
       });
     </script>
   </head>
@@ -54,6 +48,8 @@
 	
     <div class="container">
       <form id="courseForm" class="form-course" role="form">
+		<div id="success" class="alert alert-success">
+      </div>
         <div id="failure" class="alert alert-danger">
         </div>
 		<h2 class="form-course-heading">Courses</h2>
