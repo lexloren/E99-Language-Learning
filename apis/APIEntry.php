@@ -66,7 +66,7 @@ class APIEntry extends APIBase
 
 			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination, $exact_matches_only)))
 			{
-				self::return_array_as_json($entries);
+				self::return_array_as_json($entries, null, array ("pageSize" => Dictionary::$page_size, "pageNumber" => Dictionary::$page_num, "pagesCount" => Dictionary::$pages_count, "entriesFoundCount" => Dictionary::$find_last_count));
 			}
 			else
 			{

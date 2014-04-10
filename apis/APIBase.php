@@ -47,7 +47,7 @@ class APIBase
 		return $object;
 	}
 	
-	protected static function return_updates_as_json($class_name, $error_description, $result_assoc)
+	protected static function return_updates_as_json($class_name, $error_description, $result_assoc, $result_information = null)
 	{
 		$error_title = "$class_name Modification";
 		if ($result_assoc)
@@ -58,7 +58,7 @@ class APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($result_assoc);
+				Session::get()->set_result_assoc($result_assoc, $result_information);
 			}
 		}
 		else
@@ -69,7 +69,7 @@ class APIBase
 		}
 	}
 	
-	protected static function return_array_as_json($array, $privacy = null)
+	protected static function return_array_as_json($array, $privacy = null, $result_information = null)
 	{
 		if (!is_array($array))
 		{
@@ -88,7 +88,7 @@ class APIBase
 				array_push($returnable, $item->assoc_for_json($privacy));
 			}
 			
-			Session::get()->set_result_assoc($returnable);
+			Session::get()->set_result_assoc($returnable, $result_information);
 		}
 	}
 }

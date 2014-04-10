@@ -85,7 +85,7 @@ class Session
 		$mysqli = Connection::get_shared_instance();
 			
 		//  See whether we can authenticate with the handle and password posted
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle LIKE '%s' OR email LIKE '%s') AND pswd_hash = PASSWORD('%s')",
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle = '%s' OR email = '%s') AND pswd_hash = PASSWORD('%s')",
 			$mysqli->escape_string($handle),
 			$mysqli->escape_string($handle),
 			$mysqli->escape_string($password)
@@ -134,7 +134,7 @@ class Session
 				return null;
 			}
 			
-			$session_id_new = $this->session_regenerate_id();
+			$session_id_new = $session_id_old; //$this->session_regenerate_id();
 			
 			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
 				$mysqli->escape_string($session_id_new),
