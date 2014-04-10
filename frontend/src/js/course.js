@@ -19,7 +19,7 @@ function setupMaintCourse(){
 
 function showEditCourse(){
 	cleanupMessage();
-	$("#editcourse").show();
+	$("#course").show();
 	$("#unitmaint").hide();
 	$('#closedate').datetimepicker();
 	$('#opendate').datetimepicker();
@@ -30,7 +30,7 @@ function showEditCourse(){
 function showEditUnits() {
 	cleanupMessage();
 	
-	$("#editcourse").hide();
+	$("#course").hide();
 	$("#unitmaint").show();
 
 	$('#closedate').datetimepicker();
@@ -42,8 +42,8 @@ function setupMaintUnit(){
 
 	showEditUnits();
 	if(urlParams.course == null){
-        $("#editcourse").hide();
-        $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
+        $("#course").hide();
+        $("#failure").html('The course must be specified. Go to the <a href="courses.html">courses page</a> and select a course to view.');
          $("#failure").show();
         return;
     }
@@ -124,7 +124,7 @@ function insertNew() {
                 displayAlert("#failure", "#courseForm");
             }
             else{
-                $("#success").html('The course has been successfully created.Review <a href="course.html" class="alert-link">All Courses</a>');
+                $("#success").html('The course has been successfully created.Review <a href="courses.html" class="alert-link">All Courses</a>');
                 displayAlert("#success", "#courseForm");
 				resetForm("#courseForm");
        			displayCourses('#coursesOwned', '../../user_courses.php');
@@ -155,7 +155,7 @@ function displayCourses(sourceDiv, scriptAddress){
 				courseHTML ='<br/><table class="table"><tr><th>Name</th><th>Dates</th><th>Enrolled Status</th><th>Action</th></tr>';
 			}
             $.each( data.result, function() {
-				courseHTML = courseHTML + '<tr><td><a href="editcourse.html?course=' + this.courseId +'">' + this.name +'</a>';
+				courseHTML = courseHTML + '<tr><td><a href="course.html?course=' + this.courseId +'">' + this.name +'</a>';
 				if (this.isPublic) {
 					courseHTML = courseHTML +'<br/><img src="images/lock_yellow.png" height="20" width="20"/>';
 				}
@@ -167,13 +167,16 @@ function displayCourses(sourceDiv, scriptAddress){
 				} else {
 					courseHTML = courseHTML +'</td><td> No Dates are set</td>';
 				}
-				courseHTML = courseHTML +'<td>' + this.studentsCount + ' Students <br/>' + this.unitsCount + ' Units <br/>' + this.listsCount + ' Lists <br/>' + this.testsCount + ' Test <br/><a href="editcourse.html?course=' + this.courseId +'">view details</a></td>';
+				courseHTML = courseHTML +'<td>' + this.studentsCount + ' Students <br/>' + this.unitsCount + ' Units <br/>' + this.listsCount + ' Lists <br/>' + this.testsCount + ' Test <br/><a href="course.html?course=' + this.courseId +'">view details</a></td>';
 				courseHTML = courseHTML + '<td>';
 				if (this.isSessionUser) {
 					courseHTML = courseHTML + '<a href="">continue</a><br/>';
 				}
-				courseHTML = courseHTML +'<a href="enrollment.html?course=' + this.courseId +'">invite students</a><br/>';
-				courseHTML = courseHTML +'<a href="test.html?course=' + this.courseId +'">create tests</a>';
+				if (this.sessionUserPermissions.write)
+				{
+					courseHTML = courseHTML +'<a href="enrollment.html?course=' + this.courseId +'">invite students</a><br/>';
+					courseHTML = courseHTML +'<a href="test.html?course=' + this.courseId +'">create tests</a>';
+				}
 				courseHTML = courseHTML + '</td></tr>';
 			});
 			if (data.result.length >0) {
@@ -187,8 +190,8 @@ function displayCourses(sourceDiv, scriptAddress){
 function displayEditCourseForm() {
 	cleanupMessage();
 	if(urlParams.course == null){
-        $("#editcourse").hide();
-        $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
+        $("#course").hide();
+        $("#failure").html('The course must be specified. Go to the <a href="courses.html">courses page</a> and select a course to view.');
          $("#failure").show();
         return;
     }
@@ -204,6 +207,7 @@ function displayEditCourseForm() {
 				 $("#units").html('');
             }
             else{
+				$("#courseheading").html(data.result.name);
 				$("#coursename").val(data.result.name);
 				if (data.result.isPublic) {
 					$("#inputPublic")
@@ -239,8 +243,8 @@ function insertNewUnit(sourceDiv) {
     var endDate = $("#dtEndDate").val();
 	
 	if(urlParams.course == null){
-        $("#editcourse").hide();
-        $("#failure").html('The course must be specified. Go to the <a href="course.html">courses page</a> and select a course to view.');
+        $("#course").hide();
+        $("#failure").html('The course must be specified. Go to the <a href="courses.html">courses page</a> and select a course to view.');
          $("#failure").show();
         return;
     }

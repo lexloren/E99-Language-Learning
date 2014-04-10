@@ -65,7 +65,7 @@ function submitLoginForm(){
             }
             else{
                 // temporarily redirecting to course page
-                window.location.replace("course.html");
+                window.location.replace("courses.html");
             }
     });
     return; 
