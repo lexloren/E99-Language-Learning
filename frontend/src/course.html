@@ -73,8 +73,8 @@
 	<div  role="main">
 		<div class="container-left" role="main">
 			 
-			<button class="btn btn-primary" type="button" onclick="showEditCourse();">Update Course</button> 
-			<button class="btn btn-primary" type="button" onclick="showEditUnits();">Maintain Units</button> 
+			<button class="btn btn-primary" type="button" onclick="showEditCourse();">Edit Course</button>
+			<!--<button class="btn btn-primary" type="button" onclick="showEditUnits();">Maintain Units</button>-->
 			<br/>
 			<div id="course">
 		
@@ -128,8 +128,8 @@
 			  <br />
 			  <br />
 			  
-			  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Reset</button>&nbsp;
-			  <button class="btn btn-primary" type="button" onclick="insertNew();">Update Course</button> <br /><br />     
+			  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Revert</button>&nbsp;
+			  <button class="btn btn-primary" type="button" onclick="insertNew();">Save</button> <br /><br />
 			</form>	
 			</div>
 			
@@ -141,7 +141,7 @@
 				</div>
 				<div class="container-right" role="main">
 				<form id="createUnit" role="form">
-				<h3 class="form-signin-heading">Create Unit</h3><br />
+				<h3 class="form-signin-heading">New Unit</h3><br />
 				<div class="form-group">
 					<label for="unitname">Unit Name</label>
 					<input type="text" class="form-control" id="unitname" placeholder="Enter the name of the Unit" required autofocus>
@@ -157,8 +157,8 @@
 					<script>$('#closeUnitdate').datetimepicker();</script>
 			  </div><br />
 			  
-			  <button type="button" stype="button" class="btn" onclick="resetForm('#createUnit');">Reset</button>&nbsp;
-			  <button class="btn btn-primary" type="button" onclick="insertNewUnit('#units');">Create Unit</button> <br /><br />     
+			  <button type="button" stype="button" class="btn" onclick="resetForm('#createUnit');">Cancel</button>&nbsp;
+			  <button class="btn btn-primary" type="button" onclick="insertNewUnit('#units');">Save</button> <br /><br />
 			</form>	
 			
 				</div>

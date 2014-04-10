@@ -6,9 +6,7 @@ function cleanupMessage() {
 }
 function resetForm(frm){
   cleanupMessage(); 
-  $(frm)[0].reset()
-  $("#createnew").hide();
-	$("#coursesOwned").show();
+  $(frm)[0].reset();
 }
 
 function setupMaintCourse(){
@@ -55,13 +53,14 @@ function setupMaintUnit(){
 
 function submitCreateNew(){
 	cleanupMessage();
-	$("#createnew").show();
-	$("#coursesOwned").hide();
+	$("#newCourseButton").hide();
+	$("#newCourse").show();
 }	
 
 function cancelInsert() {
 	cleanupMessage();
-	$("#createnew").hide();
+	$("#newCourseButton").show();
+	$("#newCourse").hide();
 	$("#coursesOwned").show();
 }
 
@@ -126,7 +125,7 @@ function insertNew() {
             else{
                 $("#success").html('The course has been successfully created.Review <a href="courses.html" class="alert-link">All Courses</a>');
                 displayAlert("#success", "#courseForm");
-				resetForm("#courseForm");
+				resetForm("#createCourseForm");
        			displayCourses('#coursesOwned', '../../user_courses.php');
        			displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
        			displayCourses('#coursesStudied', '../../user_student_courses.php');
@@ -137,7 +136,7 @@ function insertNew() {
 
 function displayCourses(sourceDiv, scriptAddress){
 	cleanupMessage();
-	$("#createnew").hide();
+	$("#newCourse").hide();
 	$("#coursesOwned").show();
 	$('#dtStartDate').datetimepicker();
 	$('#dtEndDate').datetimepicker();
@@ -152,7 +151,7 @@ function displayCourses(sourceDiv, scriptAddress){
         else{
 			var courseHTML ='';
 			if (data.result.length >0) {
-				courseHTML ='<br/><table class="table"><tr><th>Name</th><th>Dates</th><th>Enrolled Status</th><th>Action</th></tr>';
+				courseHTML ='<br/><table class="table"><tr><th>Name</th><th>Dates</th><th>Constituents</th></tr>';
 			}
             $.each( data.result, function() {
 				courseHTML = courseHTML + '<tr><td><a href="course.html?course=' + this.courseId +'">' + this.name +'</a>';
@@ -162,13 +161,9 @@ function displayCourses(sourceDiv, scriptAddress){
 				if (this.message != null) {
 					courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
 				}
-				if (this.timeframe != null) {
-					courseHTML = courseHTML +'</td><td>' + this.timeframe + '</td>';
-				} else {
-					courseHTML = courseHTML +'</td><td> No Dates are set</td>';
-				}
-				courseHTML = courseHTML +'<td>' + this.studentsCount + ' Students <br/>' + this.unitsCount + ' Units <br/>' + this.listsCount + ' Lists <br/>' + this.testsCount + ' Test <br/><a href="course.html?course=' + this.courseId +'">view details</a></td>';
-				courseHTML = courseHTML + '<td>';
+				courseHTML = courseHTML +'</td><td>' + (this.timeframe ? this.timeframe : "None Specified") + '</td>';
+				courseHTML = courseHTML +'<td>' + this.studentsCount + ' Students <br/>' + this.unitsCount + ' Units <br/>' + this.listsCount + ' Lists <br/>' + this.testsCount + ' Tests </td>';
+				/*courseHTML = courseHTML + '<td>';
 				if (this.isSessionUser) {
 					courseHTML = courseHTML + '<a href="">continue</a><br/>';
 				}
@@ -176,8 +171,9 @@ function displayCourses(sourceDiv, scriptAddress){
 				{
 					courseHTML = courseHTML +'<a href="enrollment.html?course=' + this.courseId +'">invite students</a><br/>';
 					courseHTML = courseHTML +'<a href="test.html?course=' + this.courseId +'">create tests</a>';
-				}
-				courseHTML = courseHTML + '</td></tr>';
+				}*/
+				//courseHTML = courseHTML + '</td></tr>';
+				courseHTML = courseHTML + '</tr>';
 			});
 			if (data.result.length >0) {
 				courseHTML =courseHTML + '</table>';
@@ -189,6 +185,7 @@ function displayCourses(sourceDiv, scriptAddress){
 
 function displayEditCourseForm() {
 	cleanupMessage();
+	$("#createUnit").hide();
 	if(urlParams.course == null){
         $("#course").hide();
         $("#failure").html('The course must be specified. Go to the <a href="courses.html">courses page</a> and select a course to view.');
@@ -215,15 +212,17 @@ function displayEditCourseForm() {
 				}
 				$("#coursedetails").val(data.result.message);
 				
+				if (data.result.sessionUserPermissions.write) $("#createUnit").show();
+				
 				var unitHTML ='';
 				if (data.result.units.length >0) {
 					unitHTML ='<br/><table class="table"><tr><th>Name</th><th>Timeframe</th><th>Lists</th><th>Tests</th><th>Delete</th></tr>';
 				}
 				$.each( data.result.units, function() {
-					unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
-					unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
-					unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unit=' + this.unitId + '">Edit Unit</a></td>';
-					unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="createtest.html?unit=' + this.unitId + '">Add Test</a></td>';
+					unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.number + '. ' + this.name +'</a></td>';
+					unitHTML = unitHTML +'<td>' + (this.timeframe ? this.timeframe : "None Specified") + '</td>';
+					unitHTML = unitHTML +'<td><a href="unitlists.html?unit=' + this.unitId + '">' + this.listsCount + ' lists</a></td>';
+					unitHTML = unitHTML +'<td><a href="unittests.html?unit=' + this.testsCount + '">' + this.testsCount + ' tests</a></td>';
 					unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit(' + this.unitId +');">Delete</button></td>';
 					unitHTML = unitHTML + '</tr>';
 				});
@@ -300,7 +299,7 @@ function displayUnits(sourceDiv, courseID){
 			}
             $.each( data.result, function() {
 				unitHTML = unitHTML + '<tr><td><a href="unit.html?unit=' + this.unitId + '">'+ this.name +'</a></td>';
-				unitHTML = unitHTML +'<td>' + this.timeframe + '</td>';
+				unitHTML = unitHTML +'<td>' + (this.timeframe ? this.timeframe : "None Specified") + '</td>';
 				unitHTML = unitHTML +'<td><button class="btn btn-primary" type="button" onclick="removeUnit("' + this.unitId + '","' + sourceDiv +'","' +  courseID +'");>Delete</button></td>';
 				unitHTML = unitHTML + '</tr>';
 			});

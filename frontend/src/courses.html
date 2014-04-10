@@ -59,25 +59,13 @@
 			
 		</div>
 		
-		<h2 class="form-course-heading">Courses Instructed</h2>
-		<div id="coursesInstructed" class="table-responsive">
-			
-		</div>
-		
-		<h2 class="form-course-heading">Courses Studied</h2>
-		<div id="coursesStudied" class="table-responsive">
-			
-		</div>
 		<div class="container-left" >
-		<button class="btn btn-primary" type="button" onclick="submitCreateNew();">Create New</button>
+		<button id="newCourseButton" class="btn btn-primary" type="button" onclick="submitCreateNew();">New Course</button>
 		</div>
 		
-		</form>	
-    </div>
-	<div class="container-left" role="main">
-		<div id="createnew">
+		<div id="newCourse">
 			<form id="createCourseForm" role="form">
-			  <h3 class="form-signin-heading">Create Course</h3><br />
+			  <h3 class="form-signin-heading">New Course</h3><br />
 			  <div class="form-group">
 				<label for="coursename">Course Name</label>
 				<input type="text" class="form-control" id="coursename" placeholder="Enter the name of the Course" required autofocus>
@@ -117,13 +105,25 @@
 				<script>$('#closedate').datetimepicker();</script>
 			  </div><br />
 			  
-			  <button type="button" stype="button" class="btn" onclick="resetForm('#createCourseForm');">Reset</button>&nbsp;
-			  <button class="btn btn-primary" type="button" onclick="insertNew();">Submit</button> <br /><br />     
+			  <button type="button" stype="button" class="btn" onclick="resetForm('#createCourseForm');">Cancel</button>&nbsp;
+			  <button class="btn btn-primary" type="button" onclick="insertNew();">Save</button> <br /><br />
 			</form>	
 			
 			
 		</div>
-	</div>
+		
+		<h2 class="form-course-heading">Courses Instructed</h2>
+		<div id="coursesInstructed" class="table-responsive">
+			
+		</div>
+		
+		<h2 class="form-course-heading">Courses Studied</h2>
+		<div id="coursesStudied" class="table-responsive">
+			
+		</div>
+		
+		</form>	
+    </div>
        <!-- /container -->
   </body>
 </html>
