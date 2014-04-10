@@ -236,7 +236,7 @@ class Course extends DatabaseRow
 	public function get_units()
 	{
 		$table = "course_students LEFT JOIN users USING (user_id)";
-		return self::get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id());
+		return self::get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id(), "*", "ORDER BY num");
 	}
 	public function get_lists()
 	{

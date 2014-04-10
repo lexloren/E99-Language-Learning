@@ -201,8 +201,17 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
-		$this->get_course()->uncache_units();
-		return self::delete_this($this, "course_units", "unit_id", $this->get_unit_id());
+		if (($return = self::delete_this($this, "course_units", "unit_id", $this->get_unit_id())))
+		{
+			$this->get_course()->uncache_units();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+			
+			if ($mysqli->error) return self::set_error_description("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
+		}
+		return $return;
 	}
 	
 	public function lists_add($list)
@@ -258,6 +267,7 @@ class Unit extends CourseComponent
 		return $this->privacy_mask(array (
 			"unitId" => $this->get_unit_id(),
 			"name" => $this->get_unit_name(),
+			"number" => $this->get_number(),
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,

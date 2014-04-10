@@ -104,7 +104,7 @@ class DatabaseRow
 	{
 	}
 	
-	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*")
+	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null)
 	{
 		if (!isset($cache))
 		{
@@ -114,7 +114,7 @@ class DatabaseRow
 			
 			$mysqli = Connection::get_shared_instance();
 		
-			$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id");
+			$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{

@@ -100,7 +100,7 @@ class Test extends CourseComponent
 	private $sections;
 	public function get_sections()
 	{
-		return self::get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id());
+		return self::get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id(), "*", "ORDER BY num");
 	}
 	public function get_sections_by_number()
 	{
@@ -198,11 +198,11 @@ class Test extends CourseComponent
 	{
 		return $this->privacy_mask(array (
 			"testId" => $this->get_test_id(),
-			"name" => !$privacy ? $this->get_test_name() : null,
-			"unitId" => !$privacy ? $this->get_unit_id() : null,
-			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
-			"timeframe" => !$privacy && !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"name" => $this->get_test_name(),
+			"unitId" => $this->get_unit_id(),
+			"courseId" => $this->get_course_id(),
+			"owner" => $this->get_owner()->assoc_for_json(),
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
 			"sectionsCount" => count($this->get_sections()),
 			"message" => $this->get_message()
 		), array (0 => "testId"), $privacy);
