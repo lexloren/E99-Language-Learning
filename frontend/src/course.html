@@ -15,6 +15,7 @@
     <script src="js/jquery-ui-timepicker-addon.js"></script>
     <script src="js/bootstrap.min.js"></script>
 	<script src="js/course.js"></script>	
+    <script src="js/enrollment.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -37,9 +38,11 @@
              urlParams[decode(match[1])] = decode(match[2]);
       })();
 	  
+        $("#newStudent").hide();
       $(document).ready(function(){
         setupMaintCourse();
       });
+        getStudentInfo();
     </script>
   </head>
   <body role="document">
@@ -92,7 +95,7 @@
 				<textarea class="form-control" id="coursedetails" rows="5"placeholder="Enter the Course Details" required></textarea>
 			  </div>
 			  <div class="form-group">
-				<label for="knownLang">Known Lang</label>
+				<label for="knownLang">Known Language</label>
 					<select id="knownLang">
 						<option value="">Select One</option>
 						<option value="en">English</option>
@@ -102,7 +105,7 @@
 			  </div>
 			  
 			  <div class="form-group">
-				<label for="unknownLang">unKnown Lang</label>
+				<label for="unknownLang">Unknown Language</label>
 					<select id="unknownLang">
 						<option value="">Select One</option>
 						<option value="en">English</option>
@@ -160,6 +163,24 @@
 			
 				</div>
 			</div>
+			
+			<div id="studentData">
+				<h3>Course Enrollment</h3><br />
+
+				<div class="table-responsive">
+				  <table id="studentDetails" class="table">
+					<tr>
+					  <th>Username</th>
+					  <th>First Name</th>
+					  <th>Last Name</th>
+					  <th>Remove</th>
+					</tr>
+				  </table>
+				</div>
+				<div id="newStudent">
+				  <button class="btn btn-primary" type="button" onclick="showStudentForm();">Add New Student</button> &nbsp;
+				</div>
+			  </div>
 		</div>
 	</div>
        <!-- /container -->
