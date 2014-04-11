@@ -389,12 +389,15 @@ class User extends DatabaseRow
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
+			"languages" => self::array_for_json($this->get_languages()),
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy),
 			"languagesCount" => count($this->get_languages()),
-			"coursesCount" => count($this->get_courses()),
+			"coursesOwnedCount" => count($this->get_courses()),
+			"coursesInstructedCount" => count($this->get_instructor_courses()),
+			"coursesStudiedCount" => count($this->get_student_courses()),
 			"listsCount" => count($this->get_lists()),
 		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
@@ -405,9 +408,10 @@ class User extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["courses"] = self::array_for_json($this->get_courses());
+		$assoc["coursesOwned"] = self::array_for_json($this->get_courses());
+		$assoc["coursesInstructed"] = self::array_for_json($this->get_instructor_courses());
+		$assoc["coursesStudied"] = self::array_for_json($this->get_student_courses());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["languages"] = self::array_for_json($this->get_languages());
 		
 		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
 	}
