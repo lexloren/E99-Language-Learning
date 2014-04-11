@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss</title>
+
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+    <script src="js/jquery-ui-timepicker-addon.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+	<script src="js/course.js"></script>	
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript">
+      $(document).ready(
+	  function()
+		  {
+		  	displayUser();
+			displayCourses('#coursesOwned', '../../user_courses.php');
+			displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
+			displayCourses('#coursesStudied', '../../user_student_courses.php');
+		  }
+	  );
+    </script>
+  </head>
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Xenogloss</a>
+        </div>
+      </div>
+    </div>
+   
+	
+    <div class="container">
+      <form id="courseForm" class="form-course" role="form">
+		<div id="success" class="alert alert-success">
+      </div>
+        <div id="failure" class="alert alert-danger">
+        </div>
+		
+		<h2 class="form-course-heading" id="userNameDiv">User Name</h2>
+		
+		<h2 class="form-course-heading">Courses Owned</h2>
+		<div id="coursesOwned" class="table-responsive">
+			
+		</div>
+		
+		<div class="container-left" >
+		<button id="newCourseButton" class="btn btn-primary" type="button" onclick="submitCreateNew();">New Course</button>
+		</div>
+		
+		<div id="newCourse">
+			<form id="createCourseForm" role="form">
+			  <h3 class="form-signin-heading">New Course</h3><br />
+			  <div class="form-group">
+				<label for="coursename">Course Name</label>
+				<input type="text" class="form-control" id="coursename" placeholder="Enter the name of the Course" required autofocus>
+			  </div>
+			  <div class="form-group">
+				<label for="coursedetails">Course Details</label>
+				<textarea class="form-control" id="coursedetails" rows="5"placeholder="Enter the Course Details" required></textarea>
+			  </div>
+			  <div class="form-group">
+				<label for="knownLang">Known Lang</label>
+					<select id="knownLang">
+						<option value="">Select One</option>
+						<option value="en">English</option>
+						<option value="cn">Chinese</option>
+						<option value="jp">Japanese</option>
+					</select>
+			  </div>
+			  
+			  <div class="form-group">
+				<label for="unknownLang">unKnown Lang</label>
+					<select id="unknownLang">
+						<option value="">Select One</option>
+						<option value="en">English</option>
+						<option value="cn">Chinese</option>
+						<option value="jp">Japanese</option>
+					</select>
+			  </div>
+			  
+			  <div class="form-group">
+				<label for="opendate">Open Date</label>
+				<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
+				<script>$('#opendate').datetimepicker();</script>
+			  </div>
+			  <div class="form-group">
+				<label for="closedate">Close Date</label>
+				<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
+				<script>$('#closedate').datetimepicker();</script>
+			  </div><br />
+			  
+			  <button type="button" stype="button" class="btn" onclick="resetForm('#createCourseForm');">Cancel</button>&nbsp;
+			  <button class="btn btn-primary" type="button" onclick="insertNew();">Save</button> <br /><br />
+			</form>	
+			
+			
+		</div>
+		
+		<h2 class="form-course-heading">Courses Instructed</h2>
+		<div id="coursesInstructed" class="table-responsive">
+			
+		</div>
+		
+		<h2 class="form-course-heading">Courses Studied</h2>
+		<div id="coursesStudied" class="table-responsive">
+			
+		</div>
+		
+		</form>	
+    </div>
+       <!-- /container -->
+  </body>
+</html>
