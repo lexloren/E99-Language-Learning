@@ -1,6 +1,7 @@
 var URL = "http://cscie99.fictio.us/";
 var listsURL = URL + 'user_lists.php';
 var viewlistURL = URL + 'list_entries.php?list_id=1';
+var listnum;
 
 /*
 $.mockjax({
@@ -12,7 +13,7 @@ $.mockjax({
 	"result":[
 		{"listId" : 1,
 		"name" : "Lesson 1: Family"},
-		{"listId" : 578,
+		{"listId" : 1,
 		"name" : "Lesson 2: Animals"}],
 	},
 });
@@ -23,32 +24,17 @@ $.mockjax({
 });
 */
 
-// url parameter grabbing code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-var urlParams;
-(window.onpopstate = function () {
-	var match,
-    pl     = /\+/g,  // Regex for replacing addition symbol with a space
-    search = /([^&=]+)=?([^&]*)/g,
-    decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-    query  = window.location.search.substring(1);
-      
-    urlParams = {};
-    while (match = search.exec(query))
-    urlParams[decode(match[1])] = decode(match[2]);
-   })();
-	  
 $(document).ready(function(){
-	$("#success").hide();
-    $("#failure").hide();
-	$("#navbar").load("navbar.html");
+	pageSetup();
 	$("#listpagetitle").hide();
 	$("#dict-add").hide();
 	handleClicks();
-	if(urlParams.listid == null) {
+	listnum = getURLparam('listid');
+	if(listnum === null) {
 		getLists();
 		$("#listpagetitle").show();
 	} else {
-		viewList(urlParams.listid);
+		viewList(listnum);
 	}
 	
 });
@@ -76,16 +62,13 @@ function handleClicks() {
 }
   
 function getLists() {
-
 	$('#lists').html('');
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		if (data.isError === true) {
-			$("#failure").html(data.errorTitle + '<br/>' + data.errorDescription);
-			$("#failure").show();
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
-			$("#failure").html("You don't have any lists to practice with.");
-			$("#failure").show();
+			failureMessage("You don't have any lists to practice with.");
 		} else {
 			$('#lists').append('<tbody>');
 			$.each( data.result, function( ) {
@@ -96,11 +79,9 @@ function getLists() {
 			});
 			$('#lists').append('</tbody>');
 		}
-		
 	})
 	 .fail(function(error) {
-		$("#failure").html('Something has gone wrong. Please hit the back button on your browser and try again.');
-		$("#failure").show();
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
@@ -109,12 +90,9 @@ function viewList(listid) {
 	var currentURL = URL + 'list_entries.php?list_id=' + listid;
 	$.getJSON( currentURL, function( data ) {
 		if (data.isError === true) {
-			$("#failure").html(data.errorTitle + '<br/>' + data.errorDescription);
-			$("#failure").show();
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
-			
-			$("#failure").html("This list doesn't have any entries yet.");
-			$("#failure").show();
+			failureMessage("This list doesn't have any entries yet.");
 			$("#dict-add").show();
 		} else {
 			$('#lists').html('');
@@ -130,17 +108,15 @@ function viewList(listid) {
 			});
 			$("#dict-add").show();
 		}
-		
 	})			
 	 .fail(function(error) {
-		$("#failure").html('Something has gone wrong. Please hit the back button on your browser and try again.');
-		$("#failure").show();
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
 function delete_entry(entry) {
 	var currentURL = URL + 'list_entries_remove.php';
-	$.post(currentURL, {'list_id' : urlParams.listid, 'entry_ids' : entry }, function() {
+	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entry }, function() {
 		console.log( "success" );
 	})
 		.fail(function() {
@@ -179,8 +155,8 @@ function search_entry(page) {
 
 function addEntry(entryid) {
 	var currentURL = URL + 'list_entries_add.php';
-	$.post(currentURL, {'list_id' : urlParams.listid, 'entry_ids' : entryid }, function() {
-		viewList(urlParams.listid);
+	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entryid }, function() {
+		viewList(listnum);
 	})
 		.fail(function() {
 		console.log( "error" );

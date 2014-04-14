@@ -23,6 +23,7 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
 	<script src="../tests/resources/jquery.mockjax.js"></script>
+	<script src="js/common.js"></script>
 	<script src="js/list.js"></script>
 	
   </head>
@@ -31,9 +32,7 @@
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container role="main">
-	<div id="success" class="alert alert-success"></div>
-      <div id="failure" class="alert alert-danger"></div>
+    <div class="container" role="main" id="doc-body">
 	  <h4 id="listpagetitle">Lists</h4>
 	<table class="table" id="lists"></table>
 	<div id="dict-add">
