@@ -41,11 +41,19 @@ $(document).ready(function(){
 	$("#success").hide();
     $("#failure").hide();
 	$("#navbar").load("navbar.html");
+	$("#listpagetitle").hide();
+	$("#dict-add").hide();
+	handleClicks();
 	if(urlParams.listid == null) {
 		getLists();
+		$("#listpagetitle").show();
 	} else {
 		viewList(urlParams.listid);
 	}
+	
+});
+
+function handleClicks() {
 	$(document).on('click', '.list-delete', function () {
 		console.log(this.id);
 	});
@@ -61,10 +69,12 @@ $(document).ready(function(){
 	$(document).on('click', '.add-entry', function () {
 		addEntry(this.id);
 	});
-	
-	
-});
-	  
+	$('#next_dict').on('click', function (event) {
+		event.preventDefault();
+		search_entry();
+	});
+}
+  
 function getLists() {
 
 	$('#lists').html('');
@@ -162,10 +172,6 @@ function search_entry(page) {
 					'<td><button type="submit" class="btn btn-primary add-entry" id="' + this.entryId + '">add</button></td></tr>');
 			});
 			$('#dictionary').append('<tr><td><a href="#" id="next_dict">[next page]</a></td></tr>');
-			$('#next_dict').on('click', function (event) {
-				event.preventDefault();
-				search_entry();
-			});
 			$('#lists').append('</tbody>');
 		}
 	});
