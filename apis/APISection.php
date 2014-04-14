@@ -73,6 +73,11 @@ class APISection extends APIBase
 				$updates += !!$section->set_section_name($_POST["name"]);
 			}
 			
+			if (isset($_POST["num"]))
+			{
+				$updates += !!$section->set_number($_POST["num"]);
+			}
+			
 			if (isset($_POST["message"]))
 			{
 				$updates += !!$section->set_message($_POST["message"]);

@@ -26,6 +26,7 @@ class Dictionary
 
 	public static $page_size = null;
 	public static $page_num = null;
+	public static $pages_count = null;
 	
 	public static $find_last_count = null;
 	
@@ -57,20 +58,30 @@ class Dictionary
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		//  Now perform the query
-		//      First, decode the query and make sure it's safe
-		$query = $mysqli->escape_string($query);
-		
 		//  Make sure the language codes are safe
 		foreach ($lang_codes as &$lang_code)
 		{
 			$lang_code = $mysqli->escape_string($lang_code);
 		}
 		
-		$wildcard = $exact_matches_only ? "" : "%%";
+		if ($exact_matches_only)
+		{
+			$wc = "";
+			$op = "=";
+		}
+		else
+		{
+			$wc = "%%";
+			$op = "LIKE";
+		}
+		
+		//  Now perform the query
+		//      First, decode the query and make sure it's safe
+		//      For BOTH the PHP sprintf() and the SQL query
+		$query = str_replace("%", "%%", $mysqli->escape_string($query));
 		
 		//      Second, take all the pieces created above and run the SQL query
-		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 LIKE '$wildcard%s$wildcard' OR word_1 LIKE '$wildcard%s$wildcard') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
+		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 $op '$wc%s$wc' OR word_1 $op '$wc%s$wc') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
 			self::default_columns(),
 			self::join(),
 			$query,
@@ -86,7 +97,7 @@ class Dictionary
 		
 		//  Save information about query results in static properties
 		self::$find_last_count = $result->num_rows;
-		self::$page_size = self::$find_last_count;
+		self::$page_size = min(self::$find_last_count, 10);
 		self::$page_num = 1;
 		
 		//  Use pagination only if we have both page size and page number
@@ -95,6 +106,8 @@ class Dictionary
 			self::$page_size = intval($pagination["size"], 10);
 			self::$page_num = intval($pagination["num"], 10);
 		}
+		
+		self::$pages_count = intval(self::$find_last_count / self::$page_size, 10) + (self::$find_last_count % self::$page_size != 0);
 		
 		//  Compute the minimum and maximum entries to return
 		$entry_min = (self::$page_num - 1) * self::$page_size;
@@ -105,11 +118,10 @@ class Dictionary
 		$entry_num = 0;
 		while (($result_assoc = $result->fetch_assoc()))
 		{
-			$entry = Entry::from_mysql_result_assoc($result_assoc);
-			self::$entries_by_id[$entry->get_entry_id()] = $entry;
-			
 			if (!self::$page_size || !self::$page_num || ($entry_num >= $entry_min && $entry_num <= $entry_max))
 			{
+				$entry = Entry::from_mysql_result_assoc($result_assoc);
+				self::$entries_by_id[$entry->get_entry_id()] = $entry;
 				array_push($entries_returnable, $entry);
 			}
 			$entry_num ++;
@@ -163,7 +175,7 @@ class Dictionary
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM languages WHERE lang_code LIKE '%s'",
+		$result = $mysqli->query(sprintf("SELECT * FROM languages WHERE lang_code = '%s'",
 			$mysqli->escape_string($lang_code)
 		));
 		

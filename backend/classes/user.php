@@ -50,7 +50,7 @@ class User extends DatabaseRow
 		
 		$query = $mysqli->escape_string($query);
 		
-		$result = $mysqli->query("SELECT * FROM users WHERE email LIKE '$query' OR handle LIKE '$query'");
+		$result = $mysqli->query("SELECT * FROM users WHERE email = '$query' OR handle = '$query'");
 		
 		$users = array ();
 		while (($result_assoc = $result->fetch_assoc()))

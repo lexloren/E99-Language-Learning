@@ -90,6 +90,36 @@ class Section extends CourseComponent
 	{
 		return $this->number;
 	}
+	public function set_number($number)
+	{
+		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit test section.");
+		
+		if ($number === null || ($number = intval($number, 10)) < 1) return self::set_error_description("Test section cannot set number to null or nonpositive integer.");
+		
+		if ($number > ($sections_count = count($this->get_test()->get_sections()))) $number = $sections_count;
+		
+		if ($number === $this->get_number()) return $this;
+			
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_sections SET num = $sections_count + 1 WHERE section_id = %d", $this->get_section_id()));
+		
+		if ($mysqli->error) return self::set_error_description("Section Modification", "Failed to reorder test sections: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_sections SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $this->get_number()));
+		
+		if ($mysqli->error) return self::set_error_description("Section Modification", "Failed to reorder test sections: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_sections SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
+		
+		if ($mysqli->error) return self::set_error_description("Section Modification", "Failed to reorder test sections: " . $mysqli->error . ".");
+		
+		if (!self::update_this($this, "course_unit_test_sections", array ("num" => $number), "section_id", $this->get_section_id())) return null;
+		
+		$this->number = $number;
+		
+		return $this;
+	}
 	
 	private $name = null;
 	public function get_section_name()
@@ -144,7 +174,7 @@ class Section extends CourseComponent
 		$this->section_id = intval($section_id, 10);
 		$this->test_id = intval($test_id, 10);
 		$this->name = !!$name && strlen($name) > 0 ? $name : null;
-		$this->number = $number;
+		$this->number = intval($number, 10);
 		$this->timer = intval($timer, 10);
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
@@ -182,23 +212,32 @@ class Section extends CourseComponent
 	
 	public function delete()
 	{
-		$this->get_test()->uncache_sections();
-		return self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id());
+		if (($return = self::delete_this($this, "course_unit_test_sections", "section_id", $this->get_section_id())))
+		{
+			$this->get_test()->uncache_sections();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$mysqli->query(sprintf("UPDATE course_unit_test_sections SET num = num - 1 WHERE test_id = %d AND num >= %d ORDER BY num", $this->get_test_id(), $this->get_number()));
+			
+			if ($mysqli->error) return self::set_error_description("Unit Deletion", "Failed to reorder test sections: " . $mysqli->error . ".");
+		}
+		return $return;
 	}
 	
 	public function assoc_for_json($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"sectionId" => $this->get_section_id(),
-			"number" => !$privacy ? $this->get_number() : null,
-			"name" => !$privacy ? $this->get_section_name() : null,
-			"testId" => !$privacy ? $this->get_test_id() : null,
-			"unitId" => !$privacy ? $this->get_unit_id() : null,
-			"courseId" => !$privacy ? $this->get_course_id() : null,
-			"owner" => !$privacy ? $this->get_owner()->assoc_for_json() : null,
-			"timer" => !$privacy ? $this->get_timer() : null,
+			"number" => $this->get_number(),
+			"name" => $this->get_section_name(),
+			"testId" => $this->get_test_id(),
+			"unitId" => $this->get_unit_id(),
+			"courseId" => $this->get_course_id(),
+			"owner" => $this->get_owner()->assoc_for_json(),
+			"timer" => $this->get_timer(),
 			"entriesCount" => count($this->get_entries()),
-			"message" => !$privacy ? $this->get_message() : null
+			"message" => $this->get_message()
 		), array (0 => "sectionId"), $privacy);
 	}
 	
