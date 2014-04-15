@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unit</title>
+    <title>Xenogloss</title>
 
     <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
     <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
@@ -13,6 +13,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
     <script src="js/jquery-ui-timepicker-addon.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/unit.js"></script>
     <script src="js/bootstrap.min.js"></script>
 
@@ -22,76 +23,91 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <script>
-      // url parameter grabbing code from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
-      var urlParams;
-      (window.onpopstate = function () {
-          var match,
-              pl     = /\+/g,  // Regex for replacing addition symbol with a space
-              search = /([^&=]+)=?([^&]*)/g,
-              decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-              query  = window.location.search.substring(1);
-      
-          urlParams = {};
-          while (match = search.exec(query))
-             urlParams[decode(match[1])] = decode(match[2]);
-      })();
-
-      $(document).ready(function(){
-        $("#success").hide();
-        $("#failure").hide();
-        $("#navbar").load("navbar.html");
-        getUnitInfo();
-      });
-    </script>
   </head>
   <body role="document">
 
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container-left" role="main">
-      <div id="success" class="alert alert-success">
-      </div>
-      <div id="failure" class="alert alert-danger">
-      </div>
+    <div class="container-left" role="main" id="doc-body">
+	    <img src="images/ajax-loader.gif" id="loader">
       <div id="unitData">
+        <div id="unit-header"></div><br />
+        <div id="unit-update">
+          <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
+          <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
+        </div>
+        <!--- Update form --->
         <form id="updateUnitForm" role="form">
-          <h3 class="form-signin-heading">Edit Unit</h3><br />
           <div class="form-group">
             <label for="unitname">Unit Name</label>
             <input type="text" class="form-control" id="unitname">
           </div>
           <div class="form-group">
-            <label for="instructions">Unit Instructions</label>
-            <textarea class="form-control" id="instructions" rows="5"></textarea>
+            <label for="unitdesc">Unit Description</label>
+            <textarea class="form-control" id="unitdesc" rows="5"></textarea>
           </div>
           <div class="form-group">
-            <label for="opendate">Open Date</label>
-            <input type="text" class="form-control form-control-date" id="opendate">
-            <script>$('#opendate').datetimepicker();</script>
+            <label for="unitopendate">Open Date</label>
+            <input type="text" class="form-control form-control-date" id="unitopendate">
+            <script>$('#unitopendate').datetimepicker();</script>
           </div>
           <div class="form-group">
-            <label for="closedate">Close Date</label>
-            <input type="text" class="form-control form-control-date" id="closedate">
-            <script>$('#closedate').datetimepicker();</script>
+            <label for="unitclosedate">Close Date</label>
+            <input type="text" class="form-control form-control-date" id="unitclosedate">
+            <script>$('#unitclosedate').datetimepicker();</script>
           </div><br />
-        <button class="btn btn-primary" type="button" onclick="updateUnit();">Update Unit</button> &nbsp;
-        <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
+        <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button> &nbsp;
+        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /><br /> 
         </form> 
-        <!---<strong>Decks</strong>
-        <div id="decks" class="table-responsive">
-          <table id="deckDetails" class="table">
-          </table>
+
+        <h4>Decks</h4>
+        <table id="lists" class="table">
+          <tr>
+            <th>Name</th>
+            <th>Card Count</th>
+            <th>Remove</th>
+          </tr>
+        </table>
+        <div id="add-list">    
+          <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Add New Deck</button>  
         </div>
         <br />
-        <button class="btn btn-primary" type="button" onclick="console.log('pending');">Add New Deck</button> 
-        <br /><br />--->
-        <strong>Tests:</strong> <span id="tests"></span>
-        <br /><br />      
-        <div id="testData">    
-          <button class="btn btn-primary" type="button" onclick="createTest();">Add New Test</button>  
+        <h4>Tests</h4>
+        <table id="tests" class="table">
+          <tr>
+            <th>Name</th>
+            <th>Open Date</th>
+            <th>Close Date</th>
+          </tr>
+        </table>
+        <div id="add-test">    
+          <button class="btn btn-primary" type="button" onclick="showForm('#createTestForm','#add\-test');">Add New Test</button>  
         </div>
+        <!--- Test Form --->
+        <form id="createTestForm" role="form">
+          <h3 class="form-signin-heading">Create Test</h3><br />
+          <div class="form-group">
+            <label for="testname">Test Name</label>
+            <input type="text" class="form-control" id="testname" placeholder="Enter the name of the test" required autofocus>
+          </div>
+          <div class="form-group">
+            <label for="testdesc">Test Instructions</label>
+            <textarea class="form-control" id="testdesc" rows="5"placeholder="Enter the instructions for the test" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="testopendate">Open Date</label>
+            <input type="text" class="form-control form-control-date" id="testopendate" placeholder="Select open date/time" required>
+            <script>$('#testopendate').datetimepicker();</script>
+          </div>
+          <div class="form-group">
+            <label for="testclosedate">Close Date</label>
+            <input type="text" class="form-control form-control-date" id="testclosedate" placeholder="Select close date/time" required>
+            <script>$('#testclosedate').datetimepicker();</script>
+          </div><br />
+          <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
+          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br /><br />     
+        </form>	
       </div>
     </div> <!-- /container -->
 

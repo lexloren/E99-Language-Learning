@@ -1,147 +1,84 @@
-function showFailure(){
-  $("#failure").show();
-  $("html, body").animate({scrollTop:0}, "slow");  
-}
+var unit;
 
-function createTest(){
-    window.location.href = 'createtest.html?unit='+urlParams.unit;
-}
+$(document).ready(function(){
+	pageSetup();
+	$("#loader").hide();
+	unit = getURLparam('unitid');
+	if(unit === null) {
+    $("#unitData").hide();
+    failureMessage("The unit must be specified. Go to a course page and select a unit to view.");
+    return;
+	} 
+  else {
+    $("#updateUnitForm").hide();
+    $("#createTestForm").hide();
+    getUnitInfo();
+	}
+});
 
-function getDeckInfo(){
-    if(urlParams.unit == null){
-        $("#unitData").hide();
-        $("#failure").html("The unit must be specified. Go to the course page and select a unit to view.");
-        showFailure(); 
-        return;
-    }
-
-    $.getJSON('../../unit_lists.php', 
-        {unit_id: urlParams.unit},
-        function(data){
-            if(data.isError){
-                $("#decks").html("Flashcard data could not be retrieved for this unit.");
-            }
-            else{
-                $.each(data.result, function(i, item){
-                    newrow = '<tr><td>' + item.name + '</td></tr>';
-                    $('#deckDetails').append(newrow);
-                });
-            }
-    }); 
-}
-
-/*
 function getUnitInfo(){
-    if(urlParams.unit == null){
-        $("#unitData").hide();
-        $("#failure").html("The unit must be specified. Go to the course page and select a unit to view.");
-        showFailure(); 
-        return;
-    }
-    $.getJSON('../../unit_tests.php', 
-        {unit_id: urlParams.unit})
-        .done(function(data){
-            if(data.isError){
-                $("#tests").html("Test data could not be retrieved for this unit.");
-            }
-            else{
-                $.each(data.result, function(i, item){
-                    testlink = '<a href="test.html?test='+item.testId+'">';
-                    $('#tests').append("<br /> &nbsp; &nbsp; "+testlink+item.name+"</a>");
-                });
-            }		
-            $.getJSON('../../unit_select.php', 
-                {unit_id: urlParams.unit})
-                .done(function(data){
-                    if(data.isError){
-                        $("#failure").html("Information for this unit could not be retrieved.");
-                    }
-                    else{
-                        $("#unitname").val(data.result.name);
-                        if(data.result.message != null){
-                            $("#instructions").val(data.result.message);
-                        }
-                        if(data.result.timeframe != null){
-                            if(data.result.timeframe.open != null){
-                                opendate = new Date(data.result.timeframe.open);
-                                $("#opendate").val(opendate);
-                            }
-                            if(data.result.timeframe.close != null){
-                                closedate = new Date(data.result.timeframe.close);
-                                $("#closedate").val(closedate);
-                            }
-                        }
-                    }			
-            });
-    });
-}*/
-function getUnitInfo(){
-    if(urlParams.unit == null){
-        $("#unitData").hide();
-        $("#failure").html("The unit must be specified. Go to the course page and select a unit to view.");
-        showFailure(); 
-        return;
-    }
-	
+	  $("#loader").show();
+    $("#unitData").hide();
     $.getJSON('../../unit_select.php', 
-        {unit_id: urlParams.unit})
+        {unit_id: unit})
         .done(function(data){
             if(data.isError){
-                $("#failure").html("Information for this unit could not be retrieved.");
+                failureMessage("Information for this unit could not be retrieved.");
             }
             else{
+                unitheader = '<h3 class="form-signin-heading">Unit '+data.result.unitId+': '+data.result.name+'</h3>';
+                $("#unit-header").html(unitheader);
                 $("#unitname").val(data.result.name);
                 if(data.result.message != null){
-                    $("#instructions").val(data.result.message);
+                    $("#unitdesc").val(data.result.message);
                 }
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
                         opendate = new Date(data.result.timeframe.open);
-                        $("#opendate").val(opendate);
+                        $("#unitopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
                         closedate = new Date(data.result.timeframe.close);
-                        $("#closedate").val(closedate);
+                        $("#unitclosedate").val(closedate);
                     }
                 }
-                $.each(data.result.tests, function(i, item){
-                    testlink = '<a href="test.html?test='+item.testId+'">';
-                    $('#tests').append("<br /> &nbsp; &nbsp; "+testlink+item.name+"</a>");
-                });
-            }			
+                if(data.result.lists.length == 0){
+                    $('#lists').html("<em>This unit currently has no decks.</em>");
+                }
+                else{
+                    $.each(data.result.lists, function(i, item){
+                        testrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' +
+                                  '<td>' + item.entriesCount + '</td>' +
+                                  '<td><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'></td></tr>';
+                        $('#lists').append(newrow);
+                    });
+                    $('#lists').append('<tr><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeLists();">Remove Selected Decks</button></td></tr>');
+                }
+                if(data.result.tests.length == 0){
+                    $('#tests').html("<em>This unit currently has no tests.</em>");
+                }
+                else{
+                    $.each(data.result.tests, function(i, item){
+                        testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
+                                  '<td>' + item.timeframe.open + '</td>' +
+                                  '<td>' + item.timeframe.close + '</td></tr>';
+                        $('#tests').append(newrow);
+                    });
+                }
+            }	
+            $("#loader").hide();
+            $("#unitData").show();		
     });
 
 }
 
-/*
-function getTestInfo(){
-    $.getJSON('../../unit_tests.php', 
-        {unit_id: urlParams.unit})
-        .done(function(data){
-            if(data.isError){
-                $("#tests").html("Test data could not be retrieved for this unit.");
-            }
-            else{
-                $.each(data.result, function(i, item){
-                    testlink = '<a href="test.html?test='+item.testId+'">';
-                    $('#tests').append("<br /> &nbsp; &nbsp; "+testlink+item.name+"</a>");
-                });
-            }		
-    });
-
-}*/
 
 function deleteUnit(){
-    if(urlParams.unit == null){
-        $("#failure").html("The unit to be deleted must be specified. Go to the associated unit's page to delete it.");
-        showFailure(); 
-        return;
-    }
     if(!confirm("Are you sure you want to delete this unit?")){
         return;
     }
     $.post('../../unit_delete.php', 
-        { unit_id: urlParams.unit })
+        { unit_id: unit })
         .done(function(data){
         if(data.isError){
             var errorMsg = "Unit could not be deleted: ";
@@ -151,53 +88,107 @@ function deleteUnit(){
             else if(data.errorTitle == "Unit Deletion"){
                 errorMsg += "Please refresh the page and try again.";
             }
-            $("#failure").html(errorMsg);
-            showFailure();
+            failureMessage(errorMsg);
         }
         else{
-            $("#unitData").html("Unit was successfully deleted.");
+            $("#unitData").hide();
+            successMessage("Unit was successfully deleted.");
         }
     });
     return; 
 }
 
-function updateUnit(){
-    if(urlParams.unit == null){
-        $("#failure").html("The unit to be updated must be specified. Go to the associated unit's page to update it.");
-        showFailure(); 
-        return;
+function showForm(frm,tohide){
+    $(tohide).hide();
+    $(frm).show();
+}
+
+function cancelUpdate(frm,tohide){
+    if(frm != '#updateUnitForm'){ // but maybe add something to restore original values for updateUnitForm?
+        $(frm)[0].reset(); 
     }
-    // should refactor this out into a separate function since create form uses it too
+    $(frm).hide();
+    $(tohide).show();
+}
+
+function saveUpdate(){
     var unitname = $("#unitname").val();
-    var instructions = $("#instructions").val();
-    var opendate = $("#opendate").val();
-    var closedate = $("#closedate").val();
+    var desc = $("#unitdesc").val();
+    var opendate = $("#unitopendate").val();
+    var closedate = $("#unitclosedate").val();
     
-	  if(unitname == "" || instructions == "" || opendate == "" || closedate == ""){
-		    $("#failure").html("Please provide unit name, instructions, and open/close dates.");	
-	      showFailure();
+	  if(unitname == "" || desc == "" || opendate == "" || closedate == ""){
+		    failureMessage("Please provide unit name, instructions, and open/close dates.");	
         return;
     }
+
     opendate = Date.parse(opendate);
     closedate = Date.parse(closedate);
 
     if(closedate < opendate){
-		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
-	      showFailure();
+		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
         return;
     }
+
     $.post('../../unit_update.php', 
-        { unit_id: urlParams.unit, name: unitname, open: opendate, close: closedate, message: instructions } )
+        { unit_id: unit, name: unitname, open: opendate, close: closedate, message: desc } )
         .done(function(data){
             if(data.isError){
-                var errorMsg = "Unit could not be updated.";
-                // not sure of error titles yet
-                $("#failure").html(errorMsg);
-                showFailure();
+                var errorMsg = "Unit could not be updated. Please reload the page and try again.";
+                failureMessage(errorMsg);
             }
             else{
-                document.location.reload(true);
+                getUnitInfo();
+                cancelUpdate("#updateUnitForm","#unit-update");
+                successMessage("Unit was successfully updated.");
             }
     });
+    return; 
+}
+
+function verifyTestForm(){
+    var testname = $("#testname").val();
+    var desc = $("#testdesc").val();
+    var opendate = $("#testopendate").val();
+    var closedate = $("#testclosedate").val();
+    
+	  if(testname == "" || desc == "" || opendate == "" || closedate == ""){
+		    failureMessage("Please provide test name, instructions, and open/close dates.");	
+        return;
+    }
+
+    opendate = Date.parse(opendate);
+    closedate = Date.parse(closedate);
+
+    if(closedate < opendate){
+		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
+        return;
+    }
+
+    submitCreateTestForm(testname, desc, opendate, closedate);
+}
+
+function submitCreateTestForm(testname, desc, opendate, closedate){
+    $.post('../../test_insert.php', 
+        { unit_id: unit, name: testname, open: opendate, close: closedate, message: desc } )
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "Test could not be created: ";
+                if(data.errorTitle == "Unit Selection"){
+                    errorMsg += "Unit does not exist.";
+                }
+                else if(data.errorTitle == "Test Insertion"){
+                    errorMsg += "Please refresh the page and try again.";
+                }
+                failureMessage(errorMsg);
+            }
+            else{
+                getUnitInfo();
+                cancelUpdate("#createTestForm","#add-test");
+            }
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
