@@ -27,12 +27,7 @@ body {
   text-align: center;
 }
 
-.form-signin {
-  max-width: 330px;
-  margin: auto;
-}
-
-.form-register {
+.block-login {
   max-width: 450px;
   margin: auto;
 }
