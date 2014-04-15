@@ -69,9 +69,20 @@
             <th>Remove</th>
           </tr>
         </table>
-        <div id="add-list">    
-          <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Add New Deck</button>  
-        </div>
+        <div id="search-list">    
+          <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Search Decks</button>  
+        </div> 
+	      <!--- List Search Form --->
+        <form id="searchListForm" role="form">
+          <div class="form-group">
+            <label for="listCriteria">Search Decks:</label>
+            <input type="text" class="form-control" id="listCriteria" placeholder="Enter search criteria" required autofocus>
+          </div>
+          <button class="btn btn-primary" type="button" onclick="return searchLists();">Search</button> &nbsp;
+          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#searchListForm','#search\-list');">Cancel</button><br /><br />     
+        </form>
+        <div id="searchResults">
+        </div>   
         <br />
         <h4>Tests</h4>
         <table id="tests" class="table">

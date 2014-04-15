@@ -12,10 +12,25 @@ $(document).ready(function(){
   else {
     $("#updateUnitForm").hide();
     $("#createTestForm").hide();
+    $("#searchListForm").hide();
     getUnitInfo();
 	}
 });
 
+function showForm(frm,tohide){
+    $(tohide).hide();
+    $(frm).show();
+}
+
+function cancelUpdate(frm,tohide){
+    if(frm != '#updateUnitForm'){ // but maybe add something to restore original values for updateUnitForm?
+        $(frm)[0].reset(); 
+    }
+    $(frm).hide();
+    $(tohide).show();
+}
+
+<!--- Units --->
 function getUnitInfo(){
 	  $("#loader").show();
     $("#unitData").hide();
@@ -72,7 +87,6 @@ function getUnitInfo(){
 
 }
 
-
 function deleteUnit(){
     if(!confirm("Are you sure you want to delete this unit?")){
         return;
@@ -96,19 +110,6 @@ function deleteUnit(){
         }
     });
     return; 
-}
-
-function showForm(frm,tohide){
-    $(tohide).hide();
-    $(frm).show();
-}
-
-function cancelUpdate(frm,tohide){
-    if(frm != '#updateUnitForm'){ // but maybe add something to restore original values for updateUnitForm?
-        $(frm)[0].reset(); 
-    }
-    $(frm).hide();
-    $(tohide).show();
 }
 
 function saveUpdate(){
@@ -146,6 +147,7 @@ function saveUpdate(){
     return; 
 }
 
+<!--- Tests --->
 function verifyTestForm(){
     var testname = $("#testname").val();
     var desc = $("#testdesc").val();
@@ -191,4 +193,98 @@ function submitCreateTestForm(testname, desc, opendate, closedate){
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
 	  });
     return; 
+}
+
+<!--- Lists --->
+function addLists(){
+    var listsAdd = $('.add_list_ids:checked').map(function () {
+      return this.value;
+    }).get().join(",");
+
+    $.post('../../unit_lists_add.php', 
+        { unit_id: unit, list_ids: listsAdd })
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "List(s) could not be added: ";
+
+                if(data.errorTitle == "Unit Selection"){
+                    errorMsg += "Unit does not exist.";
+                }
+                else{
+                    errorMsg += "Please refresh the page and try again.";
+                }
+                failureMessage(errorMsg);
+            }
+            else{
+                getUnitInfo();
+            }
+    });
+    return; 
+}
+
+function removeLists(){
+    var listsRem = $('.rem_list_ids:checked').map(function () {
+      return this.value;
+    }).get().join(",");
+
+    $.post('../../unit_lists_remove.php', 
+        { unit_id: unit, list_ids: listsRem })
+        .done(function(data){
+            if(data.isError){
+                var errorMsg = "List(s) could not be removed: ";
+                if(data.errorTitle == "Unit Selection"){
+                    errorMsg += "Unit does not exist.";
+                }
+                else{
+                    errorMsg += "Please refresh the page and try again.";
+                }
+                failureMessage(errorMsg);
+            }
+            else{
+                getUnitInfo();
+            }
+    });
+    return; 
+}
+
+function toggleSearch(){
+    $("#searchResults").html('');
+    if($("#searchListForm").is(":visible")){
+        $("#searchListForm").slideUp();
+    }
+    else{
+        $("#listCriteria").val('');
+        $("#searchListForm").slideDown();
+    }
+}
+
+function searchLists(){
+    toggleSearch();
+    criteria = $("#listCriteria").val();
+    $.getJSON('../../list_find.php', <!--- not implemented yet --->
+        {query: criteria}, 
+        function(data){
+            if(data.result.length == 0){
+                $('#searchResults').html('<br />No matching lists found.<br /><br />');
+                $('#searchResults').append('<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
+            }
+            else{
+                $('#searchResults').append('<br /><strong>Search Results:</strong>');
+                $.each(data.result, function(i, item){
+                    if($(".rem_list_ids:checkbox[value="+item.listId+"]").length > 0){
+                        disabled = " disabled";
+                    }
+                    else{
+                        disabled = "";
+                    }
+                    result = '<div class="checkbox"><label><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+item.listId+disabled+'>'+
+                             item.name+'</label></div>';
+                    $('#searchResults').append(result);
+                });
+                $('#searchResults').append('<br /><button class="btn btn-primary" type="button" onclick="addLists();">Add Selected Lists</button> &nbsp; &nbsp;'+
+                                           '<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
+            }		
+    }); 
+    //$("html, body").animate({scrollBottom:0}, "slow");  
+    return;
 }
