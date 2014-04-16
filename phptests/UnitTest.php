@@ -25,7 +25,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user_obj);
 		$this->unit = Unit::insert($this->db->course_ids[0], "unit_setup");
 	}
-	
+
 	public function test_unit_insert()
 	{
 		Session::get()->set_user(null);
@@ -67,13 +67,15 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($unit_expect->get_lists(), $unit_actual->get_lists());
 		$this->assertEquals($unit_expect->get_timeframe(), $unit_actual->get_timeframe());
 	}
-	
+
 	public function test_unit_set_attributes()
 	{
 		$this->unit->set_unit_name("new_name");
 		$this->assertEquals($this->unit->get_unit_name(), "new_name");
-		$open = 1396382400000;
-		$close = 1396468800000;
+
+		$open = strtotime("2014-04-12 00:00:00");
+		$close = strtotime("2014-05-12 00:00:00");
+		
 		$timeframe = new Timeframe($open, $close);
 		$this->unit->set_timeframe($timeframe);
 		$this->assertEquals($this->unit->get_timeframe(), $timeframe);
@@ -84,7 +86,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$this->unit->set_message("test_message");
 		$this->assertEquals($this->unit->get_message(), "test_message");
 	}
-	
+
 	public function test_unit_lists()
 	{
 		$entries = $this->db->add_dictionary_entries(5);
