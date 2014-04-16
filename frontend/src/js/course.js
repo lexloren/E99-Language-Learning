@@ -3,12 +3,195 @@ function cleanupMessage() {
     $("#failure").hide();
 	$("#failure").html("");
     $("#success").html("");
+	$("#progress").hide();
+	
 }
 function resetForm(frm){
   cleanupMessage(); 
   $(frm)[0].reset()
   $("#createnew").hide();
 	$("#coursesOwned").show();
+}
+
+/** This function is used by Index Page to init the Tabs etc.*/
+function initIndexPage() {
+
+	cleanupMessage();
+	$("#progress").show();
+	
+	$.getJSON("../../user_select.php", function(data){
+        if(data.isError){
+            $("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
+            $("#failure").show();
+			$("#progress").hide();
+        }
+        else{
+			/** Begin Populate the Profile*/
+			populateProfileTab(data);
+			/** Write Course Information*/
+			populateMyCourseTab(data,"#course");
+			/** Write My List Information*/
+			populateMyListTab(data,"#list");
+			$("#progress").hide();
+		}
+	});  
+	
+}
+
+function populateProfileTab(data) {
+	$("#inputLoginHandle").val(data.result.handle);
+	$("#inputEmail").val(data.result.email);
+	$("#inputNameGiven").val(data.result.nameGiven);
+	$("#inputFamilyName").val(data.result.nameFamily);
+	$.each( data.result.languages, function() {
+		var langCode = this.code;
+		var langDesc = this.names.en;
+		if (this.names.cn) {
+			langDesc = langDesc + " - " + this.names.cn;
+		}
+		if (this.names.jp) {
+			langDesc = langDesc + " - " + this.names.jp;
+		}
+		if ($("#lang_" + langCode)) {
+			$("#lang_" + langCode).prop('checked', true); 
+			$("#lang_" + langCode +"_init").val("Y");
+			$("#lang_" + langCode +"_desc").html(langDesc);
+		}
+	});
+}
+/**Populate the My Course Tab */
+function populateMyCourseTab(data, divID) {
+	var courseHTML ='';
+	try
+	{
+		if (data.result.courses.length >0) {
+			courseHTML ='<table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Known Language</th><th>Learning</th></tr></thead>';
+		}
+		$.each( data.result.courses, function() {
+			courseHTML = courseHTML + '<tr><td>' + this.courseId +'</td><td><a href="course.html?courseid=' + this.courseId +'">' + this.name +'</a>';
+			if (this.message != null) {
+				courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
+			}
+			if (this.sessionUserPermissions.write) {
+				courseHTML =  courseHTML + '<br/><img src="images/admin_min.png" height="20px" width="20px"/>';
+			}
+			courseHTML = courseHTML + '</td>';
+			courseHTML =  courseHTML + '<td>'+ this.languageKnown.names.en;
+			if (this.languageKnown.names.cn) {
+				courseHTML =  courseHTML + '<br/>' + this.languageKnown.names.cn;
+			}
+			if (this.languageKnown.names.jp) {
+				courseHTML =  courseHTML + '<br/>' + this.languageKnown.names.jp;
+			}
+			courseHTML = courseHTML + '</td>';
+			
+			courseHTML =  courseHTML + '<td>'+ this.languageUnknown.names.en;
+			if (this.languageUnknown.names.cn) {
+				courseHTML =  courseHTML + '<br/>' + this.languageUnknown.names.cn;
+			}
+			if (this.languageUnknown.names.jp) {
+				courseHTML =  courseHTML + '<br/>' + this.languageUnknown.names.jp;
+			}
+			courseHTML = courseHTML + '</td></tr>';
+				
+		});
+		if (data.result.courses.length >0) {
+			courseHTML =courseHTML + '</table>';
+		}
+		$(divID).html(courseHTML);
+	}
+	catch (e ) {
+		$(divID).html('Error while populating course list, Please try again.');
+	}
+}
+
+
+function insertNew() {
+	cleanupMessage();
+    var courseName = $("#coursename").val();
+	var courseDetails = $("#coursedetails").val();
+    var startDate = $("#dtStartDate").val();
+    var endDate = $("#dtEndDate").val();
+	var knownLang = $("#knownLang").val();
+	var unknownLang = $("#unknownLang").val();
+	
+    if(courseName == "" ){
+        $("#failure").html("Please enter course name");
+        displayAlert("#failure", "#courseForm");
+        return;
+    }
+	
+	if(startDate == "" ){
+        $("#failure").html("Please enter course start date");
+        displayAlert("#failure", "#courseForm");
+        return;
+    }
+	
+	if(endDate == "" ){
+        $("#failure").html("Please enter course end date");
+        displayAlert("#failure", "#courseForm");
+        return;
+    }
+	
+	if(knownLang == "" ){
+        $("#failure").html("Please the source Language");
+        displayAlert("#failure", "#courseForm");
+        return;
+    }
+	
+	if(unknownLang == "" ){
+        $("#failure").html("Please the Language to be learnt");
+        displayAlert("#failure", "#courseForm");
+        return;
+    }
+	
+    $.post('../../course_insert.php', 
+        {   lang_known: knownLang, lang_unknw: unknownLang ,name: courseName, message:coursedetails})
+        .done(function(data){
+            if(data.isError){
+                $("#failure").html("The course could not be created: " + data.errorDescription);
+                $("#failure").show();
+            }
+            else{
+                $("#success").html('The course has been successfully created.Review <a href="course.html" class="alert-link">All Courses</a>');
+                displayAlert("#success", "#courseForm");
+				resetForm("#insertCourceForm");
+       			displayCourses('#coursesOwned', '../../user_courses.php');
+       			displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
+       			displayCourses('#coursesStudied', '../../user_student_courses.php');
+            }
+    });
+    return; 
+}
+
+
+
+
+
+/**Populate the My List Tab */
+function populateMyListTab(data, divID) {
+	var listHTML ='';
+	try
+	{
+		if (data.result.lists.length ==0) {
+			listHTML ='<div  class="alert alert-info">No Lists, Please create <a href="list.html">list</a> and practice</div>';
+		}
+		else {
+			if (data.result.lists.length >0) {
+				listHTML ='<ul class="list-group">';
+			}
+			$.each( data.result.lists, function() {
+				listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.entriesCount + '</span>  <a href="list.html?listid=' + this.listId +'">' + this.name +'</a>  </li>';
+			});
+			if (data.result.courses.length >0) {
+				listHTML =listHTML + '</ul>';
+			}
+		}
+		$(divID).html(listHTML);
+	}
+	catch (e ) {
+		$(divID).html('Error while populating my list, Please try again.');
+	}
 }
 
 function setupMaintCourse(){
@@ -78,62 +261,6 @@ function displayAlert(div, frm){
     return;
 }
 
-function insertNew() {
-	cleanupMessage();
-    var courseName = $("#coursename").val();
-    var startDate = $("#dtStartDate").val();
-    var endDate = $("#dtEndDate").val();
-	var knownLang = $("#knownLang").val();
-	var unknownLang = $("#unknownLang").val();
-	
-    if(courseName == "" ){
-        $("#failure").html("Please enter course name");
-        displayAlert("#failure", "#courseForm");
-        return;
-    }
-	
-	if(startDate == "" ){
-        $("#failure").html("Please enter course start date");
-        displayAlert("#failure", "#courseForm");
-        return;
-    }
-	
-	if(endDate == "" ){
-        $("#failure").html("Please enter course end date");
-        displayAlert("#failure", "#courseForm");
-        return;
-    }
-	
-	if(knownLang == "" ){
-        $("#failure").html("Please the source Language");
-        displayAlert("#failure", "#courseForm");
-        return;
-    }
-	
-	if(unknownLang == "" ){
-        $("#failure").html("Please the Language to be learnt");
-        displayAlert("#failure", "#courseForm");
-        return;
-    }
-	
-    $.post('../../course_insert.php', 
-        {   lang_known: knownLang, lang_unknw: unknownLang ,name: courseName})
-        .done(function(data){
-            if(data.isError){
-                $("#failure").html("The course could not be created: " + data.errorDescription);
-                displayAlert("#failure", "#courseForm");
-            }
-            else{
-                $("#success").html('The course has been successfully created.Review <a href="course.html" class="alert-link">All Courses</a>');
-                displayAlert("#success", "#courseForm");
-				resetForm("#courseForm");
-       			displayCourses('#coursesOwned', '../../user_courses.php');
-       			displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
-       			displayCourses('#coursesStudied', '../../user_student_courses.php');
-            }
-    });
-    return; 
-}
 
 function displayCourses(sourceDiv, scriptAddress){
 	cleanupMessage();
