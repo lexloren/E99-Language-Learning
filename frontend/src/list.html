@@ -31,36 +31,44 @@
 
     <!-- Fixed navbar -->
     <div id="navbar"></div>
-
+	<br/>
     <div class="container" role="main" id="doc-body">
-	  <h4 id="listpagetitle">Lists</h4>
-	<table class="table" id="lists"></table>
-	<div id="dict-add">
-		<h4>Add an entry from the dictionary:</h4>
-		<form class="form-inline" role="form" id="dict-search">
-		  <div class="form-group">
-			<label class="sr-only" for="entrysearch">Enter text to search for</label>
-			<input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
-		  </div>
-		  <div class="form-group">
-			<label>From: </label>
-			<select class="form-control" id="lang1">
-			  <option>cn</option>
-			  <option>jp</option>
-			</select>
-		  </div>
-		  <div class="form-group">
-			<label>To: </label>
-			<select class="form-control" id="lang2">
-			  <option>en</option>
-			</select>
-		  </div>
-		  <button type="submit" class="btn btn-primary" >Search</button>
-		</form>
-		<br/>
-		<table class="table" id="dictionary"></table>
+	   <button type="button" class="btn btn-primary btn-lg" id="create-list">Create a new List</button>
+	   <form class="form-inline" role="form" id="list-add">
+	      <div class="form-group">
+		    <label class="sr-only" for="entrysearch">List name</label>
+		    <input type="text" class="form-control" id="new-list-name" placeholder="List name">
+	      </div>
+		  <button type="submit" class="btn btn-primary">Add List</button>
+	   </form>
+	   <br/>
+	   <h4 id="listpagetitle">Your Lists</h4>
+	   <table class="table" id="lists"></table>
+	   <div id="dict-add">
+	      <h4>Add an entry from the dictionary:</h4>
+		  <form class="form-inline" role="form" id="dict-search">
+		     <div class="form-group">
+			    <label class="sr-only" for="entrysearch">Enter text to search for</label>
+			    <input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
+		     </div>
+		     <div class="form-group">
+			    <label>From: </label>
+			    <select class="form-control" id="lang1">
+			     <option>cn</option>
+			     <option>jp</option>
+			    </select>
+		     </div>
+		     <div class="form-group">
+			   <label>To: </label>
+			   <select class="form-control" id="lang2">
+			   <option>en</option>
+			   </select>
+		     </div>
+		     <button type="submit" class="btn btn-primary" >Search</button>
+		   </form>
+		   <br/>
+		   <table class="table" id="dictionary"></table>
+	   </div>
 	</div>
-	</div>
-	
   </body>
 </html>
