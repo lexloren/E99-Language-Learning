@@ -80,10 +80,14 @@ function getUnitInfo(){
                         $('#tests').append(newrow);
                     });
                 }
+                $("#unitData").show();	
             }	
-            $("#loader").hide();
-            $("#unitData").show();		
-    });
+            $("#loader").hide();	
+    })
+	 .fail(function(error) {
+        $("#loader").hide();
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
 
 }
 
@@ -108,7 +112,10 @@ function deleteUnit(){
             $("#unitData").hide();
             successMessage("Unit was successfully deleted.");
         }
-    });
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
 
@@ -143,7 +150,10 @@ function saveUpdate(){
                 cancelUpdate("#updateUnitForm","#unit-update");
                 successMessage("Unit was successfully updated.");
             }
-    });
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
 
@@ -218,7 +228,10 @@ function addLists(){
             else{
                 getUnitInfo();
             }
-    });
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
 
@@ -243,7 +256,10 @@ function removeLists(){
             else{
                 getUnitInfo();
             }
-    });
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
 
@@ -284,7 +300,10 @@ function searchLists(){
                 $('#searchResults').append('<br /><button class="btn btn-primary" type="button" onclick="addLists();">Add Selected Lists</button> &nbsp; &nbsp;'+
                                            '<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
             }		
-    }); 
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  }); 
     //$("html, body").animate({scrollBottom:0}, "slow");  
     return;
 }
