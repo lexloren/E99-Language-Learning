@@ -25,6 +25,13 @@ class Timeframe
 		return ($time = time()) > $this->get_open() && $time < $this->get_close();
 	}
 	
+	public function get_duration()
+	{
+		return !!$this->get_close() && !!$this->get_open()
+			? $this->get_close() - $this->get_open()
+			: null;
+	}
+	
 	public function mysql_assignments()
 	{
 		return array (

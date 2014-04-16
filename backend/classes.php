@@ -15,7 +15,7 @@ require_once "./backend/classes/course.php";
 require_once "./backend/classes/course_component.php";
 require_once "./backend/classes/unit.php";
 require_once "./backend/classes/test.php";
-require_once "./backend/classes/section.php";
+require_once "./backend/classes/sitting.php";
 
 function array_drop(&$array, $item)
 {

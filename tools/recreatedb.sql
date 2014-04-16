@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 06 april 2014 kl 14:46
+-- Skapad: 12 april 2014 kl 09:12
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -136,54 +136,81 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_test_sections`
+-- Struktur för tabell `course_unit_test_entries`
 --
 
-DROP TABLE IF EXISTS `course_unit_test_sections`;
-CREATE TABLE IF NOT EXISTS `course_unit_test_sections` (
-  `section_id` bigint(20) unsigned NOT NULL auto_increment,
-  `test_id` bigint(20) unsigned NOT NULL,
-  `name` char(255) default NULL,
-  `num` smallint(5) unsigned NOT NULL,
-  `timer` int(10) unsigned NOT NULL,
-  `message` text,
-  PRIMARY KEY  (`section_id`),
-  UNIQUE KEY `test_id` (`test_id`,`num`),
-  KEY `num` (`num`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
--- --------------------------------------------------------
-
---
--- Struktur för tabell `course_unit_test_section_entries`
---
-
-DROP TABLE IF EXISTS `course_unit_test_section_entries`;
-CREATE TABLE IF NOT EXISTS `course_unit_test_section_entries` (
+DROP TABLE IF EXISTS `course_unit_test_entries`;
+CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   `test_entry_id` bigint(20) unsigned NOT NULL auto_increment,
-  `section_id` bigint(20) unsigned NOT NULL,
+  `test_id` bigint(20) unsigned NOT NULL,
   `user_entry_id` bigint(20) unsigned NOT NULL,
+  `number` smallint(5) unsigned NOT NULL,
+  `show_word_0` tinyint(1) NOT NULL default '0',
+  `show_word_1` tinyint(1) NOT NULL default '1',
+  `show_word_1_pronun` tinyint(1) NOT NULL default '1',
   PRIMARY KEY  (`test_entry_id`),
-  KEY `test_id` (`section_id`),
-  KEY `entry_id` (`user_entry_id`)
+  UNIQUE KEY `test_id` (`test_id`,`number`),
+  UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`,`show_word_0`,`show_word_1`,`show_word_1_pronun`),
+  KEY `number` (`number`),
+  KEY `user_entry_id` (`user_entry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Struktur för tabell `course_unit_test_section_entry_results`
+-- Struktur för tabell `course_unit_test_entry_patterns`
 --
 
-DROP TABLE IF EXISTS `course_unit_test_section_entry_results`;
-CREATE TABLE IF NOT EXISTS `course_unit_test_section_entry_results` (
-  `test_result_id` bigint(20) unsigned NOT NULL auto_increment,
+DROP TABLE IF EXISTS `course_unit_test_entry_patterns`;
+CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
+  `pattern_id` bigint(20) unsigned NOT NULL auto_increment,
   `test_entry_id` bigint(20) unsigned NOT NULL,
+  `word_0` char(255) NOT NULL,
+  `word_1` char(255) NOT NULL,
+  `word_1_pronun` char(255) NOT NULL,
+  PRIMARY KEY  (`pattern_id`),
+  UNIQUE KEY `test_entry_id` (`test_entry_id`,`word_0`,`word_1`,`word_1_pronun`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur för tabell `course_unit_test_sittings`
+--
+
+DROP TABLE IF EXISTS `course_unit_test_sittings`;
+CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
+  `sitting_id` bigint(20) unsigned NOT NULL auto_increment,
+  `test_id` bigint(20) unsigned NOT NULL,
   `student_id` bigint(20) unsigned NOT NULL,
+  `start` bigint(20) unsigned default NULL,
+  `stop` bigint(20) unsigned default NULL,
+  PRIMARY KEY  (`sitting_id`),
+  UNIQUE KEY `test_id` (`test_id`,`student_id`),
+  KEY `student_id` (`student_id`),
+  KEY `start` (`start`),
+  KEY `stop` (`stop`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur för tabell `course_unit_test_sitting_results`
+--
+
+DROP TABLE IF EXISTS `course_unit_test_sitting_results`;
+CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_results` (
+  `result_id` bigint(20) unsigned NOT NULL auto_increment,
+  `sitting_id` bigint(20) unsigned NOT NULL,
+  `test_entry_id` bigint(20) unsigned NOT NULL,
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`test_result_id`),
-  UNIQUE KEY `test_entry_id` (`test_entry_id`,`student_id`),
+  `word_0` char(255) NOT NULL,
+  `word_1` char(255) NOT NULL,
+  `word_1_pronun` char(255) NOT NULL,
+  PRIMARY KEY  (`result_id`),
+  UNIQUE KEY `sitting_id` (`sitting_id`,`test_entry_id`),
   KEY `timestamp` (`timestamp`),
-  KEY `student_id` (`student_id`)
+  KEY `test_entry_id` (`test_entry_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -391,7 +418,7 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
   PRIMARY KEY  (`interest_id`),
   UNIQUE KEY `user_id` (`user_id`,`lang_id`),
   KEY `lang_id` (`lang_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 --
 -- Restriktioner för dumpade tabeller
@@ -439,24 +466,31 @@ ALTER TABLE `course_unit_tests`
   ADD CONSTRAINT `course_unit_tests_ibfk_1` FOREIGN KEY (`unit_id`) REFERENCES `course_units` (`unit_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_sections`
+-- Restriktioner för tabell `course_unit_test_entries`
 --
-ALTER TABLE `course_unit_test_sections`
-  ADD CONSTRAINT `course_unit_test_sections_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `course_unit_test_entries`
+  ADD CONSTRAINT `course_unit_test_entries_ibfk_4` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_unit_test_entries_ibfk_5` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_section_entries`
+-- Restriktioner för tabell `course_unit_test_entry_patterns`
 --
-ALTER TABLE `course_unit_test_section_entries`
-  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_4` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE,
-  ADD CONSTRAINT `course_unit_test_section_entries_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `course_unit_test_sections` (`section_id`) ON UPDATE CASCADE;
+ALTER TABLE `course_unit_test_entry_patterns`
+  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Restriktioner för tabell `course_unit_test_section_entry_results`
+-- Restriktioner för tabell `course_unit_test_sittings`
 --
-ALTER TABLE `course_unit_test_section_entry_results`
-  ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_section_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `course_unit_test_section_entry_results_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `course_students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `course_unit_test_sittings`
+  ADD CONSTRAINT `course_unit_test_sittings_ibfk_1` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_unit_test_sittings_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `course_students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Restriktioner för tabell `course_unit_test_sitting_results`
+--
+ALTER TABLE `course_unit_test_sitting_results`
+  ADD CONSTRAINT `course_unit_test_sitting_results_ibfk_1` FOREIGN KEY (`sitting_id`) REFERENCES `course_unit_test_sittings` (`sitting_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_unit_test_sitting_results_ibfk_2` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restriktioner för tabell `language_names`

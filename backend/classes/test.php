@@ -18,7 +18,7 @@ class Test extends CourseComponent
 		
 		if (!($unit = Unit::select_by_id(($unit_id = intval($unit_id, 10)))))
 		{
-			return static::set_error_description("Failure to insert test: " . Unit::unset_error_description());
+			return static::set_error_description("Failed to insert test: " . Unit::unset_error_description());
 		}
 		
 		if (!$unit->session_user_can_write())
@@ -88,28 +88,69 @@ class Test extends CourseComponent
 		return $this->get_unit()->get_course();
 	}
 
-	public function uncache_sections()
+	public function uncache_entries()
 	{
-		if (isset($this->sections)) unset($this->sections);
+		if (isset($this->entries)) unset($this->entries);
 	}
 	public function uncache_all()
 	{
-		$this->uncache_sections();
+		$this->uncache_entries();
 	}
 	
-	private $sections;
-	public function get_sections()
+	private $entries;
+	public function get_entries()
 	{
-		return self::get_cached_collection($this->sections, "Section", "course_unit_test_sections", "test_id", $this->get_test_id(), "*", "ORDER BY num");
+		$user_entries = "(course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id))";
+		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
+			Dictionary::language_code_columns(),
+			Dictionary::join()
+		);
+		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id());
 	}
-	public function get_sections_by_number()
+	public function set_entry_number($entry, $number)
 	{
-		$sections_by_number = array ();
-		foreach ($this->get_sections() as $section)
-		{
-			$sections_by_number[$section->get_section_number()] = $section;
-		}
-		return $sections_by_number;
+		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit test.");
+		
+		if ($number === null || ($number = intval($number, 10)) < 1) return self::set_error_description("Test cannot set entry number to null or nonpositive integer.");
+		
+		$entry = $entry->copy_for_user($this->get_owner());
+		
+		if ($number > ($entries_count = count($this->get_entries()))) $number = $entries_count;
+		
+		if ($number === ($number_formerly = array_search($entry, $this->get_entries()))) return $this;
+		
+		if ($number_formerly < 0) return self::set_error_description("Test cannot set entry number for entry not already in test.");
+			
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+		
+		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $number_formerly));
+		
+		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
+		
+		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		
+		$this->uncache_entries();
+		
+		return $this;
+	}
+	
+	private $sittings;
+	public function get_sittings()
+	{
+		$user_entries = "(course_unit LEFT JOIN user_entries USING (user_entry_id))";
+		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
+			Dictionary::language_code_columns(),
+			Dictionary::join()
+		);
+		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
+		return self::get_cached_collection($this->entries, "Sitting", $table, "test_id", $this->get_test_id());
 	}
 	
 	private $timeframe = null;
@@ -141,6 +182,16 @@ class Test extends CourseComponent
 	public function set_close($close)
 	{
 		return $this->set_timeframe(new Timeframe(!!$this->get_timeframe() ? $this->get_timeframe()->get_open() : null, $close));
+	}
+	
+	private $timer;
+	public function get_timer()
+	{
+		return $this->timer;
+	}
+	public function set_timer($timer)
+	{
+		return parent::update_this($this, "course_unit_tests", array ("timer" => intval($timer, 10)), "test_id", $this->get_test_id());
 	}
 	
 	//  inherits: protected $message;
@@ -183,9 +234,17 @@ class Test extends CourseComponent
 			: null;
 	}
 	
-	public function session_user_can_execute()
+	public function user_can_execute($user)
 	{
-		return $this->session_user_can_read(); // && $this->session_user_unfinished();
+		return $this->user_can_write($user)
+			|| ($this->get_course()->user_is_student($user)
+				&& (!$this->get_timeframe()
+					|| $this->get_timeframe()->is_current()));
+	}
+	
+	public function execute()
+	{
+		if (!$this->session_user_can_execute())
 	}
 	
 	public function delete()
@@ -203,7 +262,7 @@ class Test extends CourseComponent
 			"courseId" => $this->get_course_id(),
 			"owner" => $this->get_owner()->assoc_for_json(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
-			"sectionsCount" => count($this->get_sections()),
+			"entriesCount" => count($this->get_entries()),
 			"message" => $this->get_message()
 		), array (0 => "testId"), $privacy);
 	}
@@ -216,7 +275,7 @@ class Test extends CourseComponent
 		
 		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->assoc_for_json($privacy !== null ? $privacy : null);
-		$assoc["sections"] = $this->session_user_can_execute() ? self::array_for_json($this->get_sections()) : null;
+		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->get_entries()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
