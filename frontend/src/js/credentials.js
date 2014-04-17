@@ -1,3 +1,16 @@
+$(document).ready(function(){
+    statusBoxes();
+	  $("#forgot-pw").hide();
+	  $("#register").hide();	
+});
+
+function showForm(frm){
+    $("#success").hide();
+    $("#failure").hide();
+    $("#sign-in").hide();
+    $(frm).show();
+}
+
 function submitRegForm(){
     var email = $("#registerEmail").val();
     var handle = $("#registerHandle").val();
@@ -64,8 +77,7 @@ function submitLoginForm(){
                 $("#failure").show();
             }
             else{
-                // temporarily redirecting to course page
-                window.location.replace("course.html");
+                window.location.replace("index.html");
             }
     });
     return; 
@@ -103,7 +115,7 @@ function submitResetForm(){
 }
 
 function submitPwRequestForm(){
-    var handle = $("#inputUsername").val();
+    var handle = $("#pwUsername").val();
 	
     if(handle == ""){
         $("#failure").html("Please enter username.");

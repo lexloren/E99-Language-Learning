@@ -8,8 +8,10 @@
 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/starter-template.css" rel="stylesheet">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/common.js"></script>	
     <script src="js/credentials.js"></script>	
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -18,11 +20,6 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <script>
-      $(document).ready(function(){
-        $("#failure").hide();
-      });
-    </script>
   </head>
   <body role="document">
 
@@ -36,30 +33,63 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Xenogloss</a>
+          <a class="navbar-brand" href="login.html">Xenogloss</a>
         </div>
       </div>
     </div>
     <br />
-    <div class="container">
-      <form class="form-signin" role="form">
-        <h2 class="form-signin-heading">Sign in</h2><br />
-        <div id="failure" class="alert alert-danger">
-        </div>
-        <div class="form-group">
-          <label for="inputUsername">Username</label>
-          <input type="text" class="form-control" id="inputUsername" placeholder="Enter username"  required autofocus>
-        </div>
-        <div class="form-group">
-          <label for="inputPassword">Password</label>
-          <input type="password" class="form-control" id="inputPassword" placeholder="Enter password" required>
-        </div>
-        <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitLoginForm();">Sign in</button>
-        <div class="form-group">
-          <p class="help-block"><a href="forgotpassword.html">Forgot password?</a><br />
-          <a href="register.html">Register new account</a></p>
-        </div>        
-      </form>	
+    <div id="doc-body" class="container block-login">
+      <!--- Sign-in section --->
+      <div id="sign-in">
+        <form class="form-signin" role="form">
+          <h2 class="form-signin-heading">Sign in</h2><br />
+          <div class="form-group">
+            <label for="inputUsername">Username</label>
+            <input type="text" class="form-control" id="inputUsername" placeholder="Enter username"  required autofocus>
+          </div>
+          <div class="form-group">
+            <label for="inputPassword">Password</label>
+            <input type="password" class="form-control" id="inputPassword" placeholder="Enter password" required>
+          </div>
+          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitLoginForm();">Sign in</button>
+          <div class="form-group">
+            <p class="help-block"><span class="span-action" onclick="showForm('#forgot-pw');">Forgot password?</span><br />
+            <span class="span-action" onclick="showForm('#register');">Register new account</span></p>
+          </div>  
+        </form>	
+      </div>
+      <!--- Forgot password section --->
+      <div id="forgot-pw">
+        <form id="pwRequestForm" class="form-signin" role="form">
+          <h2 class="form-signin-heading">Forgot password?</h2><br />
+          <div class="form-group">
+            <label for="pwUsername">Username</label>
+            <input type="text" class="form-control" id="pwUsername" placeholder="Enter username" required autofocus>
+            <p class="help-block help-block-small">A new password will be sent to the email address associated with your account.</p> 
+          </div>
+          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitPwRequestForm();">Submit</button>       
+        </form>	
+      </div>
+      <!--- Register section --->
+      <div id="register">
+        <form id="regForm" class="form-register" role="form">
+          <h2 class="form-signin-heading">Register</h2><br />
+          <div class="form-group">
+            <label for="registerEmail">Email address</label>
+            <input type="email" class="form-control" id="registerEmail" placeholder="Enter email address" required autofocus>
+          </div>
+          <div class="form-group">
+            <label for="registerHandle">Username</label>
+            <input type="text" class="form-control" id="registerHandle" placeholder="Enter desired username" required>
+          </div>
+          <div class="form-group">
+            <label for="registerPassword">Password</label>
+            <input type="password" class="form-control" id="registerPassword" placeholder="Enter password" required>
+            <p class="help-block help-block-small">Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.</p> 
+          </div>
+          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitRegForm();">Register account</button><br /><br />     
+        </form>	
+      </div>
     </div> <!-- /container -->
 
   </body>

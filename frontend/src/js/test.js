@@ -1,138 +1,64 @@
-function resetForm(frm){
-  $("#failure").html("");
-  $("#success").html("");
-  $("#failure").hide();
-  $("#success").hide(); 
-  $(frm)[0].reset()
+var test;
+
+$(document).ready(function(){
+	pageSetup();
+	$("#loader").hide();
+	test = getURLparam('testid');
+	if(test === null) {
+    $("#testData").hide();
+    failureMessage("The test must be specified. Go to a unit page and select a test to view.");
+    return;
+	} 
+  else {
+    $("#updateTestForm").hide();
+    $("#takeTest").hide();
+    getTestInfo();
+	}
+});
+
+function showForm(frm,tohide){
+    $(tohide).hide();
+    $(frm).show();
 }
 
-function showFailure(){
-  $("#failure").show();
-  $("html, body").animate({scrollTop:0}, "slow");  
+function cancelUpdate(frm,tohide){
+    $(frm).hide();
+    $(tohide).show();
 }
 
 function verifyTestForm(){
-    if(urlParams.unit == null){
-        $("#failure").html("The course unit for the test must be specified. Go to the course unit page first to add the associated test.");
-        showFailure(); 
-        return;
-    }
     var testname = $("#testname").val();
-    var instructions = $("#instructions").val();
-    var opendate = $("#opendate").val();
-    var closedate = $("#closedate").val();
+    var desc = $("#testdesc").val();
+    var opendate = $("#testopendate").val();
+    var closedate = $("#testclosedate").val();
     
-	  if(testname == "" || instructions == "" || opendate == "" || closedate == ""){
-		    $("#failure").html("Please provide test name, instructions, and open/close dates.");	
-	      showFailure();
+	  if(testname == "" || desc == "" || opendate == "" || closedate == ""){
+		    failureMessage("Please provide test name, instructions, and open/close dates.");	
         return;
     }
+
     opendate = Date.parse(opendate);
     closedate = Date.parse(closedate);
 
     if(closedate < opendate){
-		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
-	      showFailure();
-        return;
-    }
-    submitCreateTestForm(testname, instructions, opendate, closedate);
-}
-
-function verifySectionForm(){
-    if(urlParams.test == null){
-        $("#failure").html("The test for the section must be specified. Go to the associated test's page to add the section.");
-        showFailure(); 
-        return;
-    }
-    var sectionname = $("#sectionname").val();
-    var instructions = $("#sectioninstructions").val();
-    //var questions = $("#questions").val();
-    
-	  if(sectionname == "" || instructions == ""){
-		    $("#failure").html("Please provide section name and instructions.");	
-	      showFailure();
+		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
         return;
     }
 
-    submitCreateSectionForm(sectionname, instructions);
-}
-
-function submitCreateTestForm(testname, instructions, opendate, closedate){
-    $.post('../../test_insert.php', 
-        { unit_id: urlParams.unit, name: testname, open: opendate, close: closedate, message: instructions } )
-        .done(function(data){
-            if(data.isError){
-                var errorMsg = "Test could not be created: ";
-                if(data.errorTitle == "Unit Selection"){
-                    errorMsg += "Unit does not exist.";
-                }
-                else if(data.errorTitle == "Test Insertion"){
-                    errorMsg += "Please refresh the page and try again.";
-                }
-                $("#failure").html(errorMsg);
-                showFailure();
-            }
-            else{
-                nextUrl = "test.html"+"?test="+data.result.testId;
-                window.location.replace(nextUrl);
-            }
-    });
-    return; 
-}
-
-function submitCreateSectionForm(sectionname, instructions){
-    $.post('../../section_insert.php', 
-        { test_id: urlParams.test, name: sectionname, message: instructions })
-        .done(function(data){
-        if(data.isError){
-            var errorMsg = "Section could not be created: ";
-            if(data.errorTitle == "Test Selection"){
-                errorMsg += "Test does not exist.";
-            }
-            else if(data.errorTitle == "Section Insertion"){
-                errorMsg += "Please refresh the page and try again.";
-            }
-            $("#failure").html(errorMsg);
-            showFailure();
-        }
-        else{
-            $("#sections").html("");
-            resetForm('#createSectionForm');
-            $("#sectionData").html('<button class="btn btn-primary" type="button" onclick="showSectionForm();">Add Test Section</button>');
-            $.post('../../test_sections.php', 
-                {test_id: urlParams.test})
-                .done(function(data){
-                    if(data.isError){
-                        $("#sections").html("Section information unavailable.");
-                    }
-                    else{
-                        $.each(data.result, function(i, item){
-                            sectionlink = '<a href="section.html?section='+item.sectionId+'">';
-                            $('#sections').append("<br /> &nbsp; &nbsp; "+sectionlink+item.name+"</a>");
-                        });
-                    }		
-            });
-        }
-    });
-    return; 
+    submitCreateTestForm(testname, desc, opendate, closedate);
 }
 
 function getTestInfo(){
-    if(urlParams.test == null){
-        $("#testData").hide();
-        $("#failure").html("The test must be specified. Go to the unit page and select a test to view.");
-        showFailure(); 
-        return;
-    }
-	
+    $("#loader").show();
+    $("#testData").hide();
     $.getJSON('../../test_select.php', 
-        {test_id: urlParams.test},
+        {test_id: test},
         function(data){
             if(data.isError){
-                $("#failure").html("Information for this test could not be retrieved.");
-                showFailure();
+                failureMessage("Information for this test could not be retrieved.");
             }
             else{
+                testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+data.result.name+'</h3>';
                 $("#testname").val(data.result.name);
                 if(data.result.message != null){
                     $("#instructions").val(data.result.message);
@@ -147,29 +73,22 @@ function getTestInfo(){
                         $("#closedate").val(closedate);
                     }
                 }
-                $.each(data.result.sections, function(i, item){
-                    sectionlink = '<a href="section.html?section='+item.sectionId+'">';
-                    $('#sections').append("<br /> &nbsp; &nbsp; "+sectionlink+item.name+"</a>");
-                });
+                $("#testData").show();
             }		
-    });
-}
-
-function showSectionForm(){
-    $("#sectionData").load("createsection.html");
+            $("#loader").hide();
+    })
+	 .fail(function(error) {
+        $("#loader").hide();
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
 }
 
 function deleteTest(){
-    if(urlParams.test == null){
-        $("#failure").html("The test to be deleted must be specified. Go to the associated test's page to delete it.");
-        showFailure(); 
-        return;
-    }
     if(!confirm("Are you sure you want to delete this test?")){
         return;
     }
     $.post('../../test_delete.php', 
-        { test_id: urlParams.test })
+        { test_id: test })
         .done(function(data){
         if(data.isError){
             var errorMsg = "Test could not be deleted: ";
@@ -179,139 +98,37 @@ function deleteTest(){
             else if(data.errorTitle == "Test Deletion"){
                 errorMsg += "Please refresh the page and try again.";
             }
-            $("#failure").html(errorMsg);
-            showFailure();
+            failureMessage(errorMsg);
         }
         else{
-            $("#testData").html("Test was successfully deleted.");
+            $("#testData").hide();
+            successMessage("Test was successfully deleted.");
         }
-    });
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
 
 function updateTest(){
-    if(urlParams.test == null){
-        $("#failure").html("The test to be updated must be specified. Go to the associated test's page to update it.");
-        showFailure(); 
-        return;
-    }
-    // should refactor this out into a separate function since create form uses it too
-    var testname = $("#testname").val();
-    var instructions = $("#instructions").val();
-    var opendate = $("#opendate").val();
-    var closedate = $("#closedate").val();
-    
-	  if(testname == "" || instructions == "" || opendate == "" || closedate == ""){
-		    $("#failure").html("Please provide test name, instructions, and open/close dates.");	
-	      showFailure();
-        return;
-    }
-    opendate = Date.parse(opendate);
-    closedate = Date.parse(closedate);
-
-    if(closedate < opendate){
-		    $("#failure").html("Open Date cannot be later than Close Date; please re-select the dates.");	
-	      showFailure();
-        return;
-    }
+    verifyTestForm();
     $.post('../../test_update.php', 
-        { test_id: urlParams.test, name: testname, open: opendate, close: closedate, message: instructions } )
+        { test_id: test, name: testname, open: opendate, close: closedate, message: instructions } )
         .done(function(data){
             if(data.isError){
-                var errorMsg = "Test could not be updated.";
-                // not sure of error titles yet
-                $("#failure").html(errorMsg);
-                showFailure();
+                var errorMsg = "Test could not be updated. Please reload the page and try again";
+                failureMessage(errorMsg);
             }
             else{
-                document.location.reload(true);
+                getTestInfo();
+                cancelUpdate("#updateTestForm","#test-update");
+                successMessage("Test was successfully updated.");
             }
-    });
-    return; 
-}
-
-function getSectionInfo(){
-    if(urlParams.section == null){
-        $("#sectionData").hide();
-        $("#failure").html("The section must be specified. Go to the test page and select a section to view.");
-        showFailure(); 
-        return;
-    }	
-    $.getJSON('../../section_select.php', 
-        {section_id: urlParams.section},
-        function(data){
-            if(data.isError){
-                $("#failure").html("Information for this section could not be retrieved.");
-                showFailure();
-                $("#button-back").hide();
-            }
-            else{
-                $("#sectionname").val(data.result.name);
-                $("#button-back").click(function(){window.location.href='test.html?test='+data.result.testId;});
-                if(data.result.message != null){
-                    $("#instructions").val(data.result.message);
-                }
-            }		
-    });
-}
-
-function deleteSection(){
-    if(urlParams.section == null){
-        $("#failure").html("The section to be deleted must be specified. Go to the associated section's page to delete it.");
-        showFailure(); 
-        return;
-    }
-    if(!confirm("Are you sure you want to delete this section?")){
-        return;
-    }
-    $.post('../../section_delete.php', 
-        { section_id: urlParams.section })
-        .done(function(data){
-        if(data.isError){
-            var errorMsg = "Section could not be deleted: ";
-            if(data.errorTitle == "Section Selection"){
-                errorMsg += "Section does not exist.";
-            }
-            else if(data.errorTitle == "Section Deletion"){
-                errorMsg += "Please refresh the page and try again.";
-            }
-            $("#failure").html(errorMsg);
-            showFailure();
-        }
-        else{
-            $("#sectionData").html("Section was successfully deleted.");
-        }
-    });
-    return; 
-}
-
-function updateSection(){
-    if(urlParams.section == null){
-        $("#failure").html("The section to be updated must be specified. Go to the associated section's page to update it.");
-        showFailure(); 
-        return;
-    }
-    // should refactor this out into a separate function since create form uses it too
-    var sectionname = $("#sectionname").val();
-    var instructions = $("#instructions").val();
-    
-	  if(sectionname == "" || instructions == ""){
-		    $("#failure").html("Please provide section name and instructions.");	
-	      showFailure();
-        return;
-    }
-    $.post('../../section_update.php', 
-        { section_id: urlParams.section, name: sectionname, message: instructions } )
-        .done(function(data){
-            if(data.isError){
-                var errorMsg = "Section could not be updated.";
-                // not sure of error titles yet
-                $("#failure").html(errorMsg);
-                showFailure();
-            }
-            else{
-                document.location.reload(true);
-            }
-    });
+    })
+	 .fail(function(error) {
+        $("#loader").hide();
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+	  });
     return; 
 }
