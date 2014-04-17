@@ -10,10 +10,119 @@ var showTrans = false;
 var wordList = [];
 
 
+var listsURL = URL + 'user_lists.php';
+var practiceURL = URL + 'user_practice.php';
+var dictionaryURL = URL + 'entry_find.php';
+
+$.mockjax({
+  url: listsURL,
+  responseText: {
+	"isError":false,
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[
+		{"listId" : 1,
+		"name" : "Lesson 1: Family"},
+		{"listId" : 2,
+		"name" : "Lesson 2: Animals"}],
+	},
+});
+
+$.mockjax({
+  url: practiceURL,
+  responseText: {
+	"isError":false, 
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[
+	{
+		"entryId":12003,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"(n) toughness (of a material)",
+			"jp":"\u3058\u3093\u6027"
+		},
+		"pronuncations":{
+			"jp":"\u3058\u3093\u305b\u3044"
+		}
+	},
+	{
+		"entryId":28,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"fastening",
+			"jp":"\u3006"
+		},
+		"pronuncations":{
+			"jp":"\u3057\u3081"
+		}
+	},
+	{
+		"entryId":50234,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"(n) (comp) Gopher",
+			"jp":"\u30b4\u30fc\u30d5\u30a1\u30fc"
+		},
+		"pronuncations":{
+			"jp":null
+		}
+	}],"resultInformation":null}
+});
+
+$.mockjax({
+  url: dictionaryURL,
+  responseText: {
+	"isError":false,
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[{
+		"entryId":"5",
+		"word":"Word 5",
+		"translation":"Translation 5",
+		"pronunciation":"Pronunciation 5"},
+		{"entryId":"6",
+		"word":"Word 6",
+		"translation":"Translation 6",
+		"pronunciation":"Pronunciation 6"},
+		{"entryId":"7",
+		"word":"Word 7",
+		"translation":"Translation 7",
+		"pronunciation":"Pronunciation 7"}],
+	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
+});
+
+/* end mockjax */
+
+
+
+
 
 /* prepare */
 
 $( document ).ready(function() {
+	pageSetup();
 	setupDoc();
 	getLists();
 	handleClicks();
@@ -22,13 +131,11 @@ $( document ).ready(function() {
 /* set up document for first use. */
 
 function setupDoc() {
-	$("#success").hide();
-    $("#failure").hide();
-	$("#loader").hide();
-    $("#navbar").load("navbar.html");
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
 	$('#card-followup-container').hide();
+	$("#loader-get-cards").hide();
+	$("#loader-get-trans").hide();
 }
 
 function populate_word() {
@@ -126,38 +233,35 @@ function shiftCards() {
 your decks" form */
 function getLists() {
 
-	$('#deck-selection-form').html('');
-	$("#loader").show();
+	
+	$("#loader-show-lists").show();
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		if (data.isError === true) {
-			$("#failure").html(data.errorTitle + '<br/>' + data.errorDescription);
-			$("#failure").show();
-			$('#deck-selection-container').hide();
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
-			$("#failure").html("You don't have any lists to practice with.");
-			$("#failure").show();
-			$('#deck-selection-container').hide();
+			failureMessage("You don't have any lists to practice with.");
 		} else {
-			$('#deck-selection-container').show();
+			$('#deck-selection-form').html('');
 			$.each( data.result, function( ) {
 				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
 				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');
 			});
-			$("#loader").hide();
+			$('#deck-selection-container').show();
+			$("#loader-show-lists").hide();
 		}
 	})
-	 .fail(function(error) {
-		$("#failure").html('Something has gone wrong. Please hit the back button on your browser and try again.');
-		$("#failure").show();
-		$('#deck-selection-container').hide();
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
 /*  */
 function get_dictionary(word, page) {
-	$('#translation-panel').show();
 	$('#translation-panel-inner').html('');
+	$("#loader-get-trans").show();
+	$('#translation-panel').show();
+	
 	var currentURL = URL + 'entry_find.php';
 	var langcodes = wordList[0].languages[0] + ',' + wordList[0].languages[1];
 	$.getJSON( currentURL, {
@@ -167,10 +271,8 @@ function get_dictionary(word, page) {
 		page_num : page
 	}, function( data ) {
 		if (data.isError === true) {
-			console.log(data.errorTitle);
-			console.log(data.errorDescription);
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
-			
 			$.each( data.result, function() {
 			$('#translation-panel-inner').append('<div>' + this.words[this.languages[1]] + ' : ' + this.words[this.languages[0]] +
 				' : ' + this.pronuncations[this.languages[1]] + '</div>');
@@ -181,6 +283,10 @@ function get_dictionary(word, page) {
 				get_dictionary(word, page + 1);
 			});
 		}
+		$("#loader-get-trans").hide();
+	})
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
@@ -191,13 +297,9 @@ function getCards() {
 	$('#flashcard-word-panel').html('');
 	$('#flashcard-pronounce-panel').html('');
 	$('#flashcard-trans-panel').html('');
-
-	$("#success").hide();
-    $("#failure").hide();
 	
 	$('#deck-selection-container').hide();
-	$('#flashcard-container').show();
-	$('#card-followup-container').show();
+	$("#loader-get-cards").show();
 	
 	if ($('#show-word').prop('checked') === true) {
 		showWord = true;
@@ -230,12 +332,17 @@ function getCards() {
 		entries_count: 50
 		}, function( data ) {
 		if (data.isError === true) {
-			console.log(data.errorTitle);
-			console.log(data.errorDescription);
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
 			wordList = data.result;
 			nextCard();
 		}
+		$("#loader-get-cards").hide();
+		$('#flashcard-container').show();
+		$('#card-followup-container').show();
+	})
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
@@ -245,6 +352,7 @@ function nextCard() {
 		practice_complete();
 	} else {
 		$('#translation-panel-inner').html('Want to know more? Click on a character to find related words.');
+		$("#loader-get-trans").hide();
 		if (showWord) {
 			populate_word();
 		} else {

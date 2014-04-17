@@ -181,12 +181,18 @@ function addEntry(entryid) {
 		viewList(listnum);
 	})
 		.fail(function() {
-		console.log( "error" );
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	})
 }
 
 function deleteList(listid) {
-
+	var currentURL = URL + 'list_entries_remove.php';
+	$.post(currentURL, {'list_id' : listid }, function() {
+		console.log( "success" );
+	})
+	.fail(function() {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	})
 }
 
 function newList(listname) {
