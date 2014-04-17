@@ -215,7 +215,7 @@ class User extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new User(
+			? new self(
 				$result_assoc["user_id"],
 				$result_assoc["handle"],
 				$result_assoc["email"],
@@ -384,7 +384,7 @@ class User extends DatabaseRow
 		return !!Session::get() && $this->equals(Session::get()->get_user());
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
@@ -402,9 +402,9 @@ class User extends DatabaseRow
 		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		

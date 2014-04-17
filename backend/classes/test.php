@@ -50,6 +50,11 @@ class Test extends CourseComponent
 		return parent::select("course_unit_tests", "test_id", $test_id);
 	}
 	
+	public static function select_by_test_entry_id($test_entry_id)
+	{
+		return parent::select("course_unit_tests LEFT JOIN course_unit_test_entries USING (test_id)", "test_entry_id", $test_entry_id);
+	}
+	
 	/***    INSTANCE    ***/
 
 	private $test_id = null;
@@ -87,14 +92,11 @@ class Test extends CourseComponent
 	{
 		return $this->get_unit()->get_course();
 	}
-
-	public function uncache_entries()
-	{
-		if (isset($this->entries)) unset($this->entries);
-	}
+	
 	public function uncache_all()
 	{
 		$this->uncache_entries();
+		$this->uncache_sittings();
 	}
 	
 	private $entries;
@@ -106,7 +108,11 @@ class Test extends CourseComponent
 			Dictionary::join()
 		);
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id());
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
+	}
+	public function uncache_entries()
+	{
+		if (isset($this->entries)) unset($this->entries);
 	}
 	public function set_entry_number($entry, $number)
 	{
@@ -141,16 +147,120 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
+	public function entries_add($entry, $mode = 1)
+	{
+		if (!$entry)
+		{
+			return static::set_error_description("Test cannot add null entry.");
+		}
+		
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		//  Insert into user_entries from dictionary, if necessary
+		$entry = $entry->copy_for_user($this->get_owner());
+		
+		if (!$entry)
+		{
+			return static::set_error_description("Test failed to add entry: " . Entry::unset_error_description());
+		}
+		
+		$mode = $mode === null ? "NULL" : (!!$mode ? "1" : "0");
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		//  Insert into list_entries for $this->list_id and $entry->entry_id
+		//      If this entry already exists in the list, then ignore the error
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, %s)",
+			$this->get_test_id(),
+			$entry->get_user_entry_id(),
+			count($this->get_entries()),
+			$mode
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Test failed to add entry: " . $mysqli->error . ".");
+		}
+		
+		array_push($this->entries, $entry);
+		
+		$entry_languages = $entry->get_languages();
+		$entry_words = $entry->get_words();
+		$entry_pronunciations = $entry->get_pronunciations();
+		
+		$test_entry_id = $mysqli->insert_id;
+		
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, word_0, word_1, word_1_pronun) VALUES (%d, 1, '%s', '%s', '%s')",
+			$test_entry_id,
+			$mysqli->escape_string($entry_words[$entry_languages[0]]),
+			$mysqli->escape_string($entry_words[$entry_languages[1]]),
+			$mysqli->escape_string($entry_pronunciations[$entry_languages[1]])
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Test failed to add entry pattern: " . $mysqli->error . ".");
+		}
+		
+		return $this;
+	}
+	
+	public function entries_remove($entry)
+	{
+		if (!$entry)
+		{
+			return static::set_error_description("Test cannot remove null entry.");
+		}
+		
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		$entry = $entry->copy_for_user($this->get_owner());
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("DELETE FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d LIMIT 1",
+			$this->get_test_id(),
+			$entry->get_user_entry_id()
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
+		}
+		
+		if (isset($this->entries)) array_drop($this->entries, $entry);
+		
+		return $this;
+	}
+	
 	private $sittings;
 	public function get_sittings()
 	{
-		$user_entries = "(course_unit LEFT JOIN user_entries USING (user_entry_id))";
-		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
-			Dictionary::language_code_columns(),
-			Dictionary::join()
-		);
-		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "Sitting", $table, "test_id", $this->get_test_id());
+		return self::get_cached_collection($this->sittings, "Sitting", "course_unit_test_sittings", "test_id", $this->get_test_id());
+	}
+	public function uncache_sittings()
+	{
+		if (isset($this->sittings)) unset($this->sittings);
+	}
+	public function get_sitting_for_user($user)
+	{
+		foreach ($this->get_sittings() as $sitting)
+		{
+			if (!$sitting->get_user())
+			{
+				return self::set_error_description("Failed to identify user for sitting: " . Sitting::unset_error_description());
+			}
+			
+			if ($sitting->get_user()->equals($user)) return $sitting;
+		}
+		
+		return null;
 	}
 	
 	private $timeframe = null;
@@ -223,7 +333,7 @@ class Test extends CourseComponent
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Test(
+			? new self(
 				$result_assoc["test_id"],
 				$result_assoc["unit_id"],
 				$result_assoc["name"],
@@ -236,15 +346,38 @@ class Test extends CourseComponent
 	
 	public function user_can_execute($user)
 	{
-		return $this->user_can_write($user)
-			|| ($this->get_course()->user_is_student($user)
+		if (!($course = $this->get_course()))
+		{
+			return self::set_error_description("Failed to get course for test where test_id = " . $this->get_test_id() . ".");
+		}
+		
+		return ($course->user_is_student($user)
 				&& (!$this->get_timeframe()
 					|| $this->get_timeframe()->is_current()));
 	}
 	
-	public function execute()
+	public function execute_for_session_user()
 	{
-		if (!$this->session_user_can_execute())
+		if ($this->session_user_can_execute())
+		{
+			if (($sitting = $this->get_sitting_for_user(Session::get()->get_user())))
+			{
+				return $sitting;
+			}
+			
+			if (($sitting = Sitting::insert($this->get_test_id())))
+			{
+				return $sitting;
+			}
+			
+			return self::set_error_description("Failed to execute test: " . Sitting::unset_error_description());
+		}
+		
+		$reasons = array ();
+		if (!$course->user_is_student($user)) array_push($reasons, "session user is not course student");
+		if (!!$this->get_timeframe() && !$this->get_timeframe()->is_current()) array_push($reasons, "test timeframe is not current");
+		
+		return self::set_error_description("Session user cannot execute test because " . implode(" and ", $reasons) . ".");
 	}
 	
 	public function delete()
@@ -253,28 +386,28 @@ class Test extends CourseComponent
 		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"testId" => $this->get_test_id(),
 			"name" => $this->get_test_name(),
 			"unitId" => $this->get_unit_id(),
 			"courseId" => $this->get_course_id(),
-			"owner" => $this->get_owner()->assoc_for_json(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"owner" => $this->get_owner()->json_assoc(),
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"entriesCount" => count($this->get_entries()),
 			"message" => $this->get_message()
 		), array (0 => "testId"), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
-		$assoc["unit"] = $this->get_unit()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
+		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->get_entries()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);

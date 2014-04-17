@@ -26,7 +26,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($unit->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -37,7 +37,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			Session::get()->set_result_assoc($unit->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($unit->detailed_json_assoc(false));
 		}
 	}
 	
@@ -53,7 +53,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($unit->assoc_for_json());
+				Session::get()->set_result_assoc($unit->json_assoc());
 			}
 		}
 	}
@@ -86,7 +86,7 @@ class APIUnit extends APIBase
 			
 			if (isset($_POST["open"]) && isset($_POST["close"]))
 			{
-				$updates += !!$unit->set_timeframe(new Timeframe($_POST["open"], $_POST["close"]));
+				$updates += !!$unit->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
 			}
 			else
 			{
@@ -100,7 +100,7 @@ class APIUnit extends APIBase
 				}
 			}
 			
-			self::return_updates_as_json("Unit", Unit::unset_error_description(), $updates ? $unit->assoc_for_json() : null);
+			self::return_updates_as_json("Unit", Unit::unset_error_description(), $updates ? $unit->json_assoc() : null);
 		}
 	}
 	
@@ -131,7 +131,7 @@ class APIUnit extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($unit->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -153,7 +153,7 @@ class APIUnit extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($unit->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($unit->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

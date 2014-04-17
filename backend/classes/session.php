@@ -105,7 +105,7 @@ class Session
 				$this->user->get_user_id()
 			));
 			
-			Session::get()->set_result_assoc($this->user->assoc_for_json());
+			Session::get()->set_result_assoc($this->user->json_assoc());
 		}
 		else
 		{

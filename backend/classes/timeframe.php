@@ -16,13 +16,14 @@ class Timeframe
 	
 	public function __construct($open, $close)
 	{
-		$this->open = intval($open, 10);
-		$this->close = intval($close, 10);
+		$this->open = ($open = intval($open, 10)) ? $open : null;
+		$this->close = ($close = intval($close, 10)) ? $close : null;
 	}
 	
 	public function is_current()
 	{
-		return ($time = time()) > $this->get_open() && $time < $this->get_close();
+		return (!$this->get_open() || ($time = time()) > $this->get_open())
+			&& (!$this->get_close() || $time < $this->get_close());
 	}
 	
 	public function get_duration()
@@ -40,7 +41,7 @@ class Timeframe
 		);
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return array (
 			"open" => $this->get_open(),

@@ -26,7 +26,7 @@ class APIUser extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($user->assoc_for_json(false));
+				Session::get()->set_result_assoc($user->json_assoc(false));
 			}
 		}
 	}
@@ -35,7 +35,7 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate() || !($user = Session::get()->get_user())) return;
 		
-		Session::get()->set_result_assoc($user->detailed_assoc_for_json(false));
+		Session::get()->set_result_assoc($user->detailed_json_assoc(false));
 	}
 	
 	public function authenticate()
@@ -106,7 +106,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->assoc_for_json() : null);
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -129,7 +129,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->assoc_for_json() : null);
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -156,7 +156,7 @@ class APIUser extends APIBase
 			$updates += !!$user->set_name_family($_POST["name_family"]);
 		}
 		
-		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->assoc_for_json() : null);
+		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->json_assoc() : null);
 	}
 	
 	public function practice()
@@ -207,7 +207,7 @@ class APIUser extends APIBase
 			$result = Practice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
 			if (!Session::get()->has_error())
 			{
-				Session::get()->set_result_assoc($result->assoc_for_json());
+				Session::get()->set_result_assoc($result->json_assoc());
 			}
 		}
 	}

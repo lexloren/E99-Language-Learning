@@ -95,7 +95,7 @@ class Language extends DatabaseRow
 			: null;
 	}
 
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return array (
 			"code" => $this->get_lang_code(),
@@ -103,9 +103,9 @@ class Language extends DatabaseRow
 		);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		return parent::detailed_assoc_for_json($privacy);
+		return parent::detailed_json_assoc($privacy);
 	}
 }
 

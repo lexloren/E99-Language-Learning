@@ -85,7 +85,7 @@ class APIBase
 					Session::get()->set_error_assoc("Unknown Error", "Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
 					return;
 				}
-				array_push($returnable, $item->assoc_for_json($privacy));
+				array_push($returnable, $item->json_assoc($privacy));
 			}
 			
 			Session::get()->set_result_assoc($returnable, $result_information);

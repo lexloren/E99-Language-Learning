@@ -16,7 +16,7 @@ class APIEntry extends APIBase
 		
 		if (($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
 		{
-			Session::get()->set_result_assoc($entry->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($entry->detailed_json_assoc(false));
 		}
 	}
 	
@@ -45,7 +45,7 @@ class APIEntry extends APIBase
 				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
 			}
 			
-			self::return_updates_as_json("Entry", Entry::unset_error_description(), $updates ? $entry->assoc_for_json() : null);
+			self::return_updates_as_json("Entry", Entry::unset_error_description(), $updates ? $entry->json_assoc() : null);
 		}
 	}
 	

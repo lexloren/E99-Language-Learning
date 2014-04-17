@@ -34,18 +34,26 @@ class CourseComponent extends DatabaseRow
 	{
 		return !!($course = $this->get_course()) ? $course->get_instructors() : array ();
 	}
+	public function user_is_instructor($user)
+	{
+		return !!($course = $this->get_course()) ? $course->user_is_instructor($user) : false;
+	}
 	public function session_user_is_instructor()
 	{
-		return !!($course = $this->get_course()) ? $course->session_user_is_instructor() : false;
+		return !!Session::get() && $this->user_is_instructor(Session::get()->get_user());
 	}
 	
 	public function get_students()
 	{
 		return !!($course = $this->get_course()) ? $course->get_students() : array ();
 	}
+	public function user_is_student($user)
+	{
+		return !!($course = $this->get_course()) ? $course->user_is_student($user) : false;
+	}
 	public function session_user_is_student()
 	{
-		return !!($course = $this->get_course()) ? $course->session_user_is_student() : false;
+		return !!Session::get() && $this->user_is_student(Session::get()->get_user());
 	}
 	
 	public function session_user_can_write()

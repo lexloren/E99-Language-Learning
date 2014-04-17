@@ -19,7 +19,7 @@ class APIList extends APIBase
 		}
 		else
 		{
-			Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 		}
 	}
 	
@@ -29,7 +29,7 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
 		{
-			Session::get()->set_result_assoc($list->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($list->detailed_json_assoc(false));
 		}
 	}
 	
@@ -48,7 +48,7 @@ class APIList extends APIBase
 					$updates += !!$list->set_list_name($_POST["name"]);
 				}
 				
-				self::return_updates_as_json("List", EntryList::unset_error_description(), $updates ? $list->assoc_for_json() : null);
+				self::return_updates_as_json("List", EntryList::unset_error_description(), $updates ? $list->json_assoc() : null);
 			}
 			else
 			{
@@ -69,7 +69,7 @@ class APIList extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($list->assoc_for_json());
+				Session::get()->set_result_assoc($list->json_assoc());
 			}
 		}
 	}
@@ -87,7 +87,7 @@ class APIList extends APIBase
 				$entries_returnable = array ();
 				foreach ($entries as $entry)
 				{
-					array_push($entries_returnable, $entry->assoc_for_json());
+					array_push($entries_returnable, $entry->json_assoc());
 				}
 				
 				Session::get()->set_result_assoc($entries_returnable);
@@ -116,7 +116,7 @@ class APIList extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -138,7 +138,7 @@ class APIList extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($list->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

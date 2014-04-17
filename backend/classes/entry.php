@@ -155,7 +155,7 @@ class Entry extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Entry(
+			? new self(
 				$result_assoc["entry_id"],
 				$result_assoc["lang_code_0"],
 				$result_assoc["lang_code_1"],
@@ -251,7 +251,7 @@ class Entry extends DatabaseRow
 		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
 	}
 
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		
@@ -260,7 +260,7 @@ class Entry extends DatabaseRow
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
-			"owner" => !!$this->get_owner() ? $this->get_owner()->assoc_for_json() : null,
+			"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc() : null,
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations(),
@@ -270,17 +270,17 @@ class Entry extends DatabaseRow
 		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
 		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
 		{
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->detailed_assoc_for_json($privacy);
+				return $user_entry->detailed_json_assoc($privacy);
 			}
 		}
 		
-		return parent::detailed_assoc_for_json($privacy);
+		return parent::detailed_json_assoc($privacy);
 	}
 }
 
@@ -503,7 +503,7 @@ class UserEntry extends Entry
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new UserEntry(
+			? new self(
 				$result_assoc["user_entry_id"],
 				$result_assoc["user_id"],
 				$result_assoc["entry_id"],
@@ -763,9 +763,9 @@ class UserEntry extends Entry
 		return $user_entry;
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		

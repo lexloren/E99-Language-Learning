@@ -218,7 +218,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_instructor()
 	{
-		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_instructors());
+		return !!Session::get() && $this->user_is_instructor(Session::get()->get_user());
+	}
+	public function user_is_instructor($user)
+	{
+		return !!$user && $user->in_array($this->get_instructors());
 	}
 	
 	private $students;
@@ -229,7 +233,11 @@ class Course extends DatabaseRow
 	}
 	public function session_user_is_student()
 	{
-		return !!Session::get()->get_user() && Session::get()->get_user()->in_array($this->get_students());
+		return !!Session::get() && $this->user_is_student(Session::get()->get_user());
+	}
+	public function user_is_student($user)
+	{
+		return !!$user && $user->in_array($this->get_students());
 	}
 	
 	private $units;
@@ -295,7 +303,7 @@ class Course extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Course(
+			? new self(
 				$result_assoc["course_id"],
 				$result_assoc["user_id"],
 				$result_assoc["lang_id_0"],
@@ -428,16 +436,16 @@ class Course extends DatabaseRow
 		}
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
-			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->assoc_for_json(),
-			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->assoc_for_json(),
-			"owner" => $this->get_owner()->assoc_for_json(),
+			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
+			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc(),
 			"isPublic" => $this->get_public(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"instructorsCount" => count($this->get_instructors()),
 			"studentsCount" => count($this->get_students()),
 			"unitsCount" => count($this->get_units()),
@@ -447,9 +455,9 @@ class Course extends DatabaseRow
 		), array (0 => "courseId"), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		

@@ -25,8 +25,9 @@ class Sitting extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_sittings (test_id, student_id, start) SELECT %d, student_id, CURRENT_TIMESTAMP FROM course_students WHERE course_id = %d AND user_id = %d",
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_sittings (test_id, student_id, start) SELECT %d, student_id, %d FROM course_students WHERE course_id = %d AND user_id = %d",
 			$test->get_test_id(),
+			time(),
 			$test->get_course_id(),
 			$session_user->get_user_id()
 		));
@@ -67,6 +68,12 @@ class Sitting extends CourseComponent
 	}
 	
 	/***    INSTANCE    ***/
+
+	private $sitting_id = null;
+	public function get_sitting_id()
+	{
+		return $this->sitting_id;
+	}
 
 	private $test_id = null;
 	public function get_test_id()
@@ -111,7 +118,7 @@ class Sitting extends CourseComponent
 			}
 		}
 		
-		return $this->user_id;
+		return $this->user;
 	}
 	public function get_user_id()
 	{
@@ -120,19 +127,20 @@ class Sitting extends CourseComponent
 		return $this->get_user()->get_user_id();
 	}
 	
-	public function uncache_results()
+	public function uncache_responses()
 	{
-		if (isset($this->results)) unset($this->results);
+		if (isset($this->responses)) unset($this->responses);
 	}
 	public function uncache_all()
 	{
-		$this->uncache_results();
+		$this->uncache_responses();
+		$this->uncache_enries_remaining();
 	}
 	
-	private $results;
-	public function get_results()
+	private $responses;
+	public function get_responses()
 	{
-		return self::get_cached_collection($this->results, "Result", "course_unit_test_sitting_results", "sitting_id", $this->get_sitting_id());
+		return self::get_cached_collection($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
 	private $timeframe = null;
@@ -170,7 +178,7 @@ class Sitting extends CourseComponent
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Sitting(
+			? new self(
 				$result_assoc["sitting_id"],
 				$result_assoc["test_id"],
 				$result_assoc["student_id"],
@@ -181,11 +189,116 @@ class Sitting extends CourseComponent
 			: null;
 	}
 	
+	private $entries_remaining;
+	public function get_entries_remaining()
+	{
+		if (!isset($this->entries_remaining))
+		{
+			$mysqli = Connection::get_shared_instance();
+			
+			//  Check whether user has already answered all the questions.
+			$result = $mysqli->query(sprintf("SELECT user_entry_id FROM course_unit_test_entries LEFT JOIN (course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id)) USING (test_entry_id) WHERE test_id = %d AND response_id IS NULL ORDER BY num", $this->get_test_id()));
+			
+			if (!!$mysqli->error)
+			{
+				return self::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
+			}
+			
+			$this->entries_remaining = array ();
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				array_push($this->entries_remaining, UserEntry::select_by_user_entry_id($result_assoc["user_entry_id"]));
+			}
+		}
+		return $this->entries_remaining;
+	}
+	public function uncache_entries_remaining()
+	{
+		if (isset($this->entries_remaining)) unset($this->entries_remaining);
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->get_test()->user_can_execute($user)
+			&& $this->get_entries_remaining() > 0;
+	}
+	
+	public function next_json_assoc()
+	{
+		if (!$this->session_user_can_execute())
+		{
+			return self::set_error_description("Session user cannot execute test" . (!$this->get_entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+		}
+		
+		if (!count($entries_remaining = $this->get_entries_remaining()))
+		{
+			return self::set_error_description("Session user has already responded to all test entries.");
+		}
+		
+		$entry = array_shift($entries_remaining);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d",
+			$this->get_test_id(),
+			$entry->get_user_entry_id()
+		));
+		
+		$failure_message = "Test failed to get next entry for session user";
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+		}
+		
+		if (!($result_assoc = $result->fetch_assoc()))
+		{
+			return self::set_error_description("Test failed to get mask for next entry for session user.");
+		}
+		
+		$mode = $result_assoc["mode"];
+		
+		$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_entry_patterns WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
+			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+		}
+		
+		$options = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			if ($mode === 1)
+			{
+				array_push($options, $result_assoc["word_1"]);
+			}
+			else if ($mode === null)
+			{
+				array_push($options, $result_assoc["word_1_pronun"]);
+			}
+			else
+			{
+				array_push($options, $result_assoc["word_0"]);
+			}
+		}
+		
+		if (count($options) == 1) $options = null;
+		
+		return array (
+			"testEntryId" => $test_entry_id,
+			"entriesRemainingCount" => count($entries_remaining),
+			"prompt" => $mode === 1 ? $entry->get_word_0() : $entry->get_word_1(),
+			"options" => $options
+		);
+	}
+	
 	public function user_can_read($user)
 	{
 		if (!$user) return false;
 		
-		return $this->user_can_write() || $user->equals($this->get_user());
+		return $this->user_can_write($user) || $user->equals($this->get_user());
 	}
 	
 	public function delete()
@@ -194,17 +307,21 @@ class Sitting extends CourseComponent
 		return self::delete_this($this, "course_unit_test_sittings", "sitting_id", $this->get_sitting_id());
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
+		//  Placeholder
+		return array ();
+		/*
 		return $this->privacy_mask(array (
 			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->assoc_for_json(),
+			"owner" => $this->get_owner()->json_assoc(),
 			"testId" => $this->get_test_id(),
 			"userId" => $this->get_user_id(),
-			"timeframe" => $this->get_timeframe()->assoc_for_json(),
-			"results" => self::array_for_json($this->get_results()),
+			"timeframe" => $this->get_timeframe()->json_assoc(),
+			"responses" => self::array_for_json($this->get_responses()),
 			"message" => $this->get_message()
 		), array (0 => "sittingId"), $privacy);
+		*/
 	}
 }
 

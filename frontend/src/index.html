@@ -4,23 +4,29 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Xenogloss: Student Edition</title>
-
+    <title>Xenogloss: Welcome Page</title>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-	
 	<!-- Custom styles for this template -->
     <link href="css/starter-template.css" rel="stylesheet">
 
+	    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+	 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+	<script src="js/jquery-ui-timepicker-addon.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+	<script src="js/course.js"></script>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-    <script>
-        // temporarily redirecting to login page
-        window.location.replace("login.html");
+	<script type="text/javascript">
+      $(document).ready(function(){
+       	initIndexPage();
+      });
     </script>
   </head>
   <body role="document">
@@ -62,16 +68,180 @@
     </div>
 
     <div class="container theme-showcase" role="main">
-  
-  
-  
-  
-    <h1>Hello, Student!</h1>
+		<h1>Welcome to Xenogloss!</h1>
+		
+		<div id="success" class="alert alert-success">
+		</div>
+        <div id="failure" class="alert alert-danger">
+        </div>
+		
+		<!--The Top tabs go here-->
+		<ul class="nav nav-tabs" style="margin-bottom: 15px;">
+			<li class="active"><a href="#course" data-toggle="tab">My Courses</a></li>
+			<li class=""><a href="#list" data-toggle="tab">My Lists</a></li>
+			<li class=""><a href="#search" data-toggle="tab">Search Course</a></li>
+			<li class=""><a href="#addcourse" data-toggle="tab">Add Course</a></li>
+			<li class=""><a href="#profile" data-toggle="tab">Profile</a></li>
+			
+		</ul>
+		<div id="progress" >
+			<img src="/frontend/src/images/loader.gif"/> loading...
+		</div>
+		<div id="myTabContent" class="tab-content">
+			<div class="tab-pane fade active in" id="course">
+				
+			</div>
+			<div class="tab-pane fade" id="list">
+				
+			</div>
+			<div class="tab-pane fade" id="search">
+				<form class="form-horizontal" id="frmSearchCourse">
+				  <fieldset>
+						
+					<div class="form-group">
+						<label class="control-label">Search Course</label>
+						<div class="input-group">
+						<input class="form-control" id="searchCourseName" placeholder="Search Course" type="text">
+							<span class="input-group-btn">
+								<button class="btn btn-info" type="button">Search</button>
+							</span>
+						</div>
+					</div>
+
+				</fieldset>
+				</form>
+				<div id="searchresults">
+				</div>
+			</div>
+			<div class="tab-pane fade" id="addcourse">
+				<form class="form-horizontal" id="insertCourceForm">
+				<fieldset>
+					<legend>Create a Course</legend>
+					<div class="form-group">
+						<label for="coursename" class="col-lg-2 control-label">Course Name</label>
+						<div class="col-lg-10">
+							<input class="form-control" id="coursename" placeholder="Course Name" type="text">
+						</div>
+					</div>
+    
+					<div class="form-group">
+						<label for="coursedetails" class="col-lg-2 control-label">Course Details</label>
+						<div class="col-lg-10">
+							<textarea class="form-control" rows="3" id="coursedetails"></textarea>
+							<span class="help-block">Enter course details here.</span>
+						</div>
+					</div>
+	
+					<div class="form-group">
+						<label for="knownLang" class="col-lg-2 control-label">Known Lang</label>
+						<div class="col-lg-10">
+							<select class="form-control" id="knownLang">
+								<option value="">Select One</option>
+								<option value="en">English</option>
+								<option value="cn">Chinese</option>
+								<option value="jp">Japanese</option>
+							</select>
+						</div>
+					</div>
+	
+					<div class="form-group">
+						<label for="unknownLang" class="col-lg-2 control-label">unKnown Lang</label>
+						<div class="col-lg-10">
+							<select class="form-control" id="unknownLang">
+								<option value="">Select One</option>
+								<option value="en">English</option>
+								<option value="cn">Chinese</option>
+								<option value="jp">Japanese</option>
+							</select>
+						</div>
+					</div>
+	
+					<div class="form-group">
+						<label for="opendate" class="col-lg-2 control-label">Open Date</label>
+						<div class="col-lg-10">
+							<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
+							<script>$('#opendate').datetimepicker();</script>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="closedate" class="col-lg-2 control-label">Close Date</label>
+						<div class="col-lg-10">
+							<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
+							<script>$('#closedate').datetimepicker();</script>
+						</div>
+					</div>
+    
+					<div class="form-group">
+						<div class="col-lg-10 col-lg-offset-2">
+							<button class="btn btn-default">Cancel</button>
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</div>
+				</fieldset>
+				</form>
+			</div>
+			<div class="tab-pane fade" id="profile">
+				<form class="form-horizontal">
+				  <fieldset>
+					<legend>Update Profile</legend>
+					<div class="form-group">
+					  <label for="inputLoginHandle" class="col-lg-2 control-label">Login Handle</label>
+					  <div class="col-lg-10">
+						<input class="form-control" id="inputLoginHandle" placeholder="Login Handle" type="text">
+					  </div>
+					</div>
+					<div class="form-group">
+					  <label for="inputEmail" class="col-lg-2 control-label">Email</label>
+					  <div class="col-lg-10">
+						<input class="form-control" id="inputEmail" placeholder="Email" type="text">
+					  </div>
+					</div>
+					<div class="form-group">
+					  <label for="inputNameGiven" class="col-lg-2 control-label">Name Given</label>
+					  <div class="col-lg-10">
+						<input class="form-control" id="inputNameGiven" placeholder="Name Given" type="text">
+					  </div>
+					</div>
+					<div class="form-group">
+					  <label for="inputFamilyName" class="col-lg-2 control-label">Family Name</label>
+					  <div class="col-lg-10">
+						<input class="form-control" id="inputFamilyName" placeholder="Family Name" type="text">
+					  </div>
+					</div>
+					
+					<div class="form-group">
+					  <label for="select" class="col-lg-2 control-label">Known Languages</label>
+					  <div class="col-lg-10">
+						<div class="checkbox">
+							<label>
+								<input type="checkbox" id="lang_en"> <span id="lang_en_desc">English</span>
+								<input type="hidden" id="lang_en_init" value="N"/>
+							</label>
+							<br/>
+							<label>
+								<input type="checkbox" id="lang_jp">  <span id="lang_jp_desc">日本語</span>
+								<input type="hidden" id="lang_jp_init" value="N"/>
+							</label>
+							<br/>
+							<label>
+								<input type="checkbox" id="lang_cn">  <span id="lang_cn_desc">漢語（汉语）</span>
+								<input type="hidden" id="lang_cn_init" value="N"/>
+							</label>
+						</div>
+					  </div>
+					</div>
+					<div class="form-group">
+					  <div class="col-lg-10 col-lg-offset-2">
+						<button class="btn btn-default">Cancel</button>
+						<button type="submit" class="btn btn-primary">Submit</button>
+					  </div>
+					</div>
+				  </fieldset>
+				</form>
+			</div>
+			
+		</div>
 	</div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="js/bootstrap.min.js"></script>
   </body>
 </html>

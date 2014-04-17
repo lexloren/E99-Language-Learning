@@ -63,7 +63,7 @@ class Annotation extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Annotation(
+			? new self(
 				$result_assoc["annotation_id"],
 				$result_assoc["user_entry_id"],
 				$result_assoc["contents"]
@@ -95,7 +95,7 @@ class Annotation extends DatabaseRow
 		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"annotationId" => $this->annotation_id,

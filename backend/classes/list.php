@@ -151,7 +151,7 @@ class EntryList extends DatabaseRow
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new EntryList(
+			? new self(
 				$result_assoc["list_id"],
 				$result_assoc["user_id"],
 				!!$result_assoc["name"] && strlen($result_assoc["name"]) > 0 ? $result_assoc["name"] : null,
@@ -260,9 +260,9 @@ class EntryList extends DatabaseRow
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function entries_remove($entry_to_remove)
+	public function entries_remove($entry)
 	{
-		if (!$entry_to_remove)
+		if (!$entry)
 		{
 			return static::set_error_description("List cannot remove null entry.");
 		}
@@ -272,26 +272,23 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
+		$entry = $entry->copy_for_user($this->get_owner());
+		
 		$mysqli = Connection::get_shared_instance();
 		
-		foreach ($this->get_entries() as $entry_removed)
+		$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND user_entry_id = %d",
+			$this->get_list_id(),
+			$entry->get_user_entry_id()
+		));
+		
+		if (!!$mysqli->error)
 		{
-			if ($entry_removed->get_entry_id() === $entry_to_remove->get_entry_id())
-			{
-				$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND user_entry_id = %d",
-					$this->list_id,
-					$entry_removed->get_user_entry_id()
-				));
-				
-				array_drop($this->entries, $entry_removed);
-				
-				$entry_removed->uncache_lists();
-				
-				return $this;
-			}
+			return self::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
 		}
 		
-		return static::set_error_description("List failed to remove entry.");
+		if (isset($this->entries)) array_drop($this->entries, $entry);
+		
+		return $this;
 	}
 	
 	//  Copies this list, setting the copy's owner to some other user
@@ -345,20 +342,20 @@ class EntryList extends DatabaseRow
 		return self::select_by_id($list_copy_id);
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
-			"owner" => $this->get_owner()->assoc_for_json(),
+			"owner" => $this->get_owner()->json_assoc(),
 			"isPublic" => $this->get_public(),
 			"entriesCount" => count($this->get_entries()),
 		), array (0 => "listId"), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		

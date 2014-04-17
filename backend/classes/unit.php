@@ -211,7 +211,7 @@ class Unit extends CourseComponent
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
-			? new Unit(
+			? new self(
 				$result_assoc["unit_id"],
 				$result_assoc["course_id"],
 				$result_assoc["num"],
@@ -286,28 +286,28 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"unitId" => $this->get_unit_id(),
 			"name" => $this->get_unit_name(),
 			"number" => $this->get_number(),
 			"courseId" => $this->get_course_id(),
-			"owner" => $this->get_owner()->assoc_for_json(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->assoc_for_json() : null,
+			"owner" => $this->get_owner()->json_assoc(),
+			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"listsCount" => count($this->get_lists()),
 			"testsCount" => count($this->get_tests()),
 			"message" => $this->get_message()
 		), array (0 => "unitId"), $privacy);
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		$assoc = $this->assoc_for_json($privacy);
+		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["course"] = $this->get_course()->assoc_for_json($privacy !== null ? $privacy : null);
+		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());
 		

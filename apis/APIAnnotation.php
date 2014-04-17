@@ -16,7 +16,7 @@ class APIAnnotation extends APIBase
 		
 		if (($annotation = self::validate_selection_id($_GET, "annotation_id", "Annotation")))
 		{
-			Session::get()->set_result_assoc($annotation->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($annotation->detailed_json_assoc(false));
 		}
 	}
 	
@@ -36,7 +36,7 @@ class APIAnnotation extends APIBase
 				}
 				else
 				{
-					Session::get()->set_result_assoc($entry->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+					Session::get()->set_result_assoc($entry->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
 			}
 		}
@@ -54,7 +54,7 @@ class APIAnnotation extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($annotation->assoc_for_json());
+				Session::get()->set_result_assoc($annotation->json_assoc());
 			}
 		}
 	}

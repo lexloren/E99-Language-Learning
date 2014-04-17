@@ -33,7 +33,7 @@ class APICourse extends APIBase
 				}
 				else
 				{
-					Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+					Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 				}
 			}
 		}
@@ -45,7 +45,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			Session::get()->set_result_assoc($course->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($course->detailed_json_assoc(false));
 		}
 	}
 	
@@ -79,7 +79,7 @@ class APICourse extends APIBase
 			
 			if (isset($_POST["open"]) && isset($_POST["close"]))
 			{
-				$updates += !!$course->set_timeframe(new Timeframe($_POST["open"], $_POST["close"]));
+				$updates += !!$course->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
 			}
 			else
 			{
@@ -93,7 +93,7 @@ class APICourse extends APIBase
 				}
 			}
 			
-			self::return_updates_as_json("Course", Course::unset_error_description(), $updates ? $course->assoc_for_json() : null);
+			self::return_updates_as_json("Course", Course::unset_error_description(), $updates ? $course->json_assoc() : null);
 		}
 	}
 	
@@ -109,7 +109,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($course->assoc_for_json());
+				Session::get()->set_result_assoc($course->json_assoc());
 			}
 		}
 	}
@@ -173,7 +173,7 @@ class APICourse extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -205,7 +205,7 @@ class APICourse extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -227,7 +227,7 @@ class APICourse extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
@@ -249,7 +249,7 @@ class APICourse extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($course->assoc_for_json());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}

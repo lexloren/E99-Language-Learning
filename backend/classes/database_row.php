@@ -116,6 +116,11 @@ class DatabaseRow
 		
 			$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
 			
+			if ($mysqli->error)
+			{
+				return static::set_error_description("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: " . $mysqli->error . ".");
+			}
+			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
 				if (!($member = $member_class::from_mysql_result_assoc($result_assoc)))
@@ -208,14 +213,14 @@ class DatabaseRow
 		return !!Session::get() && $this->user_can_execute(Session::get()->get_user());
 	}
 	
-	public function assoc_for_json($privacy = null)
+	public function json_assoc($privacy = null)
 	{
 		return null;
 	}
 	
-	public function detailed_assoc_for_json($privacy = null)
+	public function detailed_json_assoc($privacy = null)
 	{
-		return $this->assoc_for_json($privacy);
+		return $this->json_assoc($privacy);
 	}
 	
 	protected function privacy()
@@ -260,7 +265,7 @@ class DatabaseRow
 			{
 				return static::set_error_description("Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
 			}
-			array_push($assocs, $item->assoc_for_json());
+			array_push($assocs, $item->json_assoc());
 		}
 		
 		return $assocs;

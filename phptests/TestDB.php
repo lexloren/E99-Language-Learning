@@ -69,7 +69,6 @@ class TestDB
 		Unit::reset();
 		EntryList::reset();
 		Test::reset();
-		Section::reset();
 		Annotation::reset();
 	
 		$testdb = new TestDB();

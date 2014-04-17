@@ -26,7 +26,7 @@ class APITest extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($test->assoc_for_json());
+				Session::get()->set_result_assoc($test->json_assoc());
 			}
 		}
 	}
@@ -37,7 +37,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
 		{
-			Session::get()->set_result_assoc($test->detailed_assoc_for_json(false));
+			Session::get()->set_result_assoc($test->detailed_json_assoc(false));
 		}
 	}
 	
@@ -53,7 +53,7 @@ class APITest extends APIBase
 			}
 			else
 			{
-				Session::get()->set_result_assoc($test->assoc_for_json());
+				Session::get()->set_result_assoc($test->json_assoc());
 			}
 		}
 	}
@@ -82,7 +82,7 @@ class APITest extends APIBase
 			
 			if (isset($_POST["open"]) && isset($_POST["close"]))
 			{
-				$updates += !!$test->set_timeframe(new Timeframe($_POST["open"], $_POST["close"]));
+				$updates += !!$test->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
 			}
 			else
 			{
@@ -96,17 +96,106 @@ class APITest extends APIBase
 				}
 			}
 			
-			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->assoc_for_json() : null);
+			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->json_assoc() : null);
 		}
 	}
 	
-	public function sections()
+	public function entries()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
+		{
+			if ($test->session_user_can_write())
+			{
+				if (is_array($entries = $test->get_entries()))
+				{
+					self::return_array_as_json($entries);
+				}
+				else
+				{
+					Session::get()->set_error_assoc("Test Entries", Test::unset_error_description());
+				}
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Test-Entries Selection", "Session user cannot read test entries.");
+			}
+		}
+	}
+	
+	public function entries_add()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			self::return_array_as_json($test->get_sections());
+			if (self::validate_request($_POST, "entry_ids"))
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					if (!$test->entries_add(Entry::select_by_id($entry_id)))
+					{
+						Session::get()->set_error_assoc("Test-Entries Addition", Test::unset_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+		}
+	}
+	
+	public function entries_remove()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			if (self::validate_request($_POST, "entry_ids"))
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					if (!$test->entries_remove(Entry::select_by_id($entry_id)))
+					{
+						Session::get()->set_error_assoc("Test-Entries Removal", Test::unset_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+		}
+	}
+	
+	public function execute()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			if (!($sitting = $test->execute_for_session_user()))
+			{
+				Session::get()->set_error_assoc("Test Execution", Test::unset_error_description());
+				return;
+			}
+			
+			if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
+			{
+				if (!Response::insert($_POST["test_entry_id"], $_POST["contents"]))
+				{
+					Session::get()->set_error_assoc("Test Execution", Response::unset_error_description());
+					return;
+				}
+			}
+			
+			if (!($next_json_assoc = $sitting->next_json_assoc()))
+			{
+				Session::get()->set_error_assoc("Test Execution", Sitting::unset_error_description());
+				return;
+			}
+			
+			Session::get()->set_result_assoc($next_json_assoc);
 		}
 	}
 }
