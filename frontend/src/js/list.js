@@ -26,20 +26,31 @@ $(document).ready(function(){
 	pageSetup();
 	$("#listpagetitle").hide();
 	$("#dict-add").hide();
+	$('#list-add').hide();
 	handleClicks();
 	listnum = getURLparam('listid');
 	if(listnum === null) {
-		getLists();
-		$("#listpagetitle").show();
+		showAllLists();
 	} else {
+		$('#create-list').hide();
 		viewList(listnum);
 	}
 	
 });
 
+function showAllLists() {
+	getLists();
+	$("#listpagetitle").show();
+	var message = 'You can practice with your lists as well as lists from your courses at your ' +
+	'<a href="practice.html">practice page</a>.';
+	successMessage(message);
+}
+
 function handleClicks() {
-	$(document).on('click', '.list-delete', function () {
-		console.log(this.id);
+	$(document).on('click', '.list-delete', function (event) {
+		event.preventDefault();
+		deleteList(this.id);
+		$(this).parent().parent().remove();
 	});
 	$(document).on('click', '.entry-delete', function (event) {
 		event.preventDefault();
@@ -57,8 +68,17 @@ function handleClicks() {
 		event.preventDefault();
 		search_entry();
 	});
+	$('#create-list').click(function(event) {
+		event.preventDefault();
+		$('#create-list').hide();
+		$('#list-add').show();
+	});
+	$('#list-add').submit(function(event) {
+		event.preventDefault();
+		newList( $('#new-list-name').val() );
+	});
 }
-  
+
 function getLists() {
 	$('#lists').html('');
 	var currentURL = URL + 'user_lists.php';
@@ -163,4 +183,27 @@ function addEntry(entryid) {
 		.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	})
+
+function deleteList(listid) {
+	var currentURL = URL + 'list_entries_remove.php';
+	$.post(currentURL, {'list_id' : listid }, function() {
+		console.log( "success" );
+	})
+	.fail(function() {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	})
 }
+
+function newList(listname) {
+	var currentURL = URL + 'list_insert.php';
+	$.post(currentURL, {'list_name' : listname}, function(data) {
+		if (data.isError === true) {
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
+		} else {
+			insertListRow(listname, data.result.listId);
+		}
+	})
+		.fail(function() {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	})
+}}
