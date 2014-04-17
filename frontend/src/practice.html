@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Xenogloss: Student Edition</title>
+    <title>Xenogloss</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -29,6 +29,7 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="js/bootstrap.min.js"></script>
 	<script src="../tests/resources/jquery.mockjax.js"></script>
+	<script src="js/common.js"></script>
 	<script src="js/practice.js"></script>
 	
   </head>
@@ -36,15 +37,14 @@
 
     <!-- Fixed navbar -->
     <div id="navbar"></div>
+	<br/>
+    <div class="container" role="main" id="doc-body">
 
-    <div class="container role="main">
-	<div id="success" class="alert alert-success"></div>
-      <div id="failure" class="alert alert-danger"></div>
 	<!-- The "introductory section, where  student selects which decks they would like to practice. -->
 	<div id="deck-selection-container">
 	<form role="form">
 	<h4>Select which decks you would like to practice:</h4>
-	<img src="images/ajax-loader.gif" id="loader">
+	<img src="images/ajax-loader.gif" id="loader-show-lists">
 	<div class="form-group"id="deck-selection-form">
 	</div>
   <div class="form-group">
@@ -70,6 +70,7 @@
 </div>
 	
 	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
+		<div align="center" id="loader-get-cards"><img src="images/ajax-loader.gif"></div>
 		<div id="flashcard-container">
 		<div class="row">
 		<h4>Test your knowledge:</h4>
@@ -97,6 +98,7 @@
 			</div>
 			<div class="alert alert-info" id="translation-panel">
 			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
+			<div align="center" id="loader-get-trans"><img src="images/ajax-loader.gif"></div>
 				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
 			</div>
 		</div>
