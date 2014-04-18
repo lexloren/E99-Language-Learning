@@ -19,6 +19,11 @@ class Grade extends DatabaseRow
 		return parent::select("grades", "grade_id", $grade_id);
 	}
 
+	public static function select_by_point($point)
+	{
+		return parent::select("grades", "point", $point);
+	}
+
 	/***    INSTANCE    ***/
 
 	private $grade_id = null;

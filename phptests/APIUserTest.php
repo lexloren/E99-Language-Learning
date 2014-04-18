@@ -232,7 +232,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_SESSION["handle"] = $this->db->handles[0];
 
 		$_GET["entry_id"] = $this->db->practice_entry_ids[0];
-		$_GET["grade_id"] = 5;
+		$grade = Grade::select_by_point(4);
+		$_GET["grade_id"] = $grade->get_grade_id();
 		$this->obj->practice_response();
 		$this->assertFalse(Session::get()->has_error());
 		$entry = Session::get()->get_result_assoc();

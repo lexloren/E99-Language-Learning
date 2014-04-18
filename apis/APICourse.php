@@ -97,6 +97,19 @@ class APICourse extends APIBase
 		}
 	}
 	
+	public function find()
+	{
+		if (!Session::get()->reauthenticate()) return;
+
+		if (self::validate_request($_GET, "query"))
+		{
+			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
+			$lang = isset($_GET["langs"]) ? explode(",", $_GET["langs"]) : array();
+
+			self::return_array_as_json(Course::find($_GET["query"], $lang, $exact_matches_only));
+		}
+	}
+
 	public function delete()
 	{
 		if (!Session::get()->reauthenticate()) return;

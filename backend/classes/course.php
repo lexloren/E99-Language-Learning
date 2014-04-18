@@ -66,6 +66,33 @@ class Course extends DatabaseRow
 	{
 		return parent::select("courses", "course_id", $course_id);
 	}
+
+	public static function find($query, $lang_codes, $exact_match_only = false)
+	{
+		$mysqli = Connection::get_shared_instance();
+
+		foreach ($lang_codes as &$lang_code)
+		{
+			$lang_code = $mysqli->escape_string($lang_code);
+		}
+
+		$query = str_replace("%", "%%", $mysqli->escape_string($query));
+
+		$filter = !!$exact_match_only ? "name = '$query'" : "name LIKE '%%$query%%'";
+		if (!empty($lang_codes))
+		{
+			$select_lang_ids = sprintf("SELECT lang_id FROM languages WHERE lang_code in ('%s')", implode("','", $lang_codes));
+			$filter .= " AND (lang_id_0 in ($select_lang_ids) OR lang_id_1 in ($select_lang_ids))";
+		}
+		$result = $mysqli->query("SELECT * FROM courses WHERE $filter");
+
+		$courses = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($courses, Course::from_mysql_result_assoc($result_assoc));
+		}
+		return $courses;
+	}
 	
 	/***    INSTANCE    ***/
 

@@ -17,7 +17,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 	}
 	
-	public function test_insert()
+	public function test_course_insert()
 	{
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
 		$this->assertNull($course);
@@ -55,6 +55,27 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($course->get_public());
 	}
 	
+	public function test_find()
+        {
+                $user_obj = User::select_by_id($this->db->user_ids[0]);
+                Session::get()->set_user($user_obj);
+
+		$this->assertNotNull(Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1'));
+		$this->assertNotNull(Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course2'));
+		$this->assertNotNull(Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'NoMatch Course1'));
+
+		$courses = Course::find('New', array());
+		$this->assertEquals(count($courses), 2);
+		$courses = Course::find('New', array(TestDB::$lang_code_1));
+		$this->assertEquals(count($courses), 2);
+		$courses = Course::find('New', array(TestDB::$lang_code_1,TestDB::$lang_code_0));
+		$this->assertEquals(count($courses), 2);
+		$courses = Course::find('', array(TestDB::$lang_code_1));
+		$this->assertEquals(count($courses), 4);
+		$courses = Course::find('New', array('xx'));
+		$this->assertEquals(count($courses), 0);
+	}
+
 	public function test_delete()
 	{
 		Session::get()->set_user(null);

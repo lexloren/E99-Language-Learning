@@ -55,6 +55,45 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($result);
 
 	}
+
+        public function test_course_find()
+        {
+                $user_obj = User::select_by_id($this->db->user_ids[0]);
+                Session::get()->set_user($user_obj);
+
+		$course_setup = array();
+                array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1'));
+                array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course2'));
+                array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'NoMatch Course1'));
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["query"] = "New";
+                $this->obj->find();
+		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
+                $this->assertEquals(count($courses), 2);
+		$_GET["query"] = "New";
+		$_GET["langs"] = TestDB::$lang_code_1;
+                $this->obj->find();
+		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
+                $this->assertEquals(count($courses), 2);
+		$_GET["query"] = "New";
+		$_GET["langs"] = TestDB::$lang_code_1.','.TestDB::$lang_code_0;
+                $this->obj->find();
+		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
+                $this->assertEquals(count($courses), 2);
+		$_GET["query"] = "";
+		$_GET["langs"] = TestDB::$lang_code_1;
+                $this->obj->find();
+		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
+                $this->assertEquals(count($courses), 3);
+		$_GET["query"] = "";
+		$_GET["langs"] = "xx";
+                $this->obj->find();
+		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
+                $this->assertEquals(count($courses), 0);
+		foreach($course_setup as $course)	$course->delete();
+        }
+
 }
 
 
