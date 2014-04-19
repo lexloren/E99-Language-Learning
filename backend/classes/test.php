@@ -124,9 +124,9 @@ class Test extends CourseComponent
 		
 		if ($number > ($entries_count = count($this->get_entries()))) $number = $entries_count;
 		
-		if ($number === ($number_formerly = array_search($entry, $this->get_entries()))) return $this;
+		if ($number === ($number_formerly = array_search($entry, $this->get_entries()) + 1)) return $this;
 		
-		if ($number_formerly < 0) return self::set_error_description("Test cannot set entry number for entry not already in test.");
+		if ($number_formerly < 1) return self::set_error_description("Test cannot set entry number for entry not already in test.");
 			
 		$mysqli = Connection::get_shared_instance();
 		
@@ -139,6 +139,10 @@ class Test extends CourseComponent
 		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
+		
+		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 		
 		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
@@ -176,7 +180,7 @@ class Test extends CourseComponent
 		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, %s)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
-			count($this->get_entries()),
+			count($this->get_entries()) + 1,
 			$mode
 		));
 		
@@ -222,6 +226,10 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner());
 		
+		$number = array_search($entry, $this->get_entries()) + 1;
+		
+		if ($number < 1) return self::set_error_description("Test cannot remove entry not already in test.");
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("DELETE FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d LIMIT 1",
@@ -235,6 +243,16 @@ class Test extends CourseComponent
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num",
+			$this->get_test_id(),
+			$entry->get_user_entry_id()
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
+		}
 		
 		return $this;
 	}
@@ -393,7 +411,7 @@ class Test extends CourseComponent
 			"name" => $this->get_test_name(),
 			"unitId" => $this->get_unit_id(),
 			"courseId" => $this->get_course_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			//"owner" => $this->get_owner()->json_assoc(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"entriesCount" => count($this->get_entries()),
 			"message" => $this->get_message()

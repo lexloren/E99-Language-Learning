@@ -168,6 +168,27 @@ class APITest extends APIBase
 		}
 	}
 	
+	public function entry_update()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test"))
+			&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
+		{
+			if (self::validate_request($_POST, "number"))
+			{
+				if ($test->set_entry_number($entry, $_POST["number"]))
+				{
+					Session::get()->set_result_assoc($test->json_assoc());
+				}
+				else
+				{
+					Session::get()->set_error_assoc("Test-Entry Modification", Test::unset_error_description());
+				}
+			}
+		}
+	}
+	
 	public function execute()
 	{
 		if (!Session::get()->reauthenticate()) return;

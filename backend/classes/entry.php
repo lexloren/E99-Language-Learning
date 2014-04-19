@@ -260,7 +260,7 @@ class Entry extends DatabaseRow
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
-			"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc() : null,
+			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc() : null,
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations(),

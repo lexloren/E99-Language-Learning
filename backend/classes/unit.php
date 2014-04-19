@@ -293,7 +293,7 @@ class Unit extends CourseComponent
 			"name" => $this->get_unit_name(),
 			"number" => $this->get_number(),
 			"courseId" => $this->get_course_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			//"owner" => $this->get_owner()->json_assoc(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"listsCount" => count($this->get_lists()),
 			"testsCount" => count($this->get_tests()),
