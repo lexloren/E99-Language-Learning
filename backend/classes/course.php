@@ -110,7 +110,7 @@ class Course extends DatabaseRow
 		$course_user_entries = "($course_lists CROSS JOIN user_entries USING (user_entry_id))";
 		
 		$result = $mysqli->query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) AND courses.public GROUP BY course_id",
-			implode($entry_ids, ",")
+			implode(",", $entry_ids)
 		));
 		
 		if (!!$mysqli->error)
