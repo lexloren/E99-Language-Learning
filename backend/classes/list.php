@@ -32,6 +32,24 @@ class EntryList extends DatabaseRow
 		
 		return self::select_by_id($mysqli->insert_id);
 	}
+
+	public static function find($query, $exact_match_only = false)
+        {
+                $mysqli = Connection::get_shared_instance();
+
+                $query = str_replace("%", "%%", $mysqli->escape_string($query));
+
+                $filter = !!$exact_match_only ? "name = '$query'" : "name LIKE '%%$query%%'";
+                $filter .= " AND (user_id = " . Session::get()->get_user()->get_user_id() . " or public <> 0)";
+                $result = $mysqli->query("SELECT * FROM lists WHERE $filter");
+
+                $lists = array ();
+                while (($result_assoc = $result->fetch_assoc()))
+                {
+                        array_push($lists, EntryList::from_mysql_result_assoc($result_assoc));
+                }
+                return $lists;
+        }
 	
 	public static function select_by_id($list_id)
 	{

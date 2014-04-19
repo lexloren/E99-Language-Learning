@@ -72,6 +72,43 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$this->obj->insert();	
 		$this->assertTrue(Session::get()->has_error());
 	}
+
+        public function test_list_find()
+        {
+                $user_obj = User::select_by_id($this->db->user_ids[0]);
+                Session::get()->set_user($user_obj);
+
+                $list_setup = array();
+		array_push($list_setup, EntryList::insert('New List1'));
+                array_push($list_setup, EntryList::insert('New List2'));
+                array_push($list_setup, EntryList::insert('NoMatch EntryList1'));
+
+                $_SESSION["handle"] = $this->db->handles[0];
+                $_GET["query"] = "New";
+                $this->obj->find();
+                $result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
+                $this->assertEquals(count($lists), 2);
+                $_GET["query"] = "new";
+                $this->obj->find();
+                $result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
+                $this->assertEquals(count($lists), 2);
+                $_GET["query"] = "New";
+                $_GET["exact"] = 1;
+                $this->obj->find();
+                $result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
+                $this->assertEquals(count($lists), 0);
+                $_GET["query"] = "New List1";
+                $_GET["exact"] = 1;
+                $this->obj->find();
+                $result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
+                $this->assertEquals(count($lists), 1);
+                $_GET["query"] = "";
+                $_GET["exact"] = 0;
+                $this->obj->find();
+                $result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
+                $this->assertEquals(count($lists), 4);
+                foreach($list_setup as $list)       $list->delete();
+        }
 	
 	public function test_delete()
 	{

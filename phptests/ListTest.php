@@ -42,6 +42,29 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($list->get_public());
 	}
 	
+        public function test_list_find()
+        {
+                $user_obj = User::select_by_id($this->db->user_ids[0]);
+                Session::get()->set_user($user_obj);
+                $this->assertNotNull(EntryList::insert('New List1'));
+                $this->assertNotNull(EntryList::insert('New List2'));
+                $this->assertNotNull(EntryList::insert('NoMatch List1'));
+
+                $lists = EntryList::find('New');
+                $this->assertEquals(count($lists), 2);
+                $lists = EntryList::find('New', 1);
+                $this->assertEquals(count($lists), 0);
+                $lists = EntryList::find('');
+                $this->assertEquals(count($lists), 4);
+                $lists = EntryList::find('nom');
+                $this->assertEquals(count($lists), 1);
+
+                $user_obj = User::select_by_id($this->db->user_ids[1]);
+                Session::get()->set_user($user_obj);
+                $lists = EntryList::find('');
+                $this->assertEquals(count($lists), 0);
+        }
+
 	public function test_list_name()
 	{
 		$list = EntryList::select_by_id($this->db->list_ids[0]);

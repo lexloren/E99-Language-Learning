@@ -56,6 +56,17 @@ class APIList extends APIBase
 			}
 		}
 	}
+
+        public function find()
+        {
+                if (!Session::get()->reauthenticate()) return;
+
+                if (self::validate_request($_GET, "query"))
+                {
+                        $exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
+                        self::return_array_as_json(EntryList::find($_GET["query"], $exact_matches_only));
+                }
+        }
 	
 	public function delete()
 	{

@@ -84,6 +84,7 @@ class Course extends DatabaseRow
 			$select_lang_ids = sprintf("SELECT lang_id FROM languages WHERE lang_code in ('%s')", implode("','", $lang_codes));
 			$filter .= " AND (lang_id_0 in ($select_lang_ids) OR lang_id_1 in ($select_lang_ids))";
 		}
+		$filter .= " AND (user_id = " . Session::get()->get_user()->get_user_id() . " or public <> 0)";
 		$result = $mysqli->query("SELECT * FROM courses WHERE $filter");
 
 		$courses = array ();

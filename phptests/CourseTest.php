@@ -55,7 +55,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($course->get_public());
 	}
 	
-	public function test_find()
+	public function test_course_find()
         {
                 $user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);
@@ -74,6 +74,11 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(count($courses), 4);
 		$courses = Course::find('New', array('xx'));
 		$this->assertEquals(count($courses), 0);
+
+		$user_obj = User::select_by_id($this->db->user_ids[1]);
+                Session::get()->set_user($user_obj);
+		$courses = Course::find('', array(TestDB::$lang_code_1));
+                $this->assertEquals(count($courses), 0);
 	}
 
 	public function test_delete()
