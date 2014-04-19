@@ -183,6 +183,7 @@ function addEntry(entryid) {
 		.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	})
+}
 
 function deleteList(listid) {
 	var currentURL = URL + 'list_entries_remove.php';
@@ -206,4 +207,4 @@ function newList(listname) {
 		.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	})
-}}
+}
