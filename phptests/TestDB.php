@@ -44,13 +44,16 @@ class TestDB
 	public $course_ids = Array();
 	public $course_names = Array();
 	public $course_messages = Array();
+	public $course_units = Array();
 	public $course_tests = Array();
 	private static $course_name = 'some course';
 	private static $course_message = 'some course message';
 	private static $course_unit_name = 'some unit';
 	
 	public $practice_list_ids = array();
-    	public $practice_entry_ids = array();
+    public $practice_entry_ids = array();
+		
+	public $grade_ids = array();
 
 	public $link = null;
 
@@ -246,27 +249,73 @@ class TestDB
 		array_push($this->course_names, $name);
 		array_push($this->course_messages, $message);
 		
-		$link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
-			$course_id,
-			self::$course_unit_name,
-			1
-		));
-		
-		if (!$link->insert_id)
-			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
-		
-		$course_unit_id = $link->insert_id;
+		$course_unit_id = $this->add_course_unit($course_id);
 		
 		$list_id = $this->add_list($user_id, $this->entry_ids);
 
-		$link->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",
-			$course_unit_id,
-			$list_id
-		));
+		$this->add_unit_list($course_unit_id, $list_id);
 		
 		return $course_id;
 	}
 
+	public function add_course_unit($course_id)
+	{
+		$suffix = count($this->course_units);
+		$this->link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
+			$course_id,
+			self::$course_unit_name.$suffix,
+			$suffix
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+		
+		array_push($this->course_units, $this->link->insert_id);
+		return $this->link->insert_id;
+	}
+	
+	public function add_unit_list($unit_id, $list_id)
+	{
+		$this->link->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",
+			$unit_id,
+			$list_id
+		));
+	}
+	
+	public function create_user_entries_from_list($user_id, $list_id)
+	{
+		$result = $this->link->query("SELECT user_entry_id FROM list_entries WHERE list_id = ".$list_id);
+		
+		$num_rows = $result->num_rows;
+		
+		for ($i=0; $i<$num_rows; $i++) 
+		{
+			$result_assoc = $result->fetch_assoc();
+			//print_r($result_assoc);
+			
+			$this->link->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d",
+				$user_id,
+				$result_assoc['user_entry_id']
+			));
+			
+			if (!$this->link->insert_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			
+			$user_entry_id = $this->link->insert_id;
+			
+			$grade_indx = rand(0, count($this->grade_ids) - 1);
+			
+			$this->link->query(sprintf("INSERT IGNORE INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
+				$user_entry_id,
+				$this->grade_ids[$grade_indx]
+			));
+
+			if (!$this->link->insert_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
+		}
+	}
+	
 	public function add_course_student($course_id, $user_id)
 	{
 		$this->link->query(sprintf("INSERT INTO course_students (course_id, user_id) VALUES (%d, %d)",
@@ -276,6 +325,18 @@ class TestDB
 		
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+
+		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id in (SELECT unit_id from course_units WHERE course_id = %d)", $course_id);
+
+		$result = $this->link->query($sql);
+		
+		$num_rows = $result->num_rows;
+		
+		for ($i=0; $i<$num_rows; $i++) 
+		{
+			$result_assoc = $result->fetch_assoc();
+			$this->create_user_entries_from_list($user_id, $result_assoc["list_id"]);
+		}
 	}
 	
 	public function add_course_instructor($course_id, $user_id)
@@ -380,6 +441,7 @@ class TestDB
 			if (!$link->insert_id)
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 			
+			array_push($this->grade_ids, $link->insert_id);			
 		}
 	}
 

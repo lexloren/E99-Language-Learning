@@ -184,7 +184,8 @@ class User extends DatabaseRow
 	//  Returns the full name, formatted with given/family names in the right places
 	public function get_name_full($family_first = false)
 	{
-		if (!($this->is_session_user())) return null;
+		//Arunabha: Commented this. Why an instructor in session cannot get the name of a student?
+		//if (!($this->is_session_user())) return null;
 		
 		return sprintf("%s %s",
 			$family_first ? $this->get_name_family() : $this->get_name_given(),
