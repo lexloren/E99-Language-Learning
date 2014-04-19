@@ -33,19 +33,6 @@ function signout(){
             }		
     });
     return; 
-
-// url parameter grabbing code from http://stackoverflow.com/questions/19491336/get-url-parameter-jquery
-function getURLparam(paramName) {
-	var queries  = window.location.search.substring(1).split('&');  
-	var result = null;
-    $.each(queries, function () {
-        var nameValPair = this.split('=');
-        if (nameValPair[0] === paramName) 
-        {
-			result = nameValPair[1];
-        }
-    });
-	return result;
 }
 
 // url parameter grabbing code from http://stackoverflow.com/questions/19491336/get-url-parameter-jquery
