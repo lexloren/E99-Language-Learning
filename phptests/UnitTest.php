@@ -73,8 +73,8 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$this->unit->set_unit_name("new_name");
 		$this->assertEquals($this->unit->get_unit_name(), "new_name");
 
-		$open = strtotime("2014-04-12 00:00:00");
-		$close = strtotime("2014-05-12 00:00:00");
+		$open = 1397260800;
+		$close = 1399852800;
 		
 		$timeframe = new Timeframe($open, $close);
 		$this->unit->set_timeframe($timeframe);

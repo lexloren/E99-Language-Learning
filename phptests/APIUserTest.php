@@ -186,13 +186,13 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($result);
 		$this->assertCount(count($this->db->practice_entry_ids), $result);
 
+		//  Removed 'owner' from Entry JSON because it's not used by front end
+		//      and incurs heavy queries on the database for no reason
 		$this->assertArrayHasKey('entryId', $result[0]);
-		$this->assertArrayHasKey('owner', $result[0]);
 		$this->assertArrayHasKey('words', $result[0]);
 		$this->assertArrayHasKey('pronuncations', $result[0]);
 
 		$result_0_prefix = '11';
-		$this->assertEquals($result[0]["owner"]["handle"], $this->db->handles[0]);
 		$this->assertEquals($result[0]["words"][TestDB::$lang_code_0], TestDB::$word_0.$result_0_prefix);
 		$this->assertEquals($result[0]["words"][TestDB::$lang_code_1], TestDB::$word_1.$result_0_prefix);
 		$this->assertEquals($result[0]["pronuncations"][TestDB::$lang_code_1], TestDB::$word_1_pronun.$result_0_prefix);
@@ -334,8 +334,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		//Session not set
 		$this->obj->update();
 		$this->assertTrue(Session::get()->has_error());
-		$result_assoc = Session::get()->get_result_assoc();		
-		$this->assertNotNull($result_assoc);
+		$result_assoc = Session::get()->get_result_assoc();
 		
 		//Session set
 		$_SESSION["handle"] = $this->db->handles[0];
@@ -354,7 +353,5 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($result["nameFamily"], $_POST["name_family"]);
 	}
 }
-
-
 
 ?>

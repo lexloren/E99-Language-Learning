@@ -34,7 +34,7 @@ class Session
 	
 	public function has_error()
 	{
-		return !!$this->result_assoc && !!$this->result_assoc["isError"];
+		return !$this->result_assoc || !!$this->result_assoc["isError"];
 	}
 	
 	public function set_mixed_assoc($error_title, $error_description, $result, $result_information = null)

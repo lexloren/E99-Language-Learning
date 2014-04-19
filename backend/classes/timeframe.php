@@ -2,6 +2,9 @@
 
 class Timeframe
 {
+	const TIME_MIN = 946684800;  //  2000/01/01 00:00:00
+	const TIME_MAX = 1735689600; //  2025/01/01 00:00:00
+	
 	private $open;
 	public function get_open()
 	{
@@ -16,8 +19,8 @@ class Timeframe
 	
 	public function __construct($open, $close)
 	{
-		$this->open = ($open = intval($open, 10)) ? $open : null;
-		$this->close = ($close = intval($close, 10)) ? $close : null;
+		$this->open = ($open = intval($open, 10)) > TIME_MIN && $open < TIME_MAX ? $open : null;
+		$this->close = ($close = intval($close, 10)) > TIME_MIN && $close < TIME_MAX ? $close : null;
 	}
 	
 	public function is_current()
