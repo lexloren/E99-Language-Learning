@@ -61,15 +61,6 @@ class APIList extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		/*
-		if (self::validate_request($_GET, "query"))
-		{
-			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
-			self::return_array_as_json(EntryList::find($_GET["query"], $exact_matches_only));
-		}
-		
-		*/
-		
 		$lists = array ();
 		if (isset($_GET["list_ids"]))
 		{
@@ -86,6 +77,19 @@ class APIList extends APIBase
 		if (isset($_GET["user_ids"]))
 		{
 			if (is_array($more = EntryList::find_by_user_ids(explode(",", $_GET["user_ids"]))))
+			{
+				$lists = array_merge($lists, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Find", EntryList::unset_error_description());
+				return;
+			}
+		}
+		
+		if (isset($_GET["user_handles"]))
+		{
+			if (is_array($more = EntryList::find_by_user_handles(explode(",", $_GET["user_handles"]))))
 			{
 				$lists = array_merge($lists, $more);
 			}

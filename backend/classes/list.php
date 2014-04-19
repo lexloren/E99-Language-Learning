@@ -33,6 +33,7 @@ class EntryList extends DatabaseRow
 		return self::select_by_id($mysqli->insert_id);
 	}
 
+	/*
 	public static function find($query, $exact_match_only = false)
 	{
 		$mysqli = Connection::get_shared_instance();
@@ -50,6 +51,7 @@ class EntryList extends DatabaseRow
 		}
 		return $lists;
 	}
+	*/
 	
 	private static function lists_from_mysql_result($result)
 	{
@@ -87,6 +89,18 @@ class EntryList extends DatabaseRow
 		}
 		
 		return self::lists_from_mysql_result($result);
+	}
+	
+	public static function find_by_user_handles($query)
+	{
+		if (($users = User::find($query)))
+		{
+			$user_ids = array ();
+			foreach ($users as $user) array_push($user_ids, $user->get_user_id());
+			return self::find_by_user_ids($user_ids);
+		}
+		
+		return self::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
 	}
 	
 	public static function find_by_user_ids($user_ids)

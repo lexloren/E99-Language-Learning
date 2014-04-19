@@ -101,16 +101,6 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		/*
-		if (self::validate_request($_GET, "query"))
-		{
-			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
-			$lang = isset($_GET["langs"]) ? explode(",", $_GET["langs"]) : array();
-
-			self::return_array_as_json(Course::find($_GET["query"], $lang, $exact_matches_only));
-		}
-		*/
-		
 		$courses = array ();
 		if (isset($_GET["course_ids"]))
 		{
@@ -127,6 +117,19 @@ class APICourse extends APIBase
 		if (isset($_GET["user_ids"]))
 		{
 			if (is_array($more = Course::find_by_user_ids(explode(",", $_GET["user_ids"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+		}
+		
+		if (isset($_GET["user_handles"]))
+		{
+			if (is_array($more = Course::find_by_user_handles(explode(",", $_GET["user_handles"]))))
 			{
 				$courses = array_merge($courses, $more);
 			}
