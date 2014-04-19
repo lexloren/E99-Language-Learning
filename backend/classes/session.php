@@ -122,7 +122,7 @@ class Session
 		{
 			$mysqli = Connection::get_shared_instance();
 			
-			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s'",
+			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 5",
 				$mysqli->escape_string($session_id_old),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
@@ -130,8 +130,8 @@ class Session
 			if (!$result || !($result_assoc = $result->fetch_assoc()))
 			{
 				$this->session_end();
-				self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
-				return null;
+				//self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
+				return ($this->result_assoc = null);
 			}
 			
 			$session_id_new = $session_id_old; //$this->session_regenerate_id();
@@ -145,7 +145,8 @@ class Session
 			return ($this->user = User::from_mysql_result_assoc($result_assoc));
 		}
 		
-		self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
+		return ($this->result_assoc = null);
+		//self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 	}
 	
 	//  Destroys the current session both in the browser and on the server.
