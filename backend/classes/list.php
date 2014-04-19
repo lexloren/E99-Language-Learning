@@ -34,22 +34,81 @@ class EntryList extends DatabaseRow
 	}
 
 	public static function find($query, $exact_match_only = false)
-        {
-                $mysqli = Connection::get_shared_instance();
-
-                $query = str_replace("%", "%%", $mysqli->escape_string($query));
-
-                $filter = !!$exact_match_only ? "name = '$query'" : "name LIKE '%%$query%%'";
-                $filter .= " AND (user_id = " . Session::get()->get_user()->get_user_id() . " or public <> 0)";
-                $result = $mysqli->query("SELECT * FROM lists WHERE $filter");
-
-                $lists = array ();
-                while (($result_assoc = $result->fetch_assoc()))
-                {
-                        array_push($lists, EntryList::from_mysql_result_assoc($result_assoc));
-                }
-                return $lists;
-        }
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$query = str_replace("%", "%%", $mysqli->escape_string($query));
+		
+		$filter = !!$exact_match_only ? "name = '$query'" : "name LIKE '%%$query%%'";
+		$filter .= " AND (user_id = " . Session::get()->get_user()->get_user_id() . " or public <> 0)";
+		$result = $mysqli->query("SELECT * FROM lists WHERE $filter");
+		
+		$lists = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($lists, EntryList::from_mysql_result_assoc($result_assoc));
+		}
+		return $lists;
+	}
+	
+	private static function lists_from_mysql_result($result)
+	{
+		$lists = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			if (($list = self::from_mysql_result_assoc($result_assoc)))
+			{
+				if ($list->session_user_can_read())
+				{
+					$lists[$list->get_list_id()] = $list;
+				}
+			}
+			else return null;
+		}
+		return $lists;
+	}
+	
+	public static function find_by_entry_ids($entry_ids)
+	{
+		foreach ($entry_ids as &$entry_id)
+		{
+			$entry_id = intval($entry_id, 10);
+		}
+		
+		$entry_ids_string = implode(",", $entry_ids);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query("SELECT lists.* FROM (lists CROSS JOIN list_entries USING (list_id)) CROSS JOIN user_entries USING (user_entry_id) WHERE entry_id IN ($entry_ids_string) GROUP BY list_id");
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
+		}
+		
+		return self::lists_from_mysql_result($result);
+	}
+	
+	public static function find_by_user_ids($user_ids)
+	{
+		foreach ($user_ids as &$user_id)
+		{
+			$user_id = intval($user_id, 10);
+		}
+		
+		$user_ids_string = implode(",", $user_ids);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query("SELECT * FROM lists WHERE user_id IN ($user_ids_string) GROUP BY list_id");
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
+		}
+		
+		return self::lists_from_mysql_result($result);
+	}
 	
 	public static function select_by_id($list_id)
 	{

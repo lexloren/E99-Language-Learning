@@ -94,6 +94,23 @@ class Course extends DatabaseRow
 		}
 		return $courses;
 	}
+	
+	private static function courses_from_mysql_result($result)
+	{
+		$courses = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			if (($course = Course::from_mysql_result_assoc($result_assoc)))
+			{
+				if ($course->session_user_can_read())
+				{
+					$courses[$course->get_course_id()] = $course;
+				}
+			}
+			else return null;
+		}
+		return $courses;
+	}
 
 	public static function find_by_entry_ids($entry_ids)
 	{
@@ -109,7 +126,7 @@ class Course extends DatabaseRow
 		$course_lists = "($unit_lists CROSS JOIN lists ON course_unit_lists.list_id = lists.list_id AND (lists.user_id = courses.user_id OR lists.public))";
 		$course_user_entries = "($course_lists CROSS JOIN user_entries USING (user_entry_id))";
 		
-		$result = $mysqli->query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) AND courses.public GROUP BY course_id",
+		$result = $mysqli->query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) GROUP BY course_id",
 			implode(",", $entry_ids)
 		));
 		
@@ -118,13 +135,7 @@ class Course extends DatabaseRow
 			return self::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
-		$courses = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			$course = Course::from_mysql_result_assoc($result_assoc);
-			$courses[$course->get_course_id()] = $course;
-		}
-		return $courses;
+		return self::courses_from_mysql_result($result);
 	}
 
 	public static function find_by_user_ids($user_ids)
@@ -150,13 +161,7 @@ class Course extends DatabaseRow
 			return self::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
-		$courses = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			$course = Course::from_mysql_result_assoc($result_assoc);
-			$courses[$course->get_course_id()] = $course;
-		}
-		return $courses;
+		return self::courses_from_mysql_result($result);
 	}
 
 	public static function find_by_languages($lang_codes)
@@ -174,20 +179,14 @@ class Course extends DatabaseRow
 		
 		$lang_ids_string = implode(",", $lang_ids);
 		
-		$result = $mysqli->query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) AND courses.public GROUP BY course_id");
+		$result = $mysqli->query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) GROUP BY course_id");
 		
 		if (!!$mysqli->error)
 		{
 			return self::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
 		}
 		
-		$courses = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			$course = Course::from_mysql_result_assoc($result_assoc);
-			$courses[$course->get_course_id()] = $course;
-		}
-		return $courses;
+		return self::courses_from_mysql_result($result);
 	}
 	
 	/***    INSTANCE    ***/
