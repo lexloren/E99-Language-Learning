@@ -67,6 +67,7 @@ class Course extends DatabaseRow
 		return parent::select("courses", "course_id", $course_id);
 	}
 
+	/*
 	public static function find($query, $lang_codes, $exact_match_only = false)
 	{
 		$mysqli = Connection::get_shared_instance();
@@ -94,6 +95,7 @@ class Course extends DatabaseRow
 		}
 		return $courses;
 	}
+	*/
 	
 	private static function courses_from_mysql_result($result)
 	{
@@ -136,6 +138,18 @@ class Course extends DatabaseRow
 		}
 		
 		return self::courses_from_mysql_result($result);
+	}
+	
+	public static function find_by_user_handles($query)
+	{
+		if (($users = User::find($query)))
+		{
+			$user_ids = array ();
+			foreach ($users as $user) array_push($user_ids, $user->get_user_id());
+			return self::find_by_user_ids($user_ids);
+		}
+		
+		return self::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
 	}
 
 	public static function find_by_user_ids($user_ids)

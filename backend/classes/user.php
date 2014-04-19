@@ -48,9 +48,19 @@ class User extends DatabaseRow
 	{
 		$mysqli = Connection::get_shared_instance();
 		
-		$query = $mysqli->escape_string($query);
+		if (is_array($query) && !is_string($query))
+		{
+			foreach ($query as &$q)
+			{
+				$q = self::validate_email($q) || self::validate_handle($q) ? $mysqli->escape_string($q) : "";
+			}
+			
+			$query = implode("','", $query);
+		}
+		else $query = self::validate_email($query) || self::validate_handle($query)
+			? $mysqli->escape_string($query) : "";
 		
-		$result = $mysqli->query("SELECT * FROM users WHERE email = '$query' OR handle = '$query'");
+		$result = $mysqli->query("SELECT * FROM users WHERE email IN ('$query') OR handle IN ('$query')");
 		
 		$users = array ();
 		while (($result_assoc = $result->fetch_assoc()))
