@@ -390,7 +390,7 @@ class User extends DatabaseRow
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
-			"languages" => self::array_for_json($this->get_languages()),
+			"languages" => $this->is_session_user() ? self::array_for_json($this->get_languages()) : null,
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
