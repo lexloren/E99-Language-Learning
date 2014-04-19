@@ -100,7 +100,8 @@ class APICourse extends APIBase
 	public function find()
 	{
 		if (!Session::get()->reauthenticate()) return;
-
+		
+		/*
 		if (self::validate_request($_GET, "query"))
 		{
 			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
@@ -108,6 +109,61 @@ class APICourse extends APIBase
 
 			self::return_array_as_json(Course::find($_GET["query"], $lang, $exact_matches_only));
 		}
+		*/
+		
+		$courses = array ();
+		if (isset($_GET["course_ids"]))
+		{
+			foreach (explode(",", $_GET["course_ids"]) as $course_id)
+			{
+				if (($course = Course::select_by_id($course_id))
+					&& ($course->session_user_can_read()))
+				{
+					$courses[$course_id] = $course;
+				}
+			}
+		}
+		
+		if (isset($_GET["user_ids"]))
+		{
+			if (is_array($more = Course::find_by_user_ids(explode(",", $_GET["user_ids"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+		}
+		
+		if (isset($_GET["entry_ids"]))
+		{
+			if (is_array($more = Course::find_by_entry_ids(explode(",", $_GET["entry_ids"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+		}
+		
+		if (isset($_GET["langs"]))
+		{
+			if (is_array($more = Course::find_by_languages(explode(",", $_GET["langs"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+		}
+		
+		self::return_array_as_json($courses);
 	}
 
 	public function delete()

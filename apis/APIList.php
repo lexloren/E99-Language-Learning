@@ -57,16 +57,60 @@ class APIList extends APIBase
 		}
 	}
 
-        public function find()
-        {
-                if (!Session::get()->reauthenticate()) return;
-
-                if (self::validate_request($_GET, "query"))
-                {
-                        $exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
-                        self::return_array_as_json(EntryList::find($_GET["query"], $exact_matches_only));
-                }
-        }
+	public function find()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		/*
+		if (self::validate_request($_GET, "query"))
+		{
+			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
+			self::return_array_as_json(EntryList::find($_GET["query"], $exact_matches_only));
+		}
+		
+		*/
+		
+		$lists = array ();
+		if (isset($_GET["list_ids"]))
+		{
+			foreach (explode(",", $_GET["list_ids"]) as $list_id)
+			{
+				if (($list = EntryList::select_by_id($list_id))
+					&& ($list->session_user_can_read()))
+				{
+					$lists[$list_id] = $list;
+				}
+			}
+		}
+		
+		if (isset($_GET["user_ids"]))
+		{
+			if (is_array($more = EntryList::find_by_user_ids(explode(",", $_GET["user_ids"]))))
+			{
+				$lists = array_merge($lists, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Find", EntryList::unset_error_description());
+				return;
+			}
+		}
+		
+		if (isset($_GET["entry_ids"]))
+		{
+			if (is_array($more = EntryList::find_by_entry_ids(explode(",", $_GET["entry_ids"]))))
+			{
+				$lists = array_merge($lists, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("List Find", EntryList::unset_error_description());
+				return;
+			}
+		}
+		
+		self::return_array_as_json($lists);
+	}
 	
 	public function delete()
 	{

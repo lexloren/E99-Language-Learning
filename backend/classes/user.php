@@ -184,7 +184,8 @@ class User extends DatabaseRow
 	//  Returns the full name, formatted with given/family names in the right places
 	public function get_name_full($family_first = false)
 	{
-		if (!($this->is_session_user())) return null;
+		//Arunabha: Commented this. Why an instructor in session cannot get the name of a student?
+		//if (!($this->is_session_user())) return null;
 		
 		return sprintf("%s %s",
 			$family_first ? $this->get_name_family() : $this->get_name_given(),
@@ -389,7 +390,7 @@ class User extends DatabaseRow
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
-			"languages" => self::array_for_json($this->get_languages()),
+			"languages" => $this->is_session_user() ? self::array_for_json($this->get_languages()) : null,
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
