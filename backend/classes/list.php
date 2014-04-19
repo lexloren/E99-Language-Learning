@@ -91,7 +91,7 @@ class EntryList extends DatabaseRow
 		return self::lists_from_mysql_result($result);
 	}
 	
-	public static function find_by_user_handles($query)
+	public static function find_by_user_query($query)
 	{
 		if (($users = User::find($query)))
 		{

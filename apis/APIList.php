@@ -87,9 +87,9 @@ class APIList extends APIBase
 			}
 		}
 		
-		if (isset($_GET["user_handles"]))
+		if (isset($_GET["user_query"]))
 		{
-			if (is_array($more = EntryList::find_by_user_handles(explode(",", $_GET["user_handles"]))))
+			if (is_array($more = EntryList::find_by_user_query(explode(",", $_GET["user_query"]))))
 			{
 				$lists = array_merge($lists, $more);
 			}

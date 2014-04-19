@@ -127,9 +127,9 @@ class APICourse extends APIBase
 			}
 		}
 		
-		if (isset($_GET["user_handles"]))
+		if (isset($_GET["user_query"]))
 		{
-			if (is_array($more = Course::find_by_user_handles(explode(",", $_GET["user_handles"]))))
+			if (is_array($more = Course::find_by_user_query(explode(",", $_GET["user_query"]))))
 			{
 				$courses = array_merge($courses, $more);
 			}
