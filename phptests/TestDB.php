@@ -90,20 +90,22 @@ class TestDB
 		$link = $this->link;
 		for ($i = 0; $i < $num; $i++) 
 		{
-			array_push($this->emails, 'email'.$i.'@domain.com');
-			array_push($this->handles, 'handle'.$i);
-			array_push($this->passwords, 'P@ssword'.$i);
-			array_push($this->names_family, 'SomeFamily'.$i);
-			array_push($this->names_given, 'SomeGiven'.$i);
-			array_push($this->sessions, 'somesessionid'.$i);
+			$suffix = count($this->user_ids);
+			
+			array_push($this->emails, 'email'.$suffix.'@domain.com');
+			array_push($this->handles, 'handle'.$suffix);
+			array_push($this->passwords, 'P@ssword'.$suffix);
+			array_push($this->names_family, 'SomeFamily'.$suffix);
+			array_push($this->names_given, 'SomeGiven'.$suffix);
+			array_push($this->sessions, 'somesessionid'.$suffix);
 			
 			$link->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family, session) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s', '%s')",
-			$link->escape_string($this->handles[$i]),
-			$link->escape_string($this->emails[$i]),
-			$link->escape_string($this->passwords[$i]),
-			$link->escape_string($this->names_given[$i]),
-			$link->escape_string($this->names_family[$i]),
-			$link->escape_string($this->sessions[$i])
+			$link->escape_string($this->handles[$suffix]),
+			$link->escape_string($this->emails[$suffix]),
+			$link->escape_string($this->passwords[$suffix]),
+			$link->escape_string($this->names_given[$suffix]),
+			$link->escape_string($this->names_family[$suffix]),
+			$link->escape_string($this->sessions[$suffix])
 			));
 			if (!$link->insert_id)
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
@@ -310,7 +312,8 @@ class TestDB
 				if (!!$this->link->error)
 					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 
-				$user_entry_id = $result1->fetch_assoc()['user_entry_id'];
+				$result_assoc1 = $result1->fetch_assoc();
+				$user_entry_id = $result_assoc1['user_entry_id'];
 			}
 			else
 				$user_entry_id = $this->link->insert_id;

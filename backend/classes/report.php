@@ -137,8 +137,13 @@ class Report
 		//print($sql);
 		
 		$result = $mysqli->query($sql);
-		//print $result->fetch_assoc()['AVG(grades.point)'];
-		return (float)$result->fetch_assoc()['AVG(grades.point)'];
+
+		$result_assoc = $result->fetch_assoc();
+		
+		if (!!$result_assoc)
+			return (float)$result_assoc['AVG(grades.point)'];
+		else
+			return 0;
 	}
 	
 	private static function get_student_avarage_point_for_entry($entry_id, $user_id)
@@ -154,8 +159,13 @@ class Report
 		//print($sql);
 		
 		$result = $mysqli->query($sql);
-		//print $result->fetch_assoc()['AVG(grades.point)'];
-		return (float)$result->fetch_assoc()['AVG(grades.point)'];
+
+		$result_assoc = $result->fetch_assoc();
+		
+		if (!!$result_assoc)
+			return (float)$result_assoc['AVG(grades.point)'];
+		else
+			return 0;
 	}
 	
 	public static function get_course_practice_report($course_id)
