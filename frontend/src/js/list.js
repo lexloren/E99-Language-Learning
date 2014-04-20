@@ -3,25 +3,6 @@ var listsURL = URL + 'user_lists.php';
 var viewlistURL = URL + 'list_entries.php?list_id=1';
 var listnum;
 
-$.mockjax({
-  url: listsURL,
-  responseText: {
-	"isError":false,
-	"errorTitle":null,
-	"errorDescription":null,
-	"result":[
-		{"listId" : 1,
-		"name" : "Lesson 1: Family"},
-		{"listId" : 1,
-		"name" : "Lesson 2: Animals"}],
-	},
-});
-
-$.mockjax({
-  url: viewlistURL,
-  responseText: {"isError":false,"errorTitle":null,"errorDescription":null,"result":[{"entryId":12003,"owner":{"userId":6,"isSessionUser":true,"handle":"practitioner","email":"lloren@gmail.com","nameGiven":"","nameFamily":""},"languages":["en","jp"],"words":{"en":"(n) toughness (of a material)","jp":"\u3058\u3093\u6027"},"pronuncations":{"jp":"\u3058\u3093\u305b\u3044"}},{"entryId":28,"owner":{"userId":6,"isSessionUser":true,"handle":"practitioner","email":"lloren@gmail.com","nameGiven":"","nameFamily":""},"languages":["en","jp"],"words":{"en":"fastening","jp":"\u3006"},"pronuncations":{"jp":"\u3057\u3081"}},{"entryId":50234,"owner":{"userId":6,"isSessionUser":true,"handle":"practitioner","email":"lloren@gmail.com","nameGiven":"","nameFamily":""},"languages":["en","jp"],"words":{"en":"(n) (comp) Gopher","jp":"\u30b4\u30fc\u30d5\u30a1\u30fc"},"pronuncations":{"jp":null}}],"resultInformation":null}
-});
-
 $(document).ready(function(){
 	pageSetup();
 	$("#listpagetitle").hide();
@@ -35,7 +16,6 @@ $(document).ready(function(){
 		$('#create-list').hide();
 		viewList(listnum);
 	}
-	
 });
 
 function showAllLists() {
@@ -83,6 +63,7 @@ function getLists() {
 	$('#lists').html('');
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
+		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
@@ -111,6 +92,7 @@ function viewList(listid) {
 
 	var currentURL = URL + 'list_entries.php?list_id=' + listid;
 	$.getJSON( currentURL, function( data ) {
+		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
@@ -138,8 +120,8 @@ function viewList(listid) {
 
 function delete_entry(entry) {
 	var currentURL = URL + 'list_entries_remove.php';
-	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entry }, function() {
-		console.log( "success" );
+	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entry }, function(data) {
+		authorize(data);
 	})
 	.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
@@ -158,6 +140,7 @@ function search_entry(page) {
 		page_size : 5,
 		page_num : page
 	}, function( data ) {
+		authorize(data);
 		if (data.isError === true) {
 			console.log(data.errorTitle);
 			console.log(data.errorDescription);
@@ -177,7 +160,8 @@ function search_entry(page) {
 
 function addEntry(entryid) {
 	var currentURL = URL + 'list_entries_add.php';
-	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entryid }, function() {
+	$.post(currentURL, {'list_id' : listnum, 'entry_ids' : entryid }, function(data) {
+		authorize(data);
 		viewList(listnum);
 	})
 		.fail(function() {
@@ -187,8 +171,8 @@ function addEntry(entryid) {
 
 function deleteList(listid) {
 	var currentURL = URL + 'list_entries_remove.php';
-	$.post(currentURL, {'list_id' : listid }, function() {
-		console.log( "success" );
+	$.post(currentURL, {'list_id' : listid }, function(data) {
+		authorize(data);
 	})
 	.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
@@ -198,6 +182,7 @@ function deleteList(listid) {
 function newList(listname) {
 	var currentURL = URL + 'list_insert.php';
 	$.post(currentURL, {'list_name' : listname}, function(data) {
+		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {

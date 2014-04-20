@@ -1,5 +1,6 @@
 function getCourses(){
 	$.getJSON('../../user_courses.php', function(data){
+		authorize(data);
 		if(data.isError){
 			// show error
         }
@@ -55,7 +56,6 @@ function getURLparam(paramName) {
 	the main div (containing most/all other content) id="doc-body"
 		ex: <div class="container" role="main" id="doc-body"> */
 function pageSetup() {
-	authorize();
 	navbar();
 	statusBoxes();
 }
@@ -90,7 +90,11 @@ function failureMessage(message) {
 	$('#failure').show();
 }
 
-/* redirects user to login page if not logged in */
-function authorize() {
-	// window.location.replace("login.html");
+/* redirects user to login page if not logged in 
+ * @param data: any response from server
+*/
+function authorize(data) {
+	if (data == null) {
+		window.location.replace("login.html");
+	}
 }
