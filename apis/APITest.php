@@ -163,7 +163,7 @@ class APITest extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
 	}
