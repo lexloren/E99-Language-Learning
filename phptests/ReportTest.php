@@ -21,8 +21,9 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[0]);
 		//$this->db->add_course_unit($this->db->course_ids[0]);
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
+		$this->db->add_practice_data_for_course($this->db->course_ids[0], $this->db->user_ids[1], 3);
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
-		
+		$this->db->add_practice_data_for_course($this->db->course_ids[0], $this->db->user_ids[2], 2);
 	}
 	
 	public function test_get_user_practice_report()
@@ -37,6 +38,15 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($report["unitReports"]);
 		$this->assertNotNull($report["entryReports"]);
 
+		$this->assertCount(10, $report["entryReports"]);
+		
+		for($i=0; $i<10; $i++)
+		{
+			$entry_report = $report["entryReports"][$i];
+			$this->assertNotNull($entry_report);
+			$this->assertEquals(3, $entry_report["practiceCount"]);
+		}
+		//print json_encode($report);
 		//print_r($report);
 	}
 }

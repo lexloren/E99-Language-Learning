@@ -41,10 +41,81 @@ class Report
 	{
 		$report = Array();
 		$report["identifier"] = $is_anon ? "Student X" : $user->get_name_full();
+		
+		self::create_course_unit_report($report, $course, $user);
+		return $report;
+	}
+	
+	public static function create_course_unit_report(&$report, $course, $user)
+	{
+		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course->get_course_id());
+		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
+		$sql = sprintf("SELECT user_entry_id FROM list_entries WHERE list_id IN (%s)", $sql);
+		$sql = sprintf("SELECT entry_id FROM user_entries WHERE user_entry_id IN (%s)", $sql);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query($sql);
+		
+		if ($mysqli->error)
+		{
+			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
+		}
+		
+		$num_unit_entries = $result->num_rows;
+
+
+		$sql = sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id IN (%s)", $user->get_user_id(), $sql);
+		
+	
+		$result = $mysqli->query($sql);
+		
+		if ($mysqli->error)
+		{
+			print $sql;
+			print $mysqli->error;
+			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
+		}
+
+		$num_user_entries = $result->num_rows;
+		
+		$entryReports = Array();
+
+		for ($i=0; $i<$num_user_entries; $i++) 
+		{
+			$result_assoc = $result->fetch_assoc();
+			$user_entry_id = $result_assoc['user_entry_id'];
+			$entry_id = $result_assoc['entry_id'];
+			
+			$entry = Entry::select_by_id($entry_id);
+
+			$sql = sprintf("SELECT * FROM user_entry_results WHERE user_entry_id = %d", $user_entry_id);
+			$result_practice = $mysqli->query($sql);
+			
+			$num_practiced = $result_practice->num_rows;
+
+			$entryReport = Array();
+
+			$entryReport["entryId"] = $entry_id;
+			$entryReport["words"] =  $entry->get_words();
+			$entryReport["practiceCount"] = $num_practiced;
+			$entryReport["gradePointAverage"] = 0;
+			
+			while( !!($result_assoc = $result_practice->fetch_assoc() ))
+			{
+				$grade_id = $result_assoc["grade_id"];
+				$grade = Grade::select_by_id($grade_id);
+				$entryReport["gradePointAverage"] = $entryReport["gradePointAverage"] + $grade->get_point();
+			}
+			if ($num_practiced > 1)
+				$entryReport["gradePointAverage"] = $entryReport["gradePointAverage"] / $num_practiced;
+			
+			array_push($entryReports, $entryReport);
+		}
+		
 		$report["progressPercent"] = 0;
 		$report["unitReports"] = Array();
-		$report["entryReports"] = Array();
-		return $report;
+		$report["entryReports"] = $entryReports;
 	}
 }
 
