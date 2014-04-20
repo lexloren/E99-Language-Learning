@@ -47,3 +47,15 @@ div.ui-datepicker{
  font-size:12px;
 }
 
+/* Test question block */
+.test-question{
+  max-width: 400px;
+  margin: auto;
+}
+
+/* Test question body */
+.question-body{
+  font-size: 40px;
+  text-align: center;
+}
+
