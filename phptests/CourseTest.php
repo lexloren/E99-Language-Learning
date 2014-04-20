@@ -70,7 +70,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 
 		//  To update later... (---Hans)
 		/*
-		$courses = Course::find('New', array());
+		$courses = Course::find('New', array ());
 		$this->assertEquals(count($courses), 2);
 		$courses = Course::find('New', array(TestDB::$lang_code_1));
 		$this->assertEquals(count($courses), 2);

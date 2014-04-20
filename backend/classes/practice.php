@@ -36,7 +36,7 @@ class Practice
 		
 		if (($learned_count + $not_learned_count) == 0 || $count_limit == 0)
 		{
-			return new Practice(array());
+			return new Practice(array ());
 		}
 		else
 		{
@@ -72,7 +72,7 @@ class Practice
 			Session::get()->set_error_assoc("Construct", "Practice accepts entry_ids array, invalid input.");
 			return;
 		}
-		$this->entries = array();
+		$this->entries = array ();
 		foreach ($entry_ids as $entry_id)
 		{
 			$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
@@ -83,7 +83,7 @@ class Practice
 
 	private static function from_mysql_entry_id_assoc($result)
 	{
-		$entry_ids = array();
+		$entry_ids = array ();
 		if (!!$result)
 		{
 			while (($result_assoc = $result->fetch_assoc()))

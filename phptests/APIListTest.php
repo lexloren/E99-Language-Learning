@@ -78,7 +78,7 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		
-		$list_setup = array();
+		$list_setup = array ();
 		array_push($list_setup, EntryList::insert('New List1'));
 		array_push($list_setup, EntryList::insert('New List2'));
 		array_push($list_setup, EntryList::insert('NoMatch EntryList1'));

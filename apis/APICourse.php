@@ -326,6 +326,61 @@ class APICourse extends APIBase
 		}
 	}
 	
+	public function researchers()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course"))
+			&& ($course->session_user_can_write() || $course->session_user_is_researcher()))
+		{
+			self::return_array_as_json($course->get_researchers());
+		}
+	}
+	
+	public function researchers_add()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if (self::validate_request($_POST, "user_ids"))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->researchers_add(User::select_by_id($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Researchers Addition", Course::unset_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+		}
+	}
+	
+	public function researchers_remove()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if (self::validate_request($_POST, "user_ids"))
+			{
+				foreach (explode(",", $_POST["user_ids"]) as $user_id)
+				{
+					if (!$course->researchers_remove(User::select_by_id($user_id)))
+					{
+						Session::get()->set_error_assoc("Course-Researchers Removal", Course::unset_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+		}
+	}
+
 	public function practice_report()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -335,7 +390,7 @@ class APICourse extends APIBase
 			$report = Report::get_course_practice_report($_GET["course_id"]);
 			if (!!$report && !Session::get()->has_error())
 			{
-				$output = json_encode(Array("practiceReport" => $report));
+				$output = json_encode(array ("practiceReport" => $report));
 				Session::get()->set_result_assoc($output);
 			}
 		}

@@ -177,7 +177,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->db->add_unit_list($course_unit_id, $list_id);
 		
 		$course = Course::select_by_id($course_id);
-		Session::get()->set_user($user0);
+		Session::get()->set_user($course->get_owner());
 		$course->students_add($user1);
 		$courses = $user1->get_student_courses();
 		$this->assertCount(1, $courses);

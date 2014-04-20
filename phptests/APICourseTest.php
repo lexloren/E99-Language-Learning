@@ -61,7 +61,7 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		
-		$course_setup = array();
+		$course_setup = array ();
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1'));
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course2'));
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'NoMatch Course1'));

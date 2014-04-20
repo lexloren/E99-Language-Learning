@@ -126,13 +126,14 @@ class Report
 	private static function get_class_avarage_point_for_entry($entry_id, $course_id)
 	{
 		$mysqli = Connection::get_shared_instance();
-		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries
-				WHERE grades.grade_id = user_entry_results.grade_id 
-				AND user_entry_results.user_entry_id = user_entries.user_entry_id
-				AND user_entries.entry_id = %d
-				AND user_entries.user_id 
-				IN(	SELECT user_id FROM course_students WHERE course_id = %d)",
-				$entry_id, $course_id);
+		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries ".
+				"WHERE grades.grade_id = user_entry_results.grade_id ".
+				"AND user_entry_results.user_entry_id = user_entries.user_entry_id ".
+				"AND user_entries.entry_id = %d ".
+				"AND user_entries.user_id ".
+				"IN (SELECT user_id FROM course_students WHERE course_id = %d)",
+				$entry_id, $course_id
+		);
 				
 		//print($sql);
 		
