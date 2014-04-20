@@ -44,7 +44,7 @@ class TestDB
 	public $course_ids = Array();
 	public $course_names = Array();
 	public $course_messages = Array();
-	public $course_units = Array();
+	public $course_unit_ids = Array();
 	public $course_tests = Array();
 	private static $course_name = 'some course';
 	private static $course_message = 'some course message';
@@ -249,18 +249,12 @@ class TestDB
 		array_push($this->course_names, $name);
 		array_push($this->course_messages, $message);
 		
-		$course_unit_id = $this->add_course_unit($course_id);
-		
-		$list_id = $this->add_list($user_id, $this->entry_ids);
-
-		$this->add_unit_list($course_unit_id, $list_id);
-		
 		return $course_id;
 	}
 
 	public function add_course_unit($course_id)
 	{
-		$suffix = count($this->course_units);
+		$suffix = count($this->course_unit_ids);
 		$this->link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
 			$course_id,
 			self::$course_unit_name.$suffix,
@@ -270,7 +264,7 @@ class TestDB
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 		
-		array_push($this->course_units, $this->link->insert_id);
+		array_push($this->course_unit_ids, $this->link->insert_id);
 		return $this->link->insert_id;
 	}
 	
@@ -282,7 +276,7 @@ class TestDB
 		));
 	}
 	
-	public function create_user_entries_from_list($user_id, $list_id)
+	private function add_practice_data_for_list_one_time($user_id, $list_id)
 	{
 		$result = $this->link->query("SELECT user_entry_id FROM list_entries WHERE list_id = ".$list_id);
 		
@@ -348,24 +342,13 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 	}
 	
-	public function add_practice_data_for_course($course_id, $user_id, $count)
+	public function add_practice_data_for_list($list_id, $user_id, $count)
 	{
-		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id in (SELECT unit_id from course_units WHERE course_id = %d)", $course_id);
-
-		$result = $this->link->query($sql);
-		
-		$num_rows = $result->num_rows;
-		
-		for ($i=0; $i<$num_rows; $i++) 
+		for($j=0; $j<$count; $j++)
 		{
-			$result_assoc = $result->fetch_assoc();
-			for($j=0; $j<$count; $j++)
-			{
-				$this->create_user_entries_from_list($user_id, $result_assoc["list_id"]);
-			}
+			$this->add_practice_data_for_list_one_time($user_id, $list_id);
 		}
 	}
-	
 	
 	public function add_course_instructor($course_id, $user_id)
 	{
