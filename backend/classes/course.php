@@ -66,36 +66,6 @@ class Course extends DatabaseRow
 	{
 		return parent::select("courses", "course_id", $course_id);
 	}
-
-	/*
-	public static function find($query, $lang_codes, $exact_match_only = false)
-	{
-		$mysqli = Connection::get_shared_instance();
-
-		foreach ($lang_codes as &$lang_code)
-		{
-			$lang_code = $mysqli->escape_string($lang_code);
-		}
-
-		$query = str_replace("%", "%%", $mysqli->escape_string($query));
-
-		$filter = !!$exact_match_only ? "name = '$query'" : "name LIKE '%%$query%%'";
-		if (!empty($lang_codes))
-		{
-			$select_lang_ids = sprintf("SELECT lang_id FROM languages WHERE lang_code in ('%s')", implode("','", $lang_codes));
-			$filter .= " AND (lang_id_0 in ($select_lang_ids) OR lang_id_1 in ($select_lang_ids))";
-		}
-		$filter .= " AND (user_id = " . Session::get()->get_user()->get_user_id() . " or public <> 0)";
-		$result = $mysqli->query("SELECT * FROM courses WHERE $filter");
-
-		$courses = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			array_push($courses, Course::from_mysql_result_assoc($result_assoc));
-		}
-		return $courses;
-	}
-	*/
 	
 	private static function courses_from_mysql_result($result)
 	{
@@ -234,6 +204,10 @@ class Course extends DatabaseRow
 	{
 		if (isset($this->students)) unset($this->students);
 	}
+	public function uncache_researchers()
+	{
+		if (isset($this->researchers)) unset($this->researchers);
+	}
 	public function uncache_units()
 	{
 		if (isset($this->units)) unset($this->units);
@@ -242,6 +216,7 @@ class Course extends DatabaseRow
 	{
 		$this->uncache_instructors();
 		$this->uncache_students();
+		$this->uncache_researchers();
 		$this->uncache_units();
 	}
 	
@@ -359,6 +334,21 @@ class Course extends DatabaseRow
 	public function user_is_instructor($user)
 	{
 		return !!$user && $user->in_array($this->get_instructors());
+	}
+	
+	private $researchers;
+	public function get_researchers()
+	{
+		$table = "course_researchers LEFT JOIN users USING (user_id)";
+		return self::get_cached_collection($this->researchers, "User", $table, "course_id", $this->get_course_id());
+	}
+	public function session_user_is_researcher()
+	{
+		return !!Session::get() && $this->user_is_researcher(Session::get()->get_user());
+	}
+	public function user_is_researcher($user)
+	{
+		return !!$user && $user->in_array($this->get_researchers());
 	}
 	
 	private $students;

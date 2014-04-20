@@ -164,7 +164,7 @@ class APIUser extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 
 		//  Nirmal, do you check for session_user_can_read() on the lists requested for practice?
-		$list_ids = array();
+		$list_ids = array ();
 		if (isset($_GET["list_ids"]))
 		{
 			foreach (explode(",", $_GET["list_ids"]) as $list_id)

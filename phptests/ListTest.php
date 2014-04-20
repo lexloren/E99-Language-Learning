@@ -173,7 +173,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		//Create a course, add user1 as student
 		$course_id = $this->db->add_course($user0->get_user_id());
 		$course = Course::select_by_id($course_id);
-		Session::get()->set_user($user0);
+		Session::get()->set_user($course->get_owner());
 		$course->students_add($user1);
 		$courses = $user1->get_student_courses();
 		$this->assertCount(1, $courses);
