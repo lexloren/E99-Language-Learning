@@ -298,14 +298,35 @@ class TestDB
 				$result_assoc['user_entry_id']
 			));
 			
-			if (!$this->link->insert_id)
-				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			if (!!$this->link->error)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 			
-			$user_entry_id = $this->link->insert_id;
+			$user_entry_id = 0;
+			if (!$this->link->insert_id)
+			{
+				$sql = sprintf("SELECT user_entry_id FROM user_entries WHERE user_id = %d AND entry_id IN (SELECT entry_id FROM user_entries WHERE user_entry_id = %d)",
+				$user_id,
+				$result_assoc['user_entry_id']
+				);
+				
+				//print $sql;
+				
+				$result1 = $this->link->query($sql);
+				
+				if (!!$this->link->error)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
+				$user_entry_id = $result1->fetch_assoc()['user_entry_id'];
+			}
+			else
+				$user_entry_id = $this->link->insert_id;
+				
+			if ($user_entry_id == 0)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': ');
 			
 			$grade_indx = rand(0, count($this->grade_ids) - 1);
 			
-			$this->link->query(sprintf("INSERT IGNORE INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
+			$this->link->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
 				$user_entry_id,
 				$this->grade_ids[$grade_indx]
 			));
@@ -325,7 +346,10 @@ class TestDB
 		
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
-
+	}
+	
+	public function add_practice_data_for_course($course_id, $user_id, $count)
+	{
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id in (SELECT unit_id from course_units WHERE course_id = %d)", $course_id);
 
 		$result = $this->link->query($sql);
@@ -335,9 +359,13 @@ class TestDB
 		for ($i=0; $i<$num_rows; $i++) 
 		{
 			$result_assoc = $result->fetch_assoc();
-			$this->create_user_entries_from_list($user_id, $result_assoc["list_id"]);
+			for($j=0; $j<$count; $j++)
+			{
+				$this->create_user_entries_from_list($user_id, $result_assoc["list_id"]);
+			}
 		}
 	}
+	
 	
 	public function add_course_instructor($course_id, $user_id)
 	{
