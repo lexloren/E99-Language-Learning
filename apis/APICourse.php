@@ -388,6 +388,21 @@ class APICourse extends APIBase
 			}
 		}
 	}
+
+	public function practice_report()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (self::validate_request($_GET, "course_id"))
+		{
+			$report = Report::get_course_practice_report($_GET["course_id"]);
+			if (!!$report && !Session::get()->has_error())
+			{
+				$output = json_encode(Array("practiceReport" => $report));
+				Session::get()->set_result_assoc($output);
+			}
+		}
+	}
 }
 
 ?>
