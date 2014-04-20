@@ -510,6 +510,16 @@ class Course extends DatabaseRow
 		return $this->users_add($this->students, "course_students", $user);
 	}
 	
+	public function researchers_add($user)
+	{
+		if (!$this->session_user_is_owner())
+		{
+			return static::set_error_description("Session user is not course owner.");
+		}
+		
+		return $this->users_add($this->researchers, "course_researchers", $user);
+	}
+	
 	private function users_remove(&$array, $table, $user)
 	{
 		if (!$this->session_user_can_write())
@@ -545,6 +555,15 @@ class Course extends DatabaseRow
 		return $this->users_remove($this->instructors, "course_instructors", $user);
 	}
 	
+	public function researchers_remove($user)
+	{
+		if (!$this->session_user_is_owner())
+		{
+			return static::set_error_description("Session user is not course owner.");
+		}
+		return $this->users_remove($this->researchers, "course_researchers", $user);
+	}
+	
 	public function students_remove($user)
 	{
 		return $this->users_remove($this->students, "course_students", $user);
@@ -575,6 +594,7 @@ class Course extends DatabaseRow
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"instructorsCount" => count($this->get_instructors()),
 			"studentsCount" => count($this->get_students()),
+			"researchersCount" => count($this->get_researchers()),
 			"unitsCount" => count($this->get_units()),
 			"listsCount" => count($this->get_lists()),
 			"testsCount" => count($this->get_tests()),
@@ -590,6 +610,7 @@ class Course extends DatabaseRow
 		
 		$assoc["instructors"] = self::array_for_json($this->get_instructors());
 		$assoc["students"] = self::array_for_json($this->get_students());
+		$assoc["researchers"] = self::array_for_json($this->get_researchers());
 		$assoc["units"] = self::array_for_json($this->get_units());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		$assoc["tests"] = self::array_for_json($this->get_tests());

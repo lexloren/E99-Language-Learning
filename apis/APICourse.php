@@ -343,11 +343,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!$course->session_user_is_owner())
-			{
-				Session::get()->set_error_assoc("Course-Researchers Addition", "Session user is not course owner.");
-			}
-			else if (self::validate_request($_POST, "user_ids"))
+			if (self::validate_request($_POST, "user_ids"))
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -369,11 +365,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			if (!$course->session_user_is_owner())
-			{
-				Session::get()->set_error_assoc("Course-Researchers Addition", "Session user is not course owner.");
-			}
-			else if (self::validate_request($_POST, "user_ids"))
+			if (self::validate_request($_POST, "user_ids"))
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
@@ -398,7 +390,7 @@ class APICourse extends APIBase
 			$report = Report::get_course_practice_report($_GET["course_id"]);
 			if (!!$report && !Session::get()->has_error())
 			{
-				$output = json_encode(Array("practiceReport" => $report));
+				$output = json_encode(array ("practiceReport" => $report));
 				Session::get()->set_result_assoc($output);
 			}
 		}
