@@ -1,6 +1,8 @@
 <?php
 
+require_once "./backend/classes/error_reporter.php";
 require_once "./backend/classes/timeframe.php";
+require_once "./backend/classes/outbox.php";
 require_once "./backend/classes/database_row.php";
 require_once "./backend/classes/language.php";
 require_once "./backend/classes/dictionary.php";

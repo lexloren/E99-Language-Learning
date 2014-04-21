@@ -9,6 +9,20 @@ class User extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
+	private static function random_alphanumeric($length)
+	{
+		$random_alphanumeric = "";
+		for ($i = 1; $i <= $length; $i ++)
+		{
+			$r = rand(0, 61);
+			$r += ord('0');
+			if ($r > ord('9')) $r += 7;
+			if ($r > ord('Z')) $r += 6;
+			$random_alphanumeric .= chr($r);
+		}
+		return $random_alphanumeric;
+	}
+	
 	public static function validate_email($string_in_question)
 	{
 		$string_in_question = strtolower($string_in_question);
@@ -118,7 +132,7 @@ class User extends DatabaseRow
 			return static::set_error_description("Failed to insert user: " . $mysqli->error . ".");
 		}
 		
-		return self::select_by_id($mysqli->insert_id);
+		return ($user = self::select_by_id($mysqli->insert_id)) ? (Outbox::send($user, $email, "Xenogloss: Thanks for registering!", "Dear $handle,\n\nThank you for registering to teach and learn languages with Xenogloss.\n\nYours,\nThe Xenogloss Team") !== null ? $user : self::set_error_description("Failed to insert user: " . Outbox::unset_error_description())) : null;
 	}
 	
 	/***    INSTANCE    ***/
