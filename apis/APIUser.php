@@ -26,6 +26,7 @@ class APIUser extends APIBase
 			}
 			else
 			{
+				Outbox::send($user, $user->get_email(), "Xenogloss: Thanks for registering!", "Dear " . $user->get_handle() . ",\n\nThank you for registering to teach and learn languages with Xenogloss.\n\nYours,\nThe Xenogloss Team");
 				Session::get()->set_result_assoc($user->json_assoc(false));
 			}
 		}

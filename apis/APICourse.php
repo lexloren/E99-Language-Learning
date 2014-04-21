@@ -238,11 +238,12 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->students_add(User::select_by_id($user_id)))
+					if (!$course->students_add(($student = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Students Addition", Course::unset_error_description());
 						return;
 					}
+					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
@@ -270,11 +271,12 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->instructors_add(User::select_by_id($user_id)))
+					if (!$course->instructors_add(($instructor = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Instructors Addition", Course::unset_error_description());
 						return;
 					}
+					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
@@ -292,11 +294,12 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->students_remove(User::select_by_id($user_id)))
+					if (!$course->students_remove(($instructor = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Students Removal", Course::unset_error_description());
 						return;
 					}
+					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
@@ -314,11 +317,12 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->instructors_remove(User::select_by_id($user_id)))
+					if (!$course->instructors_remove(($student = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Instructors Removal", Course::unset_error_description());
 						return;
 					}
+					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
@@ -347,11 +351,12 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->researchers_add(User::select_by_id($user_id)))
+					if (!$course->researchers_add(($researcher = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Researchers Addition", Course::unset_error_description());
 						return;
 					}
+					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
@@ -369,11 +374,13 @@ class APICourse extends APIBase
 			{
 				foreach (explode(",", $_POST["user_ids"]) as $user_id)
 				{
-					if (!$course->researchers_remove(User::select_by_id($user_id)))
+					if (!$course->researchers_remove(($researcher = User::select_by_id($user_id))))
 					{
 						Session::get()->set_error_assoc("Course-Researchers Removal", Course::unset_error_description());
 						return;
 					}
+					
+					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
 				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));

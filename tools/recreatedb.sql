@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 20 april 2014 kl 15:46
+-- Skapad: 20 april 2014 kl 18:21
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `course_researchers` (
   PRIMARY KEY  (`researcher_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=67 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=71 ;
 
 -- --------------------------------------------------------
 
@@ -147,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   KEY `open` (`open`),
   KEY `close` (`close`),
   KEY `name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=42 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=43 ;
 
 -- --------------------------------------------------------
 
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=30 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=56 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=72 ;
 
 -- --------------------------------------------------------
 
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_responses` (
   UNIQUE KEY `sitting_id` (`sitting_id`,`pattern_id`),
   KEY `timestamp` (`timestamp`),
   KEY `pattern_id` (`pattern_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=23 ;
 
 -- --------------------------------------------------------
 
@@ -342,6 +342,25 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
 -- --------------------------------------------------------
 
 --
+-- Struktur för tabell `outbox`
+--
+
+DROP TABLE IF EXISTS `outbox`;
+CREATE TABLE IF NOT EXISTS `outbox` (
+  `message_id` bigint(20) unsigned NOT NULL auto_increment,
+  `user_id` bigint(20) unsigned default NULL,
+  `course_id` bigint(20) unsigned default NULL,
+  `to` char(255) NOT NULL,
+  `subject` char(255) NOT NULL,
+  `contents` text NOT NULL,
+  PRIMARY KEY  (`message_id`),
+  KEY `user_id` (`user_id`),
+  KEY `course_id` (`course_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
+
+-- --------------------------------------------------------
+
+--
 -- Struktur för tabell `users`
 --
 
@@ -363,7 +382,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `login_token` (`login_token`),
   KEY `last_activity` (`timestamp`),
   KEY `pswd_hash` (`pswd_hash`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=26 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=47 ;
 
 -- --------------------------------------------------------
 
@@ -389,7 +408,7 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   KEY `word_1_pronun` (`word_1_pronun`),
   KEY `interval` (`interval`),
   KEY `efactor` (`efactor`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=46 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=51 ;
 
 -- --------------------------------------------------------
 
@@ -540,6 +559,13 @@ ALTER TABLE `lists`
 ALTER TABLE `list_entries`
   ADD CONSTRAINT `list_entries_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE;
+
+--
+-- Restriktioner för tabell `outbox`
+--
+ALTER TABLE `outbox`
+  ADD CONSTRAINT `outbox_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `outbox_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restriktioner för tabell `user_entries`

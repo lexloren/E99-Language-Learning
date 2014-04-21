@@ -132,7 +132,7 @@ class User extends DatabaseRow
 			return static::set_error_description("Failed to insert user: " . $mysqli->error . ".");
 		}
 		
-		return ($user = self::select_by_id($mysqli->insert_id)) ? (Outbox::send($user, $email, "Xenogloss: Thanks for registering!", "Dear $handle,\n\nThank you for registering to teach and learn languages with Xenogloss.\n\nYours,\nThe Xenogloss Team") !== null ? $user : self::set_error_description("Failed to insert user: " . Outbox::unset_error_description())) : null;
+		return self::select_by_id($mysqli->insert_id);
 	}
 	
 	/***    INSTANCE    ***/

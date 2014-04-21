@@ -12,9 +12,12 @@ class Outbox extends ErrorReporter
 		$user_id = "NULL";
 		$course_id = "NULL";
 		
-		if ($sender instanceof Course) $course_id = $sender->get_course_id();
-		else if ($sender instanceof User) $user_id = $sender->get_user_id();
-		else return self::set_error_description("Sender class must be Course or User.");
+		if ($sender !== null)
+		{
+			if ($sender instanceof Course) $course_id = $sender->get_course_id();
+			else if ($sender instanceof User) $user_id = $sender->get_user_id();
+			else return self::set_error_description("Sender class must be Course or User.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
