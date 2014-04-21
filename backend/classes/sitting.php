@@ -196,8 +196,10 @@ class Sitting extends CourseComponent
 		{
 			$mysqli = Connection::get_shared_instance();
 			
+			$test_entry_ids = "SELECT test_entry_id FROM (course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id)) LEFT JOIN course_unit_test_sittings USING (sitting_id) WHERE sitting_id = " . $this->get_sitting_id();
+			
 			//  Check whether user has already answered all the questions.
-			$result = $mysqli->query(sprintf("SELECT user_entry_id FROM course_unit_test_entries LEFT JOIN (course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id)) USING (test_entry_id) WHERE test_id = %d AND response_id IS NULL ORDER BY num", $this->get_test_id()));
+			$result = $mysqli->query(sprintf("SELECT user_entry_id FROM course_unit_test_entries LEFT JOIN ($test_entry_ids) AS course_unit_test_entries_completed USING (test_entry_id) WHERE test_id = %d AND response_id IS NULL ORDER BY num", $this->get_test_id()));
 			
 			if (!!$mysqli->error)
 			{
