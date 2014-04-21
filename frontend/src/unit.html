@@ -33,6 +33,7 @@
 	    <br /><img src="images/ajax-loader.gif" id="loader">
       <div id="unitData">
         <div id="unit-header"></div><br />
+        <div id="unit-intro"></div><br />
         <div id="unit-update">
           <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
           <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
@@ -63,11 +64,6 @@
 
         <h4>Decks</h4>
         <table id="lists" class="table">
-          <tr>
-            <th>Name</th>
-            <th>Card Count</th>
-            <th>Remove</th>
-          </tr>
         </table>
         <div id="search-list">    
           <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Search Decks</button>  
@@ -119,7 +115,7 @@
           <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
           <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br /><br />     
         </form>	
-      </div>
+      </div><br />
     </div> <!-- /container -->
 
   </body>

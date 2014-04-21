@@ -46,31 +46,56 @@ function getUnitInfo(){
             else{
                 unitheader = '<h3 class="form-signin-heading">Unit '+data.result.unitId+': '+data.result.name+'</h3>';
                 $("#unit-header").html(unitheader);
-                $("#unitname").val(data.result.name);
-                if(data.result.message != null){
-                    $("#unitdesc").val(data.result.message);
+                if(data.result.sessionUserPermissions.write == true){
+                    $("#unitname").val(data.result.name);
+                    if(data.result.message != null){
+                        $("#unitdesc").val(data.result.message);
+                    }
+                    if(data.result.timeframe != null){
+                        if(data.result.timeframe.open != null){
+                            opendate = new Date(data.result.timeframe.open);
+                            $("#unitopendate").val(opendate);
+                        }
+                        if(data.result.timeframe.close != null){
+                            closedate = new Date(data.result.timeframe.close);
+                            $("#unitclosedate").val(closedate);
+                        }
+                    }
                 }
-                if(data.result.timeframe != null){
-                    if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open);
-                        $("#unitopendate").val(opendate);
+                else{
+                    if(data.result.message != null){
+                      unitintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4>';
+                      $("#unit-intro").html(unitintro);  
                     }
-                    if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close);
-                        $("#unitclosedate").val(closedate);
-                    }
+                    $("#unit-update").hide();
+                    $("#search-list").hide();
+                    $("#add-test").hide();
                 }
                 if(data.result.lists.length == 0){
                     $('#lists').html("<em>This unit currently has no decks.</em>");
                 }
                 else{
+                    if(data.result.sessionUserPermissions.write == true){
+                        listremovehead = '<th>Remove</th>';
+                    }
+                    else{
+                        listremovehead = '';
+                    }
+                    $('#lists').append('<tr><th>Name</th><th>Card Count</th>'+listremovehead+'</tr>');
                     $.each(data.result.lists, function(i, item){
-                        testrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' +
-                                  '<td>' + item.entriesCount + '</td>' +
-                                  '<td><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'></td></tr>';
-                        $('#lists').append(newrow);
+                        if(data.result.sessionUserPermissions.write == true){
+                            listremovetd = '<td><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'></td></tr>';
+                        }
+                        else{
+                            listremovetd = '';
+                        }                        
+                        listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' +
+                                  '<td>' + item.entriesCount + '</td>' + listremovetd;
+                        $('#lists').append(listrow);
                     });
-                    $('#lists').append('<tr><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeLists();">Remove Selected Decks</button></td></tr>');
+                    if(data.result.sessionUserPermissions.write == true){
+                        $('#lists').append('<tr><td></td><td></td><td><button class="btn btn-primary" type="button" onclick="removeLists();">Remove Selected Decks</button></td></tr>');
+                    }
                 }
                 if(data.result.tests.length == 0){
                     $('#tests').html("<em>This unit currently has no tests.</em>");
