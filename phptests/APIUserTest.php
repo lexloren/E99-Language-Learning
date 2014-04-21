@@ -234,12 +234,11 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_GET["entry_id"] = $this->db->practice_entry_ids[0];
 		$grade = Grade::select_by_point(4);
 		$_GET["grade_id"] = $grade->get_grade_id();
+                Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertFalse(Session::get()->has_error());
 		$entry = Session::get()->get_result_assoc();
 		$this->assertNotNull($entry["result"]);
-
-		$this->assertNotNull($entry["result"]["owner"]);
 
 		$this->assertNotNull($entry["result"]["words"]);
 		$this->assertCount(2, $entry["result"]["words"]);
