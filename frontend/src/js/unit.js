@@ -3,6 +3,7 @@ var unit;
 $(document).ready(function(){
 	pageSetup();
 	$("#loader").hide();
+	$("#test-loader").hide();
 	unit = getURLparam('unitid');
 	if(unit === null) {
     $("#unitData").hide();
@@ -20,6 +21,7 @@ $(document).ready(function(){
 function showForm(frm,tohide){
     $(tohide).hide();
     $(frm).show();
+    $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
 }
 
 function cancelUpdate(frm,tohide){
@@ -37,6 +39,7 @@ function getUnitInfo(){
     $.getJSON('../../unit_select.php', 
         {unit_id: unit})
         .done(function(data){
+		        authorize(data);
             if(data.isError){
                 failureMessage("Information for this unit could not be retrieved.");
             }
@@ -74,10 +77,24 @@ function getUnitInfo(){
                 }
                 else{
                     $.each(data.result.tests, function(i, item){
+                        if(item.timeframe == null){
+                            topen = "";
+                            tclose = "";
+                        }
+                        else{
+                            if(item.timeframe.open != null)
+                                topen = new Date(item.timeframe.open);
+                            else
+                                topen = "";
+                            if(item.timeframe.close != null)
+                                tclose = new Date(item.timeframe.close);
+                            else
+                                tclose = "";
+                        }
                         testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
-                                  '<td>' + item.timeframe.open + '</td>' +
-                                  '<td>' + item.timeframe.close + '</td></tr>';
-                        $('#tests').append(newrow);
+                                  '<td>' + topen + '</td>' +
+                                  '<td>' + tclose + '</td></tr>';
+                        $('#tests').append(testrow);
                     });
                 }
                 $("#unitData").show();	
@@ -95,9 +112,12 @@ function deleteUnit(){
     if(!confirm("Are you sure you want to delete this unit?")){
         return;
     }
+	  $('#failure').hide();
+	  $('#success').hide();
     $.post('../../unit_delete.php', 
         { unit_id: unit })
         .done(function(data){
+		    authorize(data);
         if(data.isError){
             var errorMsg = "Unit could not be deleted: ";
             if(data.errorTitle == "Unit Selection"){
@@ -120,6 +140,8 @@ function deleteUnit(){
 }
 
 function saveUpdate(){
+	  $('#failure').hide();
+	  $('#success').hide();
     var unitname = $("#unitname").val();
     var desc = $("#unitdesc").val();
     var opendate = $("#unitopendate").val();
@@ -135,30 +157,51 @@ function saveUpdate(){
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
+        $("html, body").animate({scrollTop:0}, "slow");         
         return;
     }
 
+	  $("#loader").show();
+	  $("#unitData").hide();
     $.post('../../unit_update.php', 
         { unit_id: unit, name: unitname, open: opendate, close: closedate, message: desc } )
         .done(function(data){
+          	authorize(data);
             if(data.isError){
                 var errorMsg = "Unit could not be updated. Please reload the page and try again.";
                 failureMessage(errorMsg);
             }
             else{
-                getUnitInfo();
-                cancelUpdate("#updateUnitForm","#unit-update");
+                $("#unitname").val(data.result.name);
+                $("#unitdesc").val(data.result.message);
+                if(data.result.timeframe != null){
+                    if(data.result.timeframe.open != null){
+                        opendate = new Date(data.result.timeframe.open);
+                        $("#unitopendate").val(opendate);
+                    }
+                    if(data.result.timeframe.close != null){
+                        closedate = new Date(data.result.timeframe.close);
+                        $("#unitclosedate").val(closedate);
+                    }
+                }
                 successMessage("Unit was successfully updated.");
+                cancelUpdate("#updateUnitForm","#unit-update");
+                $("#unitData").show();
             }
+            $("html, body").animate({scrollTop:0}, "slow");  
+            $("#loader").hide();
     })
 	 .fail(function(error) {
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
 	  });
     return; 
 }
 
 <!--- Tests --->
 function verifyTestForm(){
+	  $('#failure').hide();
+	  $('#success').hide();
     var testname = $("#testname").val();
     var desc = $("#testdesc").val();
     var opendate = $("#testopendate").val();
@@ -166,6 +209,7 @@ function verifyTestForm(){
     
 	  if(testname == "" || desc == "" || opendate == "" || closedate == ""){
 		    failureMessage("Please provide test name, instructions, and open/close dates.");	
+        $("html, body").animate({scrollTop:0}, "slow"); 
         return;
     }
 
@@ -174,6 +218,7 @@ function verifyTestForm(){
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
+        $("html, body").animate({scrollTop:0}, "slow");         
         return;
     }
 
@@ -181,9 +226,12 @@ function verifyTestForm(){
 }
 
 function submitCreateTestForm(testname, desc, opendate, closedate){
+	  $('#failure').hide();
+	  $('#success').hide();
     $.post('../../test_insert.php', 
         { unit_id: unit, name: testname, open: opendate, close: closedate, message: desc } )
         .done(function(data){
+          	authorize(data);
             if(data.isError){
                 var errorMsg = "Test could not be created: ";
                 if(data.errorTitle == "Unit Selection"){
@@ -193,16 +241,67 @@ function submitCreateTestForm(testname, desc, opendate, closedate){
                     errorMsg += "Please refresh the page and try again.";
                 }
                 failureMessage(errorMsg);
+                $("html, body").animate({scrollTop:0}, "slow"); 
             }
             else{
-                getUnitInfo();
                 cancelUpdate("#createTestForm","#add-test");
+                refreshTests();
             }
     })
 	 .fail(function(error) {
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
 	  });
     return; 
+}
+
+function refreshTests(){
+	  $('#failure').hide();
+	  $('#success').hide();
+    $("#test-loader").show();
+    $("#tests").html('');
+    $.getJSON('../../unit_tests.php', 
+        {unit_id: unit},
+        function(data){
+		        authorize(data);
+            if(data.isError){
+                failureMessage("Tests could not be refreshed.");
+                $("html, body").animate({scrollTop:0}, "slow"); 
+            }
+            else{
+                if(data.result == null){
+                    $('#tests').html("<em>This unit currently has no tests.</em>");
+                }
+                else{
+                    $.each(data.result, function(i, item){
+                        if(item.timeframe == null){
+                            topen = "";
+                            tclose = "";
+                        }
+                        else{
+                            if(item.timeframe.open != null)
+                                topen = new Date(item.timeframe.open);
+                            else
+                                topen = "";
+                            if(item.timeframe.close != null)
+                                tclose = new Date(item.timeframe.close);
+                            else
+                                tclose = "";
+                        }
+                        testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
+                                  '<td>' + topen + '</td>' +
+                                  '<td>' + tclose + '</td></tr>';
+                        $('#tests').append(testrow);
+                    });
+                }
+            }
+            $('html, body').animate({scrollTop: $("#tests").offset().top}, "slow");
+            $("#test-loader").hide();
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
+	  });
 }
 
 <!--- Lists --->
@@ -214,6 +313,7 @@ function addLists(){
     $.post('../../unit_lists_add.php', 
         { unit_id: unit, list_ids: listsAdd })
         .done(function(data){
+		        authorize(data);
             if(data.isError){
                 var errorMsg = "List(s) could not be added: ";
 
@@ -243,6 +343,7 @@ function removeLists(){
     $.post('../../unit_lists_remove.php', 
         { unit_id: unit, list_ids: listsRem })
         .done(function(data){
+          	authorize(data);
             if(data.isError){
                 var errorMsg = "List(s) could not be removed: ";
                 if(data.errorTitle == "Unit Selection"){
@@ -280,6 +381,7 @@ function searchLists(){
     $.getJSON('../../list_find.php', <!--- not implemented yet --->
         {query: criteria}, 
         function(data){
+        		authorize(data);
             if(data.result.length == 0){
                 $('#searchResults').html('<br />No matching lists found.<br /><br />');
                 $('#searchResults').append('<button type="button" stype="button" class="btn" onclick="toggleSearch();">New Search</button><br /><br />');
@@ -304,6 +406,5 @@ function searchLists(){
 	 .fail(function(error) {
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
 	  }); 
-    //$("html, body").animate({scrollBottom:0}, "slow");  
     return;
 }

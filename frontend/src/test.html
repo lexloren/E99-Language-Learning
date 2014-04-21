@@ -29,8 +29,8 @@
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container-left" role="main" id="doc-body">
-	    <img src="images/ajax-loader.gif" id="loader">
+    <div class="container" role="main" id="doc-body">
+	    <br /><img src="images/ajax-loader.gif" id="loader">
       <div id="testData">
 			  <div id="test-header"></div><br />
         <div id="test-update">
@@ -38,28 +38,89 @@
           <button class="btn btn-primary" type="button" onclick="deleteTest();">Delete Test</button><br /><br /> 
         </div>
 				<!--- Update form --->
-        <form id="updateTestForm" role="form">
+        <form id="updateTestForm" role="form" class="container-left">
           <div class="form-group">
             <label for="testname">Test Name</label>
             <input type="text" class="form-control" id="testname">
           </div>
           <div class="form-group">
-            <label for="instructions">Test Instructions</label>
-            <textarea class="form-control" id="instructions" rows="5"></textarea>
+            <label for="testdesc">Test Instructions</label>
+            <textarea class="form-control" id="testdesc" rows="5"></textarea>
           </div>
           <div class="form-group">
-            <label for="opendate">Open Date</label>
-            <input type="text" class="form-control form-control-date" id="opendate">
-            <script>$('#opendate').datetimepicker();</script>
+            <label for="testopendate">Open Date</label>
+            <input type="text" class="form-control form-control-date" id="testopendate">
+            <script>$('#testopendate').datetimepicker();</script>
           </div>
           <div class="form-group">
-            <label for="closedate">Close Date</label>
-            <input type="text" class="form-control form-control-date" id="closedate">
-            <script>$('#closedate').datetimepicker();</script>
+            <label for="testclosedate">Close Date</label>
+            <input type="text" class="form-control form-control-date" id="testclosedate">
+            <script>$('#testclosedate').datetimepicker();</script>
           </div><br />
         <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button> &nbsp;
 				<button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateTestForm','#test\-update');">Cancel</button><br /><br /> 
         </form> 
+        <!--- Test Entries --->
+        <div id="test-entries">
+          <h4>Entries</h4>
+          <br /><img src="images/ajax-loader.gif" id="entry-loader">
+          <table id="entry-list" class="table">
+            <thead>
+              <tr>
+                <td>Word</td>
+                <td>Pronunciation</td>
+                <td>Translation</td>
+                <td></td>
+              <tr>
+            </thead>
+          </table>
+          <!--- Entry Search Form --->
+          <div id="dict-add">
+            <h5>Add an entry from the dictionary:</h5>
+            <form class="form-inline" role="form" id="dict-search">
+              <div class="form-group">
+                <label class="sr-only" for="entrysearch">Enter text to search for</label>
+                <input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
+              </div>
+              <div class="form-group">
+                <label>From: </label>
+                <select class="form-control" id="lang1">
+                  <option>cn</option>
+                  <option>jp</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>To: </label>
+                <select class="form-control" id="lang2">
+                  <option>en</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button>
+            </form>
+            <br/><img src="images/ajax-loader.gif" id="dict-loader">
+            <table class="table" id="dictionary"></table>
+          </div>
+        </div>
+        <!--- Test Sitting --->
+        <div id="test-sitting">
+          <div id="test-intro"></div><br />
+          <button id="test-start-btn" class="btn btn-primary" type="button" onclick="startTest();">Start Test</button>
+          <br /><img src="images/ajax-loader.gif" id="test-loader">
+          <div id="question-block">
+            <div id="test-question" class="panel panel-info test-question">
+              <div class="panel-heading">
+                <h3 id="question-number" class="panel-title"></h3>
+              </div>
+              <div id="question-body" class="panel-body question-body">
+              </div>
+            </div><br />
+            <div class="form-group test-question">
+              <textarea class="form-control" id="test-answer" rows="2" placeholder="Enter the translation"></textarea><br />
+              <button id="answer-submit" class="btn btn-primary" type="button">Submit</button>          
+            </div>
+          </div>
+        </div>
+
       </div>
     </div> <!-- /container -->
 

@@ -29,8 +29,8 @@
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container-left" role="main" id="doc-body">
-	    <img src="images/ajax-loader.gif" id="loader">
+    <div class="container" role="main" id="doc-body">
+	    <br /><img src="images/ajax-loader.gif" id="loader">
       <div id="unitData">
         <div id="unit-header"></div><br />
         <div id="unit-update">
@@ -38,7 +38,7 @@
           <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
         </div>
         <!--- Update form --->
-        <form id="updateUnitForm" role="form">
+        <form id="updateUnitForm" role="form" class="container-left">
           <div class="form-group">
             <label for="unitname">Unit Name</label>
             <input type="text" class="form-control" id="unitname">
@@ -85,6 +85,7 @@
         </div>   
         <br />
         <h4>Tests</h4>
+        <br /><img src="images/ajax-loader.gif" id="test-loader">
         <table id="tests" class="table">
           <tr>
             <th>Name</th>
@@ -96,7 +97,7 @@
           <button class="btn btn-primary" type="button" onclick="showForm('#createTestForm','#add\-test');">Add New Test</button>  
         </div>
         <!--- Test Form --->
-        <form id="createTestForm" role="form">
+        <form id="createTestForm" role="form" class="container-left">
           <div class="form-group">
             <label for="testname">Test Name</label>
             <input type="text" class="form-control" id="testname" placeholder="Enter the name of the test" required autofocus>
