@@ -3,6 +3,7 @@ var unit;
 $(document).ready(function(){
 	pageSetup();
 	$("#loader").hide();
+	$("#test-loader").hide();
 	unit = getURLparam('unitid');
 	if(unit === null) {
     $("#unitData").hide();
@@ -139,6 +140,8 @@ function deleteUnit(){
 }
 
 function saveUpdate(){
+	  $('#failure').hide();
+	  $('#success').hide();
     var unitname = $("#unitname").val();
     var desc = $("#unitdesc").val();
     var opendate = $("#unitopendate").val();
@@ -197,6 +200,8 @@ function saveUpdate(){
 
 <!--- Tests --->
 function verifyTestForm(){
+	  $('#failure').hide();
+	  $('#success').hide();
     var testname = $("#testname").val();
     var desc = $("#testdesc").val();
     var opendate = $("#testopendate").val();
@@ -221,6 +226,8 @@ function verifyTestForm(){
 }
 
 function submitCreateTestForm(testname, desc, opendate, closedate){
+	  $('#failure').hide();
+	  $('#success').hide();
     $.post('../../test_insert.php', 
         { unit_id: unit, name: testname, open: opendate, close: closedate, message: desc } )
         .done(function(data){
@@ -234,16 +241,67 @@ function submitCreateTestForm(testname, desc, opendate, closedate){
                     errorMsg += "Please refresh the page and try again.";
                 }
                 failureMessage(errorMsg);
+                $("html, body").animate({scrollTop:0}, "slow"); 
             }
             else{
-                getUnitInfo();
                 cancelUpdate("#createTestForm","#add-test");
+                refreshTests();
             }
     })
 	 .fail(function(error) {
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
 	  });
     return; 
+}
+
+function refreshTests(){
+	  $('#failure').hide();
+	  $('#success').hide();
+    $("#test-loader").show();
+    $("#tests").html('');
+    $.getJSON('../../unit_tests.php', 
+        {unit_id: unit},
+        function(data){
+		        authorize(data);
+            if(data.isError){
+                failureMessage("Tests could not be refreshed.");
+                $("html, body").animate({scrollTop:0}, "slow"); 
+            }
+            else{
+                if(data.result == null){
+                    $('#tests').html("<em>This unit currently has no tests.</em>");
+                }
+                else{
+                    $.each(data.result, function(i, item){
+                        if(item.timeframe == null){
+                            topen = "";
+                            tclose = "";
+                        }
+                        else{
+                            if(item.timeframe.open != null)
+                                topen = new Date(item.timeframe.open);
+                            else
+                                topen = "";
+                            if(item.timeframe.close != null)
+                                tclose = new Date(item.timeframe.close);
+                            else
+                                tclose = "";
+                        }
+                        testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
+                                  '<td>' + topen + '</td>' +
+                                  '<td>' + tclose + '</td></tr>';
+                        $('#tests').append(testrow);
+                    });
+                }
+            }
+            $('html, body').animate({scrollTop: $("#tests").offset().top}, "slow");
+            $("#test-loader").hide();
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
+	  });
 }
 
 <!--- Lists --->

@@ -346,7 +346,6 @@ function refreshEntries(){
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
         $("html, body").animate({scrollTop:0}, "slow"); 
 	  });
-
 }
 
 <!--- Test Sitting --->
