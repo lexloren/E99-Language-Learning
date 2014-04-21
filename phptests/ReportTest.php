@@ -44,7 +44,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		{
 			$report = Report::get_user_practice_report($this->db->course_ids[0], $this->db->user_ids[$s]);
 
-			$this->assertNotNull($report);
+			$this->assertNotNull($report, "failed for student ".$s);
 			$this->assertEquals($report["name"], $this->db->names_given[$s].' '.$this->db->names_family[$s]);
 			$this->assertNotNull($report["progressPercent"]);
 			$this->assertNotNull($report["unitReports"]);
@@ -62,7 +62,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 					$this->assertEquals(2, $entry_report["practiceCount"]);
 			}
 			
-			//print json_encode($report);
+			//if ($s == 1) print json_encode($report);
 			//print_r($report);
 		}
 	}
@@ -79,6 +79,19 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($report["studentPracticeReports"]);
 		$this->assertCount(2, $report["studentPracticeReports"]);
 		$this->assertNotNull($report["difficultEntries"]);
+		//print_r ($report["difficultEntries"]);
+		$this->assertCount(10, $report["difficultEntries"]);
+		
+		$difficult_entries = $report["difficultEntries"];
+		$prev_entry = $difficult_entries[0];
+		for($i=1; $i<10; $i++)
+		{
+			$entry = $difficult_entries[$i];
+			$this->assertTrue($prev_entry["classGradePointAverage"] <= $report["difficultEntries"]);
+			$prev_entry = $entry;
+		}
+		
+		$this->assertEquals($report["courseName"], $this->db->course_names[0]);
 	}
 }
 ?>
