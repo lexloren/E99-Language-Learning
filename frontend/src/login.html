@@ -67,7 +67,11 @@
             <input type="text" class="form-control" id="pwUsername" placeholder="Enter username" required autofocus>
             <p class="help-block help-block-small">A new password will be sent to the email address associated with your account.</p> 
           </div>
-          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitPwRequestForm();">Submit</button>       
+          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitPwRequestForm();">Submit</button>
+          <div class="form-group">
+            <p class="help-block"><span class="span-action" onclick="showForm('#register');">Register new account</span><br />
+            <span class="span-action" onclick="showForm('#sign-in');">Sign in</span></p>
+          </div>         
         </form>	
       </div>
       <!--- Register section --->
@@ -87,7 +91,11 @@
             <input type="password" class="form-control" id="registerPassword" placeholder="Enter password" required>
             <p class="help-block help-block-small">Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.</p> 
           </div>
-          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitRegForm();">Register account</button><br /><br />     
+          <button class="btn btn-lg btn-primary btn-block" type="button" onclick="submitRegForm();">Register account</button> 
+          <div class="form-group">
+            <p class="help-block"><span class="span-action" onclick="showForm('#forgot-pw');">Forgot password?</span><br />
+            <span class="span-action" onclick="showForm('#sign-in');">Sign in</span></p>
+          </div>  
         </form>	
       </div>
     </div> <!-- /container -->
