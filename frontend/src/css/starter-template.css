@@ -59,3 +59,9 @@ div.ui-datepicker{
   text-align: center;
 }
 
+/* Entry id checkboxes */
+.select-entry-ids{
+  font-weight: normal;
+}
+
+
