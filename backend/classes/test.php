@@ -392,7 +392,7 @@ class Test extends CourseComponent
 		}
 		
 		$reasons = array ();
-		if (!$course->user_is_student($user)) array_push($reasons, "session user is not course student");
+		if (!$this->session_user_is_student()) array_push($reasons, "session user is not course student");
 		if (!!$this->get_timeframe() && !$this->get_timeframe()->is_current()) array_push($reasons, "test timeframe is not current");
 		
 		return self::set_error_description("Session user cannot execute test because " . implode(" and ", $reasons) . ".");

@@ -29,16 +29,17 @@
     <!-- Fixed navbar -->
     <div id="navbar"></div>
 
-    <div class="container-left" role="main" id="doc-body">
-	    <img src="images/ajax-loader.gif" id="loader">
+    <div class="container" role="main" id="doc-body">
+	    <br /><img src="images/ajax-loader.gif" id="loader">
       <div id="unitData">
         <div id="unit-header"></div><br />
+        <div id="unit-intro"></div><br />
         <div id="unit-update">
           <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
           <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
         </div>
         <!--- Update form --->
-        <form id="updateUnitForm" role="form">
+        <form id="updateUnitForm" role="form" class="container-left">
           <div class="form-group">
             <label for="unitname">Unit Name</label>
             <input type="text" class="form-control" id="unitname">
@@ -63,11 +64,6 @@
 
         <h4>Decks</h4>
         <table id="lists" class="table">
-          <tr>
-            <th>Name</th>
-            <th>Card Count</th>
-            <th>Remove</th>
-          </tr>
         </table>
         <div id="search-list">    
           <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Search Decks</button>  
@@ -85,6 +81,7 @@
         </div>   
         <br />
         <h4>Tests</h4>
+        <br /><img src="images/ajax-loader.gif" id="test-loader">
         <table id="tests" class="table">
           <tr>
             <th>Name</th>
@@ -96,7 +93,7 @@
           <button class="btn btn-primary" type="button" onclick="showForm('#createTestForm','#add\-test');">Add New Test</button>  
         </div>
         <!--- Test Form --->
-        <form id="createTestForm" role="form">
+        <form id="createTestForm" role="form" class="container-left">
           <div class="form-group">
             <label for="testname">Test Name</label>
             <input type="text" class="form-control" id="testname" placeholder="Enter the name of the test" required autofocus>
@@ -118,7 +115,7 @@
           <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
           <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br /><br />     
         </form>	
-      </div>
+      </div><br />
     </div> <!-- /container -->
 
   </body>

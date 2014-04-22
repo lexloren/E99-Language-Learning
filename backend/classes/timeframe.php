@@ -18,8 +18,8 @@ class Timeframe
 	
 	public function __construct($open, $close)
 	{
-		$this->open = ($open = intval($open, 10)) > TIME_MIN ? $open : null;
-		$this->close = ($close = intval($close, 10)) > TIME_MIN ? $close : null;
+		$this->open = ($open = intval($open, 10)) > self::TIME_MIN ? $open : null;
+		$this->close = ($close = intval($close, 10)) > self::TIME_MIN ? $close : null;
 	}
 	
 	public function is_current()

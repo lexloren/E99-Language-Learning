@@ -26,6 +26,7 @@ class APIUser extends APIBase
 			}
 			else
 			{
+				Outbox::send($user, $user->get_email(), "Xenogloss: Thanks for registering!", "Dear " . $user->get_handle() . ",\n\nThank you for registering to teach and learn languages with Xenogloss.\n\nYours,\nThe Xenogloss Team");
 				Session::get()->set_result_assoc($user->json_assoc(false));
 			}
 		}
@@ -164,7 +165,7 @@ class APIUser extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 
 		//  Nirmal, do you check for session_user_can_read() on the lists requested for practice?
-		$list_ids = array();
+		$list_ids = array ();
 		if (isset($_GET["list_ids"]))
 		{
 			foreach (explode(",", $_GET["list_ids"]) as $list_id)

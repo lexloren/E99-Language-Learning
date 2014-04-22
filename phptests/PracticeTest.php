@@ -39,7 +39,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 
 	public function testGenerateEmptyList()
 	{
-		$this->db->add_list($this->db->user_ids[0], array());
+		$this->db->add_list($this->db->user_ids[0], array ());
 
 		$practice = Practice::generate($this->db->list_ids, 50);
 		$this->assertNotNull($practice);
@@ -53,7 +53,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($practice);
 		$this->assertCount(count($this->db->practice_entry_ids), $practice->get_entries());
 		
-		$practice = Practice::generate(array(), -2);
+		$practice = Practice::generate(array (), -2);
 		$this->assertNotNull($practice);
                 $this->assertEmpty($practice->get_entries());
                 $this->assertEmpty($practice->get_entry_ids());

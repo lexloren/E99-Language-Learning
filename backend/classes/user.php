@@ -9,6 +9,20 @@ class User extends DatabaseRow
 	protected static $error_description = null;
 	protected static $instances_by_id = array ();
 	
+	private static function random_alphanumeric($length)
+	{
+		$random_alphanumeric = "";
+		for ($i = 1; $i <= $length; $i ++)
+		{
+			$r = rand(0, 61);
+			$r += ord('0');
+			if ($r > ord('9')) $r += 7;
+			if ($r > ord('Z')) $r += 6;
+			$random_alphanumeric .= chr($r);
+		}
+		return $random_alphanumeric;
+	}
+	
 	public static function validate_email($string_in_question)
 	{
 		$string_in_question = strtolower($string_in_question);

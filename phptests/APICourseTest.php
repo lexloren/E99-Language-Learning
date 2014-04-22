@@ -61,7 +61,7 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		
-		$course_setup = array();
+		$course_setup = array ();
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1'));
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course2'));
 		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'NoMatch Course1'));
@@ -96,6 +96,17 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		*/
 	}
 	
+	public function test_practice_report()
+	{
+		$this->db->add_users(1);
+		$course_id = $this->db->add_course($this->db->user_ids[0]);
+		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[0]);
+		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
+		$list_id = $this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+		$this->db->add_unit_list($course_unit_id, $list_id);
+		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[1], 3);
+	}
 }
 	
 ?>

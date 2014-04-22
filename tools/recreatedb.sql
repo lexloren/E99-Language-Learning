@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 19 april 2014 kl 15:20
+-- Skapad: 20 april 2014 kl 18:21
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   KEY `user_id` (`user_id`),
   KEY `name` (`name`),
   KEY `public` (`public`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=36 ;
 
 -- --------------------------------------------------------
 
@@ -54,7 +54,23 @@ CREATE TABLE IF NOT EXISTS `course_instructors` (
   PRIMARY KEY  (`instructor_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=41 ;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur för tabell `course_researchers`
+--
+
+DROP TABLE IF EXISTS `course_researchers`;
+CREATE TABLE IF NOT EXISTS `course_researchers` (
+  `researcher_id` bigint(20) unsigned NOT NULL auto_increment,
+  `course_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY  (`researcher_id`),
+  UNIQUE KEY `course_id` (`course_id`,`user_id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -70,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=71 ;
 
 -- --------------------------------------------------------
 
@@ -93,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `course_units` (
   KEY `close` (`close`),
   KEY `num` (`num`),
   KEY `name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=40 ;
 
 -- --------------------------------------------------------
 
@@ -131,7 +147,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   KEY `open` (`open`),
   KEY `close` (`close`),
   KEY `name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=43 ;
 
 -- --------------------------------------------------------
 
@@ -151,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -177,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=72 ;
 
 -- --------------------------------------------------------
 
@@ -198,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -216,7 +232,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_responses` (
   UNIQUE KEY `sitting_id` (`sitting_id`,`pattern_id`),
   KEY `timestamp` (`timestamp`),
   KEY `pattern_id` (`pattern_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=23 ;
 
 -- --------------------------------------------------------
 
@@ -240,7 +256,7 @@ CREATE TABLE IF NOT EXISTS `dictionary` (
   FULLTEXT KEY `lang_unknw` (`word_1`),
   FULLTEXT KEY `lang_known` (`word_0`),
   FULLTEXT KEY `pronunciation` (`word_1_pronun`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=847826 ;
 
 -- --------------------------------------------------------
 
@@ -256,7 +272,7 @@ CREATE TABLE IF NOT EXISTS `grades` (
   `desc_long` char(255) default NULL,
   PRIMARY KEY  (`grade_id`),
   UNIQUE KEY `grade_point` (`point`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -270,7 +286,7 @@ CREATE TABLE IF NOT EXISTS `languages` (
   `lang_code` char(2) NOT NULL,
   PRIMARY KEY  (`lang_id`),
   UNIQUE KEY `lang_code` (`lang_code`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
 
 -- --------------------------------------------------------
 
@@ -305,7 +321,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
   KEY `user_id` (`user_id`),
   KEY `list_name` (`name`),
   KEY `share_public` (`public`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=8 ;
 
 -- --------------------------------------------------------
 
@@ -321,7 +337,26 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
   PRIMARY KEY  (`list_entry_id`),
   UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=32 ;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur för tabell `outbox`
+--
+
+DROP TABLE IF EXISTS `outbox`;
+CREATE TABLE IF NOT EXISTS `outbox` (
+  `message_id` bigint(20) unsigned NOT NULL auto_increment,
+  `user_id` bigint(20) unsigned default NULL,
+  `course_id` bigint(20) unsigned default NULL,
+  `to` char(255) NOT NULL,
+  `subject` char(255) NOT NULL,
+  `contents` text NOT NULL,
+  PRIMARY KEY  (`message_id`),
+  KEY `user_id` (`user_id`),
+  KEY `course_id` (`course_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
 
 -- --------------------------------------------------------
 
@@ -347,7 +382,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `login_token` (`login_token`),
   KEY `last_activity` (`timestamp`),
   KEY `pswd_hash` (`pswd_hash`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=47 ;
 
 -- --------------------------------------------------------
 
@@ -373,7 +408,7 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   KEY `word_1_pronun` (`word_1_pronun`),
   KEY `interval` (`interval`),
   KEY `efactor` (`efactor`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=51 ;
 
 -- --------------------------------------------------------
 
@@ -389,7 +424,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_annotations` (
   PRIMARY KEY  (`annotation_id`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -407,7 +442,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_results` (
   KEY `timestamp` (`timestamp`),
   KEY `grade_id` (`grade_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -423,7 +458,7 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
   PRIMARY KEY  (`interest_id`),
   UNIQUE KEY `user_id` (`user_id`,`lang_id`),
   KEY `lang_id` (`lang_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=36 ;
 
 --
 -- Restriktioner för dumpade tabeller
@@ -443,6 +478,13 @@ ALTER TABLE `courses`
 ALTER TABLE `course_instructors`
   ADD CONSTRAINT `course_instructors_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `course_instructors_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE;
+
+--
+-- Restriktioner för tabell `course_researchers`
+--
+ALTER TABLE `course_researchers`
+  ADD CONSTRAINT `course_researchers_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `course_researchers_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restriktioner för tabell `course_students`
@@ -517,6 +559,13 @@ ALTER TABLE `lists`
 ALTER TABLE `list_entries`
   ADD CONSTRAINT `list_entries_ibfk_1` FOREIGN KEY (`list_id`) REFERENCES `lists` (`list_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `list_entries_ibfk_2` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE;
+
+--
+-- Restriktioner för tabell `outbox`
+--
+ALTER TABLE `outbox`
+  ADD CONSTRAINT `outbox_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `outbox_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restriktioner för tabell `user_entries`

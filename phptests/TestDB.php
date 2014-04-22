@@ -6,13 +6,13 @@ require_once './tools/database.php';
 class TestDB
 {
 	//users table
-	public $user_ids = Array();
-	public $emails = Array();
-	public $handles = Array();
-	public $passwords = Array();
-	public $names_family = Array();
-	public $names_given = Array();
-	public $sessions = Array();
+	public $user_ids = array ();
+	public $emails = array ();
+	public $handles = array ();
+	public $passwords = array ();
+	public $names_family = array ();
+	public $names_given = array ();
+	public $sessions = array ();
 
 	//languages table
 	public static $lang_id_0;
@@ -21,39 +21,39 @@ class TestDB
 	public static $lang_code_1 = 'cn';
 	
 	//dictionary table
-	public $entry_ids = Array();
-	public $word_0s = Array();
-	public $word_1s = Array();
-	public $word_1_pronuns = Array();
+	public $entry_ids = array ();
+	public $word_0s = array ();
+	public $word_1s = array ();
+	public $word_1_pronuns = array ();
 	
 	public static $word_0 = 'Peace';
 	public static $word_1 = 'Peace in CN';
 	public static $word_1_pronun = 'Peace pronun in CN';
 	
-	public $user_entry_ids = Array();
-	public $annotation_ids = Array();
+	public $user_entry_ids = array ();
+	public $annotation_ids = array ();
 	
 	private static $entry_annotation = 'Some user annotation';
 
 	//lists table
-	public $list_ids = Array();
-	public $list_names =  Array();
+	public $list_ids = array ();
+	public $list_names =  array ();
 	private static $list_name = 'somelist';
 
 	//courses table
-	public $course_ids = Array();
-	public $course_names = Array();
-	public $course_messages = Array();
-	public $course_units = Array();
-	public $course_tests = Array();
+	public $course_ids = array ();
+	public $course_names = array ();
+	public $course_messages = array ();
+	public $course_unit_ids = array ();
+	public $course_tests = array ();
 	private static $course_name = 'some course';
 	private static $course_message = 'some course message';
 	private static $course_unit_name = 'some unit';
 	
-	public $practice_list_ids = array();
-    public $practice_entry_ids = array();
+	public $practice_list_ids = array ();
+    public $practice_entry_ids = array ();
 		
-	public $grade_ids = array();
+	public $grade_ids = array ();
 
 	public $link = null;
 
@@ -90,20 +90,22 @@ class TestDB
 		$link = $this->link;
 		for ($i = 0; $i < $num; $i++) 
 		{
-			array_push($this->emails, 'email'.$i.'@domain.com');
-			array_push($this->handles, 'handle'.$i);
-			array_push($this->passwords, 'P@ssword'.$i);
-			array_push($this->names_family, 'SomeFamily'.$i);
-			array_push($this->names_given, 'SomeGiven'.$i);
-			array_push($this->sessions, 'somesessionid'.$i);
+			$suffix = count($this->user_ids);
+			
+			array_push($this->emails, 'email'.$suffix.'@domain.com');
+			array_push($this->handles, 'handle'.$suffix);
+			array_push($this->passwords, 'P@ssword'.$suffix);
+			array_push($this->names_family, 'SomeFamily'.$suffix);
+			array_push($this->names_given, 'SomeGiven'.$suffix);
+			array_push($this->sessions, 'somesessionid'.$suffix);
 			
 			$link->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family, session) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s', '%s')",
-			$link->escape_string($this->handles[$i]),
-			$link->escape_string($this->emails[$i]),
-			$link->escape_string($this->passwords[$i]),
-			$link->escape_string($this->names_given[$i]),
-			$link->escape_string($this->names_family[$i]),
-			$link->escape_string($this->sessions[$i])
+			$link->escape_string($this->handles[$suffix]),
+			$link->escape_string($this->emails[$suffix]),
+			$link->escape_string($this->passwords[$suffix]),
+			$link->escape_string($this->names_given[$suffix]),
+			$link->escape_string($this->names_family[$suffix]),
+			$link->escape_string($this->sessions[$suffix])
 			));
 			if (!$link->insert_id)
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
@@ -207,7 +209,7 @@ class TestDB
 		$count_start = count($this->word_0s);
 		$count_end = $count_start + $num_words;
 		$link = $this->link;
-		$added_entries = Array();
+		$added_entries = array ();
 		for ($i = $count_start; $i < $count_end; $i++) 
 		{
 			array_push($this->word_0s, self::$word_0.$i);
@@ -249,18 +251,12 @@ class TestDB
 		array_push($this->course_names, $name);
 		array_push($this->course_messages, $message);
 		
-		$course_unit_id = $this->add_course_unit($course_id);
-		
-		$list_id = $this->add_list($user_id, $this->entry_ids);
-
-		$this->add_unit_list($course_unit_id, $list_id);
-		
 		return $course_id;
 	}
 
 	public function add_course_unit($course_id)
 	{
-		$suffix = count($this->course_units);
+		$suffix = count($this->course_unit_ids);
 		$this->link->query(sprintf("INSERT INTO course_units (course_id, name, num) VALUES (%d, '%s', %d)",
 			$course_id,
 			self::$course_unit_name.$suffix,
@@ -270,7 +266,7 @@ class TestDB
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 		
-		array_push($this->course_units, $this->link->insert_id);
+		array_push($this->course_unit_ids, $this->link->insert_id);
 		return $this->link->insert_id;
 	}
 	
@@ -282,7 +278,7 @@ class TestDB
 		));
 	}
 	
-	public function create_user_entries_from_list($user_id, $list_id)
+	private function add_practice_data_for_list_one_time($user_id, $list_id)
 	{
 		$result = $this->link->query("SELECT user_entry_id FROM list_entries WHERE list_id = ".$list_id);
 		
@@ -298,14 +294,36 @@ class TestDB
 				$result_assoc['user_entry_id']
 			));
 			
-			if (!$this->link->insert_id)
-				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			if (!!$this->link->error)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 			
-			$user_entry_id = $this->link->insert_id;
+			$user_entry_id = 0;
+			if (!$this->link->insert_id)
+			{
+				$sql = sprintf("SELECT user_entry_id FROM user_entries WHERE user_id = %d AND entry_id IN (SELECT entry_id FROM user_entries WHERE user_entry_id = %d)",
+				$user_id,
+				$result_assoc['user_entry_id']
+				);
+				
+				//print $sql;
+				
+				$result1 = $this->link->query($sql);
+				
+				if (!!$this->link->error)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
+				$result_assoc1 = $result1->fetch_assoc();
+				$user_entry_id = $result_assoc1['user_entry_id'];
+			}
+			else
+				$user_entry_id = $this->link->insert_id;
+				
+			if ($user_entry_id == 0)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': ');
 			
 			$grade_indx = rand(0, count($this->grade_ids) - 1);
 			
-			$this->link->query(sprintf("INSERT IGNORE INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
+			$this->link->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
 				$user_entry_id,
 				$this->grade_ids[$grade_indx]
 			));
@@ -325,17 +343,13 @@ class TestDB
 		
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
-
-		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id in (SELECT unit_id from course_units WHERE course_id = %d)", $course_id);
-
-		$result = $this->link->query($sql);
-		
-		$num_rows = $result->num_rows;
-		
-		for ($i=0; $i<$num_rows; $i++) 
+	}
+	
+	public function add_practice_data_for_list($list_id, $user_id, $count)
+	{
+		for($j=0; $j<$count; $j++)
 		{
-			$result_assoc = $result->fetch_assoc();
-			$this->create_user_entries_from_list($user_id, $result_assoc["list_id"]);
+			$this->add_practice_data_for_list_one_time($user_id, $list_id);
 		}
 	}
 	
@@ -406,7 +420,7 @@ class TestDB
 	public function add_grades()
 	{
 		$link = $this->link;
-		$grade_entries = array();
+		$grade_entries = array ();
 		$grade_entries[] = array(
 								 "point" => 0,
 								 "desc_short" => 'No-Clue',

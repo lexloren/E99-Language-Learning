@@ -12,9 +12,13 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	{
 		Session::set(null);
 		$this->db = TestDB::create();
+		$this->assertNotNull($this->db, "failed to create test database");
+
 		$this->db->add_users(5);
 		$this->db->add_course($this->db->user_ids[0]);
-		$this->assertNotNull($this->db, "failed to create test database");
+		$list_id = $this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
+		$this->db->add_unit_list($course_unit_id, $list_id);
 	}
 	
 	public function test_course_insert()
@@ -66,7 +70,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 
 		//  To update later... (---Hans)
 		/*
-		$courses = Course::find('New', array());
+		$courses = Course::find('New', array ());
 		$this->assertEquals(count($courses), 2);
 		$courses = Course::find('New', array(TestDB::$lang_code_1));
 		$this->assertEquals(count($courses), 2);

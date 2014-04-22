@@ -16,7 +16,6 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db, "failed to create test database");
 
 		$this->db->add_users(1);
-		$this->db->add_grades();
 
 		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
@@ -229,17 +228,17 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	public function testPracticeResponse()
 	{
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
+		$this->db->add_grades();
 		$_SESSION["handle"] = $this->db->handles[0];
 
 		$_GET["entry_id"] = $this->db->practice_entry_ids[0];
 		$grade = Grade::select_by_point(4);
 		$_GET["grade_id"] = $grade->get_grade_id();
+                Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertFalse(Session::get()->has_error());
 		$entry = Session::get()->get_result_assoc();
 		$this->assertNotNull($entry["result"]);
-
-		$this->assertNotNull($entry["result"]["owner"]);
 
 		$this->assertNotNull($entry["result"]["words"]);
 		$this->assertCount(2, $entry["result"]["words"]);

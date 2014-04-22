@@ -18,7 +18,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 	public function test_find()
 	{
 		$this->db->add_dictionary_entries(10);
-		$codes = Array();
+		$codes = array ();
 		array_push($codes, TestDB::$lang_code_0);
 		array_push($codes, TestDB::$lang_code_1);
 		$result = Dictionary::query($this->db->word_0s[0], $codes);

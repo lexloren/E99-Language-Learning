@@ -44,13 +44,13 @@ class ListTest extends PHPUnit_Framework_TestCase
 	
         public function test_list_find()
         {
+				/*
                 $user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);
                 $this->assertNotNull(EntryList::insert('New List1'));
                 $this->assertNotNull(EntryList::insert('New List2'));
                 $this->assertNotNull(EntryList::insert('NoMatch List1'));
 
-				/*
                 $lists = EntryList::find('New');
                 $this->assertEquals(count($lists), 2);
                 $lists = EntryList::find('New', 1);
@@ -172,8 +172,12 @@ class ListTest extends PHPUnit_Framework_TestCase
 		
 		//Create a course, add user1 as student
 		$course_id = $this->db->add_course($user0->get_user_id());
+		$course_unit_id = $this->db->add_course_unit($course_id);
+		$list_id = $this->db->add_list($user0->get_user_id(), $this->db->entry_ids);
+		$this->db->add_unit_list($course_unit_id, $list_id);
+		
 		$course = Course::select_by_id($course_id);
-		Session::get()->set_user($user0);
+		Session::get()->set_user($course->get_owner());
 		$course->students_add($user1);
 		$courses = $user1->get_student_courses();
 		$this->assertCount(1, $courses);
