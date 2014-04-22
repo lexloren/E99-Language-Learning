@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+    <link href="css/starter-template.css" rel="stylesheet">
+	<style>
+		.flashcard {
+			font-size: 24px;
+			text-align: center;
+			width: 500px;
+		}
+		.translation {
+			width: 500px;
+		}
+	</style>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+	    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="../tests/resources/jquery.mockjax.js"></script>
+	<script src="js/common.js"></script>
+	<script src="js/practice-demo1.js"></script>
+	
+  </head>
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div id="navbar"></div>
+	<br/>
+    <div class="container" role="main" id="doc-body">
+
+	<!-- The "introductory section, where  student selects which decks they would like to practice. -->
+	<div id="deck-selection-container">
+	<form role="form">
+	<h4>Select which decks you would like to practice:</h4>
+	<img src="images/ajax-loader.gif" id="loader-show-lists">
+	<div class="form-group"id="deck-selection-form">
+	</div>
+  <h4>Show on side 1:</h4>
+  <div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-word" value="showword" checked>
+    Words
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-pronounce" value="showpro">
+    Pronunciations
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-trans" value="showtrans">
+    Translations
+  </label>
+</div>
+  <div id="side2-form">
+    <h4>Show on side 2:</h4>
+    <div class="checkbox">
+    <label>
+      <input type="checkbox" id="side2-word" disabled> Words
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" id="side2-pronounce"> Pronunciations
+    </label>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" id="side2-trans"> Translations
+    </label>
+  </div>
+  </div>
+  <button type="submit" class="btn btn-primary" id="get-cards">Get Cards</button>
+</form>
+</div>
+	
+	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
+		<div align="center" id="loader-get-cards"><img src="images/ajax-loader.gif"></div>
+		<div id="flashcard-container">
+		<div class="row">
+		<h4>Test your knowledge:</h4>
+			<div class="panel panel-default flashcard" id="flashcard-word">
+			<div class="panel-body">
+				<div id="flashcard-side1"></div>
+				<div id="flashcard-2a"></div>
+				<div id="flashcard-2b"></div>
+				<div><button type="button" class="btn btn-primary" id="flashcard-flip">Flip!</button></div>
+			</div>
+			</div>
+			<div class="alert alert-info translation" id="translation-panel">
+			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
+			<div align="center" id="loader-get-trans"><img src="images/ajax-loader.gif"></div>
+				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
+			</div>
+		</div>
+		
+		<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
+		<div id="card-followup-container">
+		<h4>Rate your knowledge to continue:</h4>
+		<div class="btn-group">
+			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="3" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
+		</div>
+		<br/>
+		<br/>
+		<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>
+		</div>
+	</div>
+	
+  </body>
+</html>
