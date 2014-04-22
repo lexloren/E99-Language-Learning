@@ -29,6 +29,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 					 ->will($this->returnValue($this->db->sessions[0]));
 
 		$this->assertNotNull($session_mock, "failed to create session mock");
+		
+		$session_mock->set_allow_email(false);
 		Session::set($session_mock);
 		$this->assertEquals(Session::get(), $session_mock);
 		

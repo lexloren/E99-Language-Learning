@@ -44,7 +44,8 @@ class Outbox extends ErrorReporter
 		$sent_message_ids = array ();
 		while (($result_assoc = $result->fetch_assoc()))
 		{
-			if (mail($result_assoc["to"], $result_assoc["subject"], $result_assoc["contents"], "From: no-reply@cscie99.hansandersson.me\r\nReply-To: no-reply@cscie99.hansandersson.me"))
+			if (!Session::get()->get_allow_email()
+				|| mail($result_assoc["to"], $result_assoc["subject"], $result_assoc["contents"], "From: no-reply@cscie99.hansandersson.me\r\nReply-To: no-reply@cscie99.hansandersson.me"))
 			{
 				array_push($sent_message_ids, intval($result_assoc["message_id"], 10));
 			}
