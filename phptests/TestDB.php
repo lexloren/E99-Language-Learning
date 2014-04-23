@@ -342,9 +342,20 @@ class TestDB
 		));
 		
 		if (!$this->link->insert_id)
-			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 	
+	public function add_course_researcher($course_id, $user_id)
+	{
+		$this->link->query(sprintf("INSERT INTO course_researchers (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$this->link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+	}
+
 	public function add_practice_data_for_list($list_id, $user_id, $count)
 	{
 		for($j=0; $j<$count; $j++)

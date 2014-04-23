@@ -6,7 +6,7 @@ require_once "./backend/classes.php";
 class Report
 {
 	protected static $error_description = null;
-	public static function get_user_practice_report($course_id, $user_id)
+	public static function get_course_student_practice_report($course_id, $user_id)
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
@@ -22,15 +22,15 @@ class Report
 
 		$permissions = self::check_permissions($course, $session_user, $student_user);
 		
-		if (0 == $permissions)
+		if (1 != $permissions)
 			return Session::get()->set_error_assoc("Report Error", "Do not have access to this information.");
 		
-		$entry_to_points = self::create_entry_to_average_point_assoc($course_id);
-		if (!$entry_to_points)
+		$progress_stat = self::generate_class_progress_stat($course_id);
+		if (!$progress_stat)
 			return null;
 
-		$report = self::create_course_report_for_student($course_id, $user_id, $entry_to_points);
-		$report["name"] = 2 == $permissions? "Student X" : $student_user->get_name_full();
+		$report = self::create_course_report_for_student($course_id, $user_id, $progress_stat);
+		$report["name"] = $student_user->get_name_full();
 		
 		return $report;
 	}
@@ -51,8 +51,8 @@ class Report
 		
 		$students = $course->get_students();
 		
-		$entry_to_points = self::create_entry_to_average_point_assoc($course_id);
-		if (!$entry_to_points)
+		$progress_stat = self::generate_class_progress_stat($course_id);
+		if (!$progress_stat)
 			return null;
 		
 		$course_report = Array();
@@ -62,7 +62,7 @@ class Report
 		foreach($students as $student)
 		{
 			$user_id = $student->get_user_id();
-			$studentReport = self::create_course_report_for_student($course_id, $user_id, $entry_to_points);
+			$studentReport = self::create_course_report_for_student($course_id, $user_id, $progress_stat);
 			$studentReport["name"] = 2 == $permissions? "Student X" : $student->get_name_full();
 			array_push($studentPracticeReports, $studentReport);
 		}
@@ -71,12 +71,12 @@ class Report
 		
 		$course_report["courseName"] = $course->get_course_name();
 		$course_report["studentPracticeReports"] = $studentPracticeReports;
-		$course_report["difficultEntries"] = self::create_difficult_entries_report($entry_to_points);
+		$course_report["difficultEntries"] = self::create_difficult_entries_report($progress_stat);
 		
 		return $course_report;
 	}
 	
-	private static function create_course_report_for_student($course_id, $user_id, $entry_to_points)
+	private static function create_course_report_for_student($course_id, $user_id, $progress_stat)
 	{
 		$mysqli = Connection::get_shared_instance();
 
@@ -97,6 +97,10 @@ class Report
 		
 		$entryReports = Array();
 
+		$num_user_entries_practiced = 0.0;
+		
+		$entry_to_points = $progress_stat["entry_to_points"];
+		
 		for ($i=0; $i<$num_user_entries; $i++) 
 		{
 			$result_assoc = $result->fetch_assoc();
@@ -117,16 +121,18 @@ class Report
 			$entryReport["classGradePointAverage"] = $entry_to_points[$entry_id];
 			
 			array_push($entryReports, $entryReport);
+			if ($num_practiced > 0)
+				$num_user_entries_practiced = $num_user_entries_practiced + 1.0;
 		}
 		
 		$report = Array();
-		$report["progressPercent"] = 0;
-		$report["unitReports"] = self::create_units_report($report, $course_id, $user_id);
+		$report["progressPercent"] = $progress_stat["num_entries"] > 0 ? $num_user_entries_practiced / $progress_stat["num_entries"] : 0;
+		$report["unitReports"] = self::create_units_report($course_id);
 		$report["entryReports"] = $entryReports;
 		return $report;
 	}
 	
-	private static function create_units_report(&$report, $course_id, $user_id)
+	private static function create_units_report($course_id)
 	{
 		$mysqli = Connection::get_shared_instance();
 		
@@ -201,7 +207,7 @@ class Report
 			return 0;
 	}
 	
-	private static function create_entry_to_average_point_assoc($course_id)
+	private static function generate_class_progress_stat($course_id)
 	{
 		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course_id);
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
@@ -217,7 +223,11 @@ class Report
 			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
 		}
 		
+		$progress_stat = array();
+		$progress_stat["num_entries"] = $result->num_rows;
+
 		$entry_to_points = array();
+		
 		while( !!($result_assoc = $result->fetch_assoc()) )
 		{
 			$entry_id = $result_assoc["entry_id"];
@@ -226,7 +236,9 @@ class Report
 				$entry_to_points[$entry_id] = $point;
 		}
 		
-		return $entry_to_points;
+		$progress_stat["entry_to_points"] = $entry_to_points;
+
+		return $progress_stat;
 	}
 	
 	//returns 0 if no permission, 1 if all , 2 if anonymous
@@ -254,8 +266,10 @@ class Report
 		return 0;
 	}
 	
-	private static function create_difficult_entries_report($entry_to_points)
+	private static function create_difficult_entries_report($progress_stat)
 	{
+		$entry_to_points = $progress_stat["entry_to_points"];
+		
 		$difficult_entries = array ();
 		if( asort ($entry_to_points) )
 		{
