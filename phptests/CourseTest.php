@@ -273,8 +273,9 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$time_frame = $course->get_timeframe();
 		$this->assertNull($time_frame);
 		$week = (7 * 24 * 60 * 60);
-		$prevWeek = time() - $week;
-		$nextWeek = time() + $week;
+		$time_now = time();
+		$prevWeek = $time_now - $week;
+		$nextWeek = $time_now + $week;
 		$time_frame_to_set = new Timeframe($prevWeek, $nextWeek);
 		
 		//Session user not set
@@ -288,16 +289,16 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$course->set_timeframe($time_frame_to_set);
 		$time_frame = $course->get_timeframe();
 		$this->assertNotNull($time_frame);
-		$this->assertEquals(time() - $week, $time_frame->get_open());
-		$this->assertEquals(time() + $week, $time_frame->get_close());
-		$course->set_open(time());
+		$this->assertEquals($time_now - $week, $time_frame->get_open());
+		$this->assertEquals($time_now + $week, $time_frame->get_close());
+		$course->set_open($time_now);
 		$time_frame = $course->get_timeframe();
-		$this->assertEquals(time(), $time_frame->get_open());
-		$this->assertEquals(time() + $week, $time_frame->get_close());
-		$course->set_close(time() + $week * 2);
+		$this->assertEquals($time_now, $time_frame->get_open());
+		$this->assertEquals($time_now + $week, $time_frame->get_close());
+		$course->set_close($time_now + $week * 2);
 		$time_frame = $course->get_timeframe();
-		$this->assertEquals(time(), $time_frame->get_open());
-		$this->assertEquals(time() + $week * 2, $time_frame->get_close());
+		$this->assertEquals($time_now, $time_frame->get_open());
+		$this->assertEquals($time_now + $week * 2, $time_frame->get_close());
 	}
 	
 	public function	test_session_user_can_read()
