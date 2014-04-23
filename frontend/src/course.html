@@ -14,6 +14,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
     <script src="js/jquery-ui-timepicker-addon.js"></script>
     <script src="js/bootstrap.min.js"></script>
+	<script src="js/common.js"></script>
 	<script src="js/course.js"></script>	
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -23,105 +24,127 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script type="text/javascript">
+        
       $(document).ready(function(){
-       	displayCourses('#coursesOwned', '../../user_courses.php');
-       	displayCourses('#coursesInstructed', '../../user_instructor_courses.php');
-       	displayCourses('#coursesStudied', '../../user_student_courses.php');
+        setupMaintCourse();
       });
     </script>
   </head>
   <body role="document">
 
-    <!-- Fixed navbar -->
-    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Xenogloss</a>
-        </div>
-      </div>
-    </div>
-   
+   <!-- Fixed navbar -->
+    <div id="navbar"></div>
+	<br/>
 	
-    <div class="container">
-      <form id="courseForm" class="form-course" role="form">
-		<div id="success" class="alert alert-success">
-      </div>
-        <div id="failure" class="alert alert-danger">
-        </div>
-		<h2 class="form-course-heading">Courses Owned</h2>
-		<div id="coursesOwned" class="table-responsive">
-			
-		</div>
-		
-		<h2 class="form-course-heading">Courses Instructed</h2>
-		<div id="coursesInstructed" class="table-responsive">
-			
-		</div>
-		
-		<h2 class="form-course-heading">Courses Studied</h2>
-		<div id="coursesStudied" class="table-responsive">
-			
-		</div>
-		<div class="container-left" >
-		<button class="btn btn-primary" type="button" onclick="submitCreateNew();">Create New</button>
-		</div>
-		
-		</form>	
-    </div>
-	<div class="container-left" role="main">
-		<div id="createnew">
-			<form id="createCourseForm" role="form">
-			  <h3 class="form-signin-heading">Create Course</h3><br />
-			  <div class="form-group">
-				<label for="coursename">Course Name</label>
-				<input type="text" class="form-control" id="coursename" placeholder="Enter the name of the Course" required autofocus>
-			  </div>
-			  <div class="form-group">
-				<label for="coursedetails">Course Details</label>
-				<textarea class="form-control" id="coursedetails" rows="5"placeholder="Enter the Course Details" required></textarea>
-			  </div>
-			  <div class="form-group">
-				<label for="knownLang">Known Lang</label>
-					<select id="knownLang">
-						<option value="">Select One</option>
-						<option value="en">English</option>
-						<option value="cn">Chinese</option>
-						<option value="jp">Japanese</option>
-					</select>
-			  </div>
-			  
-			  <div class="form-group">
-				<label for="unknownLang">unKnown Lang</label>
-					<select id="unknownLang">
-						<option value="">Select One</option>
-						<option value="en">English</option>
-						<option value="cn">Chinese</option>
-						<option value="jp">Japanese</option>
-					</select>
-			  </div>
-			  
-			  <div class="form-group">
-				<label for="opendate">Open Date</label>
-				<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
-				<script>$('#opendate').datetimepicker();</script>
-			  </div>
-			  <div class="form-group">
-				<label for="closedate">Close Date</label>
-				<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
-				<script>$('#closedate').datetimepicker();</script>
-			  </div><br />
-			  
-			  <button type="button" stype="button" class="btn" onclick="resetForm('#createCourseForm');">Reset</button>&nbsp;
-			  <button class="btn btn-primary" type="button" onclick="insertNew();">Submit</button> <br /><br />     
-			</form>	
-			
-			
+     <div div id="doc-body" class="container theme-showcase" role="main">
+		<div class="row">
+			<div class="col-md-2">
+				<!--The Top tabs go here-->
+				<ul class="nav nav-pills nav-stacked" style="margin-bottom: 15px;">
+					<li class="active"><a href="#progress" data-toggle="tab">My Progress</a></li>
+					<li class=""><a href="#students" data-toggle="tab">Enroll Students</a></li>
+					<li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>
+					<li class=""><a href="#researcher" data-toggle="tab">Researcher</a></li>
+					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>
+					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>
+					
+				</ul>
+			</div>
+			<div class="col-md-9">	
+				<div id="progress" >
+					<img src="/frontend/src/images/loader.gif"/> loading...
+				</div>
+				<div id="myTabContent" class="tab-content">
+					<div class="tab-pane fade active in" id="progress">
+						
+					</div>
+					<div class="tab-pane fade" id="students">
+						
+					</div>
+					<div class="tab-pane fade" id="instructor">
+						
+					</div>
+					<div class="tab-pane fade" id="researcher">
+						
+					</div>
+					<div class="tab-pane fade" id="unit">
+						<div id="units">
+						</div>
+						
+						<form id="createUnit" role="form">
+							<h3 class="form-signin-heading">Create Unit</h3><br />
+							<div class="form-group">
+								<label for="unitname">Unit Name</label>
+								<input type="text" class="form-control" id="unitname" placeholder="Enter the name of the Unit" required autofocus>
+							</div>
+							<div class="form-group">
+								<label for="openUnitdate">Open Date</label>
+								<input type="text" class="form-control form-control-date" id="openUnitdate" placeholder="Select open date/time" required>
+								<script>$('#openUnitdate').datetimepicker();</script>
+							</div>
+							<div class="form-group">
+								<label for="closeUnitdate">Close Date</label>
+								<input type="text" class="form-control form-control-date" id="closeUnitdate" placeholder="Select close date/time" required>
+								<script>$('#closeUnitdate').datetimepicker();</script>
+							</div><br />
+					  
+							<button type="button" stype="button" class="btn" onclick="resetForm('#createUnit');">Reset</button>&nbsp;
+							<button class="btn btn-primary" type="button" onclick="insertNewUnit('#units');">Create Unit</button> <br /><br />     
+						</form>		
+					
+					</div>
+					<div class="tab-pane fade" id="updatecourse">
+						<form id="editCourseForm" role="form">
+							<div class="form-group">
+								<label for="coursename">Course Name</label>
+								<input type="text" class="form-control" id="coursename" placeholder="Enter the name of the Course" required autofocus>
+							</div>
+							<div class="form-group">
+								<label for="coursedetails">Course Details</label>
+								<textarea class="form-control" id="coursedetails" rows="5"placeholder="Enter the Course Details" required></textarea>
+							</div>
+														
+							<div class="form-group">
+									<select class="form-control" id="knownLang">
+										<option value="">Select One</option>
+										<option value="en">English</option>
+										<option value="cn">Chinese</option>
+										<option value="jp">Japanese</option>
+									</select>
+								
+							</div>
+							
+							<div class="form-group">
+									<select class="form-control" id="unknownLang">
+										<option value="">Select One</option>
+										<option value="en">English</option>
+										<option value="cn">Chinese</option>
+										<option value="jp">Japanese</option>
+									</select>
+								
+							</div>
+							
+					  
+							<div class="form-group">
+								<label for="opendate">Open Date</label>
+								<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
+								<script>$('#opendate').datetimepicker();</script>
+							</div>
+							<div class="form-group">
+								<label for="closedate">Close Date</label>
+								<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
+								<script>$('#closedate').datetimepicker();</script>
+							</div>
+					  
+					  <br />
+					  <br />
+					  
+					  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Reset</button>&nbsp;
+					  <button class="btn btn-primary" type="button" onclick="insertNew();">Update Course</button> <br /><br />     
+					</form>	
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
        <!-- /container -->
