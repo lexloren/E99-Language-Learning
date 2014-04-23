@@ -21,7 +21,7 @@ $(document).ready(function(){
 function showForm(frm,tohide){
     $(tohide).hide();
     $(frm).show();
-    //$('html, body').animate({scrollTop: $(frm)}, "slow");
+    $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
 }
 
 function cancelUpdate(frm,tohide){
@@ -255,7 +255,7 @@ function search_entry(page) {
                                               '<td><span class="span-action" onclick="addEntries();">[Add Selected Entries]</span></td></tr>');
 			                $('#dictionary').append('</tbody>');
 		              }
-                  //$('html, body').animate({scrollTop: $("#dictionary")}, "slow");
+                  $('html, body').animate({scrollTop: $("#dictionary").offset().top}, "slow");
 	                $("#dict-loader").hide();
 	})
   .fail(function(error){
@@ -301,11 +301,11 @@ function addEntries(page){
 }
 
 function updateOrder(entry){
+    var entrysel = $('#entryorder'+entry).find(":selected").text();
 	  $('#failure').hide();
 	  $('#success').hide();
     $("#entry-loader").show();
     $("#entry-list").html('');
-    var entrysel = $('#entryorder'+entry).find(":selected").text();
 
     $.post('../../test_entry_update.php', 
         { test_id: test, entry_id: entry, number: entrysel })
@@ -405,7 +405,7 @@ function refreshEntries(){
             if(!$("#dict-add").is(":visible")){
                 $("#dict-add").show();
             }
-            //$('html, body').animate({scrollTop: $("#test-entries")}, "slow");
+            $('html, body').animate({scrollTop: $("#test-entries").offset().top}, "slow");
             $("#entry-loader").hide();
     })
 	 .fail(function(error) {

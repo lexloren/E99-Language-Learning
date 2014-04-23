@@ -30,10 +30,10 @@
     <div id="navbar"></div>
 
     <div class="container" role="main" id="doc-body">
-	    <br /><img src="images/ajax-loader.gif" id="loader">
+	    <br /><div id="loader"><img src="images/ajax-loader.gif"></div>
       <div id="unitData">
-        <div id="unit-header"></div><br />
-        <div id="unit-intro"></div><br />
+        <div id="unit-header"></div>
+        <div id="unit-intro"></div>
         <div id="unit-update">
           <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
           <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
@@ -59,11 +59,11 @@
             <script>$('#unitclosedate').datetimepicker();</script>
           </div><br />
         <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button> &nbsp;
-        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /><br /> 
+        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /> &nbsp;
         </form> 
 
         <h4>Flashcard Decks</h4>
-        <br /><img src="images/ajax-loader.gif" id="unitdeck-loader">
+        <div id="unitdeck-loader"><img src="images/ajax-loader.gif"></div>
         <table id="lists" class="table">
         </table>
         <div id="search-list">    
@@ -75,7 +75,7 @@
             <span class="span-action" onclick="myDecks();">[View My Decks]</span> &nbsp; 
             <span class="span-action" onclick="showSearch('#word-search');">[Search by Word]</span> &nbsp; 
             <span class="span-action" onclick="showSearch('#owner-search');">[Search by Owner]</span> &nbsp;
-            <span class="span-action" onclick="cancelUpdate('#searchListForm','#search\-list');">[ x ]</span>
+            <span class="span-action" onclick="cancelUpdate('#searchListForm','#search\-list');">[ x ]</span><br />&nbsp;
             <div id="word-search"><br />
               <div class="form-group">
                 <label class="sr-only" for="entrysearch">Enter search text</label>
@@ -94,21 +94,21 @@
                   <option>en</option>
                 </select>
               </div>
-              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button>
+              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br />&nbsp;
             </div>
             <div id="owner-search"><br />
               <div class="form-group">
                 <input type="text" class="form-control" id="ownerCriteria" placeholder="Enter username or email to search for" required autofocus>
               </div>
-              <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button>
+              <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button><br />&nbsp;
             </div>
           </div> 
         </form>
-        <br /><img src="images/ajax-loader.gif" id="deck-loader">
+        <div id="deck-loader"><img src="images/ajax-loader.gif"></div>
         <table class="table" id="searchResults">
         </table>   
         <h4>Tests</h4>
-        <br /><img src="images/ajax-loader.gif" id="test-loader">
+        <div id="test-loader"><img src="images/ajax-loader.gif"></div>
         <table id="tests" class="table">
           <tr>
             <th>Name</th>
@@ -140,7 +140,7 @@
             <script>$('#testclosedate').datetimepicker();</script>
           </div><br />
           <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
-          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br /><br />     
+          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br />&nbsp;  
         </form>	
       </div><br />
     </div> <!-- /container -->

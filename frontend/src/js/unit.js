@@ -26,7 +26,8 @@ $(document).ready(function(){
 function showForm(frm,tohide){
     $(tohide).hide();
     $(frm).show();
-    $('html, body').animate({scrollTop: $(frm)}, "slow");
+    if(frm != "#searchListForm")
+        $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
 }
 
 function showSearch(search){
@@ -81,7 +82,7 @@ function getUnitInfo(){
                 }
                 else{
                     if(data.result.message != null){
-                      unitintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4>';
+                      unitintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4><br />';
                       $("#unit-intro").html(unitintro);  
                     }
                     $("#unit-update").hide();
@@ -332,7 +333,7 @@ function refreshTests(){
                     });
                 }
             }
-            $('html, body').animate({scrollTop: $("#tests").offset().top}, "slow");
+            //$('html, body').animate({scrollTop: $("#tests").offset().top}, "slow");
             $("#test-loader").hide();
     })
 	 .fail(function(error) {
@@ -375,7 +376,7 @@ function myDecks() {
 			                $('#searchResults').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
-                  $('html, body').animate({scrollTop: $("#searchResults")}, "slow");
+                  //$('html, body').animate({scrollTop: $("#searchResults")}, "slow");
 	                $("#deck-loader").hide();
 	})
   .fail(function(error){
@@ -457,7 +458,7 @@ function searchWord() {
 			                $('#searchResults').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
-                  //$('html, body').animate({scrollTop: $("#searchResults")}, "slow");
+                  //$('html, body').animate({scrollTop: $("#searchResults").offset().top}, "slow");
 	                $("#deck-loader").hide();
 	})
   .fail(function(error){
@@ -515,7 +516,7 @@ function search_entry(page) {
                                               '<td><span class="span-action" onclick="searchWord();">[Find lists containing selected words]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
-                  //$('html, body').animate({scrollTop: $("#dictionary")}, "slow");
+                  //$('html, body').animate({scrollTop: $("#searchResults").offset().top}, "slow");
 	                $("#deck-loader").hide();
 	})
   .fail(function(error){
@@ -624,7 +625,7 @@ function refreshLists(){
             if(!$("#searchResults").is(":visible")){
                 $("#searchResults").show();
             }
-            //$('html, body').animate({scrollTop: $("#lists")}, "slow");
+            //$('html, body').animate({scrollTop: $("#lists").offset().top}, "slow");
             $("#unitdeck-loader").hide();
     })
 	 .fail(function(error) {
