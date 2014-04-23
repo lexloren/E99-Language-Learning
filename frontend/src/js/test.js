@@ -21,7 +21,7 @@ $(document).ready(function(){
 function showForm(frm,tohide){
     $(tohide).hide();
     $(frm).show();
-    $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
+    //$('html, body').animate({scrollTop: $(frm)}, "slow");
 }
 
 function cancelUpdate(frm,tohide){
@@ -200,7 +200,6 @@ function saveUpdate(){
 
 <!--- Entries --->
 
-<!--- Need to add previous page link --->
 function search_entry(page) {
 	  $('#failure').hide();
 	  $('#success').hide();
@@ -224,15 +223,15 @@ function search_entry(page) {
                       }
 		              } 
                   else {
-                      if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
-                          disabled = " disabled";
-                      }
-                      else{
-                          disabled = "";
-                      }
 			                $('#dictionary').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td></td></tr></thead>');
 			                $('#dictionary').append('<tbody>');
 			                $.each( data.result, function() {
+                          if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
+                              disabled = " disabled";
+                          }
+                          else{
+                              disabled = "";
+                          }
 				                  $('#dictionary').append('<tr><td>' + this.words[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.pronuncations[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.words[this.languages[0]] + '</td>' + 
@@ -256,7 +255,7 @@ function search_entry(page) {
                                               '<td><span class="span-action" onclick="addEntries();">[Add Selected Entries]</span></td></tr>');
 			                $('#dictionary').append('</tbody>');
 		              }
-                  $('html, body').animate({scrollTop: $("#dictionary").offset().top}, "slow");
+                  //$('html, body').animate({scrollTop: $("#dictionary")}, "slow");
 	                $("#dict-loader").hide();
 	})
   .fail(function(error){
@@ -304,6 +303,8 @@ function addEntries(page){
 function updateOrder(entry){
 	  $('#failure').hide();
 	  $('#success').hide();
+    $("#entry-loader").show();
+    $("#entry-list").html('');
     var entrysel = $('#entryorder'+entry).find(":selected").text();
 
     $.post('../../test_entry_update.php', 
@@ -382,7 +383,7 @@ function refreshEntries(){
                         count = i + 1;
                         selectid = "entryorder"+item.entryId;
                         entryrow = '<tr><td>'+count+'</td>' +
-                                   '<td>'+item.words[item.languages[1]]+'</a></td>' +
+                                   '<td>'+item.words[item.languages[1]]+'</td>' +
                                    '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
                                    '<td>' + item.words[item.languages[0]] + '</td>' +
                                    '<td><select id='+selectid+'>';
@@ -404,7 +405,7 @@ function refreshEntries(){
             if(!$("#dict-add").is(":visible")){
                 $("#dict-add").show();
             }
-            $('html, body').animate({scrollTop: $("#test-entries").offset().top}, "slow");
+            //$('html, body').animate({scrollTop: $("#test-entries")}, "slow");
             $("#entry-loader").hide();
     })
 	 .fail(function(error) {
