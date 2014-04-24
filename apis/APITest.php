@@ -26,6 +26,12 @@ class APITest extends APIBase
 			}
 			else
 			{
+				if (isset($_POST["mode"]))
+				{
+					$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+				}
+				else $mode = 1;
+				
 				if (isset($_POST["list_ids"]))
 				{
 					$list_ids = explode(",", $_POST["list_ids"]);
@@ -35,7 +41,7 @@ class APITest extends APIBase
 						if (($list = EntryList::select_by_id($list_id))
 							&& $list->session_user_can_read())
 						{
-							$test->entries_add_from_list($list);
+							$test->entries_add_from_list($list, $mode);
 						}
 					}
 				}
@@ -48,7 +54,7 @@ class APITest extends APIBase
 					{
 						if (($entry = Entry::select_by_id($entry_id)))
 						{
-							$test->entries_add($entry);
+							$test->entries_add($entry, $mode);
 						}
 					}
 				}
@@ -157,6 +163,12 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
+			if (isset($_POST["mode"]))
+			{
+				$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+			}
+			else $mode = 1;
+			
 			if (isset($_POST["list_ids"]))
 			{
 				$list_ids = explode(",", $_POST["list_ids"]);
@@ -166,7 +178,7 @@ class APITest extends APIBase
 					if (($list = EntryList::select_by_id($list_id))
 						&& $list->session_user_can_read())
 					{
-						if (!$test->entries_add_from_list($list))
+						if (!$test->entries_add_from_list($list, $mode))
 						{
 							Session::get()->set_error_assoc("Test-Entries Addition", Test::unset_error_description());
 							return;
@@ -179,7 +191,7 @@ class APITest extends APIBase
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					if (!$test->entries_add(Entry::select_by_id($entry_id)))
+					if (!$test->entries_add(Entry::select_by_id($entry_id), $mode))
 					{
 						Session::get()->set_error_assoc("Test-Entries Addition", Test::unset_error_description());
 						return;
@@ -197,28 +209,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if (isset($_POST["list_ids"]))
-			{
-				$list_ids = explode(",", $_POST["list_ids"]);
-				
-				foreach ($list_ids as $list_id)
-				{
-					if (($list = EntryList::select_by_id($list_id))
-						&& $list->session_user_can_read())
-					{
-						foreach ($list->get_entries() as $entry)
-						{
-							if (!$test->entries_remove($entry))
-							{
-								Session::get()->set_error_assoc("Test-Entries Removal", Test::unset_error_description());
-								return;
-							}
-						}
-					}
-				}
-			}
-			
-			if (isset($_POST["entry_ids"]))
+			if (self::validate_request($_POST, "entry_ids"))
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
@@ -241,17 +232,21 @@ class APITest extends APIBase
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test"))
 			&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
 		{
-			if (self::validate_request($_POST, "number"))
+			$updates = 0;
+			
+			if (isset($_POST["number"]))
 			{
-				if ($test->set_entry_number($entry, $_POST["number"]))
-				{
-					Session::get()->set_result_assoc($test->json_assoc());
-				}
-				else
-				{
-					Session::get()->set_error_assoc("Test-Entry Modification", Test::unset_error_description());
-				}
+				$updates += !!$test->set_entry_number($entry, $_POST["number"]);
 			}
+			
+			if (isset($_POST["mode"]))
+			{
+				$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+				
+				$updates += !!$test->set_entry_mode($entry, $mode);
+			}
+			
+			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->json_assoc() : null);
 		}
 	}
 	
