@@ -122,7 +122,7 @@ class Session
 		{
 			$mysqli = Connection::get_shared_instance();
 			
-			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 5",
+			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
 				$mysqli->escape_string($session_id_old),
 				$mysqli->escape_string($_SESSION["handle"])
 			));
