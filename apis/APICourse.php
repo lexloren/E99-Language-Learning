@@ -166,6 +166,32 @@ class APICourse extends APIBase
 			}
 		}
 		
+		if (isset($_GET["opened"]) && intval($_GET["opened"], 10) == 1)
+		{
+			$courses_to_keep = array ();
+			foreach ($courses as $course)
+			{
+				if (!$course->get_timeframe() || $course->get_timeframe()->is_opened())
+				{
+					array_push($courses_to_keep, $course);
+				}
+			}
+			$courses = $courses_to_keep;
+		}
+		
+		if (isset($_GET["closed"]) && intval($_GET["closed"], 10) == 1)
+		{
+			$courses_to_keep = array ();
+			foreach ($courses as $course)
+			{
+				if (!$course->get_timeframe() || $course->get_timeframe()->is_closed())
+				{
+					array_push($courses_to_keep, $course);
+				}
+			}
+			$courses = $courses_to_keep;
+		}
+		
 		self::return_array_as_json($courses);
 	}
 
