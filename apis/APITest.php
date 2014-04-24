@@ -35,10 +35,7 @@ class APITest extends APIBase
 						if (($list = EntryList::select_by_id($list_id))
 							&& $list->session_user_can_read())
 						{
-							foreach ($list->get_entries() as $entry)
-							{
-								$test->entries_add($entry);
-							}
+							$test->entries_add_from_list($list);
 						}
 					}
 				}
@@ -169,13 +166,10 @@ class APITest extends APIBase
 					if (($list = EntryList::select_by_id($list_id))
 						&& $list->session_user_can_read())
 					{
-						foreach ($list->get_entries() as $entry)
+						if (!$test->entries_add_from_list($list))
 						{
-							if (!$test->entries_add($entry))
-							{
-								Session::get()->set_error_assoc("Test-Entries Addition", Test::unset_error_description());
-								return;
-							}
+							Session::get()->set_error_assoc("Test-Entries Addition", Test::unset_error_description());
+							return;
 						}
 					}
 				}

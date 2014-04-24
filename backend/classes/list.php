@@ -329,6 +329,20 @@ class EntryList extends DatabaseRow
 		return $this;
 	}
 	
+	public function entries_add_from_list($list)
+	{
+		if ($list == $this) return self::set_error_description("List cannot add entries from itself.");
+		
+		foreach ($list->get_entries() as $entry)
+		{
+			if (!$this->entries_add($entry))
+			{
+				return null;
+			}
+		}
+		return $this;
+	}
+	
 	//  Adds an entry to this list
 	//      Returns this list
 	public function entries_remove($entry)

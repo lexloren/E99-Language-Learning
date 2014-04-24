@@ -212,6 +212,18 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
+	public function entries_add_from_list($list, $mode = 1)
+	{
+		foreach ($list->get_entries() as $entry)
+		{
+			if (!$this->entries_add($entry, $mode))
+			{
+				return null;
+			}
+		}
+		return $this;
+	}
+	
 	public function entries_remove($entry)
 	{
 		if (!$entry)

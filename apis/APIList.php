@@ -164,7 +164,25 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			if (self::validate_request($_POST, "entry_ids"))
+			if (isset($_POST["list_ids"]))
+			{
+				$list_ids = explode(",", $_POST["list_ids"]);
+				
+				foreach ($list_ids as $list_id)
+				{
+					if (($other = EntryList::select_by_id($list_id))
+						&& $other->session_user_can_read())
+					{
+						if (!$list->entries_add_from_list($other))
+						{
+							Session::get()->set_error_assoc("List-Entries Addition", EntryList::unset_error_description());
+							return;
+						}
+					}
+				}
+			}
+			
+			if (isset($_POST["entry_ids"]))
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
