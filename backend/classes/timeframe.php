@@ -20,12 +20,26 @@ class Timeframe
 	{
 		$this->open = ($open = intval($open, 10)) > self::TIME_MIN ? $open : null;
 		$this->close = ($close = intval($close, 10)) > self::TIME_MIN ? $close : null;
+		if (($this->get_close() && $this->get_open()) && $this->get_close() < $this->get_open())
+		{
+			$this->close = $this->get_open();
+		}
 	}
 	
 	public function is_current()
 	{
 		return (!$this->get_open() || ($time = time()) > $this->get_open())
 			&& (!$this->get_close() || $time < $this->get_close());
+	}
+	
+	public function is_opened()
+	{
+		return (!!$this->get_open()) && ($this->get_open() - time() > 0);
+	}
+	
+	public function is_closed()
+	{
+		return (!!$this->get_close()) && (time() - $this->get_close() > 0);
 	}
 	
 	public function get_duration()
