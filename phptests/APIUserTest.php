@@ -230,7 +230,6 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 	public function testPracticeResponse()
 	{
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
-		$this->db->add_grades();
 		$_SESSION["handle"] = $this->db->handles[0];
 
 		$_GET["entry_id"] = $this->db->practice_entry_ids[0];

@@ -16,7 +16,6 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 			$this->assertNotNull($this->db, "failed to create test database");
 
 	$this->db->add_users(1);
-	$this->db->add_grades();
 	$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 	$user_obj = User::select_by_id($this->db->user_ids[0]);
 			Session::get()->set_user($user_obj);

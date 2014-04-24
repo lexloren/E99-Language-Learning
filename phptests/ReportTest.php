@@ -13,7 +13,6 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 		
-		$this->db->add_grades();
 		$this->db->add_users(5);
 		$this->db->add_dictionary_entries(10);
 		
