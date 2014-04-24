@@ -3,27 +3,27 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-class Report
+class Report extends ErrorReporter
 {
 	protected static $error_description = null;
 	public static function get_course_student_practice_report($course_id, $user_id)
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return Session::get()->set_error_assoc("Report Error", "Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return Session::get()->set_error_assoc("Report Error", "Invalid course id.");
+			return static::set_error_description("Invalid course id.");
 
 		$student_user = User::select_by_id($user_id);
 		if (!$student_user)
-			return Session::get()->set_error_assoc("Report Error", "Invalid student id.");
+			return static::set_error_description("Invalid student id.");
 
 		$permissions = self::check_permissions($course, $session_user, $student_user);
 		
 		if (1 != $permissions)
-			return Session::get()->set_error_assoc("Report Error", "Do not have access to this information.");
+			return static::set_error_description("Do not have access to this information.");
 		
 		$progress_stat = self::generate_class_progress_stat($course_id);
 		if (!$progress_stat)
@@ -39,15 +39,15 @@ class Report
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return Session::get()->set_error_assoc("Report Error", "Session user has not reauthenticated.");
+			return static::set_error_description("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return Session::get()->set_error_assoc("Report Error", "Invalid course id.");
+			return static::set_error_description("Invalid course id.");
 
 		$permissions = self::check_permissions($course, $session_user, null);
 		if (0 == $permissions)
-			return Session::get()->set_error_assoc("Report Error", "Do not have access to this information.");
+			return static::set_error_description("Do not have access to this information.");
 		
 		$students = $course->get_students();
 		
@@ -90,7 +90,7 @@ class Report
 		
 		if ($mysqli->error)
 		{
-			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
+			return static::set_error_description("Database query failed.");
 		}
 
 		$num_user_entries = $result->num_rows;
@@ -141,7 +141,7 @@ class Report
 		
 		if ($mysqli->error)
 		{
-			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
+			return static::set_error_description("Database query failed.");
 		}
 		
 		$num_units = $result->num_rows;
@@ -220,7 +220,7 @@ class Report
 		
 		if ($mysqli->error)
 		{
-			return Session::get()->set_error_assoc("Report Error", "Database query failed.");
+			return static::set_error_description("Database query failed.");
 		}
 		
 		$progress_stat = array();
