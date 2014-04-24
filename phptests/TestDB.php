@@ -81,6 +81,7 @@ class TestDB
 		Connection::set_shared_instance($testdb->link);
 
 	 	$testdb->add_languages();
+		$testdb->add_grades();
 
 		return $testdb;
 	}
@@ -428,7 +429,7 @@ class TestDB
 		}
 	}
 	
-	public function add_grades()
+	private function add_grades()
 	{
 		$link = $this->link;
 		$grade_entries = array ();
