@@ -96,7 +96,8 @@ function insertListRow(listname, listid) {
 }
 
 function viewList(listid) {
-
+	$('#loader-show-lists').show();
+	$('#lists').html('');
 	var currentURL = URL + 'list_select.php?list_id=' + listid;
 	$.getJSON( currentURL, function( data ) {
 		$('#loader-show-lists').hide();
@@ -108,7 +109,6 @@ function viewList(listid) {
 				'id="rename-show">Rename</button>');
 			$("#rename-input").val(data.result.name);	
 			$("#dict-add").show();
-			$('#lists').html('');
 			$('#lists').append('<tbody>');
 			if (data.result.entries.length === 0) {
 				failureMessage("This list doesn't have any entries yet.");
@@ -205,7 +205,7 @@ function deleteList(listid) {
 
 function newList(listname) {
 	var currentURL = URL + 'list_insert.php';
-	$.post(currentURL, {'list_name' : listname}, function(data) {
+	$.post(currentURL, {'name' : listname}, function(data) {
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
@@ -222,17 +222,16 @@ function ListRename(newname) {
 	var currentURL = URL + 'list_update.php';
 	
 	$("#rename-form").hide();
+	$("#pagetitle").html(newname + ' <button class="btn btn-xs" ' + 
+					'id="rename-show">Rename</button>');
+	$("#pagetitle").show();
 	
 	$.post(currentURL, {
-		'list_name' : newname,
+		'name' : newname,
 		'list_id' : listnum }, function(data) {
 			authorize(data);
 			if (data.isError === true) {
 				failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
-			} else {
-				$("#pagetitle").html(newname + ' <button class="btn btn-xs" ' + 
-					'id="rename-show">Rename</button>');
-				$("#pagetitle").show();
 			}
 	})
 		.fail(function() {
