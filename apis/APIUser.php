@@ -182,6 +182,14 @@ class APIUser extends APIBase
 			}
 		}
 		
+		if (isset($_POST["password_old"]) && isset($_POST["password_new"]))
+		{
+			if ($user->check_password($_POST["password_old"]))
+			{
+				$updates += !!$user->set_password($_POST["password_new"]);
+			}
+		}
+		
 		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->json_assoc() : null);
 	}
 	

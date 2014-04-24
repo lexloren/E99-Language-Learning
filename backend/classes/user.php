@@ -153,6 +153,44 @@ class User extends DatabaseRow
 		return $this->handle;
 	}
 	
+	public function set_password($password)
+	{
+		$mysqli = Connection::get_shared_instance();
+			
+		//  See whether we can authenticate with the handle and password posted
+		$mysqli->query(sprintf("UPDATE users SET pswd_hash = PASSWORD('%s') WHERE handle = '%s' AND email = '%s' LIMIT 1",
+			$mysqli->escape_string($password),
+			$mysqli->escape_string($this->get_handle()),
+			$mysqli->escape_string($this->get_email(false))
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("User failed to set password: " . $mysqli->error . ".");
+		}
+		
+		return $this;
+	}
+	
+	public function check_password($password)
+	{
+		$mysqli = Connection::get_shared_instance();
+			
+		//  See whether we can authenticate with the handle and password posted
+		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle = '%s' AND email = '%s') AND pswd_hash = PASSWORD('%s')",
+			$mysqli->escape_string($this->get_handle()),
+			$mysqli->escape_string($this->get_email(false)),
+			$mysqli->escape_string($password)
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("User failed to check password: " . $mysqli->error . ".");
+		}
+		
+		return $result->num_rows === 1;
+	}
+	
 	private $email = null;
 	public function get_email($privacy = false)
 	{
