@@ -15,6 +15,10 @@
 		.flashcard {
 			font-size: 24px;
 			text-align: center;
+			width: 500px;
+		}
+		.translation {
+			width: 500px;
 		}
 	</style>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -47,25 +51,44 @@
 	<img src="images/ajax-loader.gif" id="loader-show-lists">
 	<div class="form-group"id="deck-selection-form">
 	</div>
-  <div class="form-group">
-  <h4>I want to see _______ and guess the rest:</h4>
+  <h4>Show on side 1:</h4>
+  <div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-word" value="showword" checked>
+    Words
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-pronounce" value="showpro">
+    Pronunciations
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side1Radios" id="side1-trans" value="showtrans">
+    Translations
+  </label>
+</div>
+  <div id="side2-form">
+    <h4>Show on side 2:</h4>
     <div class="checkbox">
     <label>
-      <input type="checkbox" id="show-word"> Words
+      <input type="checkbox" id="side2-word" disabled> Words
     </label>
   </div>
   <div class="checkbox">
     <label>
-      <input type="checkbox" id="show-pronounce"> Pronunciations
+      <input type="checkbox" id="side2-pronounce"> Pronunciations
     </label>
   </div>
   <div class="checkbox">
     <label>
-      <input type="checkbox" id="show-trans"> Translations
+      <input type="checkbox" id="side2-trans"> Translations
     </label>
   </div>
   </div>
-  <button type="submit" class="btn btn-default" id="get-cards">Get Cards</button>
+  <button type="submit" class="btn btn-primary" id="get-cards">Get Cards</button>
 </form>
 </div>
 	
@@ -74,29 +97,15 @@
 		<div id="flashcard-container">
 		<div class="row">
 		<h4>Test your knowledge:</h4>
-			<div class="col-md-3 panel panel-default flashcard" id="flashcard-word">
-				<div class="panel-heading">Word</div>
-				<div class="panel-body" id="flashcard-word-panel"></div>
-				<div class="panel-footer">
-					<button type="button" class="btn btn-default" id="flashcard-word-button">show</button>
-				</div>
-			</div>
-			<div class="col-md-3 panel panel-default flashcard" id="flashcard-pronounce">
-				<div class="panel-heading">Pronunciation</div>
-				<div class="panel-body" id="flashcard-pronounce-panel"></div>
-				<div class="panel-footer">
-					<button type="button" class="btn btn-default" id="flashcard-pronounce-button">show</button>
-				</div>
-			</div>
-			<div class="col-md-3 panel panel-default flashcard" id="flashcard-trans">
-				<div class="panel-heading">Translation</div>
-				<div class="panel-body" id="flashcard-trans-panel"></div>
-				<div class="panel-footer">
-					<button type="button" class="btn btn-default" id="flashcard-trans-button">show</button>
-				</div>
+			<div class="panel panel-default flashcard" id="flashcard-word">
+			<div class="panel-body">
+				<div id="flashcard-side1"></div>
+				<div id="flashcard-2a"></div>
+				<div id="flashcard-2b"></div>
+				<div><button type="button" class="btn btn-primary" id="flashcard-flip">Flip!</button></div>
 			</div>
 			</div>
-			<div class="alert alert-info" id="translation-panel">
+			<div class="alert alert-info translation" id="translation-panel">
 			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
 			<div align="center" id="loader-get-trans"><img src="images/ajax-loader.gif"></div>
 				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>

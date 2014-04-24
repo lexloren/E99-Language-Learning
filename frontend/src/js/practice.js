@@ -4,9 +4,8 @@
  */
 
 var URL = "http://cscie99.fictio.us/";
-var showWord = true;
-var showPronun = false;
-var showTrans = false;
+var cardFrontUp = true;
+
 var wordList = [];
 
 /* prepare */
@@ -26,36 +25,6 @@ function setupDoc() {
 	$('#card-followup-container').hide();
 	$("#loader-get-cards").hide();
 	$("#loader-get-trans").hide();
-}
-
-function populate_word() {
-	$('#flashcard-word-panel').html(getWord(wordList[0].words[wordList[0].languages[1]]));	
-}
-
-function populate_pronoun() {
-	$('#flashcard-pronounce-panel').html(wordList[0].pronuncations[wordList[0].languages[1]]);
-}
-
-function populate_trans() {
-	$('#flashcard-trans-panel').html(wordList[0].words[wordList[0].languages[0]]);
-}
-
-function show_full_hide_empty() {
-	if (wordList[0].words[wordList[0].languages[1]] === null) {
-		$('#flashcard-word').hide();
-	} else {
-		$('#flashcard-word').show();
-	}
-	if (wordList[0].pronuncations[wordList[0].languages[1]] === null) {
-		$('#flashcard-pronounce').hide();
-	} else {
-		$('#flashcard-pronounce').show();
-	}
-	if (wordList[0].words[wordList[0].words[wordList[0].languages[0]]] === null) {
-		$('#flashcard-trans').hide();
-	} else {
-		$('#flashcard-trans').show();
-	}
 }
 
 function handleClicks() {
@@ -84,18 +53,10 @@ function handleClicks() {
 		$('#translation-panel').hide();
 	});	
 	
-	/* show hidden cards */
-	$('#flashcard-word-button').click(function(event) {
+	/* flip flashcard */
+	$('#flashcard-flip').click(function(event) {
 		event.preventDefault();
-		populate_word();
-	});
-	$('#flashcard-pronounce-button').click(function(event) {
-		event.preventDefault();
-		populate_pronoun();
-	});
-	$('#flashcard-trans-button').click(function(event) {
-		event.preventDefault();
-		populate_trans();
+		flip_card();
 	});
 
 	/* open menu to select a new deck */
@@ -103,7 +64,30 @@ function handleClicks() {
 		event.preventDefault();
 		setupDoc();
 	});
+	
+	/* card selection radio buttons */
+	$('#side1-word').on('change', function () {
+		$('#side2-word').attr("disabled", true);
+		$('#side2-word').removeAttr('checked');
+		$('#side2-pronounce').removeAttr("disabled");
+		$('#side2-trans').removeAttr("disabled");
+	});	
+	
+	$('#side1-pronounce').on('change', function () {
+		$('#side2-pronounce').attr("disabled", true);
+		$('#side2-pronounce').removeAttr('checked');
+		$('#side2-word').removeAttr("disabled");
+		$('#side2-trans').removeAttr("disabled");
+	});	
+	
+	$('#side1-trans').on('change', function () {
+		$('#side2-trans').attr("disabled", true);
+		$('#side2-trans').removeAttr('checked');
+		$('#side2-pronounce').removeAttr("disabled");
+		$('side2-word').removeAttr("disabled");
+	});	
 }
+
 
 /* split the word into individual characters */
 function getWord(word) {
@@ -184,30 +168,9 @@ function get_dictionary(word, page) {
 
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
-
-	/* clear old data from the flashcards */
-	$('#flashcard-word-panel').html('');
-	$('#flashcard-pronounce-panel').html('');
-	$('#flashcard-trans-panel').html('');
 	
 	$('#deck-selection-container').hide();
 	$("#loader-get-cards").show();
-	
-	if ($('#show-word').prop('checked') === true) {
-		showWord = true;
-	} else {
-		showWord = false;
-	}
-	if ($('#show-pronounce').prop('checked') === true) {
-		showPronun = true;
-	} else {
-		showPronun = false;
-	}
-	if ($('#show-trans').prop('checked') === true) {
-		showTrans = true;
-	} else {
-		showTrans = false;
-	}
 
 	var requestedDecks = [];
 	$("input[name='wordlist'][type='checkbox']:checked").each(function() {
@@ -246,22 +209,76 @@ function nextCard() {
 	} else {
 		$('#translation-panel-inner').html('Want to know more? Click on a character to find related words.');
 		$("#loader-get-trans").hide();
-		if (showWord) {
-			populate_word();
-		} else {
-			$('#flashcard-word-panel').html('');
+		
+		var word = getWord(wordList[0].words[wordList[0].languages[1]]);
+		var pronun = wordList[0].pronuncations[wordList[0].languages[1]];
+		var trans = wordList[0].words[wordList[0].languages[0]];
+		var secondanswer = false;
+		
+		/* populate side 1 */
+		if ($('#side1-word').prop('checked') === true) {
+			populate_side1(word);
 		}
-		if (showPronun) {
-			populate_pronoun();
-		} else {
-			$('#flashcard-pronounce-panel').html('');
+		else if ($('#side1-pronounce').prop('checked') === true) {
+			populate_side1(pronun);
 		}
-		if (showTrans) {
-			populate_trans();
-		} else {
-			$('#flashcard-trans-panel').html('');
+		else if ($('#side1-trans').prop('checked') === true) {
+			populate_side1(trans);
 		}
-		show_full_hide_empty();
+		
+		/* populate side 2 */
+		if ($('#side2-word').prop('checked') === true) {
+			populate_2a(word);
+			secondanswer = true;
+		}
+		if (($('#side2-pronounce').prop('checked') === true) && (pronun != null)) {
+			if (secondanswer != true) {
+				populate_2a(pronun);
+				secondanswer = true;
+			} else {
+				populate_2b(pronun);
+			}
+		}
+		if (($('#side2-trans').prop('checked') === true) && (trans != null)) {
+			if (secondanswer != true) {
+				populate_2a(trans);
+			} else {
+				populate_2b(trans);
+			}
+		}
+		
+		$('#flashcard-side1').show();
+		$('#flashcard-2a').hide();
+		$('#flashcard-2b').hide();
+		cardFrontUp = true;
+	}
+}
+
+function populate_side1(string) {
+	$('#flashcard-side1').html(string);
+}
+
+function populate_2a(string) {
+	$('#flashcard-2a').html(string);
+	$('#flashcard-2b').html('');
+}
+
+function populate_2b(string) {
+	$('#flashcard-2b').html('<hr/>');
+	$('#flashcard-2b').append(string);
+}
+
+function flip_card() {
+	if (cardFrontUp == true) {
+		$('#flashcard-side1').hide();
+		$('#flashcard-2a').show();
+		$('#flashcard-2b').show();
+		cardFrontUp = false;
+	} else { 
+		$('#flashcard-side1').show();
+		$('#flashcard-2a').hide();
+		$('#flashcard-2b').hide();
+		cardFrontUp = true;
 	}
 }
 
