@@ -14,7 +14,6 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->db = TestDB::create();
 		$this->assertNotNull($this->db, "failed to create test database");
 		$this->db->add_dictionary_entries(10);
-		$this->db->add_grades();
 	}
 	
 	public function test_select()

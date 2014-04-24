@@ -395,10 +395,14 @@ class APICourse extends APIBase
 		if (self::validate_request($_GET, "course_id"))
 		{
 			$report = Report::get_course_practice_report($_GET["course_id"]);
-			if (!!$report && !Session::get()->has_error())
+			if (!!$report)
 			{
 				$output = json_encode(array ("practiceReport" => $report));
 				Session::get()->set_result_assoc($output);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
 			}
 		}
 	}

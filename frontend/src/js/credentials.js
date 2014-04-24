@@ -8,6 +8,8 @@ function showForm(frm){
     $("#success").hide();
     $("#failure").hide();
     $("#sign-in").hide();
+    $("#register").hide();
+    $("#forgot-pw").hide();
     $(frm).show();
 }
 
@@ -30,8 +32,9 @@ function submitRegForm(){
                 displayAlert("#failure", "#regForm");
             }
             else{
-                $("#success").html('Your account has been successfully created. You can now <a href="login.html" class="alert-link">login</a>.');
-                displayAlert("#success", "#regForm");
+                //$("#success").html('Your account has been successfully created. You can now <a href="login.html" class="alert-link">login</a>.');
+                //displayAlert("#success", "#regForm");
+                window.location.replace("index.html");
             }
     });
     return; 
@@ -115,7 +118,8 @@ function submitResetForm(){
 }
 
 function submitPwRequestForm(){
-    var handle = $("#pwUsername").val();
+    alert("Placeholder: This script doesn't exist yet.");
+    /*var handle = $("#pwUsername").val();
 	
     if(handle == ""){
         $("#failure").html("Please enter username.");
@@ -134,6 +138,6 @@ function submitPwRequestForm(){
                 $("#success").html('A new password has been emailed to you. Please reset your password once you are able to sign in.');
                 displayAlert("#success", "#pwRequestForm");
             }
-    });
+    });*/
     return; 
 }

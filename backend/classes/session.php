@@ -7,8 +7,9 @@ class Session
 {
 	private $user = null;
 	private $result_assoc = null;
+	private $allow_email = true;
 	private static $instance = null;
-	
+
 	public static function set($instance)
 	{
 		self::$instance = $instance;
@@ -19,6 +20,16 @@ class Session
 		if (!isset(self::$instance))
 			self::$instance = new Session();
 		return self::$instance;
+	}
+	
+	public function get_allow_email()
+	{
+		return $this->allow_email;
+	}
+	
+	public function set_allow_email($allow)
+	{
+		$this->allow_email = $allow;
 	}
 	
 	public function get_user()

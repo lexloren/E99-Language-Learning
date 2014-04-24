@@ -1,13 +1,12 @@
 var URL = "http://cscie99.fictio.us/";
-var listsURL = URL + 'user_lists.php';
-var viewlistURL = URL + 'list_entries.php?list_id=1';
 var listnum;
 
 $(document).ready(function(){
 	pageSetup();
-	$("#listpagetitle").hide();
 	$("#dict-add").hide();
 	$('#list-add').hide();
+	$('#rename-form').hide();
+	$('#loader-dict').hide();
 	handleClicks();
 	listnum = getURLparam('listid');
 	if(listnum === null) {
@@ -20,7 +19,6 @@ $(document).ready(function(){
 
 function showAllLists() {
 	getLists();
-	$("#listpagetitle").show();
 	var message = 'You can practice with your lists as well as lists from your courses at your ' +
 	'<a href="practice.html">practice page</a>.';
 	successMessage(message);
@@ -29,7 +27,7 @@ function showAllLists() {
 function handleClicks() {
 	$(document).on('click', '.list-delete', function (event) {
 		event.preventDefault();
-		deleteList(this.id);
+		deleteList($(this).parent().parent().attr("id"));
 		$(this).parent().parent().remove();
 	});
 	$(document).on('click', '.entry-delete', function (event) {
@@ -44,6 +42,10 @@ function handleClicks() {
 	$(document).on('click', '.add-entry', function () {
 		addEntry(this.id);
 	});
+	$(document).on('click', '#rename-show', function () {
+		$('#pagetitle').hide();
+		$('#rename-form').show();
+	});
 	$('#next_dict').on('click', function (event) {
 		event.preventDefault();
 		search_entry();
@@ -57,6 +59,10 @@ function handleClicks() {
 		event.preventDefault();
 		newList( $('#new-list-name').val() );
 	});
+	$('#rename-form').submit(function(event) {
+		event.preventDefault();
+		ListRename($('#rename-input').val());
+	});
 }
 
 function getLists() {
@@ -64,6 +70,7 @@ function getLists() {
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		authorize(data);
+		$('#loader-show-lists').hide();
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else if (data.result.length === 0) {
@@ -82,40 +89,52 @@ function getLists() {
 }
 
 function insertListRow(listname, listid) {
-	$('#lists').append('<tr><td>' + listname + '</td>' + 
-		'<td><a href="list.html?listid='+ listid + '">[view/edit]</a></td>' +
-		'<td><a href="#" class="list-delete" id="'+ listid + '">[delete]</a><td>' + 
+	$('#lists').append('<tr class="static-listname" id="'+ listid + '"><td>' + listname + '</td>' + 
+		'<td><a href="list.html?listid='+ listid + '" class="btn btn-primary">View/Edit</a></td>' +
+		'<td><a href="#" class="list-delete btn btn-primary">Delete</a><td>' + 
 		'</tr>');
 }
 
 function viewList(listid) {
 
-	var currentURL = URL + 'list_entries.php?list_id=' + listid;
+	var currentURL = URL + 'list_select.php?list_id=' + listid;
 	$.getJSON( currentURL, function( data ) {
+		$('#loader-show-lists').hide();
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
-		} else if (data.result.length === 0) {
-			failureMessage("This list doesn't have any entries yet.");
-			$("#dict-add").show();
 		} else {
-			$('#lists').html('');
-			$('#lists').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td>' + '</tr></thead>');
-			$('#lists').append('<tbody>');
-			$.each( data.result, function( ) {
-				$('#lists').append('<tr>' + 
-				'<td>' + this.languages[1] + ' : ' + this.words[this.languages[1]] + '</td>' + 
-				'<td>' + this.languages[1] + ' : ' + this.pronuncations[this.languages[1]] + '</td>' + 
-				'<td>' + this.languages[0] + ' : ' + this.words[this.languages[0]] + '</td>' + 
-				'<td><a href="#" class="entry-delete" id="' + this.entryId + '">[delete]</a></td>' + 
-				'</tr>');
-			});
+			$("#pagetitle").html(data.result.name + ' <button class="btn btn-xs" ' + 
+				'id="rename-show">Rename</button>');
+			$("#rename-input").val(data.result.name);	
 			$("#dict-add").show();
+			$('#lists').html('');
+			$('#lists').append('<tbody>');
+			if (data.result.entries.length === 0) {
+				failureMessage("This list doesn't have any entries yet.");
+			} else {
+				
+				$('#lists').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td>' + '</tr></thead>');
+				
+				$.each( data.result.entries, function() {
+					insertEntryRow(this.languages[1], this.languages[0], this.words[this.languages[1]], 
+						this.pronuncations[this.languages[1]], this.words[this.languages[0]], this.entryId);
+				});
+			}
 		}
 	})			
 	 .fail(function(error) {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
+}
+
+function insertEntryRow(lang1, lang2, word, pro, trans, id) {
+	$('#lists').append('<tr>' + 
+		'<td>' + lang1 + ' : ' + word + '</td>' + 
+		'<td>' + lang1 + ' : ' + pro + '</td>' + 
+		'<td>' + lang2 + ' : ' + trans + '</td>' + 
+		'<td><a href="#" class="entry-delete" id="' + id + '">[delete]</a></td>' + 
+		'</tr>');
 }
 
 function delete_entry(entry) {
@@ -125,10 +144,11 @@ function delete_entry(entry) {
 	})
 	.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
-	})
+	});
 }
 
 function search_entry(page) {
+	$('#loader-dict').show();
 	$('#dictionary').show();
 	$('#dictionary').html('');
 	var currentURL = URL + 'entry_find.php';
@@ -141,6 +161,7 @@ function search_entry(page) {
 		page_num : page
 	}, function( data ) {
 		authorize(data);
+		$('#loader-dict').hide();
 		if (data.isError === true) {
 			console.log(data.errorTitle);
 			console.log(data.errorDescription);
@@ -155,6 +176,9 @@ function search_entry(page) {
 			$('#dictionary').append('<tr><td><a href="#" id="next_dict">[next page]</a></td></tr>');
 			$('#lists').append('</tbody>');
 		}
+	})
+	.fail(function() {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
@@ -166,17 +190,17 @@ function addEntry(entryid) {
 	})
 		.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
-	})
+	});
 }
 
 function deleteList(listid) {
-	var currentURL = URL + 'list_entries_remove.php';
+	var currentURL = URL + 'list_delete.php';
 	$.post(currentURL, {'list_id' : listid }, function(data) {
 		authorize(data);
 	})
 	.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
-	})
+	});
 }
 
 function newList(listname) {
@@ -191,5 +215,27 @@ function newList(listname) {
 	})
 		.fail(function() {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	});
+}
+
+function ListRename(newname) {
+	var currentURL = URL + 'list_update.php';
+	
+	$("#rename-form").hide();
+	
+	$.post(currentURL, {
+		'list_name' : newname,
+		'list_id' : listnum }, function(data) {
+			authorize(data);
+			if (data.isError === true) {
+				failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
+			} else {
+				$("#pagetitle").html(newname + ' <button class="btn btn-xs" ' + 
+					'id="rename-show">Rename</button>');
+				$("#pagetitle").show();
+			}
 	})
+		.fail(function() {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	});
 }

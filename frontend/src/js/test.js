@@ -63,13 +63,26 @@ function getTestInfo(){
                     else{
                         $('#entry-list').append('<tbody>');
                         $.each(data.result.entries, function(i, item){
-                            entryrow = '<tr><td>'+item.words[item.languages[1]]+'</a></td>' +
+                            count = i + 1;
+                            selectid = "entryorder"+item.entryId;
+                            entryrow = '<tr><td>'+count+'</td>' +
+                                       '<td>'+item.words[item.languages[1]]+'</a></td>' +
                                        '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
                                        '<td>' + item.words[item.languages[0]] + '</td>' +
-                                       '<td><label><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
+                                       '<td><select id='+selectid+'>';
+                            for(num=1;num<=data.result.entriesCount;num++){
+                                if(num == count){
+                                    selected = '<option selected="selected">'
+                                }
+                                else{
+                                    selected = '<option>';
+                                }
+                                entryrow += selected+num+'</option>';
+                            }
+                            entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update Order]</span></td><td><label class="select-entry-ids"><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
                             $('#entry-list').append(entryrow);
                         });
-                        $('#entry-list').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
+                        $('#entry-list').append('<tr><td></td><td></td><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
                     }
                     $("#test-sitting").hide();
                 }
@@ -187,7 +200,6 @@ function saveUpdate(){
 
 <!--- Entries --->
 
-<!--- Need to add previous page link --->
 function search_entry(page) {
 	  $('#failure').hide();
 	  $('#success').hide();
@@ -211,21 +223,35 @@ function search_entry(page) {
                       }
 		              } 
                   else {
-                      if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
-                          disabled = " disabled";
-                      }
-                      else{
-                          disabled = "";
-                      }
+			                $('#dictionary').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td></td></tr></thead>');
 			                $('#dictionary').append('<tbody>');
 			                $.each( data.result, function() {
+                          if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
+                              disabled = " disabled";
+                          }
+                          else{
+                              disabled = "";
+                          }
 				                  $('#dictionary').append('<tr><td>' + this.words[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.pronuncations[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.words[this.languages[0]] + '</td>' + 
-                                                  '<td><label><input type="checkbox" class="add_entry_ids" name="add_entry_ids" value='+this.entryId+disabled+'>&nbsp; Add</label></td></tr>');
-			                });
-                      nextpage = page + 1;
-			                $('#dictionary').append('<tr><td><span class="span-action" onclick="search_entry('+nextpage+');">[Next Page]</span></td><td></td><td></td>' +
+                                                  '<td><label class="select-entry-ids"><input type="checkbox" class="add_entry_ids" name="add_entry_ids" value='+this.entryId+disabled+'>&nbsp; Add</label></td></tr>');
+                      });
+                      if(data.resultInformation.pageNumber < data.resultInformation.pagesCount){
+                          nextpage = page + 1;
+                          nextspan = '<span class="span-action" onclick="search_entry('+nextpage+');">[Next Page]</span>';
+                      }
+                      else{
+                          nextspan = '';
+                      }
+                      if(page > 1){
+                          prevpage = page - 1;
+                          prevspan = '<span class="span-action" onclick="search_entry('+prevpage+');">[Previous Page]</span> &nbsp; '
+                      }
+                      else{
+                          prevspan = '';
+                      }
+			                $('#dictionary').append('<tr><td>'+prevspan+nextspan+'</td><td></td><td></td>' +
                                               '<td><span class="span-action" onclick="addEntries();">[Add Selected Entries]</span></td></tr>');
 			                $('#dictionary').append('</tbody>');
 		              }
@@ -264,6 +290,33 @@ function addEntries(page){
             else{
                 $("#dict-add").hide();
                 $('.add_entry_ids').prop('checked',false);
+                refreshEntries();
+            }
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
+	  });
+    return; 
+}
+
+function updateOrder(entry){
+    var entrysel = $('#entryorder'+entry).find(":selected").text();
+	  $('#failure').hide();
+	  $('#success').hide();
+    $("#entry-loader").show();
+    $("#entry-list").html('');
+
+    $.post('../../test_entry_update.php', 
+        { test_id: test, entry_id: entry, number: entrysel })
+        .done(function(data){
+          	authorize(data);
+            if(data.isError){
+                var errorMsg = "Entry order could not be updated: Please refresh the page and try again.";
+                failureMessage(errorMsg);
+                $("html, body").animate({scrollTop:0}, "slow"); 
+            }
+            else{
                 refreshEntries();
             }
     })
@@ -325,15 +378,28 @@ function refreshEntries(){
                     $('#entry-list').html("<em>This test currently has no entries.</em>");
                 }
                 else{
-                    $('#entry-list').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td></td></tr></thead><tbody>');
+                    $('#entry-list').append('<thead><tr><td></td><td>Word</td><td>Pronunciation</td><td>Translation</td><td></td><td></td></tr></thead><tbody>');
                     $.each(data.result, function(i, item){
-                        entryrow = '<tr><td>'+item.words[item.languages[1]]+'</a></td>' +
+                        count = i + 1;
+                        selectid = "entryorder"+item.entryId;
+                        entryrow = '<tr><td>'+count+'</td>' +
+                                   '<td>'+item.words[item.languages[1]]+'</td>' +
                                    '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
                                    '<td>' + item.words[item.languages[0]] + '</td>' +
-                                   '<td><label><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
+                                   '<td><select id='+selectid+'>';
+                        for(num=1;num<=data.result.length;num++){
+                            if(num == count){
+                                selected = '<option selected="selected">'
+                            }
+                            else{
+                                selected = '<option>';
+                            }
+                            entryrow += selected+num+'</option>';
+                        }
+                        entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update Order]</span></td><td><label class="select-entry-ids"><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
                         $('#entry-list').append(entryrow);
                     });
-                    $('#entry-list').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
+                    $('#entry-list').append('<tr><td></td><td></td><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
                 }
             }
             if(!$("#dict-add").is(":visible")){
@@ -369,7 +435,7 @@ function startTest(){
                 failureMessage(errorMsg);
             }
             else{
-                $("#question-number").html('Questions Remaining: '+data.result.entriesRemainingCount);
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                     submitAnswer(data.result.testEntryId);
@@ -401,7 +467,7 @@ function submitAnswer(id){
                 }
             }
             else{
-                $("#question-number").html('Questions Remaining: '+data.result.entriesRemainingCount);
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                      submitAnswer(data.result.testEntryId);                   
