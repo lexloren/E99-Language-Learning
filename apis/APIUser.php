@@ -157,6 +157,31 @@ class APIUser extends APIBase
 			$updates += !!$user->set_name_family($_POST["name_family"]);
 		}
 		
+		if (isset($_POST["langs"]))
+		{
+			$lang_codes = explode(",", $_POST["langs"]);
+			$user_languages = $user->get_languages();
+			
+			foreach ($user_languages as $language)
+			{
+				if (!in_array($language->get_lang_code(), $lang_codes))
+				{
+					$updates += !!$user->languages_remove($language);
+				}
+			}
+			
+			foreach ($lang_codes as $lang_code)
+			{
+				if (($language = Language::select_by_code($lang_code)))
+				{
+					if (!in_array($language, $user_languages))
+					{
+						$updates += !!$user->languages_add($language);
+					}
+				}
+			}
+		}
+		
 		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->json_assoc() : null);
 	}
 	
