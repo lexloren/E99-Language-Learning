@@ -26,6 +26,36 @@ class APITest extends APIBase
 			}
 			else
 			{
+				if (isset($_POST["list_ids"]))
+				{
+					$list_ids = explode(",", $_POST["list_ids"]);
+					
+					foreach ($list_ids as $list_id)
+					{
+						if (($list = EntryList::select_by_id($list_id))
+							&& $list->session_user_can_read())
+						{
+							foreach ($list->get_entries() as $entry)
+							{
+								$test->entries_add($entry);
+							}
+						}
+					}
+				}
+				
+				if (isset($_POST["entry_ids"]))
+				{
+					$entry_ids = explode(",", $_POST["entry_ids"]);
+					
+					foreach ($entry_ids as $entry_id)
+					{
+						if (($entry = Entry::select_by_id($entry_id)))
+						{
+							$test->entries_add($entry);
+						}
+					}
+				}
+			
 				Session::get()->set_result_assoc($test->json_assoc());
 			}
 		}

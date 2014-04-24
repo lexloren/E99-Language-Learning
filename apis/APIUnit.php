@@ -26,6 +26,20 @@ class APIUnit extends APIBase
 			}
 			else
 			{
+				if (isset($_POST["list_ids"]))
+				{
+					$list_ids = explode(",", $_POST["list_ids"]);
+					
+					foreach ($list_ids as $list_id)
+					{
+						if (($list = EntryList::select_by_id($list_id))
+							&& $list->session_user_can_read())
+						{
+							$unit->lists_add($list);
+						}
+					}
+				}
+				
 				Session::get()->set_result_assoc($unit->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
