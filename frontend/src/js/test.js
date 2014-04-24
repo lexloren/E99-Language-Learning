@@ -435,7 +435,7 @@ function startTest(){
                 failureMessage(errorMsg);
             }
             else{
-                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount)
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                     submitAnswer(data.result.testEntryId);
@@ -467,7 +467,7 @@ function submitAnswer(id){
                 }
             }
             else{
-                $("#question-number").html('Questions Remaining: '+data.result.entriesRemainingCount);
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                      submitAnswer(data.result.testEntryId);                   
