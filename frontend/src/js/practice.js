@@ -5,7 +5,6 @@
 
 var URL = "http://cscie99.fictio.us/";
 var cardFrontUp = true;
-
 var wordList = [];
 
 /* prepare */
@@ -64,28 +63,6 @@ function handleClicks() {
 		event.preventDefault();
 		setupDoc();
 	});
-	
-	/* card selection radio buttons */
-	$('#side1-word').on('change', function () {
-		$('#side2-word').attr("disabled", true);
-		$('#side2-word').removeAttr('checked');
-		$('#side2-pronounce').removeAttr("disabled");
-		$('#side2-trans').removeAttr("disabled");
-	});	
-	
-	$('#side1-pronounce').on('change', function () {
-		$('#side2-pronounce').attr("disabled", true);
-		$('#side2-pronounce').removeAttr('checked');
-		$('#side2-word').removeAttr("disabled");
-		$('#side2-trans').removeAttr("disabled");
-	});	
-	
-	$('#side1-trans').on('change', function () {
-		$('#side2-trans').attr("disabled", true);
-		$('#side2-trans').removeAttr('checked');
-		$('#side2-pronounce').removeAttr("disabled");
-		$('side2-word').removeAttr("disabled");
-	});	
 }
 
 
@@ -169,6 +146,32 @@ function get_dictionary(word, page) {
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
 	
+	/* have all appropriate boxes been checked? */
+	var side1Ok = false;
+	var side2Ok = false;
+	if ($('#side1-word').prop('checked') === true) {
+		side1Ok = true;
+		$('#side2-word').removeAttr('checked');
+	}
+	else if ($('#side1-pronounce').prop('checked') === true) {
+		side1Ok = true;
+		$('#side2-pronounce').removeAttr('checked');
+		$('#side2-pronounce').removeAttr('checked');
+	}
+	else if ($('#side1-trans').prop('checked') === true) {
+		side1Ok = true;
+		$('#side2-trans').removeAttr('checked');
+	}	
+	if (($('#side2-word').prop('checked') === true) || 
+		(($('#side2-pronounce').prop('checked') === true)) || 
+		(($('#side2-trans').prop('checked') === true))) {
+			side2Ok = true;
+	}
+	if ((side1Ok === false) || (side2Ok === false)) {
+			failureMessage('Please ensure that at least one box is checked for each side of the flshcard.');
+			return;
+	}
+	
 	$('#deck-selection-container').hide();
 	$("#loader-get-cards").show();
 
@@ -218,12 +221,15 @@ function nextCard() {
 		/* populate side 1 */
 		if ($('#side1-word').prop('checked') === true) {
 			populate_side1(word);
+			$('#side1-word').removeAttr('checked');
 		}
 		else if ($('#side1-pronounce').prop('checked') === true) {
 			populate_side1(pronun);
+			$('#side1-pronounce').removeAttr('checked');
 		}
 		else if ($('#side1-trans').prop('checked') === true) {
 			populate_side1(trans);
+			$('#side1-trans').removeAttr('checked');
 		}
 		
 		/* populate side 2 */

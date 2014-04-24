@@ -20,6 +20,9 @@
 		.translation {
 			width: 500px;
 		}
+		hr {
+			border-color: #333333; 
+		}
 	</style>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -74,7 +77,7 @@
     <h4>Show on side 2:</h4>
     <div class="checkbox">
     <label>
-      <input type="checkbox" id="side2-word" disabled> Words
+      <input type="checkbox" id="side2-word"> Words
     </label>
   </div>
   <div class="checkbox">
@@ -92,10 +95,10 @@
 </form>
 </div>
 	
-	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically; the "show" button should show a hidden "side" of the card. -->
+	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically. -->
 		<div align="center" id="loader-get-cards"><img src="images/ajax-loader.gif"></div>
 		<div id="flashcard-container">
-		<div class="row">
+		<div>
 		<h4>Test your knowledge:</h4>
 			<div class="panel panel-default flashcard" id="flashcard-word">
 			<div class="panel-body">
