@@ -38,6 +38,25 @@ function showSearch(search){
     $(search).show();
 }
 
+function getLangs(){
+    $.getJSON('../../language_enumerate.php')
+        .done(function(data){
+            authorize(data);
+            if(data.isError){
+                failureMessage("Word search could not be initialized.");
+            }
+            else{
+                $.each(data.result, function(i, item){           
+                    $('#lang1').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                    $('#lang2').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                });
+            }
+    })
+    .fail(function(error) {
+        failureMessage('Something has gone wrong. Please refresh the page and try again.');
+    });    
+}
+
 function cancelUpdate(frm,tohide){
     if(frm != '#updateUnitForm'){ // but maybe add something to restore original values for updateUnitForm?
         $(frm)[0].reset(); 
@@ -62,23 +81,28 @@ function getUnitInfo(){
             }
             else{
                 owner = data.result.course.owner.userId;
-                unitheader = '<h3 class="form-signin-heading">Unit '+data.result.unitId+': '+data.result.name+'</h3>';
+                if(data.result.name != null)
+                    uname = data.result.name;
+                else
+                    uname = '';
+                unitheader = '<h3 class="form-signin-heading">Unit '+data.result.unitId+': '+uname+'</h3>';
                 $("#unit-header").html(unitheader);
                 if(data.result.sessionUserPermissions.write == true){
-                    $("#unitname").val(data.result.name);
+                    $("#unitname").val(uname);
                     if(data.result.message != null){
                         $("#unitdesc").val(data.result.message);
                     }
                     if(data.result.timeframe != null){
                         if(data.result.timeframe.open != null){
-                            opendate = new Date(data.result.timeframe.open);
+                            opendate = new Date(data.result.timeframe.open/1000);
                             $("#unitopendate").val(opendate);
                         }
                         if(data.result.timeframe.close != null){
-                            closedate = new Date(data.result.timeframe.close);
+                            closedate = new Date(data.result.timeframe.close/1000);
                             $("#unitclosedate").val(closedate);
                         }
                     }
+                    getLangs();
                 }
                 else{
                     if(data.result.message != null){
@@ -100,8 +124,12 @@ function getUnitInfo(){
                         }
                         else{
                             listremovetd = '<td></td></tr>';
-                        }                        
-                        listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' +
+                        }             
+                        if(item.name != null)
+                            lname = item.name;
+                        else
+                            lname = '<em>unnamed</em>';           
+                        listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' +
                                   '<td>' + item.entriesCount + '</td><td>'+item.owner.handle+'</td>'+listremovetd;
                         $('#lists').append(listrow);
                     });
@@ -121,15 +149,19 @@ function getUnitInfo(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open);
+                                topen = new Date(item.timeframe.open/1000);
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close);
+                                tclose = new Date(item.timeframe.close/1000);
                             else
                                 tclose = "";
                         }
-                        testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
+                        if(item.name != null)
+                            tname = item.name;
+                        else
+                            tname = '<em>unnamed</em>';
+                        testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+tname+'</a></td>' +
                                   '<td>' + topen + '</td>' +
                                   '<td>' + tclose + '</td></tr>';
                         $('#tests').append(testrow);
@@ -143,7 +175,6 @@ function getUnitInfo(){
         $("#loader").hide();
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
 	  });
-
 }
 
 function deleteUnit(){
@@ -190,8 +221,8 @@ function saveUpdate(){
         return;
     }
 
-    opendate = Date.parse(opendate);
-    closedate = Date.parse(closedate);
+    opendate = Date.parse(opendate)*1000;
+    closedate = Date.parse(closedate)*1000;
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -214,11 +245,11 @@ function saveUpdate(){
                 $("#unitdesc").val(data.result.message);
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open);
+                        opendate = new Date(data.result.timeframe.open/1000);
                         $("#unitopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close);
+                        closedate = new Date(data.result.timeframe.close/1000);
                         $("#unitclosedate").val(closedate);
                     }
                 }
@@ -251,8 +282,8 @@ function verifyTestForm(){
         return;
     }
 
-    opendate = Date.parse(opendate);
-    closedate = Date.parse(closedate);
+    opendate = Date.parse(opendate)*1000;
+    closedate = Date.parse(closedate)*1000;
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -318,11 +349,11 @@ function refreshTests(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open);
+                                topen = new Date(item.timeframe.open/1000);
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close);
+                                tclose = new Date(item.timeframe.close/1000);
                             else
                                 tclose = "";
                         }
@@ -368,7 +399,11 @@ function myDecks() {
                           else{
                               disabled = "";
                           }
-				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' + 
+                          if(item.name != null)
+                              lname = item.name;
+                          else
+                              lname = '<em>unnamed</em>';
+				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
                                                      '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
@@ -408,7 +443,11 @@ function searchOwner() {
                           else{
                               disabled = "";
                           }
-				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' + 
+                          if(item.name != null)
+                              lname = item.name;
+                          else
+                              lname = '<em>unnamed</em>';
+				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
                                                      '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
@@ -450,7 +489,11 @@ function searchWord() {
                           else{
                               disabled = "";
                           }
-				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' + 
+                          if(item.name != null)
+                              lname = item.name;
+                          else
+                              lname = '<em>unnamed</em>';
+				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
                                                      '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
@@ -613,7 +656,11 @@ function refreshLists(){
                 else{
                     $('#lists').append('<thead><tr><td>Name</td><td>Card Count</td><td>Owner</td><td></td></tr></thead><tbody>');
                     $.each(data.result, function(i, item){
-                        listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+item.name+'</a></td>' +
+                        if(item.name != null)
+                            lname = item.name;
+                        else
+                            lname = '<em>unnamed</em>';
+                        listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' +
                                   '<td>'+item.entriesCount+'</td>' +
                                   '<td>'+item.owner.handle+'</td>' +
                                   '<td><label class="select-entry-ids"><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'>&nbsp; Remove</label></td></tr>';
