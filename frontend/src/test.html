@@ -30,9 +30,9 @@
     <div id="navbar"></div>
 
     <div class="container" role="main" id="doc-body">
-	    <br /><img src="images/ajax-loader.gif" id="loader">
+	    <br /><div id="loader"><img src="images/ajax-loader.gif"></div>
       <div id="testData">
-			  <div id="test-header"></div><br />
+			  <div id="test-header"></div>
         <div id="test-update">
           <button class="btn btn-primary" type="button" onclick="showForm('#updateTestForm','#test\-update');">Update Test</button> &nbsp;
           <button class="btn btn-primary" type="button" onclick="deleteTest();">Delete Test</button><br /><br /> 
@@ -63,7 +63,7 @@
         <!--- Test Entries --->
         <div id="test-entries">
           <h4>Entries</h4>
-          <br /><img src="images/ajax-loader.gif" id="entry-loader">
+          <div id="entry-loader"><img src="images/ajax-loader.gif"></div>
           <table id="entry-list" class="table">
             <thead>
               <tr>
@@ -97,9 +97,9 @@
                   <option>en</option>
                 </select>
               </div>
-              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button>
+              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br /> &nbsp;
             </form>
-            <br/><img src="images/ajax-loader.gif" id="dict-loader">
+            <div id="dict-loader"><img src="images/ajax-loader.gif"></div>
             <table class="table" id="dictionary"></table>
           </div>
         </div>
@@ -107,7 +107,7 @@
         <div id="test-sitting">
           <div id="test-intro"></div><br />
           <button id="test-start-btn" class="btn btn-primary" type="button" onclick="startTest();">Start Test</button>
-          <br /><img src="images/ajax-loader.gif" id="test-loader">
+          <div id="test-loader"><img src="images/ajax-loader.gif"></div>
           <div id="question-block">
             <div id="test-question" class="panel panel-info test-question">
               <div class="panel-heading">

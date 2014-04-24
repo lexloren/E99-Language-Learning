@@ -30,10 +30,10 @@
     <div id="navbar"></div>
 
     <div class="container" role="main" id="doc-body">
-	    <br /><img src="images/ajax-loader.gif" id="loader">
+	    <br /><div id="loader"><img src="images/ajax-loader.gif"></div>
       <div id="unitData">
-        <div id="unit-header"></div><br />
-        <div id="unit-intro"></div><br />
+        <div id="unit-header"></div>
+        <div id="unit-intro"></div>
         <div id="unit-update">
           <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
           <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
@@ -59,29 +59,56 @@
             <script>$('#unitclosedate').datetimepicker();</script>
           </div><br />
         <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button> &nbsp;
-        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /><br /> 
+        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /> &nbsp;
         </form> 
 
-        <h4>Decks</h4>
+        <h4>Flashcard Decks</h4>
+        <div id="unitdeck-loader"><img src="images/ajax-loader.gif"></div>
         <table id="lists" class="table">
         </table>
         <div id="search-list">    
-          <button class="btn btn-primary" type="button" onclick="alert('pending feature');">Search Decks</button>  
+          <button class="btn btn-primary" type="button" onclick="showForm('#searchListForm','#search\-list');">Search Decks</button>  
         </div> 
 	      <!--- List Search Form --->
-        <form id="searchListForm" role="form">
+        <form class="form-inline" id="searchListForm" role="form">
           <div class="form-group">
-            <label for="listCriteria">Search Decks:</label>
-            <input type="text" class="form-control" id="listCriteria" placeholder="Enter search criteria" required autofocus>
-          </div>
-          <button class="btn btn-primary" type="button" onclick="return searchLists();">Search</button> &nbsp;
-          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#searchListForm','#search\-list');">Cancel</button><br /><br />     
+            <span class="span-action" onclick="myDecks();">[View My Decks]</span> &nbsp; 
+            <span class="span-action" onclick="showSearch('#word-search');">[Search by Word]</span> &nbsp; 
+            <span class="span-action" onclick="showSearch('#owner-search');">[Search by Owner]</span> &nbsp;
+            <span class="span-action" onclick="cancelUpdate('#searchListForm','#search\-list');">[ x ]</span><br />&nbsp;
+            <div id="word-search"><br />
+              <div class="form-group">
+                <label class="sr-only" for="entrysearch">Enter search text</label>
+                <input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
+              </div>
+              <div class="form-group">
+                <label>From: </label>
+                <select class="form-control" id="lang1">
+                  <option>cn</option>
+                  <option>jp</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>To: </label>
+                <select class="form-control" id="lang2">
+                  <option>en</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br />&nbsp;
+            </div>
+            <div id="owner-search"><br />
+              <div class="form-group">
+                <input type="text" class="form-control" id="ownerCriteria" placeholder="Enter username or email to search for" required autofocus>
+              </div>
+              <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button><br />&nbsp;
+            </div>
+          </div> 
         </form>
-        <div id="searchResults">
-        </div>   
-        <br />
+        <div id="deck-loader"><img src="images/ajax-loader.gif"></div>
+        <table class="table" id="searchResults">
+        </table>   
         <h4>Tests</h4>
-        <br /><img src="images/ajax-loader.gif" id="test-loader">
+        <div id="test-loader"><img src="images/ajax-loader.gif"></div>
         <table id="tests" class="table">
           <tr>
             <th>Name</th>
@@ -113,7 +140,7 @@
             <script>$('#testclosedate').datetimepicker();</script>
           </div><br />
           <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
-          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br /><br />     
+          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br />&nbsp;  
         </form>	
       </div><br />
     </div> <!-- /container -->

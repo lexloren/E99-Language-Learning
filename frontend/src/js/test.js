@@ -200,7 +200,6 @@ function saveUpdate(){
 
 <!--- Entries --->
 
-<!--- Need to add previous page link --->
 function search_entry(page) {
 	  $('#failure').hide();
 	  $('#success').hide();
@@ -224,15 +223,15 @@ function search_entry(page) {
                       }
 		              } 
                   else {
-                      if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
-                          disabled = " disabled";
-                      }
-                      else{
-                          disabled = "";
-                      }
 			                $('#dictionary').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td></td></tr></thead>');
 			                $('#dictionary').append('<tbody>');
 			                $.each( data.result, function() {
+                          if($(".rem_entry_ids:checkbox[value="+this.entryId+"]").length > 0){
+                              disabled = " disabled";
+                          }
+                          else{
+                              disabled = "";
+                          }
 				                  $('#dictionary').append('<tr><td>' + this.words[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.pronuncations[this.languages[1]] + '</td>' + 
 					                                        '<td>' + this.words[this.languages[0]] + '</td>' + 
@@ -302,9 +301,11 @@ function addEntries(page){
 }
 
 function updateOrder(entry){
+    var entrysel = $('#entryorder'+entry).find(":selected").text();
 	  $('#failure').hide();
 	  $('#success').hide();
-    var entrysel = $('#entryorder'+entry).find(":selected").text();
+    $("#entry-loader").show();
+    $("#entry-list").html('');
 
     $.post('../../test_entry_update.php', 
         { test_id: test, entry_id: entry, number: entrysel })
@@ -382,7 +383,7 @@ function refreshEntries(){
                         count = i + 1;
                         selectid = "entryorder"+item.entryId;
                         entryrow = '<tr><td>'+count+'</td>' +
-                                   '<td>'+item.words[item.languages[1]]+'</a></td>' +
+                                   '<td>'+item.words[item.languages[1]]+'</td>' +
                                    '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
                                    '<td>' + item.words[item.languages[0]] + '</td>' +
                                    '<td><select id='+selectid+'>';
@@ -434,7 +435,7 @@ function startTest(){
                 failureMessage(errorMsg);
             }
             else{
-                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount)
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                     submitAnswer(data.result.testEntryId);
@@ -466,7 +467,7 @@ function submitAnswer(id){
                 }
             }
             else{
-                $("#question-number").html('Questions Remaining: '+data.result.entriesRemainingCount);
+                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
                 $("#answer-submit").click(function(){
                      submitAnswer(data.result.testEntryId);                   
