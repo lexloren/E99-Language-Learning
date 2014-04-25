@@ -601,7 +601,7 @@ function displayEditCourseForm() {
 						navHTML ='<li ><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>';
 						$("#studentadmin").show();
 					} else {
-						navHTML ='<li ><a href="#progress" data-toggle="tab">My Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#unit" data-toggle="tab">Units</a></li>';
+						navHTML ='<li ><a href="#progress" data-toggle="tab">My Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li>';
 						$("#studentadmin").hide();
 					}
 					$("#navtabs").html(navHTML);
