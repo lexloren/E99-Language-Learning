@@ -94,11 +94,11 @@ function getUnitInfo(){
                     }
                     if(data.result.timeframe != null){
                         if(data.result.timeframe.open != null){
-                            opendate = new Date(data.result.timeframe.open/1000);
+                            opendate = new Date(data.result.timeframe.open*1000);
                             $("#unitopendate").val(opendate);
                         }
                         if(data.result.timeframe.close != null){
-                            closedate = new Date(data.result.timeframe.close/1000);
+                            closedate = new Date(data.result.timeframe.close*1000);
                             $("#unitclosedate").val(closedate);
                         }
                     }
@@ -149,11 +149,11 @@ function getUnitInfo(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open/1000);
+                                topen = new Date(item.timeframe.open*1000);
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close/1000);
+                                tclose = new Date(item.timeframe.close*1000);
                             else
                                 tclose = "";
                         }
@@ -221,8 +221,8 @@ function saveUpdate(){
         return;
     }
 
-    opendate = Date.parse(opendate)*1000;
-    closedate = Date.parse(closedate)*1000;
+    opendate = Date.parse(opendate)/1000;
+    closedate = Date.parse(closedate)/1000;
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -245,11 +245,11 @@ function saveUpdate(){
                 $("#unitdesc").val(data.result.message);
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open/1000);
+                        opendate = new Date(data.result.timeframe.open*1000);
                         $("#unitopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close/1000);
+                        closedate = new Date(data.result.timeframe.close*1000);
                         $("#unitclosedate").val(closedate);
                     }
                 }
@@ -282,8 +282,8 @@ function verifyTestForm(){
         return;
     }
 
-    opendate = Date.parse(opendate)*1000;
-    closedate = Date.parse(closedate)*1000;
+    opendate = Date.parse(opendate)/1000;
+    closedate = Date.parse(closedate)/1000;
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -349,11 +349,11 @@ function refreshTests(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open/1000);
+                                topen = new Date(item.timeframe.open*1000);
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close/1000);
+                                tclose = new Date(item.timeframe.close*1000);
                             else
                                 tclose = "";
                         }
