@@ -108,6 +108,7 @@ function getTestInfo(){
                         $('#entry-list').append('<tr><td></td><td></td><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
                     }
                     getLangs();
+                    $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
                     $("#test-sitting").hide();
                 }
                 else if(data.result.sessionUserPermissions.execute == true){

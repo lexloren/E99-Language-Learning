@@ -167,6 +167,7 @@ function getUnitInfo(){
                         $('#tests').append(testrow);
                     });
                 }
+                $("#doc-body").append('<a href="course.html?courseid='+data.result.courseId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to course"></span>&nbsp; Return to course</a><br />&nbsp; ');
                 $("#unitData").show();	
             }	
             $("#loader").hide();	
