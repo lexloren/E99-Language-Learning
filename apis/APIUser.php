@@ -226,19 +226,19 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_GET["entry_id"]) || !($entry = Entry::select_by_id(intval($_GET["entry_id"], 10))))
+		if (!isset($_POST["entry_id"]) || !($entry = Entry::select_by_id(intval($_POST["entry_id"], 10))))
 		{
 			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".
-							(isset($_GET["entry_id"]) ? $_GET["entry_id"] : ''));
+							(isset($_POST["entry_id"]) ? $_POST["entry_id"] : ''));
 		}
-		else if (!isset($_GET["grade_id"]) || !($grade = Grade::select_by_id(intval($_GET["grade_id"], 10))))
+		else if (!isset($_POST["grade_id"]) || !($grade = Grade::select_by_id(intval($_POST["grade_id"], 10))))
 		{
 			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".
-                                                        (isset($_GET["grade_id"]) ? $_GET["grade_id"] : ''));
+                                                        (isset($_POST["grade_id"]) ? $_POST["grade_id"] : ''));
 		}
 		else
 		{
-			$result = Practice::update_practice_response($_GET["entry_id"], $_GET["grade_id"]);
+			$result = Practice::update_practice_response($_POST["entry_id"], $_POST["grade_id"]);
 			if (!Session::get()->has_error())
 			{
 				Session::get()->set_result_assoc($result->json_assoc());
