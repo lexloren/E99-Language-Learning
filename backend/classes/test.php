@@ -441,11 +441,14 @@ class Test extends CourseComponent
 			"name" => $this->get_test_name(),
 			"unitId" => $this->get_unit_id(),
 			"courseId" => $this->get_course_id(),
-			//"owner" => $this->get_owner()->json_assoc(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
+			"timeframe" => !!$this->get_timeframe()
+				? ($this->session_user_can_read() || $this->session_user_can_execute()
+					? $this->get_timeframe()->json_assoc()
+					: null)
+				: null,
 			"entriesCount" => count($this->get_entries()),
 			"message" => $this->get_message()
-		), array (0 => "testId"), $privacy);
+		), array ("testId", "timeframe"), $privacy);
 	}
 	
 	public function detailed_json_assoc($privacy = null)
