@@ -232,9 +232,9 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 		$_SESSION["handle"] = $this->db->handles[0];
 
-		$_GET["entry_id"] = $this->db->practice_entry_ids[0];
+		$_POST["entry_id"] = $this->db->practice_entry_ids[0];
 		$grade = Grade::select_by_point(4);
-		$_GET["grade_id"] = $grade->get_grade_id();
+		$_POST["grade_id"] = $grade->get_grade_id();
                 Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertFalse(Session::get()->has_error());

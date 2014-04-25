@@ -150,6 +150,24 @@ class Test extends CourseComponent
 		
 		return $this;
 	}
+	public function set_entry_mode($entry, $mode)
+	{
+		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit test.");
+		
+		$mode = $mode === null ? "NULL" : (!!$mode ? "1" : "0");
+		$entry = $entry->copy_for_user($this->get_owner());
+		
+		if (!in_array($entry, $this->get_entries()))
+		{
+			return self::set_error_description("Test cannot set mode for entry not already in test.");
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+		
+		return $this;
+	}
 	
 	public function entries_add($entry, $mode = 1)
 	{
