@@ -582,6 +582,40 @@ class Course extends DatabaseRow
 		}
 	}
 	
+	public function instructors_count()
+	{
+		return self::count("course_instructors", "course_id", $this->get_course_id());
+	}
+	
+	public function students_count()
+	{
+		return self::count("course_students", "course_id", $this->get_course_id());
+	}
+	
+	public function units_count()
+	{
+		return self::count("course_units", "course_id", $this->get_course_id());
+	}
+	
+	public function lists_count()
+	{
+		$course_units = "courses CROSS JOIN course_units USING (course_id)";
+		$unit_lists = "($course_units) CROSS JOIN course_unit_lists USING (unit_id)";
+		return self::count($unit_lists, "course_id", $this->get_course_id());
+	}
+	
+	public function tests_count()
+	{
+		$course_units = "courses CROSS JOIN course_units USING (course_id)";
+		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
+		return self::count($unit_tests, "course_id", $this->get_course_id());
+	}
+	
+	public function researchers_count()
+	{
+		return self::count("course_researchers", "course_id", $this->get_course_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -592,12 +626,12 @@ class Course extends DatabaseRow
 			"owner" => $this->get_owner()->json_assoc(),
 			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
-			"instructorsCount" => count($this->get_instructors()),
-			"studentsCount" => count($this->get_students()),
-			"researchersCount" => count($this->get_researchers()),
-			"unitsCount" => count($this->get_units()),
-			"listsCount" => count($this->get_lists()),
-			"testsCount" => count($this->get_tests()),
+			"instructorsCount" => $this->instructors_count(),
+			"studentsCount" => $this->students_count(),
+			"researchersCount" => $this->researchers_count(),
+			"unitsCount" => $this->units_count(),
+			"listsCount" => $this->lists_count(),
+			"testsCount" => $this->tests_count(),
 			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}

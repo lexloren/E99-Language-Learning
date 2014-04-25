@@ -302,6 +302,7 @@ class User extends DatabaseRow
 		$this->uncache_courses();
 		$this->uncache_instructor_courses();
 		$this->uncache_student_courses();
+		$this->uncache_researcher_courses();
 	}
 	public function uncache_courses()
 	{
@@ -314,6 +315,10 @@ class User extends DatabaseRow
 	public function uncache_student_courses()
 	{
 		if (isset($this->student_courses)) unset($this->student_courses);
+	}
+	public function uncache_researcher_courses()
+	{
+		if (isset($this->researcher_courses)) unset($this->researcher_courses);
 	}
 	public function uncache_all()
 	{
@@ -412,6 +417,13 @@ class User extends DatabaseRow
 		return self::get_cached_collection($this->student_courses, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
 	}
 	
+	private $researcher_courses;
+	public function get_researcher_courses()
+	{
+		$table = "course_researchers LEFT JOIN courses USING (course_id)";
+		return self::get_cached_collection($this->researcher_courses, "Course", $table, "course_researchers.user_id", $this->get_user_id(), "courses.*");
+	}
+	
 	public function in_array($array)
 	{
 		foreach ($array as $user)
@@ -447,21 +459,45 @@ class User extends DatabaseRow
 		return !!Session::get() && $this->equals(Session::get()->get_user());
 	}
 	
+	public function courses_owned_count()
+	{
+		return self::count("courses", "user_id", $this->get_user_id());
+	}
+	
+	public function courses_instructed_count()
+	{
+		return self::count("course_instructors", "user_id", $this->get_user_id());
+	}
+	
+	public function courses_studied_count()
+	{
+		return self::count("course_students", "user_id", $this->get_user_id());
+	}
+	
+	public function courses_researched_count()
+	{
+		return self::count("course_researchers", "user_id", $this->get_user_id());
+	}
+	
+	public function lists_count()
+	{
+		return self::count("lists", "user_id", $this->get_user_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
-			"languages" => $this->is_session_user() ? self::array_for_json($this->get_languages()) : null,
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy),
-			"languagesCount" => count($this->get_languages()),
-			"coursesOwnedCount" => count($this->get_courses()),
-			"coursesInstructedCount" => count($this->get_instructor_courses()),
-			"coursesStudiedCount" => count($this->get_student_courses()),
-			"listsCount" => count($this->get_lists()),
+			"coursesOwnedCount" => $this->courses_owned_count(),
+			"coursesInstructedCount" => $this->courses_instructed_count(),
+			"coursesStudiedCount" => $this->courses_studied_count(),
+			"coursesResearchedCount" => $this->courses_researched_count(),
+			"listsCount" => $this->lists_count(),
 		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
 	
@@ -474,6 +510,7 @@ class User extends DatabaseRow
 		$assoc["coursesOwned"] = self::array_for_json($this->get_courses());
 		$assoc["coursesInstructed"] = self::array_for_json($this->get_instructor_courses());
 		$assoc["coursesStudied"] = self::array_for_json($this->get_student_courses());
+		$assoc["coursesResearched"] = self::array_for_json($this->get_researcher_courses());
 		$assoc["lists"] = self::array_for_json($this->get_lists());
 		
 		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());

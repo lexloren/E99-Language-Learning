@@ -67,6 +67,29 @@ class DatabaseRow extends ErrorReporter
 		return $instance;
 	}
 	
+	protected static function count($table, $column, $id)
+	{
+		$id = intval($id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
+		
+		if (!!$mysqli->error)
+		{
+			return static::set_error_description("Failed to count $table where $column = $id: " . $mysqli->error . ".");
+		}
+		
+		if ($result->num_rows == 0) return 0;
+		
+		if (!($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to count $table where $column = $id.");
+		}
+		
+		return intval($result_assoc["count"], 10);
+	}
+	
 	protected static function assoc_contains_keys($assoc, $keys)
 	{
 		if (!isset($assoc) || !$assoc || !is_array($assoc))

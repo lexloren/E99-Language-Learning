@@ -293,6 +293,11 @@ class EntryList extends DatabaseRow
 		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
+	public function entries_count()
+	{
+		return self::count("list_entries", "list_id", $this->get_list_id());
+	}
+	
 	//  Adds an entry to this list
 	//      Returns this list
 	public function entries_add($entry_to_add)
@@ -434,7 +439,7 @@ class EntryList extends DatabaseRow
 			"name" => $this->name,
 			"owner" => $this->get_owner()->json_assoc(),
 			"isPublic" => $this->get_public(),
-			"entriesCount" => count($this->get_entries()),
+			"entriesCount" => $this->entries_count(),
 		), array (0 => "listId"), $privacy);
 	}
 	
