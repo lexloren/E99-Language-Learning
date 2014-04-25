@@ -10,6 +10,7 @@
     <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/starter-template.css" rel="stylesheet">
+	
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
     <script src="js/jquery-ui-timepicker-addon.js"></script>
@@ -26,6 +27,7 @@
     <script type="text/javascript">
         
       $(document).ready(function(){
+		pageSetup();
         setupMaintCourse();
       });
     </script>
@@ -35,18 +37,14 @@
    <!-- Fixed navbar -->
     <div id="navbar"></div>
 	<br/>
-	
-     <div div id="doc-body" class="container theme-showcase" role="main">
+      
+    <div div id="doc-body" class="container theme-showcase" role="main">
+		<h1><span id="coursenameH1"></span></h1>
 		<div class="row">
 			<div class="col-md-2">
 				<!--The Top tabs go here-->
-				<ul class="nav nav-pills nav-stacked" style="margin-bottom: 15px;">
-					<li class="active"><a href="#progress" data-toggle="tab">My Progress</a></li>
-					<li class=""><a href="#students" data-toggle="tab">Enroll Students</a></li>
-					<li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>
-					<li class=""><a href="#researcher" data-toggle="tab">Researcher</a></li>
-					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>
-					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>
+				<ul class="nav nav-pills nav-stacked" id="navtabs" style="margin-bottom: 15px;">
+					
 					
 				</ul>
 			</div>
@@ -59,14 +57,37 @@
 						
 					</div>
 					<div class="tab-pane fade" id="students">
-						
+						<div id="enrolledstudents">
+						</div> 
+						<div id="studentadmin">
+							<br /><br />
+							<form id="searchUserForm" class="container-small" role="form">
+							  <div class="form-group">
+								<label for="searchCriteria">Search Users:</label>
+								<input type="text" class="form-control" id="searchCriteria" placeholder="Search by email address or username" required autofocus>
+							  </div>
+							  <button class="btn btn-primary" type="button" onclick="return searchUsers(true);">Search</button> &nbsp; 
+							</form>
+							<div id="searchResults">
+							</div>   
+						</div>
 					</div>
 					<div class="tab-pane fade" id="instructor">
+						<div id="courseInstructor">
+						</div> 
+						<br /><br />
+						<form id="searchInstructorForm" class="container-small" role="form">
+						  <div class="form-group">
+							<label for="searchInstructor">Search Instructor:</label>
+							<input type="text" class="form-control" id="searchInstructor" placeholder="Search by email address or username" required autofocus>
+						  </div>
+						  <button class="btn btn-primary" type="button" onclick="return searchUsers(false);">Search</button> &nbsp; 
+						</form>
+						<div id="searchResultsInstructor">
+						</div>   
 						
 					</div>
-					<div class="tab-pane fade" id="researcher">
-						
-					</div>
+					
 					<div class="tab-pane fade" id="unit">
 						<div id="units">
 						</div>
@@ -139,8 +160,8 @@
 					  <br />
 					  <br />
 					  
-					  <button type="button" stype="button" class="btn" onclick="javascript:window.location.assign('course.html');">Reset</button>&nbsp;
-					  <button class="btn btn-primary" type="button" onclick="insertNew();">Update Course</button> <br /><br />     
+					  <button type="button" stype="button" class="btn" onclick="resetForm('#editCourseForm');">Reset</button>&nbsp;
+					  <button class="btn btn-primary" type="button" onclick="updateCourse();">Update Course</button> <br /><br />     
 					</form>	
 					</div>
 				</div>
