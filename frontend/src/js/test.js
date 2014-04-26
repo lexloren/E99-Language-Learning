@@ -487,8 +487,12 @@ function submitAnswer(id){
             if(data.isError){
                 console.log(data.errorTitle);
                 console.log(data.errorDescription);
-                if(data.errorDescription = "Session user has already responded to all test entries."){
+                if(data.errorDescription == "Session user has already responded to all test entries."){
                   successMessage("Test is complete and has been submitted.");                  
+                }
+                else{
+                    failureMessage("There was a problem obtaining the test data. Please refresh the page and try again.");
+                    $("html, body").animate({scrollTop:0}, "slow"); 
                 }
             }
             else{
