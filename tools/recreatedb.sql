@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 26 april 2014 kl 05:22
+-- Skapad: 26 april 2014 kl 06:33
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -141,12 +141,16 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   `name` char(255) default NULL,
   `open` bigint(20) unsigned default NULL,
   `close` bigint(20) unsigned default NULL,
+  `graded` tinyint(1) NOT NULL default '1',
+  `disclosed` tinyint(1) NOT NULL default '0',
   `message` text,
   PRIMARY KEY  (`test_id`),
   KEY `unit_id` (`unit_id`),
   KEY `open` (`open`),
   KEY `close` (`close`),
-  KEY `name` (`name`)
+  KEY `name` (`name`),
+  KEY `graded` (`graded`),
+  KEY `disclosed` (`disclosed`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=48 ;
 
 -- --------------------------------------------------------
