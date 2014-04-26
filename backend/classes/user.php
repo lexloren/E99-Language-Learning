@@ -355,9 +355,41 @@ class User extends DatabaseRow
 	}
 	
 	private $lists;
-	public function get_lists()
+	public function get_lists($course_ids = null)
 	{
-		return self::get_cached_collection($this->lists, "EntryList", "lists", "user_id", $this->get_user_id());
+		if ($course_ids === null)
+		{
+			return self::get_cached_collection($this->lists, "EntryList", "lists", "user_id", $this->get_user_id());
+		}
+		else
+		{
+			foreach ($course_ids as &$course_id)
+			{
+				$course_id = intval($course_id, 10);
+			}
+			
+			$course_ids_string = implode(",", $course_ids);
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$course_units = "(courses CROSS JOIN course_units USING (course_id))";
+			$unit_lists = "($course_units CROSS JOIN course_unit_lists USING (unit_id))";
+			
+			$result = $mysqli->query("SELECT lists.* FROM lists CROSS JOIN $unit_lists USING (list_id) WHERE lists.user_id = %d AND course_id IN ($course_ids_string)");
+			
+			if (!!$mysqli->error)
+			{
+				return self::set_error_description("User failed to get lists by course id: " . $mysqli->error . ".");
+			}
+			
+			$lists = array ();
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				array_push($lists, EntryList::from_mysql_result_assoc($result_assoc));
+			}
+			
+			return $lists;
+		}
 	}
 	
 	private $courses;

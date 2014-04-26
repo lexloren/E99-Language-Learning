@@ -79,7 +79,7 @@ class APIUser extends APIBase
 	public function lists()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_lists());
+		self::return_array_as_json(Session::get()->get_user()->get_lists(isset($_GET["course_ids"]) ? explode(",", $_GET["course_ids"]) : null));
 	}
 	
 	public function languages()
