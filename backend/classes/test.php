@@ -198,7 +198,7 @@ class Test extends CourseComponent
 		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, %s)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
-			count($this->get_entries()) + 1,
+			$this->entries_count() + 1,
 			$mode
 		));
 		
@@ -434,6 +434,11 @@ class Test extends CourseComponent
 		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
+	public function entries_count()
+	{
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries", "test_id", $this->get_test_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -446,7 +451,7 @@ class Test extends CourseComponent
 					? $this->get_timeframe()->json_assoc()
 					: null)
 				: null,
-			"entriesCount" => count($this->get_entries()),
+			"entriesCount" => $this->entries_count(),
 			"message" => $this->get_message()
 		), array ("testId", "timeframe"), $privacy);
 	}

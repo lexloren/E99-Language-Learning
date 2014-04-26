@@ -286,6 +286,18 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
+	public function lists_count()
+	{
+		$unit_lists = "course_units CROSS JOIN course_unit_lists USING (unit_id)";
+		return self::count($unit_lists, "unit_id", $this->get_unit_id());
+	}
+	
+	public function tests_count()
+	{
+		$unit_tests = "course_units CROSS JOIN course_unit_tests USING (unit_id)";
+		return self::count($unit_tests, "unit_id", $this->get_unit_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -295,8 +307,8 @@ class Unit extends CourseComponent
 			"courseId" => $this->get_course_id(),
 			//"owner" => $this->get_owner()->json_assoc(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
-			"listsCount" => count($this->get_lists()),
-			"testsCount" => count($this->get_tests()),
+			"listsCount" => $this->lists_count(),
+			"testsCount" => $this->tests_count(),
 			"message" => $this->get_message()
 		), array (0 => "unitId"), $privacy);
 	}

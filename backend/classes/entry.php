@@ -250,6 +250,11 @@ class Entry extends DatabaseRow
 		
 		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
 	}
+	
+	public function annotations_count()
+	{
+		return 0;
+	}
 
 	public function json_assoc($privacy = null)
 	{
@@ -264,7 +269,7 @@ class Entry extends DatabaseRow
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations(),
-			"annotationsCount" => count($this->get_annotations())
+			"annotationsCount" => $this->annotations_count()
 		);
 		
 		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
@@ -761,6 +766,11 @@ class UserEntry extends Entry
 		$user_entry->interval = $new_interval;
 		$user_entry->efactor = $new_efactor;
 		return $user_entry;
+	}
+	
+	public function annotations_count()
+	{
+		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
 	public function detailed_json_assoc($privacy = null)
