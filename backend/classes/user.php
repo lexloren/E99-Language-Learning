@@ -172,6 +172,31 @@ class User extends DatabaseRow
 		return $this;
 	}
 	
+	private $status_id = null;
+	public function get_status_id()
+	{
+		$this->status_id;
+	}
+	public function get_status($status)
+	{
+		if (!$this->get_status_id()) return null;
+		
+		if (($status = Status::select_by_id($this->get_status_id())))
+		{
+			return $status;
+		}
+		else return self::set_error_description("Failed to get user status: " . Status::unset_error_description());
+	}
+	public function set_status($status)
+	{
+		if (!self::update_this($this, "users", array ("status_id" => ($status_id = $status->get_status_id())), "user_id", $this->get_user_id()))
+		{
+			return null;
+		}
+		$this->status_id = $status_id;
+		return $this;
+	}
+	
 	public function check_password($password)
 	{
 		$mysqli = Connection::get_shared_instance();
@@ -255,9 +280,10 @@ class User extends DatabaseRow
 		);
 	}
 	
-	public function __construct($user_id, $handle, $email = null, $name_family = null, $name_given = null)
+	public function __construct($user_id, $status_id, $handle, $email = null, $name_family = null, $name_given = null)
 	{
 		$this->user_id = intval($user_id, 10);
+		$this->status_id = intval($status_id, 10);
 		$this->handle = $handle;
 		$this->email = $email;
 		$this->name_family = $name_family;
@@ -271,6 +297,7 @@ class User extends DatabaseRow
 	{
 		$mysql_columns = array (
 			"user_id",
+			"status_id",
 			"handle",
 			"email",
 			"name_family",
@@ -280,6 +307,7 @@ class User extends DatabaseRow
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
 			? new self(
 				$result_assoc["user_id"],
+				$result_assoc["status_id"],
 				$result_assoc["handle"],
 				$result_assoc["email"],
 				$result_assoc["name_family"],

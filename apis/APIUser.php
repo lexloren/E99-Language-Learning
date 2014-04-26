@@ -146,6 +146,21 @@ class APIUser extends APIBase
 		{
 			$updates += !!$user->set_email($_POST["email"]);
 		}
+			
+		if (isset($_POST["status_id"]))
+		{
+			if (($status = Status::select_by_id($_POST["status_id"])))
+			{
+				$updates += !!$user->set_status($status);
+			}
+		}
+		else if (isset($_POST["status"]))
+		{
+			if (($status = Status::select_by_description($_POST["status"])))
+			{
+				$updates += !!$user->set_status($status);
+			}
+		}
 		
 		if (isset($_POST["name_given"]))
 		{
