@@ -372,7 +372,7 @@ class User extends DatabaseRow
 		$table = "user_languages LEFT JOIN languages USING (lang_id)";
 		return self::get_cached_collection($this->languages, "Language", $table, "user_id", $this->get_user_id());
 	}
-	public function languages_add($language)
+	public function languages_add($language, $years = null)
 	{
 		if (!$language)
 		{
@@ -384,10 +384,19 @@ class User extends DatabaseRow
 			return static::set_error_description("Session user cannot edit user.");
 		}
 		
+		if ($years === null)
+		{
+			$years = "NULL";
+		}
+		else if (($years = intval($years, 10)) < 0)
+		{
+			return static::set_error_description("User cannot add language with negative years.");
+		}
+		
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("INSERT INTO user_languages " .
-							   "(user_id, lang_id) VALUES (%d, %d)",
+							   "(user_id, lang_id, years) VALUES (%d, %d, $years)",
 			$this->get_user_id(),
 			$language->get_lang_id()
 		));
@@ -403,14 +412,14 @@ class User extends DatabaseRow
 	}
 	public function languages_remove($language)
 	{
-		if (!$language)
-		{
-			return static::set_error_description("Failed to remove null user language.");
-		}
-		
 		if (!$this->session_user_can_write())
 		{
 			return static::set_error_description("Session user cannot edit user.");
+		}
+		
+		if (!$language)
+		{
+			return static::set_error_description("User cannot remove null user language.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -429,6 +438,62 @@ class User extends DatabaseRow
 		if (isset($this->languages)) array_drop($this->languages, $language);
 		
 		return $this;
+	}
+	public function set_language_years($language, $years)
+	{
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit user.");
+		}
+		
+		if (!$language)
+		{
+			return static::set_error_description("User cannot update null user language.");
+		}
+		
+		if ($years === null)
+		{
+			$years = "NULL";
+		}
+		else if (($years = intval($years, 10)) < 0)
+		{
+			return static::set_error_description("User cannot set language years to negative integer.");
+		}
+		
+		if (!in_array($language, $this->get_languages()))
+		{
+			return self::set_error_description("User cannot set language years for language not already associated with user.");
+		}
+			
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_language_id()));
+		
+		if ($mysqli->error) return self::set_error_description("User Modification", "User failed to set language years: " . $mysqli->error . ".");
+		
+		return $this;
+	}
+	
+	public function get_language_years_json_assoc()
+	{
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query(sprintf("SELECT lang_code, years FROM user_languages LEFT JOIN languages USING (lang_id) WHERE user_id = %d", $this->get_user_id()));
+		
+		if (!!$mysqli->error)
+		{
+			return self::set_error_description("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
+		}
+		
+		$language_years_assoc = array ();
+		
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($language_years_assoc,
+				array ($result_assoc["lang_code"] => $result_assoc["years"]));
+		}
+		
+		return $languages_assoc;
 	}
 	
 	private $instructor_courses;
@@ -519,6 +584,7 @@ class User extends DatabaseRow
 			"isSessionUser" => $this->is_session_user(),
 			"handle" => $this->get_handle(),
 			"email" => $this->get_email($privacy),
+			"languageYears" => $this->get_language_years_json_assoc(),
 			"nameGiven" => $this->get_name_given($privacy),
 			"nameFamily" => $this->get_name_family($privacy),
 			"coursesOwnedCount" => $this->courses_owned_count(),

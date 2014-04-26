@@ -175,23 +175,41 @@ class APIUser extends APIBase
 		if (isset($_POST["langs"]))
 		{
 			$lang_codes = explode(",", $_POST["langs"]);
+			
+			$language_years = array ();
+			foreach ($lang_codes as $lang_code)
+			{
+				$lang_code = explode("=", $lang_code);
+				$years = count($lang_code) == 2 ? array_pop($lang_code) : null;
+				if ($years !== null && strlen($years) == 0)
+				{
+					$years = null;
+				}
+				else $years = intval($years, 10);
+				$language_years[$lang_code] = $years;
+			}
+			
 			$user_languages = $user->get_languages();
 			
 			foreach ($user_languages as $language)
 			{
-				if (!in_array($language->get_lang_code(), $lang_codes))
+				if (!in_array($language->get_lang_code(), $language_years))
 				{
 					$updates += !!$user->languages_remove($language);
 				}
 			}
 			
-			foreach ($lang_codes as $lang_code)
+			foreach ($language_years as $lang_code => $years)
 			{
 				if (($language = Language::select_by_code($lang_code)))
 				{
 					if (!in_array($language, $user_languages))
 					{
-						$updates += !!$user->languages_add($language);
+						$updates += !!$user->languages_add($language, $years);
+					}
+					else
+					{
+						$updates += !!$user->set_language_years($language, $years);
 					}
 				}
 			}
