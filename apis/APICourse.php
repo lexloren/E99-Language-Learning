@@ -155,6 +155,19 @@ class APICourse extends APIBase
 		
 		if (isset($_GET["langs"]))
 		{
+			if (isset($_GET["entry_query"]))
+			{
+				if (is_array($more = Course::find_by_entry_query(explode(",", $_GET["entry_query"]), explode(",", $_GET["langs"]))))
+				{
+					$courses = array_merge($courses, $more);
+				}
+				else
+				{
+					Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+					return;
+				}
+			}
+			
 			if (is_array($more = Course::find_by_languages(explode(",", $_GET["langs"]))))
 			{
 				$courses = array_merge($courses, $more);

@@ -113,6 +113,34 @@ class APIList extends APIBase
 			}
 		}
 		
+		if (isset($_GET["langs"]))
+		{
+			if (isset($_GET["entry_query"]))
+			{
+				if (is_array($more = EntryList::find_by_entry_query(explode(",", $_GET["entry_query"]), explode(",", $_GET["langs"]))))
+				{
+					$lists = array_merge($lists, $more);
+				}
+				else
+				{
+					Session::get()->set_error_assoc("List Find", EntryList::unset_error_description());
+					return;
+				}
+			}
+			
+			/*
+			if (is_array($more = Course::find_by_languages(explode(",", $_GET["langs"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+			*/
+		}
+		
 		self::return_array_as_json($lists);
 	}
 	

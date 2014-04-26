@@ -110,6 +110,18 @@ class Course extends DatabaseRow
 		return self::courses_from_mysql_result($result);
 	}
 	
+	public static function find_by_entry_query($query, $lang_codes)
+	{
+		if (($entries = Dictionary::query($query, $lang_codes, array ("num" => 0, "size" => 100), false)))
+		{
+			$entry_ids = array ();
+			foreach ($entries as $entry) array_push($entry_ids, $entry->get_entry_id());
+			return self::find_by_entry_ids($entry_ids);
+		}
+		
+		return self::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
+	}
+	
 	public static function find_by_user_query($query)
 	{
 		if (($users = User::find($query)))
