@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 27 april 2014 kl 05:51
+-- Skapad: 27 april 2014 kl 07:50
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -170,7 +170,8 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   UNIQUE KEY `test_id` (`test_id`,`num`),
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
   KEY `number` (`num`),
-  KEY `user_entry_id` (`user_entry_id`)
+  KEY `user_entry_id` (`user_entry_id`),
+  KEY `mode` (`mode`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=22 ;
 
 -- --------------------------------------------------------
@@ -183,21 +184,17 @@ DROP TABLE IF EXISTS `course_unit_test_entry_patterns`;
 CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   `pattern_id` bigint(20) unsigned NOT NULL auto_increment,
   `test_entry_id` bigint(20) unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   `prompt` tinyint(1) NOT NULL default '0',
-  `word_0` char(255) NOT NULL,
-  `word_1` char(255) NOT NULL,
-  `word_1_pronun` char(255) NOT NULL,
-  `grade_id` bigint(20) unsigned default NULL,
+  `contents` char(255) default NULL,
   `score` tinyint(4) default NULL,
   PRIMARY KEY  (`pattern_id`),
-  UNIQUE KEY `test_entry_id` (`test_entry_id`,`word_0`,`word_1`,`word_1_pronun`),
+  UNIQUE KEY `test_entry_id` (`test_entry_id`,`mode`,`contents`),
   KEY `score` (`score`),
-  KEY `grade_id` (`grade_id`),
   KEY `prompt` (`prompt`),
-  KEY `word_0` (`word_0`),
-  KEY `word_1` (`word_1`),
-  KEY `word_1_pronun` (`word_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=103 ;
+  KEY `mode` (`mode`),
+  KEY `contents` (`contents`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -218,7 +215,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=16 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -552,8 +549,7 @@ ALTER TABLE `course_unit_test_entries`
 -- Restriktioner för tabell `course_unit_test_entry_patterns`
 --
 ALTER TABLE `course_unit_test_entry_patterns`
-  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_2` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restriktioner för tabell `course_unit_test_sittings`

@@ -291,18 +291,9 @@ class Test extends CourseComponent
 		
 		array_push($this->entries, $entry);
 		
-		$entry_languages = $entry->get_languages();
-		$entry_words = $entry->get_words();
-		$entry_pronunciations = $entry->get_pronunciations();
-		
 		$test_entry_id = $mysqli->insert_id;
 		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, word_0, word_1, word_1_pronun) VALUES (%d, 1, '%s', '%s', '%s')",
-			$test_entry_id,
-			$mysqli->escape_string($entry_words[$entry_languages[0]]),
-			$mysqli->escape_string($entry_words[$entry_languages[1]]),
-			$mysqli->escape_string($entry_pronunciations[$entry_languages[1]])
-		));
+		$mysqli->query("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, mode, contents) SELECT test_entry_id, 1, mode, IF(mode = 0, word_0, IF(mode = 1, word_1, word_1_pronun)) FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = $test_entry_id AND mode = $mode");
 		
 		if (!!$mysqli->error)
 		{
@@ -310,21 +301,6 @@ class Test extends CourseComponent
 		}
 		
 		return $this;
-	}
-	
-	public function get_entry_options($entry)
-	{
-		
-	}
-	
-	public function entry_options_insert($contents)
-	{
-		
-	}
-	
-	public function entry_options_delete_by_pattern_id($pattern_id)
-	{
-		
 	}
 	
 	public function entries_add_from_list($list, $mode = null)

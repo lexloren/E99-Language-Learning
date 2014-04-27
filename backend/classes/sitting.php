@@ -260,7 +260,7 @@ class Sitting extends CourseComponent
 		
 		$mode = $result_assoc["mode"];
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_entry_patterns WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
+		$result = $mysqli->query(sprintf("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
 			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
 		));
 		
@@ -272,18 +272,7 @@ class Sitting extends CourseComponent
 		$options = array ();
 		while (($result_assoc = $result->fetch_assoc()))
 		{
-			if ($mode === 1)
-			{
-				array_push($options, $result_assoc["word_1"]);
-			}
-			else if ($mode === 2)
-			{
-				array_push($options, $result_assoc["word_1_pronun"]);
-			}
-			else
-			{
-				array_push($options, $result_assoc["word_0"]);
-			}
+			array_push($options, $result_assoc["contents"]);
 		}
 		
 		if (count($options) == 1) $options = null;
