@@ -65,7 +65,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -80,7 +80,7 @@ class EntryList extends DatabaseRow
 			return self::find_by_entry_ids($entry_ids);
 		}
 		
-		return self::set_error_description("Failed to find list(s) by entry ids: " . Dictionary::unset_error_description());
+		return static::set_error_description("Failed to find list(s) by entry ids: " . Dictionary::unset_error_description());
 	}
 	
 	public static function find_by_user_query($query)
@@ -92,7 +92,7 @@ class EntryList extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return self::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
+		return static::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
 	}
 	
 	public static function find_by_user_ids($user_ids)
@@ -110,7 +110,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -161,7 +161,7 @@ class EntryList extends DatabaseRow
 	}
 	public function set_public($public)
 	{
-		return self::set_error_description("List.set_public() not yet implemented.");
+		return static::set_error_description("List.set_public() not yet implemented.");
 	}
 	
 	public function uncache_entries()
@@ -345,7 +345,7 @@ class EntryList extends DatabaseRow
 	
 	public function entries_add_from_list($list)
 	{
-		if ($list == $this) return self::set_error_description("List cannot add entries from itself.");
+		if ($list == $this) return static::set_error_description("List cannot add entries from itself.");
 		
 		foreach ($list->get_entries() as $entry)
 		{
@@ -385,7 +385,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
+			return static::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);

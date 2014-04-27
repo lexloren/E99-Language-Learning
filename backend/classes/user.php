@@ -166,7 +166,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("User failed to set password: " . $mysqli->error . ".");
+			return static::set_error_description("User failed to set password: " . $mysqli->error . ".");
 		}
 		
 		return $this;
@@ -185,7 +185,7 @@ class User extends DatabaseRow
 		{
 			return $status;
 		}
-		else return self::set_error_description("Failed to get user status: " . Status::unset_error_description());
+		else return static::set_error_description("Failed to get user status: " . Status::unset_error_description());
 	}
 	public function set_status($status)
 	{
@@ -210,7 +210,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("User failed to check password: " . $mysqli->error . ".");
+			return static::set_error_description("User failed to check password: " . $mysqli->error . ".");
 		}
 		
 		return $result->num_rows === 1;
@@ -379,7 +379,7 @@ class User extends DatabaseRow
 			
 			if (!!$mysqli->error)
 			{
-				return self::set_error_description("User failed to get lists by course id: " . $mysqli->error . ".");
+				return static::set_error_description("User failed to get lists by course id: " . $mysqli->error . ".");
 			}
 			
 			$lists = array ();
@@ -494,14 +494,14 @@ class User extends DatabaseRow
 		
 		if (!in_array($language, $this->get_languages()))
 		{
-			return self::set_error_description("User cannot set language years for language not already associated with user.");
+			return static::set_error_description("User cannot set language years for language not already associated with user.");
 		}
 			
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_language_id()));
 		
-		if ($mysqli->error) return self::set_error_description("User Modification", "User failed to set language years: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("User Modification", "User failed to set language years: " . $mysqli->error . ".");
 		
 		return $this;
 	}
@@ -514,7 +514,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
+			return static::set_error_description("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
 		}
 		
 		$language_years_assoc = array ();

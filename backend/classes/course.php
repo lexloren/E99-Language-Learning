@@ -104,7 +104,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -119,7 +119,7 @@ class Course extends DatabaseRow
 			return self::find_by_entry_ids($entry_ids);
 		}
 		
-		return self::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
+		return static::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
 	}
 	
 	public static function find_by_user_query($query)
@@ -131,7 +131,7 @@ class Course extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return self::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
+		return static::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
 	}
 
 	public static function find_by_user_ids($user_ids)
@@ -154,7 +154,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -179,7 +179,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
