@@ -445,6 +445,31 @@ class APICourse extends APIBase
 			}
 		}
 	}
+	
+	public function student_practice_report()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (!self::validate_request($_GET, "course_id"))
+			return;
+		
+		$user_id = 0;
+		if (self::validate_request($_GET, "user_id"))
+			$user_id = $_GET["user_id"];
+		else
+			$user_id = Session::get()->get_user()->get_user_id();
+			
+		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id);
+		if (!!$report)
+		{
+			$output = json_encode(array ("studentPracticeReport" => $report));
+			Session::get()->set_result_assoc($output);
+		}
+		else
+		{
+			Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
+		}
+	}
 }
 
 ?>
