@@ -44,6 +44,7 @@ class UserEntryTest extends PHPUnit_Framework_TestCase
 	public function test_set_words()
 	{
 		$user_entry = UserEntry::select_by_user_entry_id($this->db->user_entry_ids[0]);
+		$this->assertNotNull($user_entry);
 		$word_0 = $user_entry->get_word_0();
 		$word_1 = $user_entry->get_word_1();
 		$this->assertNull($user_entry->set_word_0("new word 0"));

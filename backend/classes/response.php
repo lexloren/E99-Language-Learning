@@ -39,7 +39,7 @@ class Response extends CourseComponent
 		
 		$word_0 = "IF(mode = 0, '%s', user_entries.word_0)";
 		$word_1 = "IF(mode = 1, '%s', user_entries.word_1)";
-		$word_1_pronun = "IF(mode IS NULL, '%s', user_entries.word_1_pronun)";
+		$word_1_pronun = "IF(mode = 2, '%s', user_entries.word_1_pronun)";
 		
 		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, word_0, word_1, word_1_pronun) SELECT test_entry_id, $word_0, $word_1, $word_1_pronun FROM course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id) WHERE test_entry_id = %d ON DUPLICATE KEY UPDATE pattern_id = pattern_id",
 			$mysqli->escape_string($contents),

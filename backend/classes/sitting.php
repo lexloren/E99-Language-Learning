@@ -276,7 +276,7 @@ class Sitting extends CourseComponent
 			{
 				array_push($options, $result_assoc["word_1"]);
 			}
-			else if ($mode === null)
+			else if ($mode === 2)
 			{
 				array_push($options, $result_assoc["word_1_pronun"]);
 			}

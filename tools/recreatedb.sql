@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 26 april 2014 kl 06:33
+-- Skapad: 27 april 2014 kl 05:51
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   `test_id` bigint(20) unsigned NOT NULL,
   `user_entry_id` bigint(20) unsigned NOT NULL,
   `num` smallint(5) unsigned NOT NULL,
-  `mode` tinyint(1) default '0',
+  `mode` tinyint(1) unsigned NOT NULL default '1',
   PRIMARY KEY  (`test_entry_id`),
   UNIQUE KEY `test_id` (`test_id`,`num`),
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
@@ -404,16 +404,24 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   `word_0` char(255) default NULL,
   `word_1` char(255) default NULL,
   `word_1_pronun` char(255) default NULL,
-  `interval` int(11) NOT NULL default '0',
-  `efactor` decimal(3,2) NOT NULL default '2.50',
+  `interval_0` int(11) NOT NULL default '0',
+  `efactor_0` decimal(3,2) NOT NULL default '2.50',
+  `interval_1` int(11) NOT NULL default '0',
+  `efactor_1` decimal(3,2) NOT NULL default '2.50',
+  `interval_1_pronun` int(11) NOT NULL default '0',
+  `efactor_1_pronun` decimal(3,2) NOT NULL default '2.50',
   PRIMARY KEY  (`user_entry_id`),
   UNIQUE KEY `entry_id` (`entry_id`,`user_id`),
   KEY `user_id` (`user_id`),
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`),
-  KEY `interval` (`interval`),
-  KEY `efactor` (`efactor`)
+  KEY `interval_0` (`interval_0`),
+  KEY `efactor_0` (`efactor_0`),
+  KEY `interval_1` (`interval_1`),
+  KEY `efactor_1` (`efactor_1`),
+  KEY `interval_1_pronun` (`interval_1_pronun`),
+  KEY `efactor_1_pronun` (`efactor_1_pronun`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=81 ;
 
 -- --------------------------------------------------------

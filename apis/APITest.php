@@ -26,11 +26,7 @@ class APITest extends APIBase
 			}
 			else
 			{
-				if (isset($_POST["mode"]))
-				{
-					$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
-				}
-				else $mode = 1;
+				$mode = isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
 				
 				if (isset($_POST["list_ids"]))
 				{
@@ -163,11 +159,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if (isset($_POST["mode"]))
-			{
-				$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
-			}
-			else $mode = 1;
+			$mode = isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
 			
 			if (isset($_POST["list_ids"]))
 			{
@@ -225,6 +217,28 @@ class APITest extends APIBase
 		}
 	}
 	
+	public function entries_randomize()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			if (self::validate_request($_POST, "entry_ids"))
+			{
+				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+				{
+					if (!$test->entries_remove(Entry::select_by_id($entry_id)))
+					{
+						Session::get()->set_error_assoc("Test-Entries Removal", Test::unset_error_description());
+						return;
+					}
+				}
+				
+				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+			}
+		}
+	}
+	
 	public function entry_update()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -241,7 +255,7 @@ class APITest extends APIBase
 			
 			if (isset($_POST["mode"]))
 			{
-				$mode = strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+				$mode = intval($_POST["mode"], 10);
 				
 				$updates += !!$test->set_entry_mode($entry, $mode);
 			}

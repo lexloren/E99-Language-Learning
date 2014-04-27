@@ -106,6 +106,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
         Session::get()->set_user($user_obj);
 		$result = $entry->update_repetition_details(4);
 		
+		$this->assertNotNull($result);
 		$this->assertEquals($result->get_entry_id(), $entry->get_entry_id());
 		$this->assertEquals($result->get_words(), $entry->get_words());
 		$this->assertEquals($result->get_interval(), 1);
@@ -129,6 +130,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->db->add_users(5);
 		$user = User::select_by_id($this->db->user_ids[3]);
 		$user_entry = $entry->copy_for_user($user);
+		$this->assertNotNull($user_entry);
 		$this->AssertEquals($user, $user_entry->get_owner());
 		$this->AssertEquals($this->db->user_ids[3], $user_entry->get_user_id());
     }

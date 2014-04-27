@@ -154,7 +154,13 @@ class Test extends CourseComponent
 	{
 		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit test.");
 		
-		$mode = $mode === null ? "NULL" : (!!$mode ? "1" : "0");
+		$mode = intval($mode, 10);
+		
+		if ($mode > 2 || $mode < 0)
+		{
+			return self::set_error_description("Test cannot set mode = $mode.");
+		}
+		
 		$entry = $entry->copy_for_user($this->get_owner());
 		
 		if (!in_array($entry, $this->get_entries()))
@@ -169,7 +175,57 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
-	public function entries_add($entry, $mode = 1)
+	public function entries_randomize($reorder = true, $remode = false)
+	{
+		if (!$reorder && !$remode)
+		{
+			return self::set_error_description("Test failed to randomize entries because neither reorder nor remode requested.");
+		}
+		
+		$entries_ordered = $this->get_entries();
+		$entries_count = count($entries_ordered);
+		
+		if ($reorder)
+		{
+			$entries_randomized = array ();
+			
+			while (count($entries_ordered) > 0)
+			{
+				array_push($entries_randomized, array_splice($entries_ordered, rand(0, count($entries_ordered)), 1));
+			}
+			
+			$this->uncache_entries();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $this->get_test_id()));
+			
+			if ($mysqli->error)
+			{
+				return self::set_error_description("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+			}
+		}
+		else
+		{
+			$entries_randomized = $entries_ordered;
+		}
+		
+		for ($i = 0; $i < $entries_count; $i ++)
+		{
+			$mode = $remode ? rand(0, 2) : "mode";
+			
+			$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
+		
+			if ($mysqli->error)
+			{
+				return self::set_error_description("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+			}
+		}
+		
+		return $this;
+	}
+	
+	public function entries_add($entry, $mode = null)
 	{
 		if (!$entry)
 		{
@@ -189,17 +245,21 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to add entry: " . Entry::unset_error_description());
 		}
 		
-		$mode = $mode === null ? "NULL" : (!!$mode ? "1" : "0");
+		$mode = $mode === null ? rand(0, 2) : intval($mode, 10);
+		
+		if ($mode > 2 || $mode < 0)
+		{
+			return self::set_error_description("Test cannot set mode = $mode.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, %s)",
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
-			$this->entries_count() + 1,
-			$mode
+			$this->entries_count() + 1
 		));
 		
 		if (!!$mysqli->error)
@@ -230,7 +290,7 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
-	public function entries_add_from_list($list, $mode = 1)
+	public function entries_add_from_list($list, $mode = null)
 	{
 		foreach ($list->get_entries() as $entry)
 		{

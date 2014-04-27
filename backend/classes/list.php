@@ -324,10 +324,7 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		//  Insert into user_entries from dictionary, if necessary
-		$entry_added = $entry_to_add->copy_for_user($this->get_owner());
-		
-		if (!$entry_added)
+		if (!($entry_added = $entry_to_add->copy_for_user($this->get_owner())))
 		{
 			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
 		}
@@ -374,7 +371,10 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		if (!($entry = $entry->copy_for_user($this->get_owner())))
+		{
+			return static::set_error_description("List failed to remove entry: " . Entry::unset_error_description());
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
