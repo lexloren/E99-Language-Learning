@@ -100,13 +100,13 @@ class Entry extends DatabaseRow
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = self::get_error_description();
+			$error_description = static::get_error_description();
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
 				return $user_entry->get_annotations();
 			}
-			self::unset_error_description();
-			self::set_error_description($error_description);
+			static::unset_error_description();
+			static::set_error_description($error_description);
 		}
 		
 		return array ();
@@ -131,13 +131,13 @@ class Entry extends DatabaseRow
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = self::get_error_description();
+			$error_description = static::get_error_description();
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
 				return $user_entry->revert();
 			}
-			self::unset_error_description();
-			self::set_error_description($error_description);
+			static::unset_error_description();
+			static::set_error_description($error_description);
 		}
 		
 		return $this;
@@ -190,7 +190,7 @@ class Entry extends DatabaseRow
 			: null;
 	}
 	
-	public function annotations_add($annotation_contents)
+	/*public function annotations_add($annotation_contents)
 	{
 		return ($user_entry = $this->copy_for_session_user())
 			? $user_entry->annotations_add($annotation_contents)
@@ -207,7 +207,7 @@ class Entry extends DatabaseRow
 		return ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false))
 			? $user_entry->annotations_remove($annotation)
 			: null;
-	}
+	}*/
 	
 	public function get_interval()
 	{
@@ -539,7 +539,7 @@ class UserEntry extends Entry
 		$pronunciations = $this->get_entry()->get_pronunciations();
 		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
-		return $succeeded ? $this : static::set_error_description("$failure_message: " . self::unset_error_description());
+		return $succeeded ? $this : static::set_error_description("$failure_message: " . static::unset_error_description());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -576,7 +576,7 @@ class UserEntry extends Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
-	public function annotations_add($annotation_contents)
+	/*public function annotations_add($annotation_contents)
 	{
 		self::set_error_description("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
 		
@@ -621,7 +621,7 @@ class UserEntry extends Entry
 		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
 		
 		return $this;
-	}
+	}*/
 	
 	public function user_can_read($user, $list = null)
 	{

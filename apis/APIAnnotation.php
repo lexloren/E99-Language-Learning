@@ -28,11 +28,13 @@ class APIAnnotation extends APIBase
 		{
 			if (self::validate_request($_POST, "contents"))
 			{
-				$entry = $entry->copy_for_session_user();
-				
-				if (!$entry->annotations_add($_POST["contents"]))
+				if (!($entry = $entry->copy_for_session_user()))
 				{
 					Session::get()->set_error_assoc("Annotation Insertion", Entry::unset_error_description());
+				}
+				else if (!Annotation::insert($entry->get_user_entry_id(), $_POST["contents"]))
+				{
+					Session::get()->set_error_assoc("Annotation Insertion", Annotation::unset_error_description());
 				}
 				else
 				{

@@ -68,6 +68,8 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(0, $annotations);
 	}
 	
+	/*
+	//  DEPRECATED
 	public function test_annotations_add()
 	{
 		$this->db->add_users(1);
@@ -85,10 +87,12 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($ret);
 	}
 	
+	//  DEPRECATED
 	public function test_annotations_remove()
 	{
 		//  Already tested in test_get_annotations()
 	}
+	*/
 	
 	public function test_copy_for_session_user()
 	{
