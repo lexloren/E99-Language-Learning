@@ -108,7 +108,7 @@ class Test extends CourseComponent
 			Dictionary::join()
 		);
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
+		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num", "test_entry_id");
 	}
 	public function uncache_entries()
 	{
@@ -289,11 +289,10 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to add entry: " . $mysqli->error . ".");
 		}
 		
-		array_push($this->entries, $entry);
-		
 		$test_entry_id = $mysqli->insert_id;
+		if (isset($this->entries)) $this->entries[$test_entry_id] = $entry;
 		
-		$mysqli->query("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, mode, contents) SELECT test_entry_id, 1, mode, IF(mode = 0, word_0, IF(mode = 1, word_1, word_1_pronun)) FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = $test_entry_id AND mode = $mode");
+		$mysqli->query("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, mode, contents) SELECT test_entry_id, 1, $mode, IF($mode = 0, word_0, IF($mode = 1, word_1, word_1_pronun)) FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = $test_entry_id");
 		
 		if (!!$mysqli->error)
 		{
@@ -572,7 +571,7 @@ class Test extends CourseComponent
 	
 	public function entries_count()
 	{
-		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries", "test_id", $this->get_test_id());
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function json_assoc($privacy = null)

@@ -111,7 +111,7 @@ class DatabaseRow extends ErrorReporter
 	{
 	}
 	
-	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null)
+	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
 	{
 		if (!isset($cache))
 		{
@@ -135,7 +135,7 @@ class DatabaseRow extends ErrorReporter
 					unset ($cache);
 					return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::unset_error_description());
 				}
-				array_push($cache, $member);
+				$cache[$key_by !== null ? $result_assoc[$key_by] : count($cache)] = $member;
 			}
 		}
 		

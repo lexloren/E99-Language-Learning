@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 27 april 2014 kl 07:50
+-- Skapad: 27 april 2014 kl 14:35
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -448,11 +448,13 @@ CREATE TABLE IF NOT EXISTS `user_entry_results` (
   `result_id` bigint(20) unsigned NOT NULL auto_increment,
   `user_entry_id` bigint(20) unsigned NOT NULL,
   `timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   `grade_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY  (`result_id`),
   KEY `timestamp` (`timestamp`),
   KEY `grade_id` (`grade_id`),
-  KEY `user_entry_id` (`user_entry_id`)
+  KEY `user_entry_id` (`user_entry_id`),
+  KEY `mode` (`mode`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

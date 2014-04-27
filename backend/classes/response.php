@@ -13,56 +13,48 @@ class Response extends CourseComponent
 	{
 		if (!($session_user = Session::get()->get_user())) return static::set_error_description("Session user has not reauthenticated.");
 		
+		$test_entry_id = intval($test_entry_id, 10);
+		
+		$failure_message = "Failed to insert test sitting response";
+		
 		if (!($test = Test::select_by_test_entry_id(($test_entry_id = intval($test_entry_id, 10)))))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . Test::unset_error_description());
+			return static::set_error_description("$failure_message: " . Test::unset_error_description());
 		}
 		
 		if (!($sitting = $test->get_sitting_for_user(Session::get()->get_user())))
 		{
-			return static::set_error_description("Failed to insert test sitting response because test returned no sitting for session user.");
+			return static::set_error_description("$failure_message: Test returned no sitting for session user.");
 		}
 		
 		if (!$sitting->session_user_can_execute())
 		{
-			return static::set_error_description("Session user cannot execute sitting.");
+			return static::set_error_description("$failure_message: Session user cannot execute sitting.");
 		}
 		
 		$current_question = $sitting->next_json_assoc();
 		
 		if ($current_question["testEntryId"] !== $test_entry_id)
 		{
-			return static::set_error_description("Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
+			return static::set_error_description("$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$contents = $mysqli->escape_string($contents);
-		
-		$mysqli->query("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, contents) SELECT test_entry_id, mode, '$contents' FROM course_unit_test_entries WHERE test_entry_id = $test_entry_id ON DUPLICATE KEY UPDATE pattern_id = pattern_id");
-		
-		if (!!$mysqli->error)
+		$test_entries = $test->get_entries();
+		if (!($test_entry = $test_entries[$test_entry_id]))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: Test returned no entry for test_entry_id = $test_entry_id.");
 		}
 		
-		$result = $mysqli->query("SELECT * FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = $test_entry_id AND contents = '$contents'");
-		
-		if (!!$mysqli->error)
+		if (!($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $test_entry->get_entry_id(), $contents)))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . Pattern::unset_error_description());
 		}
-		
-		if (!($pattern_assoc = $result->fetch_assoc()))
-		{
-			return static::set_error_description("Failed to insert test sitting response because failed to find pattern where test_entry_id = $test_entry_id and contents = '$contents'.");
-		}
-		
-		$pattern_id = intval($pattern_assoc["pattern_id"], 10);
 		
 		$mysqli->query(sprintf("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id, timestamp) VALUES (%d, %d, %d)",
 			$sitting->get_sitting_id(),
-			$pattern_id,
+			$pattern->get_pattern_id(),
 			($now = time())
 		));
 		
