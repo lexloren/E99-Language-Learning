@@ -271,10 +271,13 @@ class APIUser extends APIBase
 		}
 		else
 		{
-			$result = Practice::update_practice_response($_POST["entry_id"], $_POST["grade_id"]);
-			if (!Session::get()->has_error())
+			if (($result = Practice::update_practice_response($_POST["entry_id"], $_POST["grade_id"])))
 			{
 				Session::get()->set_result_assoc($result->json_assoc());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Entry Practice", "Unfortunately, this application module does not report errors.");
 			}
 		}
 	}
