@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 27 april 2014 kl 14:35
+-- Skapad: 27 april 2014 kl 15:25
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=22 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
 
 -- --------------------------------------------------------
 
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `prompt` (`prompt`),
   KEY `mode` (`mode`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
 
 -- --------------------------------------------------------
 
@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
 
@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_responses` (
   UNIQUE KEY `sitting_id` (`sitting_id`,`pattern_id`),
   KEY `timestamp` (`timestamp`),
   KEY `pattern_id` (`pattern_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=39 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=41 ;
 
 -- --------------------------------------------------------
 
@@ -401,25 +401,15 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   `word_0` char(255) default NULL,
   `word_1` char(255) default NULL,
   `word_1_pronun` char(255) default NULL,
-  `interval_0` int(11) NOT NULL default '0',
-  `efactor_0` decimal(3,2) NOT NULL default '2.50',
-  `interval_1` int(11) NOT NULL default '0',
-  `efactor_1` decimal(3,2) NOT NULL default '2.50',
-  `interval_1_pronun` int(11) NOT NULL default '0',
-  `efactor_1_pronun` decimal(3,2) NOT NULL default '2.50',
+  `interval` int(11) NOT NULL default '0',
+  `efactor` decimal(3,2) NOT NULL default '2.50',
   PRIMARY KEY  (`user_entry_id`),
   UNIQUE KEY `entry_id` (`entry_id`,`user_id`),
   KEY `user_id` (`user_id`),
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
-  KEY `word_1_pronun` (`word_1_pronun`),
-  KEY `interval_0` (`interval_0`),
-  KEY `efactor_0` (`efactor_0`),
-  KEY `interval_1` (`interval_1`),
-  KEY `efactor_1` (`efactor_1`),
-  KEY `interval_1_pronun` (`interval_1_pronun`),
-  KEY `efactor_1_pronun` (`efactor_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=81 ;
+  KEY `word_1_pronun` (`word_1_pronun`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=86 ;
 
 -- --------------------------------------------------------
 
@@ -474,6 +464,26 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
   KEY `lang_id` (`lang_id`),
   KEY `years` (`years`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=36 ;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur för tabell `user_practice`
+--
+
+DROP TABLE IF EXISTS `user_practice`;
+CREATE TABLE IF NOT EXISTS `user_practice` (
+  `practice_id` bigint(20) unsigned NOT NULL auto_increment,
+  `user_entry_id` bigint(20) unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL,
+  `interval` int(11) NOT NULL default '0',
+  `efactor` decimal(3,2) NOT NULL default '2.50',
+  PRIMARY KEY  (`practice_id`),
+  KEY `mode` (`mode`),
+  KEY `interval` (`interval`),
+  KEY `efactor` (`efactor`),
+  KEY `user_entry_id` (`user_entry_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -625,3 +635,9 @@ ALTER TABLE `user_entry_results`
 ALTER TABLE `user_languages`
   ADD CONSTRAINT `user_languages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `user_languages_ibfk_2` FOREIGN KEY (`lang_id`) REFERENCES `languages` (`lang_id`) ON UPDATE CASCADE;
+
+--
+-- Restriktioner för tabell `user_practice`
+--
+ALTER TABLE `user_practice`
+  ADD CONSTRAINT `user_practice_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
