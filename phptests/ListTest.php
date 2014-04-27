@@ -42,31 +42,59 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($list->get_public());
 	}
 	
-        public function test_list_find()
-        {
-				/*
-                $user_obj = User::select_by_id($this->db->user_ids[0]);
-                Session::get()->set_user($user_obj);
-                $this->assertNotNull(EntryList::insert('New List1'));
-                $this->assertNotNull(EntryList::insert('New List2'));
-                $this->assertNotNull(EntryList::insert('NoMatch List1'));
+	public function test_find_by_entry_ids()
+	{
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		
+		$entry_ids1 = $this->db->add_dictionary_entries(7);
+		$entry_ids2 = $this->db->add_dictionary_entries(7);
+		$entry_ids3 = $this->db->add_dictionary_entries(7);
+		
+		$list1_id = $this->db->add_list($this->db->user_ids[0], $entry_ids1);
+		$list2_id = $this->db->add_list($this->db->user_ids[0], $entry_ids2);
+		$list3_id = $this->db->add_list($this->db->user_ids[0], $entry_ids3);
+				
+		$entry_ids_to_find = array();
+		array_push($entry_ids_to_find, $entry_ids1[0]);
+		array_push($entry_ids_to_find, $entry_ids1[3]);		
+		array_push($entry_ids_to_find, $entry_ids3[2]);
+		
+		$lists = EntryList::find_by_entry_ids($entry_ids_to_find);
+		$this->assertNotNull($lists);
+		
+		$this->assertCount(2, $lists);
+		
+		$list1 = $lists[$list1_id];
+		$list2 = $lists[$list3_id];
 
-                $lists = EntryList::find('New');
-                $this->assertEquals(count($lists), 2);
-                $lists = EntryList::find('New', 1);
-                $this->assertEquals(count($lists), 0);
-                $lists = EntryList::find('');
-                $this->assertEquals(count($lists), 4);
-                $lists = EntryList::find('nom');
-                $this->assertEquals(count($lists), 1);
-
-                $user_obj = User::select_by_id($this->db->user_ids[1]);
-                Session::get()->set_user($user_obj);
-                $lists = EntryList::find('');
-                $this->assertEquals(count($lists), 0);
-				*/
-        }
-
+		$this->assertNotNull($list1);
+		$this->assertNotNull($list2);
+	}
+	
+	public function test_find_by_user_ids()
+	{
+		$this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
+		$this->db->add_list($this->db->user_ids[2], $this->db->entry_ids);
+		$this->db->add_list($this->db->user_ids[3], $this->db->entry_ids);
+		
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		$user_ids = array();
+		array_push($user_ids, $this->db->user_ids[0]);
+		array_push($user_ids, $this->db->user_ids[3]);
+		
+		
+		$lists = EntryList::find_by_user_ids($user_ids);
+		$this->assertNotNull($lists);
+		
+		$this->assertCount(1, $lists);
+		$list1 = $lists[$this->db->list_ids[0]];
+		$this->assertNotNull($list1);
+	}
+	
+	public function test_find_by_user_query()
+	{
+	}
+	
 	public function test_list_name()
 	{
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
