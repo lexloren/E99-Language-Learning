@@ -17,7 +17,6 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->db->add_dictionary_entries(10);
 		
 		$course_id = $this->db->add_course($this->db->user_ids[0]);
-		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[0]);
 		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
 		$list_id = $this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
 		$this->db->add_unit_list($course_unit_id, $list_id);

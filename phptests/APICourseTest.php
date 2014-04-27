@@ -57,44 +57,58 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		
 	}
 
-	public function test_course_find()
+	public function test_course_find_by_user_ids()
+	{
+		$this->db->add_users(3);
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
+		
+		$course1_id = $this->db->add_course($this->db->user_ids[0], 1);
+		$course2_id = $this->db->add_course($this->db->user_ids[1], 1);
+		$course3_id = $this->db->add_course($this->db->user_ids[0], 1);
+		
+		$_SESSION["handle"] = $this->db->handles[0];
+		
+		$_GET["user_ids"] = implode(",", array($this->db->user_ids[0]));
+		$this->obj->find();
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		
+		$this->assertCount(2, $result);
+		
+		$result0 = $result[0];
+		$result1 = $result[1];
+		
+		$this->assertTrue($result0["courseId"] != $result1["courseId"]);
+		$this->assertTrue($result0["courseId"] == $course1_id || $result0["courseId"] == $course3_id );
+		$this->assertTrue($result1["courseId"] == $course1_id || $result1["courseId"] == $course3_id );
+	}
+	
+	public function test_course_find_by_course_ids()
 	{
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		
-		$course_setup = array ();
-		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1'));
-		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course2'));
-		array_push($course_setup, Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'NoMatch Course1'));
+		$course1_id = $this->db->add_course($this->db->user_ids[0]);
+		$course2_id = $this->db->add_course($this->db->user_ids[0]);
+		$course3_id = $this->db->add_course($this->db->user_ids[0]);
 		
-		/*
 		$_SESSION["handle"] = $this->db->handles[0];
-		$_GET["query"] = "New";
+		
+		$_GET["course_ids"] = implode(",", array($course1_id, $course3_id));
 		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
-		$this->assertEquals(count($courses), 2);
-		$_GET["query"] = "New";
-		$_GET["langs"] = TestDB::$lang_code_1;
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
-		$this->assertEquals(count($courses), 2);
-		$_GET["query"] = "New";
-		$_GET["langs"] = TestDB::$lang_code_1.','.TestDB::$lang_code_0;
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
-		$this->assertEquals(count($courses), 2);
-		$_GET["query"] = "";
-		$_GET["langs"] = TestDB::$lang_code_1;
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
-		$this->assertEquals(count($courses), 3);
-		$_GET["query"] = "";
-		$_GET["langs"] = "xx";
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $courses = $result_assoc["result"];
-		$this->assertEquals(count($courses), 0);
-		foreach($course_setup as $course)	$course->delete();
-		*/
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
+		$result0 = $result[0];
+		$result1 = $result[1];
+		
+		$this->assertTrue($result0["courseId"] != $result1["courseId"]);
+		$this->assertTrue($result0["courseId"] == $course1_id || $result0["courseId"] == $course3_id );
+		$this->assertTrue($result1["courseId"] == $course1_id || $result1["courseId"] == $course3_id );
 	}
 	
 	public function test_practice_report()
@@ -103,7 +117,6 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_dictionary_entries(10);
 		
 		$course_id = $this->db->add_course($this->db->user_ids[1]);
-		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[1]);
 		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
 		$list_id = $this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
 		$this->db->add_unit_list($course_unit_id, $list_id);
@@ -136,14 +149,12 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_dictionary_entries(10);
 		
 		$course_id = $this->db->add_course($this->db->user_ids[1]);
-		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[1]);
 		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
 		$list_id = $this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
 		$this->db->add_unit_list($course_unit_id, $list_id);
 		
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[0]);
 		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[0], 3);
-		
 		
 		$_GET["course_id"] =  $course_id;
 		$_SESSION["handle"] = $this->db->handles[0];

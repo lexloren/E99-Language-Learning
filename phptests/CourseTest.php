@@ -212,13 +212,13 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		
-		$this->assertCount(0, $course->get_instructors());
+		$this->assertCount(1, $course->get_instructors());
 		$ret = $course->instructors_add($instructor);
 		$this->assertNotNull($ret);
 		
 		$instructors = $course->get_instructors();
-		$this->assertCount(1, $instructors);
-		$this->assertEquals($instructor, $instructors[0]);
+		$this->assertCount(2, $instructors);
+		$this->assertTrue(in_array($instructor, $instructors));
 	}
 	
 	public function test_instructors_remove()
@@ -229,12 +229,12 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[4]);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		$instructors = $course->get_instructors();
-		$this->assertCount(4, $instructors);
+		$this->assertCount(5, $instructors);
 		
 		//Session user is not set
 		$course->instructors_remove($instructors[0]);
 		$instructors = $course->get_instructors();
-		$this->assertCount(4, $instructors);
+		$this->assertCount(5, $instructors);
 
 		//Session user set
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
@@ -244,7 +244,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$course->instructors_remove($instructors[0]);
 		$course->instructors_remove($instructors[3]);
 		$instructors = $course->get_instructors();
-		$this->assertCount(2, $instructors);
+		$this->assertCount(3, $instructors);
 		$this->assertTrue(in_array($instructor1, $instructors));
 		$this->assertTrue(in_array($instructor2, $instructors));
 	}
