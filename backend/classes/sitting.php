@@ -104,17 +104,17 @@ class Sitting extends CourseComponent
 				$this->get_student_id()
 			));
 			
-			if (!!$mysqli->error) return self::set_error_description("Failed to select sitting user: " . $mysqli->error . ".");
+			if (!!$mysqli->error) return static::set_error_description("Failed to select sitting user: " . $mysqli->error . ".");
 			
 			if (!$result || $result->num_rows != 1 || !($result_assoc = $result->fetch_assoc()))
 			{
-				return self::set_error_description("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
+				return static::set_error_description("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
 			}
 			
 			if (!($this->user = User::select_by_id($result_assoc["user_id"])))
 			{
 				unset($this->user);
-				return self::set_error_description("Failed to select sitting user: " . User::unset_error_description());
+				return static::set_error_description("Failed to select sitting user: " . User::unset_error_description());
 			}
 		}
 		
@@ -203,7 +203,7 @@ class Sitting extends CourseComponent
 			
 			if (!!$mysqli->error)
 			{
-				return self::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
+				return static::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
 			}
 			
 			$this->entries_remaining = array ();
@@ -229,12 +229,12 @@ class Sitting extends CourseComponent
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return self::set_error_description("Session user cannot execute test" . (!$this->get_entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+			return static::set_error_description("Session user cannot execute test" . (!$this->get_entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
 		}
 		
 		if (!count($entries_remaining = $this->get_entries_remaining()))
 		{
-			return self::set_error_description("Session user has already responded to all test entries.");
+			return static::set_error_description("Session user has already responded to all test entries.");
 		}
 		
 		$entry = array_shift($entries_remaining);
@@ -250,12 +250,12 @@ class Sitting extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return self::set_error_description("Test failed to get mask for next entry for session user.");
+			return static::set_error_description("Test failed to get mask for next entry for session user.");
 		}
 		
 		$mode = $result_assoc["mode"];
@@ -266,7 +266,7 @@ class Sitting extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		$options = array ();

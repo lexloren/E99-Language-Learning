@@ -87,6 +87,23 @@ class APITest extends APIBase
 		}
 	}
 	
+	public function unexecute()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
+		{
+			if (!$test->unexecute())
+			{
+				Session::get()->set_error_assoc("Test Unexecution", Test::unset_error_description());
+			}
+			else
+			{
+				Session::get()->set_result_assoc($test->json_assoc());
+			}
+		}
+	}
+	
 	public function update()
 	{
 		//  name
