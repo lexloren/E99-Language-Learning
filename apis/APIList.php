@@ -220,9 +220,9 @@ class APIList extends APIBase
 						return;
 					}
 				}
-				
-				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
+			
+			self::return_array_as_json($list->get_entries());
 		}
 	}
 	
@@ -243,7 +243,7 @@ class APIList extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($list->get_entries());
 			}
 		}
 	}

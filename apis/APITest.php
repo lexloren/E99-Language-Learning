@@ -206,9 +206,9 @@ class APITest extends APIBase
 						return;
 					}
 				}
-				
-				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
+			
+			self::return_array_as_json($test->get_entries());
 		}
 	}
 	
@@ -229,7 +229,7 @@ class APITest extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($test->get_entries());
 			}
 		}
 	}
@@ -274,7 +274,68 @@ class APITest extends APIBase
 				$updates += !!$test->set_entry_mode($entry, $mode);
 			}
 			
+			if (isset($_POST["prompts"]))
+			{
+				$prompts = explode(",", $_POST["prompts"]);
+				
+				foreach ($prompts as $prompt)
+				{
+					if (($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $contents)))
+					{
+						$updates += !!$pattern->set_prompt(true);
+					}
+				}
+			}
+			
 			self::return_updates_as_json("Test", Test::unset_error_description(), $updates ? $test->json_assoc() : null);
+		}
+	}
+	
+	public function entry_patterns()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($test = self::validate_selection_id($_GET, "test_id", "Test"))
+			&& ($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
+		{
+			if (($test_entry_id = array_search($entry, $test->get_entries())))
+			{
+				self::return_array_as_json(Pattern::select_all_for_test_entry_id($test_entry_id));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Test-Entry Patterns Selection", "Failed to select test entry where test_id = " . $test->get_test_id() . " and entry_id = " . $entry->get_entry_id() . ".");
+			}
+		}
+	}
+	
+	public function entry_pattern_update()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($pattern = self::validate_selection_id($_POST, "pattern_id", "Pattern"))
+			|| (($test = self::validate_selection_id($_POST, "test_id", "Test"))
+				&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry"))
+				&& isset($_POST["contents"])))
+		{
+			Pattern::unset_error_description();
+			
+			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $contents)))
+			{
+				if (isset($_POST["prompt"]))
+				{
+					$pattern->set_prompt($_POST["prompt"]);
+				}
+				
+				if (isset($_POST["score"]))
+				{
+					$pattern->set_score($_POST["score"]);
+				}
+				
+				Session::get()->set_result_assoc($pattern->json_assoc());
+				return;
+			}
+			Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::unset_error_description());
 		}
 	}
 	

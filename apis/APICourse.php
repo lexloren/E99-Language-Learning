@@ -285,7 +285,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_students());
 			}
 		}
 	}
@@ -318,7 +318,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_instructors());
 			}
 		}
 	}
@@ -341,7 +341,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_students());
 			}
 		}
 	}
@@ -364,7 +364,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_instructors());
 			}
 		}
 	}
@@ -398,7 +398,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_researchers());
 			}
 		}
 	}
@@ -422,7 +422,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->get_researchers());
 			}
 		}
 	}
