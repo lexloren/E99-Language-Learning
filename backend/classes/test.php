@@ -175,9 +175,9 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
-	public function entries_randomize($reorder = true, $remode = false)
+	public function entries_randomize($renumber = true, $remode = false)
 	{
-		if (!$reorder && !$remode)
+		if (!$renumber && !$remode)
 		{
 			return self::set_error_description("Test failed to randomize entries because neither reorder nor remode requested.");
 		}
@@ -185,7 +185,7 @@ class Test extends CourseComponent
 		$entries_ordered = $this->get_entries();
 		$entries_count = count($entries_ordered);
 		
-		if ($reorder)
+		if ($renumber)
 		{
 			$entries_randomized = array ();
 			

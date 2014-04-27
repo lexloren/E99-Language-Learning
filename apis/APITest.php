@@ -223,19 +223,16 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if (self::validate_request($_POST, "entry_ids"))
+			$remode = isset($_POST["remode"]) && !!$_POST["remode"];
+			$renumber = isset($_POST["renumber"]) && !!$_POST["renumber"];
+			
+			if (!$test->entries_randomize($renumber, $remode))
 			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-				{
-					if (!$test->entries_remove(Entry::select_by_id($entry_id)))
-					{
-						Session::get()->set_error_assoc("Test-Entries Removal", Test::unset_error_description());
-						return;
-					}
-				}
-				
-				Session::get()->set_result_assoc($test->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				Session::get()->set_error_assoc("Test-Entries Randomization", Test::unset_error_description());
+				return;
 			}
+			
+			self::return_array_as_json($test->get_entries());
 		}
 	}
 	
