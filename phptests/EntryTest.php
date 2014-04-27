@@ -60,7 +60,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($annotation->get_annotation_id(), $this->db->annotation_ids[0]);
 		$this->assertEquals($annotation->get_user_entry_id(), $this->db->user_entry_ids[0]);
 		
-		$ret = $entry->annotations_remove($annotation);
+		$ret = $annotation->delete();
 		
 		$this->assertNotNull($ret);
 		$annotations = $entry->get_annotations();
