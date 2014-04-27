@@ -525,7 +525,7 @@ class User extends DatabaseRow
 				array ($result_assoc["lang_code"] => $result_assoc["years"]));
 		}
 		
-		return $languages_assoc;
+		return $language_years_assoc;
 	}
 	
 	private $instructor_courses;
