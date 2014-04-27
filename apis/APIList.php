@@ -201,11 +201,7 @@ class APIList extends APIBase
 					if (($other = EntryList::select_by_id($list_id))
 						&& $other->session_user_can_read())
 					{
-						if (!$list->entries_add_from_list($other))
-						{
-							Session::get()->set_error_assoc("List-Entries Addition", EntryList::unset_error_description());
-							return;
-						}
+						$list->entries_add_from_list($other);
 					}
 				}
 			}
@@ -214,11 +210,7 @@ class APIList extends APIBase
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					if (!$list->entries_add(Entry::select_by_id($entry_id)))
-					{
-						Session::get()->set_error_assoc("List-Entries Addition", EntryList::unset_error_description());
-						return;
-					}
+					$list->entries_add(Entry::select_by_id($entry_id));
 				}
 			}
 			

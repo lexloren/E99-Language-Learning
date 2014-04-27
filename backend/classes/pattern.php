@@ -29,7 +29,7 @@ class Pattern extends CourseComponent
 		}
 		
 		if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10))))
-			|| !($entry = $entry->copy_for_user($test->get_owner())))
+			|| !($entry = $entry->copy_for_user($test->get_owner(), $test)))
 		{
 			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
 		}
@@ -96,7 +96,7 @@ class Pattern extends CourseComponent
 		$entry_id = intval($entry_id, 10);
 		
 		if (!($entry = Entry::select_by_id($entry_id))
-			|| !($entry = $entry->copy_for_user($test->get_owner())))
+			|| !($entry = $entry->copy_for_user($test->get_owner(), $test)))
 		{
 			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
 		}

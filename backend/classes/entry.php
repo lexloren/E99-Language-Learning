@@ -626,25 +626,25 @@ class UserEntry extends Entry
 	public function user_can_read($user, $list = null)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via_list($user, $list)
+			|| $this->user_can_read_via($user, $list)
 			|| $this->user_can_read_via_course($user);
 	}
 	
 	public function user_can_write($user, $list = null)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via_list($user, $list)
+			|| $this->user_can_write_via($user, $list)
 			|| $this->user_can_write_via_course($user);
 	}
 	
-	private function user_can_read_via_list($user, $list)
+	private function user_can_read_via($user, $list)
 	{
 		if (!$user || !$list) return false;
 		
 		return $this->in_list($list) && $list->user_can_read($user);
 	}
 	
-	private function user_can_write_via_list($user, $list)
+	private function user_can_write_via($user, $list)
 	{
 		if (!$user || !$list) return false;
 		
@@ -659,7 +659,7 @@ class UserEntry extends Entry
 		{
 			foreach ($course->get_lists() as $list)
 			{
-				if ($this->user_can_write_via_list($user, $list)) return true;
+				if ($this->user_can_write_via($user, $list)) return true;
 			}
 		}
 		
@@ -695,7 +695,12 @@ class UserEntry extends Entry
 		{
 			foreach ($course->get_lists() as $list)
 			{
-				if ($this->user_can_read_via_list($user, $list)) return true;
+				if ($this->user_can_read_via($user, $list)) return true;
+			}
+			
+			foreach ($course->get_tests() as $test)
+			{
+				if ($this->user_can_read_via($user, $test)) return true;
 			}
 		}
 		

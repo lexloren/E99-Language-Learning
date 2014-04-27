@@ -125,7 +125,7 @@ class Test extends CourseComponent
 		
 		if ($number === null || ($number = intval($number, 10)) < 1) return static::set_error_description("Test cannot set entry number to null or nonpositive integer.");
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
 		if ($number > ($entries_count = count($this->get_entries()))) $number = $entries_count;
 		
@@ -171,7 +171,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Test cannot set mode = $mode.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		$entry = $entry->copy_for_user($this->get_owner(), true);
 		
 		if (!in_array($entry, $this->get_entries()))
 		{
