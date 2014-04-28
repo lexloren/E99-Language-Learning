@@ -23,36 +23,36 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertNull($entry->get_owner());
 		
-		$words = $entry->get_words();
+		$words = $entry->words();
 		$this->assertNotNull($words);
 		$this->assertCount(2, $words);
 		
 		$this->assertEquals($entry->get_entry_id(), $this->db->entry_ids[0]);
 		
-		$langs = $entry->get_languages();
+		$langs = $entry->languages();
 		$this->assertCount(2, $langs);
 		$this->assertEquals(TestDB::$lang_code_0, $langs[0]);
 		$this->assertEquals(TestDB::$lang_code_1, $langs[1]);
 	}
 
-	public function test_get_annotations()
+	public function test_annotations()
 	{
 		$entry = Entry::select_by_id($this->db->entry_ids[0]);
 		$this->assertNotNull($entry);
 		
 		Session::get()->set_user(null);
-		$annotations = $entry->get_annotations();
+		$annotations = $entry->annotations();
 		$this->assertCount(0, $annotations);
 		
 		$this->db->add_users(1);
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);	
-		$annotations = $entry->get_annotations();
+		$annotations = $entry->annotations();
 		$this->assertCount(0, $annotations);
 
 		
 		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
-		$annotations = $entry->get_annotations();
+		$annotations = $entry->annotations();
 		$this->assertNotNull($annotations);
 		$this->assertCount(1, $annotations);
 		
@@ -60,14 +60,16 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($annotation->get_annotation_id(), $this->db->annotation_ids[0]);
 		$this->assertEquals($annotation->get_user_entry_id(), $this->db->user_entry_ids[0]);
 		
-		$ret = $entry->annotations_remove($annotation);
+		$ret = $annotation->delete();
 		
 		$this->assertNotNull($ret);
-		$annotations = $entry->get_annotations();
+		$annotations = $entry->annotations();
 		$this->assertNotNull($annotations);
 		$this->assertCount(0, $annotations);
 	}
 	
+	/*
+	//  DEPRECATED
 	public function test_annotations_add()
 	{
 		$this->db->add_users(1);
@@ -85,10 +87,12 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($ret);
 	}
 	
+	//  DEPRECATED
 	public function test_annotations_remove()
 	{
-		//  Already tested in test_get_annotations()
+		//  Already tested in test_annotations()
 	}
+	*/
 	
 	public function test_copy_for_session_user()
 	{
@@ -106,16 +110,17 @@ class EntryTest extends PHPUnit_Framework_TestCase
         Session::get()->set_user($user_obj);
 		$result = $entry->update_repetition_details(4);
 		
+		$this->assertNotNull($result);
 		$this->assertEquals($result->get_entry_id(), $entry->get_entry_id());
-		$this->assertEquals($result->get_words(), $entry->get_words());
+		$this->assertEquals($result->words(), $entry->words());
 		$this->assertEquals($result->get_interval(), 1);
 		$this->assertEquals($result->get_efactor(), 2.50);
 	}
 	
-	public function test_get_pronunciations()
+	public function test_pronunciations()
 	{
 		$entry = Entry::select_by_id($this->db->entry_ids[0]);
-		$prons = $entry->get_pronunciations();
+		$prons = $entry->pronunciations();
 		$this->assertNotNull($prons);
 		$this->assertCount(1, $prons);
 		$this->assertEquals($this->db->word_1_pronuns[0], $prons[TestDB::$lang_code_1]);		
@@ -129,6 +134,7 @@ class EntryTest extends PHPUnit_Framework_TestCase
 		$this->db->add_users(5);
 		$user = User::select_by_id($this->db->user_ids[3]);
 		$user_entry = $entry->copy_for_user($user);
+		$this->assertNotNull($user_entry);
 		$this->AssertEquals($user, $user_entry->get_owner());
 		$this->AssertEquals($this->db->user_ids[3], $user_entry->get_user_id());
     }

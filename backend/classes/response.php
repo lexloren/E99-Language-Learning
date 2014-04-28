@@ -13,68 +13,48 @@ class Response extends CourseComponent
 	{
 		if (!($session_user = Session::get()->get_user())) return static::set_error_description("Session user has not reauthenticated.");
 		
+		$test_entry_id = intval($test_entry_id, 10);
+		
+		$failure_message = "Failed to insert test sitting response";
+		
 		if (!($test = Test::select_by_test_entry_id(($test_entry_id = intval($test_entry_id, 10)))))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . Test::unset_error_description());
+			return static::set_error_description("$failure_message: " . Test::unset_error_description());
 		}
 		
 		if (!($sitting = $test->get_sitting_for_user(Session::get()->get_user())))
 		{
-			return static::set_error_description("Failed to insert test sitting response because test returned no sitting for session user.");
+			return static::set_error_description("$failure_message: Test returned no sitting for session user.");
 		}
 		
 		if (!$sitting->session_user_can_execute())
 		{
-			return static::set_error_description("Session user cannot execute sitting.");
+			return static::set_error_description("$failure_message: Session user cannot execute sitting.");
 		}
 		
 		$current_question = $sitting->next_json_assoc();
 		
 		if ($current_question["testEntryId"] !== $test_entry_id)
 		{
-			return static::set_error_description("Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
+			return static::set_error_description("$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$word_0 = "IF(mode = 0, '%s', user_entries.word_0)";
-		$word_1 = "IF(mode = 1, '%s', user_entries.word_1)";
-		$word_1_pronun = "IF(mode IS NULL, '%s', user_entries.word_1_pronun)";
-		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, word_0, word_1, word_1_pronun) SELECT test_entry_id, $word_0, $word_1, $word_1_pronun FROM course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id) WHERE test_entry_id = %d ON DUPLICATE KEY UPDATE pattern_id = pattern_id",
-			$mysqli->escape_string($contents),
-			$mysqli->escape_string($contents),
-			$mysqli->escape_string($contents),
-			$test_entry_id
-		));
-		
-		if (!!$mysqli->error)
+		$test_entries = $test->entries();
+		if (!($test_entry = $test_entries[$test_entry_id]))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: Test returned no entry for test_entry_id = $test_entry_id.");
 		}
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_entry_patterns LEFT JOIN (course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id)) USING (test_entry_id) WHERE test_entry_id = %d AND course_unit_test_entry_patterns.word_0 = $word_0 AND course_unit_test_entry_patterns.word_1 = $word_1 AND course_unit_test_entry_patterns.word_1_pronun = $word_1_pronun",
-			$test_entry_id,
-			$mysqli->escape_string($contents),
-			$mysqli->escape_string($contents),
-			$mysqli->escape_string($contents)
-		));
-		
-		if (!!$mysqli->error)
+		if (!($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $test_entry->get_entry_id(), $contents)))
 		{
-			return static::set_error_description("Failed to insert test sitting response: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . Pattern::unset_error_description());
 		}
-		
-		if (!($pattern_assoc = $result->fetch_assoc()))
-		{
-			return static::set_error_description("Failed to insert test sitting response because failed to find pattern where test_entry_id = $test_entry_id and course_unit_test_entry_patterns.word_0 = $word_0 and course_unit_test_entry_patterns.word_1 = $word_1 and course_unit_test_entry_patterns.word_1_pronun = $word_1_pronun.");
-		}
-		
-		$pattern_id = intval($pattern_assoc["pattern_id"], 10);
 		
 		$mysqli->query(sprintf("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id, timestamp) VALUES (%d, %d, %d)",
 			$sitting->get_sitting_id(),
-			$pattern_id,
+			$pattern->get_pattern_id(),
 			($now = time())
 		));
 		
@@ -144,6 +124,21 @@ class Response extends CourseComponent
 	{
 		return $this->pattern_id;
 	}
+	public function get_pattern()
+	{
+		return $this->pattern_id
+			? Pattern::select_by_id($this->pattern_id)
+			: null;
+	}
+	
+	public function get_message()
+	{
+		return $this->get_pattern()->get_message();
+	}
+	public function set_message($message)
+	{
+		return $this->get_pattern()->set_message($message);
+	}
 	
 	private $timestamp = null;
 	public function get_timestamp()
@@ -195,19 +190,14 @@ class Response extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		//  Placeholder
-		return array ();
-		/*
 		return $this->privacy_mask(array (
-			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"responseId" => $this->get_response_id(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"userId" => $this->get_user_id(),
-			"timeframe" => $this->get_timeframe()->json_assoc(),
-			"results" => self::array_for_json($this->get_results()),
-			"message" => $this->get_message()
-		), array (0 => "sittingId"), $privacy);
-		*/
+			"student" => $this->get_user()->json_assoc(),
+			"timestamp" => $this->get_timestamp(),
+			"pattern" => $this->get_pattern()->json_assoc()
+		), array (0 => "responseId"), $privacy);
 	}
 }
 

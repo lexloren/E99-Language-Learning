@@ -29,7 +29,7 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
 		{
-			Session::get()->set_result_assoc($list->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($list->json_assoc_detailed(false));
 		}
 	}
 	
@@ -113,6 +113,34 @@ class APIList extends APIBase
 			}
 		}
 		
+		if (isset($_GET["langs"]))
+		{
+			if (isset($_GET["entry_query"]))
+			{
+				if (is_array($more = EntryList::find_by_entry_query(explode(",", $_GET["entry_query"]), explode(",", $_GET["langs"]))))
+				{
+					$lists = array_merge($lists, $more);
+				}
+				else
+				{
+					Session::get()->set_error_assoc("List Find", EntryList::unset_error_description());
+					return;
+				}
+			}
+			
+			/*
+			if (is_array($more = Course::find_by_languages(explode(",", $_GET["langs"]))))
+			{
+				$courses = array_merge($courses, $more);
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				return;
+			}
+			*/
+		}
+		
 		self::return_array_as_json($lists);
 	}
 	
@@ -141,7 +169,7 @@ class APIList extends APIBase
 		{
 			if ($list->session_user_can_read())
 			{
-				$entries = $list->get_entries();
+				$entries = $list->entries();
 			
 				$entries_returnable = array ();
 				foreach ($entries as $entry)
@@ -164,19 +192,29 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			if (self::validate_request($_POST, "entry_ids"))
+			if (isset($_POST["list_ids"]))
+			{
+				$list_ids = explode(",", $_POST["list_ids"]);
+				
+				foreach ($list_ids as $list_id)
+				{
+					if (($other = EntryList::select_by_id($list_id))
+						&& $other->session_user_can_read())
+					{
+						$list->entries_add_from_list($other);
+					}
+				}
+			}
+			
+			if (isset($_POST["entry_ids"]))
 			{
 				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 				{
-					if (!$list->entries_add(Entry::select_by_id($entry_id)))
-					{
-						Session::get()->set_error_assoc("List-Entries Addition", EntryList::unset_error_description());
-						return;
-					}
+					$list->entries_add(Entry::select_by_id($entry_id));
 				}
-				
-				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
+			
+			self::return_array_as_json($list->entries());
 		}
 	}
 	
@@ -197,7 +235,7 @@ class APIList extends APIBase
 					}
 				}
 				
-				Session::get()->set_result_assoc($list->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($list->entries());
 			}
 		}
 	}

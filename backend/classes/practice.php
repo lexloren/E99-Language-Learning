@@ -60,7 +60,7 @@ class Practice
 	}
 
 	private $entries = null;
-	public function get_entries()
+	public function entries()
 	{
 		return $this->entries;
 	}

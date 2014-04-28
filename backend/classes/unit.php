@@ -28,7 +28,7 @@ class Unit extends CourseComponent
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		$number = count($course->get_units()) + 1;
+		$number = count($course->units()) + 1;
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
@@ -78,11 +78,11 @@ class Unit extends CourseComponent
 	}
 	public function set_number($number)
 	{
-		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit course unit.");
+		if (!$this->session_user_can_write()) return static::set_error_description("Session user cannot edit course unit.");
 		
-		if ($number === null || ($number = intval($number, 10)) < 1) return self::set_error_description("Course unit cannot set number to null or nonpositive integer.");
+		if ($number === null || ($number = intval($number, 10)) < 1) return static::set_error_description("Course unit cannot set number to null or nonpositive integer.");
 		
-		if ($number > ($units_count = count($this->get_course()->get_units()))) $number = $units_count;
+		if ($number > ($units_count = count($this->get_course()->units()))) $number = $units_count;
 		
 		if ($number === $this->get_number()) return $this;
 			
@@ -90,15 +90,15 @@ class Unit extends CourseComponent
 		
 		$mysqli->query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
 		
-		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
 		
-		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
 		
-		if ($mysqli->error) return self::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
 		
 		if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
 		
@@ -174,16 +174,16 @@ class Unit extends CourseComponent
 	}
 	
 	private $tests;
-	public function get_tests()
+	public function tests()
 	{
-		return self::get_cached_collection($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
+		return self::cache($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
 	}
 	
 	private $lists;
-	public function get_lists()
+	public function lists()
 	{
 		$table = "course_unit_lists LEFT JOIN lists USING (list_id)";
-		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
+		return self::cache($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
 	private function __construct($unit_id, $course_id, $number, $name = null, $open = null, $close = null, $message = null)
@@ -233,7 +233,7 @@ class Unit extends CourseComponent
 			
 			$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
 			
-			if ($mysqli->error) return self::set_error_description("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
+			if ($mysqli->error) return static::set_error_description("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
 		}
 		return $return;
 	}
@@ -245,7 +245,7 @@ class Unit extends CourseComponent
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		if (!($list = $list->copy_for_user($this->get_owner())))
+		if (!($list = $list->copy_for_user($this->get_owner(), $this)))
 		{
 			return static::set_error_description("Failed to add list: " . EntryList::unset_error_description());
 		}
@@ -257,7 +257,7 @@ class Unit extends CourseComponent
 			$list->get_list_id()
 		));
 		
-		$lists = $this->get_lists();
+		$lists = $this->lists();
 		array_push($lists, $list);
 		
 		$list->uncache_courses();
@@ -286,6 +286,18 @@ class Unit extends CourseComponent
 		return $this;
 	}
 	
+	public function lists_count()
+	{
+		$unit_lists = "course_units CROSS JOIN course_unit_lists USING (unit_id)";
+		return self::count($unit_lists, "unit_id", $this->get_unit_id());
+	}
+	
+	public function tests_count()
+	{
+		$unit_tests = "course_units CROSS JOIN course_unit_tests USING (unit_id)";
+		return self::count($unit_tests, "unit_id", $this->get_unit_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -293,23 +305,23 @@ class Unit extends CourseComponent
 			"name" => $this->get_unit_name(),
 			"number" => $this->get_number(),
 			"courseId" => $this->get_course_id(),
-			//"owner" => $this->get_owner()->json_assoc(),
+			//"owner" => $this->get_owner()->json_assoc_condensed(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
-			"listsCount" => count($this->get_lists()),
-			"testsCount" => count($this->get_tests()),
+			"listsCount" => $this->lists_count(),
+			"testsCount" => $this->tests_count(),
 			"message" => $this->get_message()
 		), array (0 => "unitId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["tests"] = self::array_for_json($this->get_tests());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["tests"] = self::json_array($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

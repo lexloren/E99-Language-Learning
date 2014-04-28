@@ -45,7 +45,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			Session::get()->set_result_assoc($course->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($course->json_assoc_detailed(false));
 		}
 	}
 	
@@ -155,6 +155,19 @@ class APICourse extends APIBase
 		
 		if (isset($_GET["langs"]))
 		{
+			if (isset($_GET["entry_query"]))
+			{
+				if (is_array($more = Course::find_by_entry_query(explode(",", $_GET["entry_query"]), explode(",", $_GET["langs"]))))
+				{
+					$courses = array_merge($courses, $more);
+				}
+				else
+				{
+					Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+					return;
+				}
+			}
+			
 			if (is_array($more = Course::find_by_languages(explode(",", $_GET["langs"]))))
 			{
 				$courses = array_merge($courses, $more);
@@ -219,7 +232,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_lists());
+			self::return_array_as_json($course->lists());
 		}
 	}
 	
@@ -230,7 +243,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_tests());
+			self::return_array_as_json($course->tests());
 		}
 	}
 	
@@ -240,7 +253,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_units());
+			self::return_array_as_json($course->units());
 		}
 	}
 	
@@ -250,7 +263,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_students());
+			self::return_array_as_json($course->students());
 		}
 	}
 	
@@ -272,7 +285,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->students());
 			}
 		}
 	}
@@ -283,7 +296,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_instructors());
+			self::return_array_as_json($course->instructors());
 		}
 	}
 	
@@ -305,7 +318,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->instructors());
 			}
 		}
 	}
@@ -328,7 +341,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->students());
 			}
 		}
 	}
@@ -351,7 +364,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->instructors());
 			}
 		}
 	}
@@ -363,7 +376,7 @@ class APICourse extends APIBase
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course"))
 			&& ($course->session_user_can_write() || $course->session_user_is_researcher()))
 		{
-			self::return_array_as_json($course->get_researchers());
+			self::return_array_as_json($course->researchers());
 		}
 	}
 	
@@ -385,7 +398,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->researchers());
 			}
 		}
 	}
@@ -409,7 +422,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				Session::get()->set_result_assoc($course->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+				self::return_array_as_json($course->researchers());
 			}
 		}
 	}
@@ -430,6 +443,31 @@ class APICourse extends APIBase
 			{
 				Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
 			}
+		}
+	}
+	
+	public function student_practice_report()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (!self::validate_request($_GET, "course_id"))
+			return;
+		
+		$user_id = 0;
+		if (self::validate_request($_GET, "user_id"))
+			$user_id = $_GET["user_id"];
+		else
+			$user_id = Session::get()->get_user()->get_user_id();
+			
+		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id);
+		if (!!$report)
+		{
+			$output = json_encode(array ("studentPracticeReport" => $report));
+			Session::get()->set_result_assoc($output);
+		}
+		else
+		{
+			Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
 		}
 	}
 }

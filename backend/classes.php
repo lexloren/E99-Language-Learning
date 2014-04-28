@@ -20,6 +20,8 @@ require_once "./backend/classes/test.php";
 require_once "./backend/classes/sitting.php";
 require_once "./backend/classes/response.php";
 require_once "./backend/classes/report.php";
+require_once "./backend/classes/status.php";
+require_once "./backend/classes/pattern.php";
 
 function array_drop(&$array, $item)
 {

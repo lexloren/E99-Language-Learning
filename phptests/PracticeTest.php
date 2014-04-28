@@ -32,7 +32,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
                 $practice = Practice::generate($this->db->practice_list_ids, 50);
 
 		$this->assertNotNull($practice);
-		$this->assertCount(count($this->db->practice_entry_ids), $practice->get_entries());
+		$this->assertCount(count($this->db->practice_entry_ids), $practice->entries());
 		$this->assertEquals($this->db->practice_entry_ids, $practice->get_entry_ids());
 	}
 
@@ -42,7 +42,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 
 		$practice = Practice::generate($this->db->list_ids, 50);
 		$this->assertNotNull($practice);
-		$this->assertEmpty($practice->get_entries());	
+		$this->assertEmpty($practice->entries());	
 		$this->assertEmpty($practice->get_entry_ids());	
 	}
 
@@ -50,11 +50,11 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 	{
                 $practice = Practice::generate($this->db->practice_list_ids, -6);
 		$this->assertNotNull($practice);
-		$this->assertCount(count($this->db->practice_entry_ids), $practice->get_entries());
+		$this->assertCount(count($this->db->practice_entry_ids), $practice->entries());
 		
 		$practice = Practice::generate(array (), -2);
 		$this->assertNotNull($practice);
-                $this->assertEmpty($practice->get_entries());
+                $this->assertEmpty($practice->entries());
                 $this->assertEmpty($practice->get_entry_ids());
 	}
 

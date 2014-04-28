@@ -64,7 +64,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($unit_expect->get_number(), $unit_actual->get_number());
 		$this->assertEquals($unit_expect->get_course_id(), $unit_actual->get_course_id());
 		$this->assertEquals($unit_expect->get_course(), $unit_actual->get_course());
-		$this->assertEquals($unit_expect->get_lists(), $unit_actual->get_lists());
+		$this->assertEquals($unit_expect->lists(), $unit_actual->lists());
 		$this->assertEquals($unit_expect->get_timeframe(), $unit_actual->get_timeframe());
 	}
 
@@ -92,7 +92,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		$entries = $this->db->add_dictionary_entries(5);
 		$list_id = $this->db->add_list($this->db->user_ids[0], $entries);
 		$unit = $this->unit->lists_add(EntryList::select_by_id($list_id));
-		$got_lists = $unit->get_lists();
+		$got_lists = $unit->lists();
 		$this->assertEquals($got_lists[0]->get_list_id(), $list_id);
 	}
 }

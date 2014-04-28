@@ -6,7 +6,7 @@ function getCourses(){
         }
         else {
             $.each(data.result, function(i, item){
-				courseli = '<li><a href="editcourse.html?course='+item.courseId+'">'+item.name+'</a></li>';
+				courseli = '<li><a href="course.html?courseid='+item.courseId+'">'+item.name+'</a></li>';
                     $('#course-menu').append(courseli);
             });
         }

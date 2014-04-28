@@ -104,10 +104,22 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
+	}
+	
+	public static function find_by_entry_query($query, $lang_codes)
+	{
+		if (($entries = Dictionary::query($query, $lang_codes, array ("num" => 0, "size" => 100), false)))
+		{
+			$entry_ids = array ();
+			foreach ($entries as $entry) array_push($entry_ids, $entry->get_entry_id());
+			return self::find_by_entry_ids($entry_ids);
+		}
+		
+		return static::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
 	}
 	
 	public static function find_by_user_query($query)
@@ -119,7 +131,7 @@ class Course extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return self::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
+		return static::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
 	}
 
 	public static function find_by_user_ids($user_ids)
@@ -142,7 +154,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -167,7 +179,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -322,10 +334,10 @@ class Course extends DatabaseRow
 	}
 	
 	private $instructors;
-	public function get_instructors()
+	public function instructors()
 	{
 		$table = "course_instructors LEFT JOIN users USING (user_id)";
-		return self::get_cached_collection($this->instructors, "User", $table, "course_id", $this->get_course_id());
+		return self::cache($this->instructors, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_instructor()
 	{
@@ -333,14 +345,14 @@ class Course extends DatabaseRow
 	}
 	public function user_is_instructor($user)
 	{
-		return !!$user && $user->in_array($this->get_instructors());
+		return !!$user && $user->in($this->instructors());
 	}
 	
 	private $researchers;
-	public function get_researchers()
+	public function researchers()
 	{
 		$table = "course_researchers LEFT JOIN users USING (user_id)";
-		return self::get_cached_collection($this->researchers, "User", $table, "course_id", $this->get_course_id());
+		return self::cache($this->researchers, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_researcher()
 	{
@@ -348,14 +360,14 @@ class Course extends DatabaseRow
 	}
 	public function user_is_researcher($user)
 	{
-		return !!$user && $user->in_array($this->get_researchers());
+		return !!$user && $user->in($this->researchers());
 	}
 	
 	private $students;
-	public function get_students()
+	public function students()
 	{
 		$table = "course_students LEFT JOIN users USING (user_id)";
-		return self::get_cached_collection($this->students, "User", $table, "course_id", $this->get_course_id());
+		return self::cache($this->students, "User", $table, "course_id", $this->get_course_id());
 	}
 	public function session_user_is_student()
 	{
@@ -363,21 +375,21 @@ class Course extends DatabaseRow
 	}
 	public function user_is_student($user)
 	{
-		return !!$user && $user->in_array($this->get_students());
+		return !!$user && $user->in($this->students());
 	}
 	
 	private $units;
-	public function get_units()
+	public function units()
 	{
 		$table = "course_students LEFT JOIN users USING (user_id)";
-		return self::get_cached_collection($this->units, "Unit", "course_units", "course_id", $this->get_course_id(), "*", "ORDER BY num");
+		return self::cache($this->units, "Unit", "course_units", "course_id", $this->get_course_id(), "*", "ORDER BY num");
 	}
-	public function get_lists()
+	public function lists()
 	{
 		$lists = array ();
-		foreach ($this->get_units() as $unit)
+		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->get_lists() as $list)
+			foreach ($unit->lists() as $list)
 			{
 				if (!in_array($list, $lists))
 				{
@@ -387,12 +399,12 @@ class Course extends DatabaseRow
 		}
 		return $lists;
 	}
-	public function get_tests()
+	public function tests()
 	{
 		$tests = array ();
-		foreach ($this->get_units() as $unit)
+		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->get_tests() as $test)
+			foreach ($unit->tests() as $test)
 			{
 				array_push($tests, $test);
 			}
@@ -458,11 +470,11 @@ class Course extends DatabaseRow
 	
 	public function delete()
 	{
-		foreach (array_merge(array ($this->get_owner()), $this->get_students(), $this->get_instructors()) as $user)
+		foreach (array_merge(array ($this->get_owner()), $this->students(), $this->instructors()) as $user)
 		{
 			$user->uncache_all_courses();
 		}
-		foreach ($this->get_lists() as $list)
+		foreach ($this->lists() as $list)
 		{
 			$list->uncache_courses();
 		}
@@ -582,6 +594,40 @@ class Course extends DatabaseRow
 		}
 	}
 	
+	public function instructors_count()
+	{
+		return self::count("course_instructors", "course_id", $this->get_course_id());
+	}
+	
+	public function students_count()
+	{
+		return self::count("course_students", "course_id", $this->get_course_id());
+	}
+	
+	public function units_count()
+	{
+		return self::count("course_units", "course_id", $this->get_course_id());
+	}
+	
+	public function lists_count()
+	{
+		$course_units = "courses CROSS JOIN course_units USING (course_id)";
+		$unit_lists = "($course_units) CROSS JOIN course_unit_lists USING (unit_id)";
+		return self::count($unit_lists, "course_id", $this->get_course_id());
+	}
+	
+	public function tests_count()
+	{
+		$course_units = "courses CROSS JOIN course_units USING (course_id)";
+		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
+		return self::count($unit_tests, "course_id", $this->get_course_id());
+	}
+	
+	public function researchers_count()
+	{
+		return self::count("course_researchers", "course_id", $this->get_course_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -589,31 +635,31 @@ class Course extends DatabaseRow
 			"name" => $this->get_course_name(),
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
-			"instructorsCount" => count($this->get_instructors()),
-			"studentsCount" => count($this->get_students()),
-			"researchersCount" => count($this->get_researchers()),
-			"unitsCount" => count($this->get_units()),
-			"listsCount" => count($this->get_lists()),
-			"testsCount" => count($this->get_tests()),
+			"instructorsCount" => $this->instructors_count(),
+			"studentsCount" => $this->students_count(),
+			"researchersCount" => $this->researchers_count(),
+			"unitsCount" => $this->units_count(),
+			"listsCount" => $this->lists_count(),
+			"testsCount" => $this->tests_count(),
 			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["instructors"] = self::array_for_json($this->get_instructors());
-		$assoc["students"] = self::array_for_json($this->get_students());
-		$assoc["researchers"] = self::array_for_json($this->get_researchers());
-		$assoc["units"] = self::array_for_json($this->get_units());
-		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["tests"] = self::array_for_json($this->get_tests());
+		$assoc["instructors"] = self::json_array($this->instructors());
+		$assoc["students"] = self::json_array($this->students());
+		$assoc["researchers"] = self::json_array($this->researchers());
+		$assoc["units"] = self::json_array($this->units());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["tests"] = self::json_array($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

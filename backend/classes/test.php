@@ -100,7 +100,7 @@ class Test extends CourseComponent
 	}
 	
 	private $entries;
-	public function get_entries()
+	public function entries()
 	{
 		$user_entries = "(course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id))";
 		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
@@ -108,7 +108,7 @@ class Test extends CourseComponent
 			Dictionary::join()
 		);
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
+		return self::cache($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num", "test_entry_id");
 	}
 	public function uncache_entries()
 	{
@@ -116,42 +116,133 @@ class Test extends CourseComponent
 	}
 	public function set_entry_number($entry, $number)
 	{
-		if (!$this->session_user_can_write()) return self::set_error_description("Session user cannot edit test.");
+		if (!$this->session_user_can_write()) return static::set_error_description("Session user cannot edit test.");
 		
-		if ($number === null || ($number = intval($number, 10)) < 1) return self::set_error_description("Test cannot set entry number to null or nonpositive integer.");
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		if ($number === null || ($number = intval($number, 10)) < 1) return static::set_error_description("Test cannot set entry number to null or nonpositive integer.");
 		
-		if ($number > ($entries_count = count($this->get_entries()))) $number = $entries_count;
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		if ($number === ($number_formerly = array_search($entry, $this->get_entries()) + 1)) return $this;
+		if ($number > ($entries_count = count($this->entries()))) $number = $entries_count;
 		
-		if ($number_formerly < 1) return self::set_error_description("Test cannot set entry number for entry not already in test.");
+		if ($number === ($number_formerly = array_search($entry, $this->entries()) + 1)) return $this;
+		
+		if ($number_formerly < 1) return static::set_error_description("Test cannot set entry number for entry not already in test.");
 			
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 		
-		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $number_formerly));
 		
-		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
 		
-		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 		
-		if ($mysqli->error) return self::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::set_error_description("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
 		
 		$this->uncache_entries();
 		
 		return $this;
 	}
+	public function set_entry_mode($entry, $mode)
+	{
+		if (!$this->session_user_can_write()) return static::set_error_description("Session user cannot edit test.");
+		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
+		$mode = intval($mode, 10);
+		
+		if ($mode > 2 || $mode < 0)
+		{
+			return static::set_error_description("Test cannot set mode = $mode.");
+		}
+		
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
+		
+		if (!in_array($entry, $this->entries()))
+		{
+			return static::set_error_description("Test cannot set mode for entry not already in test.");
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+		
+		return $this;
+	}
 	
-	public function entries_add($entry, $mode = 1)
+	public function entries_randomize($renumber = true, $remode = false)
+	{
+		if (!$this->session_user_can_write()) return static::set_error_description("Session user cannot edit test.");
+		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
+		if (!$renumber && !$remode)
+		{
+			return static::set_error_description("Test failed to randomize entries because neither reorder nor remode requested.");
+		}
+		
+		$entries_ordered = $this->entries();
+		$entries_count = count($entries_ordered);
+		
+		if ($renumber)
+		{
+			$entries_randomized = array ();
+			
+			while (count($entries_ordered) > 0)
+			{
+				array_push($entries_randomized, array_splice($entries_ordered, rand(0, count($entries_ordered)), 1));
+			}
+			
+			$this->uncache_entries();
+			
+			$mysqli = Connection::get_shared_instance();
+			
+			$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $this->get_test_id()));
+			
+			if ($mysqli->error)
+			{
+				return static::set_error_description("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+			}
+		}
+		else
+		{
+			$entries_randomized = $entries_ordered;
+		}
+		
+		for ($i = 0; $i < $entries_count; $i ++)
+		{
+			$mode = $remode ? rand(0, 6) : "mode";
+			
+			$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
+		
+			if ($mysqli->error)
+			{
+				return static::set_error_description("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+			}
+		}
+		
+		return $this;
+	}
+	
+	public function entries_add($entry, $mode = null)
 	{
 		if (!$entry)
 		{
@@ -163,6 +254,11 @@ class Test extends CourseComponent
 			return static::set_error_description("Session user cannot edit test.");
 		}
 		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
 		//  Insert into user_entries from dictionary, if necessary
 		$entry = $entry->copy_for_user($this->get_owner());
 		
@@ -171,44 +267,90 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to add entry: " . Entry::unset_error_description());
 		}
 		
-		$mode = $mode === null ? "NULL" : (!!$mode ? "1" : "0");
+		$mode = $mode === null ? rand(0, 6) : intval($mode, 10);
+		
+		if ($mode > 6 || $mode < 0)
+		{
+			return static::set_error_description("Test cannot set mode = $mode.");
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, %s)",
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
-			count($this->get_entries()) + 1,
-			$mode
+			$this->entries_count() + 1
 		));
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Test failed to add entry: " . $mysqli->error . ".");
+			return static::set_error_description("Test failed to add entry: " . $mysqli->error . ".");
 		}
 		
-		array_push($this->entries, $entry);
-		
-		$entry_languages = $entry->get_languages();
-		$entry_words = $entry->get_words();
-		$entry_pronunciations = $entry->get_pronunciations();
-		
-		$test_entry_id = $mysqli->insert_id;
-		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, word_0, word_1, word_1_pronun) VALUES (%d, 1, '%s', '%s', '%s')",
-			$test_entry_id,
-			$mysqli->escape_string($entry_words[$entry_languages[0]]),
-			$mysqli->escape_string($entry_words[$entry_languages[1]]),
-			$mysqli->escape_string($entry_pronunciations[$entry_languages[1]])
-		));
-		
-		if (!!$mysqli->error)
+		if (isset($this->entries))
 		{
-			return self::set_error_description("Test failed to add entry pattern: " . $mysqli->error . ".");
+			if ($mysqli->insert_id)
+			{
+				$this->entries[$mysqli->insert_id] = $entry;
+			}
+			else
+			{
+				$this->uncache_entries();
+			}
 		}
 		
+		switch ($mode % 3)
+		{
+			case 1:
+			{
+				$contents = $entry->get_word_1();
+			} break;
+			
+			case 2:
+			{
+				$contents = array_pop($entry->pronunciations());
+			} break;
+			
+			default:
+			{
+				$contents = $entry->get_word_0();
+			}
+		}
+		
+		return Pattern::insert(
+					$this->get_test_id(),
+					$entry->get_entry_id(),
+					$contents,
+					true
+				)
+			? $this
+			: static::set_error_description(
+					"Test failed to add entry pattern: " .
+					Pattern::unset_error_description()
+				);
+	}
+	
+	public function entries_add_from_list($list, $mode = null)
+	{
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
+		foreach ($list->entries() as $entry)
+		{
+			if (!$this->entries_add($entry, $mode))
+			{
+				return null;
+			}
+		}
 		return $this;
 	}
 	
@@ -224,11 +366,16 @@ class Test extends CourseComponent
 			return static::set_error_description("Session user cannot edit test.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
 		
-		$number = array_search($entry, $this->get_entries()) + 1;
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		if ($number < 1) return self::set_error_description("Test cannot remove entry not already in test.");
+		$number = array_search($entry, $this->entries()) + 1;
+		
+		if ($number < 1) return static::set_error_description("Test cannot remove entry not already in test.");
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -239,7 +386,7 @@ class Test extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
+			return static::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);
@@ -251,16 +398,16 @@ class Test extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
+			return static::set_error_description("Test failed to remove entry: " . $mysqli->error . ".");
 		}
 		
 		return $this;
 	}
 	
 	private $sittings;
-	public function get_sittings()
+	public function sittings()
 	{
-		return self::get_cached_collection($this->sittings, "Sitting", "course_unit_test_sittings", "test_id", $this->get_test_id());
+		return self::cache($this->sittings, "Sitting", "course_unit_test_sittings", "test_id", $this->get_test_id());
 	}
 	public function uncache_sittings()
 	{
@@ -268,17 +415,50 @@ class Test extends CourseComponent
 	}
 	public function get_sitting_for_user($user)
 	{
-		foreach ($this->get_sittings() as $sitting)
+		foreach ($this->sittings() as $sitting)
 		{
 			if (!$sitting->get_user())
 			{
-				return self::set_error_description("Failed to identify user for sitting: " . Sitting::unset_error_description());
+				return static::set_error_description("Failed to identify user for sitting: " . Sitting::unset_error_description());
 			}
 			
 			if ($sitting->get_user()->equals($user)) return $sitting;
 		}
 		
 		return null;
+	}
+	
+	public function patterns()
+	{
+		return self::collect("Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+	}
+	
+	public function executed()
+	{
+		return count($this->sittings()) > 0;
+	}
+	
+	public function unexecute()
+	{
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$mysqli->query(sprintf("DELETE FROM course_unit_test_sittings WHERE test_id = %d",
+			$this->get_test_id()
+		));
+		
+		if (!!$mysqli->error)
+		{
+			return static::set_error_description("Test failed to unexecute: " . $mysqli->error . ".");
+		}
+		
+		$this->uncache_sittings();
+		
+		return $this;
 	}
 	
 	private $timeframe = null;
@@ -288,6 +468,16 @@ class Test extends CourseComponent
 	}
 	public function set_timeframe($timeframe)
 	{
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
 		if (!self::update_this(
 			$this,
 			"course_unit_tests",
@@ -319,6 +509,16 @@ class Test extends CourseComponent
 	}
 	public function set_timer($timer)
 	{
+		if (!$this->session_user_can_write())
+		{
+			return static::set_error_description("Session user cannot edit test.");
+		}
+		
+		if ($this->executed())
+		{
+			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
+		}
+		
 		return parent::update_this($this, "course_unit_tests", array ("timer" => intval($timer, 10)), "test_id", $this->get_test_id());
 	}
 	
@@ -366,7 +566,7 @@ class Test extends CourseComponent
 	{
 		if (!($course = $this->get_course()))
 		{
-			return self::set_error_description("Failed to get course for test where test_id = " . $this->get_test_id() . ".");
+			return static::set_error_description("Failed to get course for test where test_id = " . $this->get_test_id() . ".");
 		}
 		
 		return ($course->user_is_student($user)
@@ -388,20 +588,35 @@ class Test extends CourseComponent
 				return $sitting;
 			}
 			
-			return self::set_error_description("Failed to execute test: " . Sitting::unset_error_description());
+			return static::set_error_description("Failed to execute test: " . Sitting::unset_error_description());
 		}
 		
 		$reasons = array ();
 		if (!$this->session_user_is_student()) array_push($reasons, "session user is not course student");
 		if (!!$this->get_timeframe() && !$this->get_timeframe()->is_current()) array_push($reasons, "test timeframe is not current");
 		
-		return self::set_error_description("Session user cannot execute test because " . implode(" and ", $reasons) . ".");
+		return static::set_error_description("Session user cannot execute test because " . implode(" and ", $reasons) . ".");
 	}
 	
 	public function delete()
 	{
 		$this->get_unit()->uncache_tests();
 		return self::delete_this($this, "course_unit_tests", "test_id", $this->get_test_id());
+	}
+	
+	public function entries_count()
+	{
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
+	}
+	
+	public function sittings_count()
+	{
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "test_id", $this->get_test_id());
+	}
+	
+	public function patterns_count()
+	{
+		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function json_assoc($privacy = null)
@@ -411,14 +626,19 @@ class Test extends CourseComponent
 			"name" => $this->get_test_name(),
 			"unitId" => $this->get_unit_id(),
 			"courseId" => $this->get_course_id(),
-			//"owner" => $this->get_owner()->json_assoc(),
-			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
-			"entriesCount" => count($this->get_entries()),
+			"timeframe" => !!$this->get_timeframe()
+				? ($this->session_user_can_read() || $this->session_user_can_execute()
+					? $this->get_timeframe()->json_assoc()
+					: null)
+				: null,
+			"entriesCount" => $this->entries_count(),
+			"sittingsCount" => $this->sittings_count(),
+			"patternsCount" => $this->patterns_count(),
 			"message" => $this->get_message()
-		), array (0 => "testId"), $privacy);
+		), array ("testId", "timeframe"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
@@ -426,7 +646,9 @@ class Test extends CourseComponent
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->get_entries()) : null;
+		$assoc["entries"] = $this->session_user_can_write() ? self::json_array($this->entries()) : null;
+		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
+		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

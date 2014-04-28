@@ -35,8 +35,8 @@
         <div id="unit-header"></div>
         <div id="unit-intro"></div>
         <div id="unit-update">
-          <button class="btn btn-primary" type="button" onclick="showForm('#updateUnitForm','#unit\-update');">Update Unit</button> &nbsp;
-          <button class="btn btn-primary" type="button" onclick="deleteUnit();">Delete Unit</button><br /><br /> 
+          <span class="glyphicon glyphicon-pencil span-action" onclick="showForm('#updateUnitForm','#unit\-update');" title="Update this unit"></span> &nbsp;
+          <span class="glyphicon glyphicon-trash span-action" onclick="deleteUnit();" title="Delete this unit"></span><br /><br /> 
         </div>
         <!--- Update form --->
         <form id="updateUnitForm" role="form" class="container-left">
@@ -58,8 +58,8 @@
             <input type="text" class="form-control form-control-date" id="unitclosedate">
             <script>$('#unitclosedate').datetimepicker();</script>
           </div><br />
-        <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button> &nbsp;
-        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button><br /> &nbsp;
+        <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateUnitForm','#unit\-update');">Cancel</button> &nbsp;
+        <button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button><br /> &nbsp;
         </form> 
 
         <h4>Flashcard Decks</h4>
@@ -75,30 +75,27 @@
             <span class="span-action" onclick="myDecks();">[View My Decks]</span> &nbsp; 
             <span class="span-action" onclick="showSearch('#word-search');">[Search by Word]</span> &nbsp; 
             <span class="span-action" onclick="showSearch('#owner-search');">[Search by Owner]</span> &nbsp;
-            <span class="span-action" onclick="cancelUpdate('#searchListForm','#search\-list');">[ x ]</span><br />&nbsp;
+            <span style="top:3px;" class="glyphicon glyphicon-remove span-action" onclick="cancelUpdate('#searchListForm','#search\-list');" title="Close search"></span><br />&nbsp;
             <div id="word-search"><br />
               <div class="form-group">
                 <label class="sr-only" for="entrysearch">Enter search text</label>
-                <input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
+                <input type="text" class="form-control" id="entrysearch" placeholder="search word">
               </div>
               <div class="form-group">
                 <label>From: </label>
                 <select class="form-control" id="lang1">
-                  <option>cn</option>
-                  <option>jp</option>
                 </select>
               </div>
               <div class="form-group">
                 <label>To: </label>
                 <select class="form-control" id="lang2">
-                  <option>en</option>
                 </select>
               </div>
               <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br />&nbsp;
             </div>
             <div id="owner-search"><br />
               <div class="form-group">
-                <input type="text" class="form-control" id="ownerCriteria" placeholder="Enter username or email to search for" required autofocus>
+                <input type="text" class="form-control" id="ownerCriteria" placeholder="username or email" required autofocus>
               </div>
               <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button><br />&nbsp;
             </div>
@@ -139,8 +136,8 @@
             <input type="text" class="form-control form-control-date" id="testclosedate" placeholder="Select close date/time" required>
             <script>$('#testclosedate').datetimepicker();</script>
           </div><br />
-          <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button> &nbsp;
-          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button><br />&nbsp;  
+          <button type="button" stype="button" class="btn" onclick="cancelUpdate('#createTestForm','#add\-test');">Cancel</button>&nbsp;  
+          <button class="btn btn-primary" type="button" onclick="verifyTestForm();">Submit</button>      
         </form>	
       </div><br />
     </div> <!-- /container -->

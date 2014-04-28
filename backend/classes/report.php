@@ -49,7 +49,7 @@ class Report extends ErrorReporter
 		if (0 == $permissions)
 			return static::set_error_description("Do not have access to this information.");
 		
-		$students = $course->get_students();
+		$students = $course->students();
 		
 		$progress_stat = self::generate_class_progress_stat($course_id);
 		if (!$progress_stat)
@@ -115,7 +115,7 @@ class Report extends ErrorReporter
 
 			$entryReport["entryId"] = $entry_id;
 			$entry = Entry::select_by_id($entry_id);
-			$entryReport["words"] =  $entry->get_words();
+			$entryReport["words"] =  $entry->words();
 			$entryReport["practiceCount"] = $num_practiced;
 			$entryReport["gradePointAverage"] = self::get_student_average_point_for_entry($entry_id, $user_id);
 			$entryReport["classGradePointAverage"] = $entry_to_points[$entry_id];
@@ -247,18 +247,18 @@ class Report extends ErrorReporter
 		if (!$session_user || !$course)
 			return 0;
 		
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 
 		if (in_array($session_user, $instructors))
 			return 1;
 			
-		$researchers = $course->get_researchers();
+		$researchers = $course->researchers();
 		if (in_array($session_user, $researchers))
 			return 2;
 			
 		if ($student_user == $session_user)
 		{
-			$students = $course->get_students();
+			$students = $course->students();
 			if (in_array($student_user, $students))
 				return 1;
 		}

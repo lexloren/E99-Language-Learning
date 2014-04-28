@@ -24,6 +24,25 @@ function showForm(frm,tohide){
     $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
 }
 
+function getLangs(){
+    $.getJSON('../../language_enumerate.php')
+        .done(function(data){
+            authorize(data);
+            if(data.isError){
+                failureMessage("Word search could not be initialized.");
+            }
+            else{
+                $.each(data.result, function(i, item){           
+                    $('#lang1').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                    $('#lang2').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                });
+            }
+    })
+    .fail(function(error) {
+        failureMessage('Something has gone wrong. Please refresh the page and try again.');
+    });    
+}
+
 function cancelUpdate(frm,tohide){
     $(frm).hide();
     $(tohide).show();
@@ -40,7 +59,11 @@ function getTestInfo(){
                 failureMessage("Information for this test could not be retrieved.");
             }
             else{
-                testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+data.result.name+'</h3>';
+                if(data.result.name != null)
+                    tname = data.result.name;
+                else
+                    tname = '';
+                testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+tname+'</h3>';
                 $("#test-header").html(testheader);
                 if(data.result.sessionUserPermissions.write == true){
                     $("#testname").val(data.result.name);
@@ -49,11 +72,11 @@ function getTestInfo(){
                     }
                     if(data.result.timeframe != null){
                         if(data.result.timeframe.open != null){
-                            opendate = new Date(data.result.timeframe.open);
+                            opendate = new Date(data.result.timeframe.open*1000);
                             $("#testopendate").val(opendate);
                         }
                         if(data.result.timeframe.close != null){
-                            closedate = new Date(data.result.timeframe.close);
+                            closedate = new Date(data.result.timeframe.close*1000);
                             $("#testclosedate").val(closedate);
                         }
                     }
@@ -84,9 +107,11 @@ function getTestInfo(){
                         });
                         $('#entry-list').append('<tr><td></td><td></td><td></td><td></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
                     }
+                    getLangs();
+                    $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
                     $("#test-sitting").hide();
                 }
-                else{
+                else if(data.result.sessionUserPermissions.execute == true){
                     if(data.result.message != null){
                       testintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4>';
                       $("#test-intro").html(testintro);  
@@ -152,8 +177,8 @@ function saveUpdate(){
         return;
     }
 
-    opendate = Date.parse(opendate);
-    closedate = Date.parse(closedate);
+    opendate = Date.parse(opendate)/1000;
+    closedate = Date.parse(closedate)/1000;
 
     if(closedate < opendate){
 		    failureMessage("Open Date cannot be later than Close Date; please re-select the dates.");	
@@ -176,11 +201,11 @@ function saveUpdate(){
                 $("#testdesc").val(data.result.message);
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open);
+                        opendate = new Date(data.result.timeframe.open*1000);
                         $("#testopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close);
+                        closedate = new Date(data.result.timeframe.close*1000);
                         $("#testclosedate").val(closedate);
                     }
                 }
@@ -462,8 +487,12 @@ function submitAnswer(id){
             if(data.isError){
                 console.log(data.errorTitle);
                 console.log(data.errorDescription);
-                if(data.errorDescription = "Session user has already responded to all test entries."){
+                if(data.errorDescription == "Session user has already responded to all test entries."){
                   successMessage("Test is complete and has been submitted.");                  
+                }
+                else{
+                    failureMessage("There was a problem obtaining the test data. Please refresh the page and try again.");
+                    $("html, body").animate({scrollTop:0}, "slow"); 
                 }
             }
             else{

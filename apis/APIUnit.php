@@ -26,6 +26,20 @@ class APIUnit extends APIBase
 			}
 			else
 			{
+				if (isset($_POST["list_ids"]))
+				{
+					$list_ids = explode(",", $_POST["list_ids"]);
+					
+					foreach ($list_ids as $list_id)
+					{
+						if (($list = EntryList::select_by_id($list_id))
+							&& $list->session_user_can_read())
+						{
+							$unit->lists_add($list);
+						}
+					}
+				}
+				
 				Session::get()->set_result_assoc($unit->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
 			}
 		}
@@ -37,7 +51,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			Session::get()->set_result_assoc($unit->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($unit->json_assoc_detailed(false));
 		}
 	}
 	
@@ -110,7 +124,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->get_lists());
+			self::return_array_as_json($unit->lists());
 		}
 	}
 	
@@ -164,7 +178,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->get_tests());
+			self::return_array_as_json($unit->tests());
 		}
 	}
 }

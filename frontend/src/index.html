@@ -6,15 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Xenogloss: Welcome Page</title>
     <!-- Bootstrap -->
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
     <link href="css/bootstrap.min.css" rel="stylesheet">
-	<!-- Custom styles for this template -->
     <link href="css/starter-template.css" rel="stylesheet">
-
-	    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-	 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
-	<script src="js/jquery-ui-timepicker-addon.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+    <script src="js/jquery-ui-timepicker-addon.js"></script>
     <script src="js/bootstrap.min.js"></script>
 	<script src="js/common.js"></script>
 	<script src="js/course.js"></script>
@@ -44,12 +42,9 @@
 			<div class="col-md-2">
 				<!--The Top tabs go here-->
 				<ul class="nav nav-pills nav-stacked" style="margin-bottom: 15px;">
-					<li class="active"><a href="#course" data-toggle="tab">My Courses</a></li>
+					<li class="active"><a href="#coursetab" data-toggle="tab">My Courses</a></li>
 					<li class=""><a href="#list" data-toggle="tab">My Lists</a></li>
-					<li class=""><a href="#search" data-toggle="tab">Search Course</a></li>
-					<li class=""><a href="#addcourse" data-toggle="tab">Add Course</a></li>
 					<li class=""><a href="#profile" data-toggle="tab">Profile</a></li>
-					
 				</ul>
 			</div>
 			<div class="col-md-9">
@@ -57,101 +52,118 @@
 					<img src="/frontend/src/images/loader.gif"/> loading...
 				</div>
 				<div id="myTabContent" class="tab-content">
-					<div class="tab-pane fade active in" id="course">
+					<div class="tab-pane fade active in" id="coursetab">
+						<div  id="search">
+							<form class="navbar-form" role="search" id="frmSearchCourse">
+								<div class="form-group">
+									<input type="text" id="searchCourseIds" class="form-control" placeholder="Course ID">
+								</div>
+								<div class="form-group">
+									<div class="col-lg-10">
+										<select class="form-control" id="searchKnownLang">
+											<option value="">Known Lang</option>
+											<option value="en">English</option>
+											<option value="cn">Chinese</option>
+											<option value="jp">Japanese</option>
+										</select>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="col-lg-10">
+										<select class="form-control" id="searchLearnLang">
+											<option value="">Learn Lang</option>
+											<option value="en">English</option>
+											<option value="cn">Chinese</option>
+											<option value="jp">Japanese</option>
+										</select>
+									</div>
+								</div>
+								<button type="button" onclick="searchCancel();"  class="btn btn-default">Cancel</button>
+								<button type="button" onclick="searchCourses();"  class="btn btn-primary">Search</button>
+							</form>
+							<br/>
 						
+							<div id="searchresults">
+							</div>
+						</div>
+						
+						<div id="course">
+						</div>
+						
+						
+						<div  id="addcourse">
+							<form class="form-horizontal" id="insertCourseForm">
+							<fieldset>
+								<legend>Create a Course</legend>
+								<div class="form-group">
+									<label for="coursename" class="col-lg-2 control-label">Course Name</label>
+									<div class="col-lg-10">
+										<input class="form-control" id="coursename" placeholder="Course Name" type="text">
+									</div>
+								</div>
+				
+								<div class="form-group">
+									<label for="coursedetails" class="col-lg-2 control-label">Course Details</label>
+									<div class="col-lg-10">
+										<input class="form-control" id="coursedetails" placeholder="Course Details" type="text">
+									</div>
+									
+								</div>
+				
+								<div class="form-group">
+									<label for="knownLang" class="col-lg-2 control-label">Known Lang</label>
+									<div class="col-lg-10">
+										<select class="form-control" id="knownLang">
+											<option value="">Select One</option>
+											<option value="en">English</option>
+											<option value="cn">Chinese</option>
+											<option value="jp">Japanese</option>
+										</select>
+									</div>
+								</div>
+				
+								<div class="form-group">
+									<label for="unknownLang" class="col-lg-2 control-label">unKnown Lang</label>
+									<div class="col-lg-10">
+										<select class="form-control" id="unknownLang">
+											<option value="">Select One</option>
+											<option value="en">English</option>
+											<option value="cn">Chinese</option>
+											<option value="jp">Japanese</option>
+										</select>
+									</div>
+								</div>
+				
+								<div class="form-group">
+									<label for="opendate" class="col-lg-2 control-label">Open Date</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control form-control-date" id="opendate" >
+										<script>$('#opendate').datetimepicker();</script>
+									</div>
+								</div>
+								<div class="form-group">
+									<label for="closedate" class="col-lg-2 control-label">Close Date</label>
+									<div class="col-lg-10">
+										<input type="text" class="form-control form-control-date" id="closedate">
+										<script>$('#closedate').datetimepicker();</script>
+									</div>
+								</div>
+				
+								<div class="form-group">
+									<div class="col-lg-10 col-lg-offset-2">
+										<button type="button" class="btn btn-default" onclick="addCourseCancel();">Cancel</button>
+										<button type="button" class="btn btn-primary" onclick="insertNew();">Submit</button>
+									</div>
+								</div>
+							</fieldset>
+							</form>
+						</div>
 					</div>
 					<div class="tab-pane fade" id="list">
 						
 					</div>
-					<div class="tab-pane fade" id="search">
-						<form class="navbar-form" role="search" id="frmSearchCourse">
-							<div class="form-group">
-								<input type="text" id="searchCourseIds" class="form-control" placeholder="Course ID">
-							</div>
-							<div class="form-group">
-								<div class="col-lg-10">
-									<select class="form-control" id="searchLang">
-										<option value="">Select One</option>
-										<option value="en">English</option>
-										<option value="cn">Chinese</option>
-										<option value="jp">Japanese</option>
-									</select>
-								</div>
-							</div>
-							<button type="button" onclick="searchCourses();"  class="btn btn-primary">Search</button>
-						</form>
-						<br/>
-						
-						<div id="searchresults">
-						</div>
-					</div>
-					<div class="tab-pane fade" id="addcourse">
-						<form class="form-horizontal" id="insertCourseForm">
-						<fieldset>
-							<legend>Create a Course</legend>
-							<div class="form-group">
-								<label for="coursename" class="col-lg-2 control-label">Course Name</label>
-								<div class="col-lg-10">
-									<input class="form-control" id="coursename" placeholder="Course Name" type="text">
-								</div>
-							</div>
-			
-							<div class="form-group">
-								<label for="coursedetails" class="col-lg-2 control-label">Course Details</label>
-								<div class="col-lg-10">
-									<input class="form-control" id="coursedetails" placeholder="Course Details" type="text">
-								</div>
-								
-							</div>
-			
-							<div class="form-group">
-								<label for="knownLang" class="col-lg-2 control-label">Known Lang</label>
-								<div class="col-lg-10">
-									<select class="form-control" id="knownLang">
-										<option value="">Select One</option>
-										<option value="en">English</option>
-										<option value="cn">Chinese</option>
-										<option value="jp">Japanese</option>
-									</select>
-								</div>
-							</div>
-			
-							<div class="form-group">
-								<label for="unknownLang" class="col-lg-2 control-label">unKnown Lang</label>
-								<div class="col-lg-10">
-									<select class="form-control" id="unknownLang">
-										<option value="">Select One</option>
-										<option value="en">English</option>
-										<option value="cn">Chinese</option>
-										<option value="jp">Japanese</option>
-									</select>
-								</div>
-							</div>
-			
-							<div class="form-group">
-								<label for="opendate" class="col-lg-2 control-label">Open Date</label>
-								<div class="col-lg-10">
-									<input type="text" class="form-control form-control-date" id="opendate" placeholder="Select open date/time" required>
-									<script>$('#opendate').datetimepicker();</script>
-								</div>
-							</div>
-							<div class="form-group">
-								<label for="closedate" class="col-lg-2 control-label">Close Date</label>
-								<div class="col-lg-10">
-									<input type="text" class="form-control form-control-date" id="closedate" placeholder="Select close date/time" required>
-									<script>$('#closedate').datetimepicker();</script>
-								</div>
-							</div>
-			
-							<div class="form-group">
-								<div class="col-lg-10 col-lg-offset-2">
-									<button type="button" class="btn btn-default" onclick="resetForm('#insertCourseForm');">Cancel</button>
-									<button type="button" class="btn btn-primary" onclick="insertNew();">Submit</button>
-								</div>
-							</div>
-						</fieldset>
-						</form>
-					</div>
+					
+					
 					<div class="tab-pane fade" id="profile">
 						<form class="form-horizontal">
 						  <fieldset>
@@ -205,7 +217,7 @@
 							<div class="form-group">
 							  <div class="col-lg-10 col-lg-offset-2">
 								<button class="btn btn-default">Cancel</button>
-								<button type="button" onclick="updateProfile" class="btn btn-primary">Submit</button>
+								<button type="button" onclick="updateProfile();" class="btn btn-primary">Submit</button>
 							  </div>
 							</div>
 						  </fieldset>

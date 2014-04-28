@@ -30,9 +30,9 @@ class CourseComponent extends DatabaseRow
 		return !!($course = $this->get_course()) ? $course->get_course_id() : null;
 	}
 	
-	public function get_instructors()
+	public function instructors()
 	{
-		return !!($course = $this->get_course()) ? $course->get_instructors() : array ();
+		return !!($course = $this->get_course()) ? $course->instructors() : array ();
 	}
 	public function user_is_instructor($user)
 	{
@@ -43,9 +43,9 @@ class CourseComponent extends DatabaseRow
 		return !!Session::get() && $this->user_is_instructor(Session::get()->get_user());
 	}
 	
-	public function get_students()
+	public function students()
 	{
-		return !!($course = $this->get_course()) ? $course->get_students() : array ();
+		return !!($course = $this->get_course()) ? $course->students() : array ();
 	}
 	public function user_is_student($user)
 	{

@@ -67,6 +67,29 @@ class DatabaseRow extends ErrorReporter
 		return $instance;
 	}
 	
+	protected static function count($table, $column, $id)
+	{
+		$id = intval($id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+		
+		$result = $mysqli->query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
+		
+		if (!!$mysqli->error)
+		{
+			return static::set_error_description("Failed to count $table where $column = $id: " . $mysqli->error . ".");
+		}
+		
+		if ($result->num_rows == 0) return 0;
+		
+		if (!($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to count $table where $column = $id.");
+		}
+		
+		return intval($result_assoc["count"], 10);
+	}
+	
 	protected static function assoc_contains_keys($assoc, $keys)
 	{
 		if (!isset($assoc) || !$assoc || !is_array($assoc))
@@ -88,32 +111,39 @@ class DatabaseRow extends ErrorReporter
 	{
 	}
 	
-	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null)
+	protected static function collect($member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
+	{
+		$cache = array ();
+			
+		$anchor_id = intval($anchor_id, 10);
+		
+		$mysqli = Connection::get_shared_instance();
+	
+		$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
+		
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: " . $mysqli->error . ".");
+		}
+		
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			if (!($member = $member_class::from_mysql_result_assoc($result_assoc)))
+			{
+				unset ($cache);
+				return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::unset_error_description());
+			}
+			$cache[$key_by !== null ? $result_assoc[$key_by] : count($cache)] = $member;
+		}
+		
+		return $cache;
+	}
+	
+	protected static function cache(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
 	{
 		if (!isset($cache))
 		{
-			$cache = array ();
-			
-			$anchor_id = intval($anchor_id, 10);
-			
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
-			
-			if ($mysqli->error)
-			{
-				return static::set_error_description("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: " . $mysqli->error . ".");
-			}
-			
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				if (!($member = $member_class::from_mysql_result_assoc($result_assoc)))
-				{
-					unset ($cache);
-					return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::unset_error_description());
-				}
-				array_push($cache, $member);
-			}
+			$cache = self::collect($member_class, $table, $anchor_column, $anchor_id, $columns, $order_by, $key_by);
 		}
 		
 		return $cache;
@@ -202,7 +232,7 @@ class DatabaseRow extends ErrorReporter
 		return null;
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		return $this->json_assoc($privacy);
 	}
@@ -235,7 +265,7 @@ class DatabaseRow extends ErrorReporter
 		return $array;
 	}
 	
-	protected static function array_for_json($array)
+	protected static function json_array($array)
 	{
 		if (!is_array($array))
 		{

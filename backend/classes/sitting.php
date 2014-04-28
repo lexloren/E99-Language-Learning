@@ -88,6 +88,31 @@ class Sitting extends CourseComponent
 	{
 		return $this->get_test()->get_course();
 	}
+	public function get_score_json_assoc()
+	{
+		$mysqli = Connection::get_shared_instance();
+		$response_patterns = "(course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id))";
+		$result = $mysqli->query(sprintf("SELECT SUM(score) AS scoredTotal, SUM(unscored) AS unscoredCount FROM (SELECT score, IF(score IS NULL, 1, 0) AS unscored FROM $response_patterns WHERE sitting_id = %d) AS scores",
+			$this->get_sitting_id()
+		));
+		
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to get test sitting score: " . $mysqli->error . ".");
+		}
+		
+		if (!($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to get test sitting score!");
+		}
+		
+		foreach ($result_assoc as $key => &$value)
+		{
+			$value = intval($value, 10);
+		}
+		
+		return $result_assoc;
+	}
 	
 	private $student_id = null;
 	public function get_student_id()
@@ -104,17 +129,17 @@ class Sitting extends CourseComponent
 				$this->get_student_id()
 			));
 			
-			if (!!$mysqli->error) return self::set_error_description("Failed to select sitting user: " . $mysqli->error . ".");
+			if (!!$mysqli->error) return static::set_error_description("Failed to select sitting user: " . $mysqli->error . ".");
 			
 			if (!$result || $result->num_rows != 1 || !($result_assoc = $result->fetch_assoc()))
 			{
-				return self::set_error_description("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
+				return static::set_error_description("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
 			}
 			
 			if (!($this->user = User::select_by_id($result_assoc["user_id"])))
 			{
 				unset($this->user);
-				return self::set_error_description("Failed to select sitting user: " . User::unset_error_description());
+				return static::set_error_description("Failed to select sitting user: " . User::unset_error_description());
 			}
 		}
 		
@@ -138,9 +163,9 @@ class Sitting extends CourseComponent
 	}
 	
 	private $responses;
-	public function get_responses()
+	public function responses()
 	{
-		return self::get_cached_collection($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+		return self::cache($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
 	private $timeframe = null;
@@ -190,7 +215,7 @@ class Sitting extends CourseComponent
 	}
 	
 	private $entries_remaining;
-	public function get_entries_remaining()
+	public function entries_remaining()
 	{
 		if (!isset($this->entries_remaining))
 		{
@@ -203,7 +228,7 @@ class Sitting extends CourseComponent
 			
 			if (!!$mysqli->error)
 			{
-				return self::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
+				return static::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
 			}
 			
 			$this->entries_remaining = array ();
@@ -222,19 +247,20 @@ class Sitting extends CourseComponent
 	public function user_can_execute($user)
 	{
 		return $this->get_test()->user_can_execute($user)
-			&& $this->get_entries_remaining() > 0;
+			&& $this->get_user()->equals($user)
+			&& $this->entries_remaining() > 0;
 	}
 	
 	public function next_json_assoc()
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return self::set_error_description("Session user cannot execute test" . (!$this->get_entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+			return static::set_error_description("Session user cannot execute test" . (!$this->entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
 		}
 		
-		if (!count($entries_remaining = $this->get_entries_remaining()))
+		if (!count($entries_remaining = $this->entries_remaining()))
 		{
-			return self::set_error_description("Session user has already responded to all test entries.");
+			return static::set_error_description("Session user has already responded to all test entries.");
 		}
 		
 		$entry = array_shift($entries_remaining);
@@ -250,40 +276,29 @@ class Sitting extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return self::set_error_description("Test failed to get mask for next entry for session user.");
+			return static::set_error_description("Test failed to get mask for next entry for session user.");
 		}
 		
 		$mode = $result_assoc["mode"];
 		
-		$result = $mysqli->query(sprintf("SELECT * FROM course_unit_test_entry_patterns WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
+		$result = $mysqli->query(sprintf("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
 			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
 		));
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		$options = array ();
 		while (($result_assoc = $result->fetch_assoc()))
 		{
-			if ($mode === 1)
-			{
-				array_push($options, $result_assoc["word_1"]);
-			}
-			else if ($mode === null)
-			{
-				array_push($options, $result_assoc["word_1_pronun"]);
-			}
-			else
-			{
-				array_push($options, $result_assoc["word_0"]);
-			}
+			array_push($options, $result_assoc["contents"]);
 		}
 		
 		if (count($options) == 1) $options = null;
@@ -300,7 +315,9 @@ class Sitting extends CourseComponent
 	{
 		if (!$user) return false;
 		
-		return $this->user_can_write($user) || $user->equals($this->get_user());
+		return $this->user_can_write($user)
+			|| ($user->equals($this->get_user())
+				&& !$this->user_can_execute($this->get_user()));
 	}
 	
 	public function delete()
@@ -309,21 +326,34 @@ class Sitting extends CourseComponent
 		return self::delete_this($this, "course_unit_test_sittings", "sitting_id", $this->get_sitting_id());
 	}
 	
+	public function responses_count()
+	{
+		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
-		//  Placeholder
-		return array ();
-		/*
 		return $this->privacy_mask(array (
 			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"userId" => $this->get_user_id(),
+			"student" => $this->get_user()->json_assoc(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
-			"responses" => self::array_for_json($this->get_responses()),
+			"responsesCount" => $this->responses_count(),
+			"score" => $this->get_score_json_assoc(),
 			"message" => $this->get_message()
 		), array (0 => "sittingId"), $privacy);
-		*/
+	}
+	
+	public function json_assoc_detailed($privacy = null)
+	{
+		$assoc = $this->json_assoc($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["responses"] = self::json_array($this->responses());
+		
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

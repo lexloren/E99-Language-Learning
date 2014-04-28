@@ -10,6 +10,9 @@ function showForm(frm){
     $("#sign-in").hide();
     $("#register").hide();
     $("#forgot-pw").hide();
+    $("#form-signin")[0].reset();
+    $("#pwRequestForm")[0].reset();
+    $("#regForm")[0].reset();
     $(frm).show();
 }
 

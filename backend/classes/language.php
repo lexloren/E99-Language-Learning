@@ -47,7 +47,7 @@ class Language extends DatabaseRow
 	}
 
 	private $names;
-	public function get_names()
+	public function names()
 	{
 		if (!isset($this->names))
 		{
@@ -99,13 +99,13 @@ class Language extends DatabaseRow
 	{
 		return array (
 			"code" => $this->get_lang_code(),
-			"names" => $this->get_names()
+			"names" => $this->names()
 		);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
-		return parent::detailed_json_assoc($privacy);
+		return parent::json_assoc_detailed($privacy);
 	}
 }
 

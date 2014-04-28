@@ -30,7 +30,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertNull($entry->get_owner());
 		
-		$words = $entry->get_words();
+		$words = $entry->words();
 		$this->assertNotNull($words);
 		$this->assertCount(2, $words);
 		
@@ -45,7 +45,7 @@ class DictionaryTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertNull($entry->get_owner());
 		
-		$words = $entry->get_words();
+		$words = $entry->words();
 		$this->assertNotNull($words);
 		$this->assertCount(2, $words);
 		

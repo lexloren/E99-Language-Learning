@@ -65,10 +65,22 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
+	}
+	
+	public static function find_by_entry_query($query, $lang_codes)
+	{
+		if (($entries = Dictionary::query($query, $lang_codes, array ("num" => 0, "size" => 100), false)))
+		{
+			$entry_ids = array ();
+			foreach ($entries as $entry) array_push($entry_ids, $entry->get_entry_id());
+			return self::find_by_entry_ids($entry_ids);
+		}
+		
+		return static::set_error_description("Failed to find list(s) by entry ids: " . Dictionary::unset_error_description());
 	}
 	
 	public static function find_by_user_query($query)
@@ -80,7 +92,7 @@ class EntryList extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return self::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
+		return static::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
 	}
 	
 	public static function find_by_user_ids($user_ids)
@@ -98,7 +110,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
+			return static::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -149,7 +161,7 @@ class EntryList extends DatabaseRow
 	}
 	public function set_public($public)
 	{
-		return self::set_error_description("List.set_public() not yet implemented.");
+		return static::set_error_description("List.set_public() not yet implemented.");
 	}
 	
 	public function uncache_entries()
@@ -167,7 +179,7 @@ class EntryList extends DatabaseRow
 	}
 	
 	private $entries;
-	public function get_entries()
+	public function entries()
 	{
 		$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
 			Dictionary::language_code_columns(),
@@ -176,16 +188,16 @@ class EntryList extends DatabaseRow
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
+		return self::cache($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
 	}
 	
 	private $courses;
-	public function get_courses()
+	public function courses()
 	{
 		if (!isset($this->courses))
 		{
 			$table = "(course_unit_lists LEFT JOIN course_units USING (unit_id)) LEFT JOIN courses USING (course_id)";
-			if (self::get_cached_collection($this->courses, "Course", $table, "list_id", $this->get_list_id()))
+			if (self::cache($this->courses, "Course", $table, "list_id", $this->get_list_id()))
 			{
 				$courses_unique = array ();
 				foreach ($this->courses as $course)
@@ -242,14 +254,14 @@ class EntryList extends DatabaseRow
 	public function user_can_read($user)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via_course($user)
+			|| $this->user_can_read_via_some_course($user)
 			|| $this->get_public();
 	}
 	
 	public function user_can_write($user)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via_course($user);
+			|| $this->user_can_write_via_some_course($user);
 	}
 	
 	public function session_user_can_write()
@@ -261,7 +273,7 @@ class EntryList extends DatabaseRow
 	{
 		foreach ($courses as $course)
 		{
-			foreach ($course->get_lists() as $list)
+			foreach ($course->lists() as $list)
 			{
 				if ($list->list_id === $this->list_id)
 					//  Should now be true for all lists associated with all courses:
@@ -276,14 +288,14 @@ class EntryList extends DatabaseRow
 	}
 	
 	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
-	private function user_can_read_via_course($user)
+	private function user_can_read_via_some_course($user)
 	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->get_student_courses());
+		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_studied());
 	}
 	
-	private function user_can_write_via_course($user)
+	private function user_can_write_via_some_course($user)
 	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->get_instructor_courses());
+		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_instructed());
 	}
 	
 	public function delete()
@@ -293,9 +305,14 @@ class EntryList extends DatabaseRow
 		return self::delete_this($this, "lists", "list_id", $this->get_list_id());
 	}
 	
+	public function entries_count()
+	{
+		return self::count("list_entries", "list_id", $this->get_list_id());
+	}
+	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function entries_add($entry_to_add)
+	public function entries_add($entry_to_add, $hint = null)
 	{
 		if (!$entry_to_add)
 		{
@@ -307,10 +324,7 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		//  Insert into user_entries from dictionary, if necessary
-		$entry_added = $entry_to_add->copy_for_user($this->get_owner());
-		
-		if (!$entry_added)
+		if (!($entry_added = $entry_to_add->copy_for_user($this->get_owner(), $hint)))
 		{
 			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
 		}
@@ -319,13 +333,27 @@ class EntryList extends DatabaseRow
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 			$this->list_id,
 			$entry_added->get_user_entry_id()
 		));
 		
 		$entry_added->uncache_lists();
 		
+		return $this;
+	}
+	
+	public function entries_add_from_list($list)
+	{
+		if ($list == $this) return static::set_error_description("List cannot add entries from itself.");
+		
+		foreach ($list->entries() as $entry)
+		{
+			if (!$this->entries_add($entry))
+			{
+				return null;
+			}
+		}
 		return $this;
 	}
 	
@@ -343,7 +371,10 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		if (!($entry = $entry->copy_for_user($this->get_owner(), $this)))
+		{
+			return static::set_error_description("List failed to remove entry: " . Entry::unset_error_description());
+		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
@@ -354,7 +385,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return self::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
+			return static::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);
@@ -393,7 +424,7 @@ class EntryList extends DatabaseRow
 		$list_copy_id = $mysqli->insert_id;
 		
 		$insertion_values = array ();
-		foreach ($this->get_entries() as $entry)
+		foreach ($this->entries() as $entry)
 		{
 			if (($entry_copy = $entry->copy_for_user($user, $this)))
 			{
@@ -418,19 +449,19 @@ class EntryList extends DatabaseRow
 		return $this->privacy_mask(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"isPublic" => $this->get_public(),
-			"entriesCount" => count($this->get_entries()),
+			"entriesCount" => $this->entries_count(),
 		), array (0 => "listId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = self::array_for_json($this->get_entries());
+		$assoc["entries"] = self::json_array($this->entries());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

@@ -54,6 +54,7 @@ class TestDB
     public $practice_entry_ids = array ();
 		
 	public $grade_ids = array ();
+	public $mode_ids = array ();
 
 	public $link = null;
 
@@ -82,6 +83,7 @@ class TestDB
 
 	 	$testdb->add_languages();
 		$testdb->add_grades();
+		$testdb->add_modes();
 
 		return $testdb;
 	}
@@ -229,29 +231,38 @@ class TestDB
 		return $added_entries;
 	}
 	
-	public function add_course($user_id)
+	public function add_course($user_id, $is_public=0)
 	{
 		$link = $this->link;
 		$suffix = count($this->course_ids);
 		$name = self::$course_name.$suffix;
 		$message = self::$course_message.$suffix;
 		
-		$link->query(sprintf("INSERT INTO courses (user_id, name, lang_id_0, lang_id_1, message) VALUES (%d, '%s', %d, %d, '%s')",
+		$link->query(sprintf("INSERT INTO courses (user_id, name, lang_id_0, lang_id_1, message, public) VALUES (%d, '%s', %d, %d, '%s', %d)",
 			$user_id,
 			$link->escape_string($name),
 			self::$lang_id_0,
 			self::$lang_id_1,
-			$link->escape_string($message)
+			$link->escape_string($message),
+			$is_public
 		));
 
 		if (!$link->insert_id)
-			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 		
 		$course_id = $link->insert_id;
 		array_push($this->course_ids, $course_id);
 		array_push($this->course_names, $name);
 		array_push($this->course_messages, $message);
 		
+		$link->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+			$course_id,
+			$user_id
+		));
+		
+		if (!$link->insert_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+			
 		return $course_id;
 	}
 
@@ -373,7 +384,7 @@ class TestDB
 		));
 		
 		if (!$this->link->insert_id)
-			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 	
 	public function add_unit_test($unit_id)
@@ -471,7 +482,50 @@ class TestDB
 		}
 	}
 
-}
-	
+	private function add_modes()
+	{
+		$link = $this->link;
+		$mode_entries = array ();
+                $mode_entries[] = array(
+                                                                 "mode_id" => 0,
+                                                                 "source" => 'unknown',
+                                                                 "dest" => 'known'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 1,
+                                                                 "source" => 'known',
+                                                                 "dest" => 'unknown'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 2,
+                                                                 "source" => 'unknown',
+                                                                 "dest" => 'pronunciation'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 3,
+                                                                 "source" => 'pronunciation',
+                                                                 "dest" => 'known'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 4,
+                                                                 "source" => 'pronunciation',
+                                                                 "dest" => 'unknown'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 5,
+                                                                 "source" => 'known',
+                                                                 "dest" => 'pronunciation'
+                                                                 );
+                foreach ($mode_entries as $mode)
+                {
+                        if(!$link->query(sprintf(
+                                                                 "INSERT into modes (mode_id, source, dest) values (%d, '%s', '%s')",
+                                                                 $mode["mode_id"], $mode["source"], $mode["dest"])
+                                                 ))
+                                exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
+                        array_push($this->mode_ids, $mode["mode_id"]);
+		}
+	}
+}
 ?>

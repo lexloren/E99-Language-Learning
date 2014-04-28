@@ -73,40 +73,44 @@ class Entry extends DatabaseRow
 		return $this->lang_code_1;
 	}
 	
-	public function get_languages()
+	public function languages()
 	{
 		return array (
 			$this->get_lang_code_0(),
 			$this->get_lang_code_1()
 		);
 	}
-	public function get_words()
+	public function words($i = null)
 	{
-		return array (
-			$this->get_lang_code_0() => $this->get_word_0(),
-			$this->get_lang_code_1() => $this->get_word_1()
-		);
+		return $i !== null
+			? ($i === 0
+				? $this->get_word_0()
+				: ($i === 1 ? $this->get_word_1() : null))
+			: array (
+					$this->get_lang_code_0() => $this->get_word_0(),
+					$this->get_lang_code_1() => $this->get_word_1()
+				);
 	}
 
 	protected $pronunciations = null;
-	public function get_pronunciations()
+	public function pronunciations()
 	{
 		return $this->pronunciations;
 	}
 	
-	public function get_annotations()
+	public function annotations()
 	{
 		if (!!Session::get()
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = self::get_error_description();
+			$error_description = static::get_error_description();
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->get_annotations();
+				return $user_entry->annotations();
 			}
-			self::unset_error_description();
-			self::set_error_description($error_description);
+			static::unset_error_description();
+			static::set_error_description($error_description);
 		}
 		
 		return array ();
@@ -131,13 +135,13 @@ class Entry extends DatabaseRow
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = self::get_error_description();
+			$error_description = static::get_error_description();
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
 				return $user_entry->revert();
 			}
-			self::unset_error_description();
-			self::set_error_description($error_description);
+			static::unset_error_description();
+			static::set_error_description($error_description);
 		}
 		
 		return $this;
@@ -190,7 +194,7 @@ class Entry extends DatabaseRow
 			: null;
 	}
 	
-	public function annotations_add($annotation_contents)
+	/*public function annotations_add($annotation_contents)
 	{
 		return ($user_entry = $this->copy_for_session_user())
 			? $user_entry->annotations_add($annotation_contents)
@@ -207,7 +211,7 @@ class Entry extends DatabaseRow
 		return ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false))
 			? $user_entry->annotations_remove($annotation)
 			: null;
-	}
+	}*/
 	
 	public function get_interval()
 	{
@@ -250,6 +254,11 @@ class Entry extends DatabaseRow
 		
 		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
 	}
+	
+	public function annotations_count()
+	{
+		return 0;
+	}
 
 	public function json_assoc($privacy = null)
 	{
@@ -260,27 +269,27 @@ class Entry extends DatabaseRow
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
-			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc() : null,
-			"languages" => $entry->get_languages(),
-			"words" => $entry->get_words(),
-			"pronuncations" => $entry->get_pronunciations(),
-			"annotationsCount" => count($this->get_annotations())
+			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc_condensed() : null,
+			"languages" => $entry->languages(),
+			"words" => $entry->words(),
+			"pronuncations" => $entry->pronunciations(),
+			"annotationsCount" => $this->annotations_count()
 		);
 		
 		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
 		{
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->detailed_json_assoc($privacy);
+				return $user_entry->json_assoc_detailed($privacy);
 			}
 		}
 		
-		return parent::detailed_json_assoc($privacy);
+		return parent::json_assoc_detailed($privacy);
 	}
 }
 
@@ -414,27 +423,10 @@ class UserEntry extends Entry
 	{
 		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_1() : null;
 	}
-	
-	public function get_languages()
-	{
-		return array (
-			$this->get_lang_code_0(),
-			$this->get_lang_code_1()
-		);
-	}
-	public function get_words()
-	{
-		return array (
-			$this->get_lang_code_0() => $this->get_word_0(),
-			$this->get_lang_code_1() => $this->get_word_1()
-		);
-	}
 
-	public function get_pronunciations()
+	public function pronunciations()
 	{
-		return isset($this->pronunciations) && !!$this->pronunciations
-			? $this->pronunciations
-			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
+		return !!$this->get_entry() ? $this->get_entry()->pronunciations() : null;
 	}
 	
 	public function uncache_annotations()
@@ -452,16 +444,16 @@ class UserEntry extends Entry
 	}
 
 	private $annotations;
-	public function get_annotations()
+	public function annotations()
 	{
 		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
+		return self::cache($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
 	}
 	
 	private $lists;
-	public function get_lists()
+	public function lists()
 	{
-		return self::get_cached_collection($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
+		return self::cache($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
 	}
 
 	private function __construct($user_entry_id, $user_id, $entry_id,
@@ -493,8 +485,8 @@ class UserEntry extends Entry
 			"user_entry_id",
 			"user_id",
 			"entry_id",
-			"interval",
-			"efactor",
+			//"interval",
+			//"efactor",
 			"lang_code_0",
 			"lang_code_1",
 			"word_0",
@@ -507,8 +499,8 @@ class UserEntry extends Entry
 				$result_assoc["user_entry_id"],
 				$result_assoc["user_id"],
 				$result_assoc["entry_id"],
-				$result_assoc["interval"],
-				$result_assoc["efactor"],
+				0, //$result_assoc["interval"],
+				2.5, //$result_assoc["efactor"],
 				$result_assoc["lang_code_0"],
 				$result_assoc["lang_code_1"],
 				$result_assoc["word_0"],
@@ -531,10 +523,10 @@ class UserEntry extends Entry
 		
 		$succeeded = !!$this->set_word_0($this->get_entry()->get_word_0()) && $succeeded;
 		$succeeded = !!$this->set_word_1($this->get_entry()->get_word_1()) && $succeeded;
-		$pronunciations = $this->get_entry()->get_pronunciations();
+		$pronunciations = $this->get_entry()->pronunciations();
 		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
-		return $succeeded ? $this : static::set_error_description("$failure_message: " . self::unset_error_description());
+		return $succeeded ? $this : static::set_error_description("$failure_message: " . static::unset_error_description());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -571,7 +563,7 @@ class UserEntry extends Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
-	public function annotations_add($annotation_contents)
+	/*public function annotations_add($annotation_contents)
 	{
 		self::set_error_description("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
 		
@@ -584,7 +576,7 @@ class UserEntry extends Entry
 		{
 			if (($annotation = Annotation::insert($entry->get_user_entry_id(), $annotation_contents)))
 			{
-				$annotations = $entry->get_annotations();
+				$annotations = $entry->annotations();
 				array_push($annotations, $annotation);
 				return $entry;
 			}
@@ -616,60 +608,44 @@ class UserEntry extends Entry
 		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
 		
 		return $this;
-	}
+	}*/
 	
-	public function user_can_read($user, $list = null)
+	public function user_can_read($user, $hint = null)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via_list($user, $list)
-			|| $this->user_can_read_via_course($user);
+			|| $this->user_can_read_via($user, $hint);
 	}
 	
-	public function user_can_write($user, $list = null)
+	public function user_can_write($user, $hint = null)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via_list($user, $list)
-			|| $this->user_can_write_via_course($user);
+			|| $this->user_can_write_via($user, $hint);
 	}
 	
-	private function user_can_read_via_list($user, $list)
+	private function user_can_read_via($user, $hint)
 	{
-		if (!$user || !$list) return false;
+		if (!$user || !$hint) return false;
 		
-		return $this->in_list($list) && $list->user_can_read($user);
+		return $this->hint_relevant($hint)
+			&& ($hint->user_can_read($user) || $hint->user_can_execute($user));
 	}
 	
-	private function user_can_write_via_list($user, $list)
+	private function user_can_write_via($user, $hint)
 	{
-		if (!$user || !$list) return false;
+		if (!$user || !$hint) return false;
 		
-		return $this->in_list($list) && $list->user_can_write($user);
+		return $this->hint_relevant($hint) && $hint->user_can_write($user);
 	}
 	
-	private function user_can_write_via_course($user)
+	public function hint_relevant($hint)
 	{
-		if (!$user) return false;
-		
-		foreach (array_merge($user->get_courses(), $user->get_instructor_courses()) as $course)
-		{
-			foreach ($course->get_lists() as $list)
-			{
-				if ($this->user_can_write_via_list($user, $list)) return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	public function in_list($list)
-	{
-		if (!$list) return false;
+		if (!$hint) return false;
 		
 		//  Quick check
-		if (in_array($this, ($list_entries = $list->get_entries()))) return true;
+		if (in_array($this, ($entries = $hint->entries()))) return true;
 		
 		//  Robustness, in case of unexpected duplicate UserEntry
-		foreach ($list_entries as $entry)
+		foreach ($entries as $entry)
 		{
 			if ($entry->get_user_entry_id() === $this->get_user_entry_id())
 			{
@@ -682,22 +658,7 @@ class UserEntry extends Entry
 		return false;
 	}
 	
-	private function user_can_read_via_course($user)
-	{
-		if (!$user) return false;
-		
-		foreach (array_merge($user->get_student_courses(), $user->get_instructor_courses()) as $course)
-		{
-			foreach ($course->get_lists() as $list)
-			{
-				if ($this->user_can_read_via_list($user, $list)) return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	public function copy_for_user($user, $list = null)
+	public function copy_for_user($user, $hint = null)
 	{
 		if (!$user)
 		{
@@ -706,7 +667,7 @@ class UserEntry extends Entry
 		
 		if ($this->user_is_owner($user)) return $this;
 		
-		if (!$this->user_can_read($user, $list))
+		if (!$this->user_can_read($user, $hint))
 		{
 			return static::set_error_description("User cannot read user entry to copy.");
 		}
@@ -763,14 +724,19 @@ class UserEntry extends Entry
 		return $user_entry;
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function annotations_count()
+	{
+		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
+	}
+	
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["annotations"] = self::array_for_json($this->get_annotations());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["annotations"] = self::json_array($this->annotations());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
