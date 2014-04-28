@@ -205,7 +205,7 @@ function getCards() {
 	});
 }
 
-/* use the first card to populate the "flashcard view", using view preferences that the user specified earlier */
+/* use the next card to populate the "flashcard view", using view preferences that the user specified earlier */
 function nextCard() {
 	if (wordList.length === 0) {
 		practice_complete();
