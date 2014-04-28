@@ -54,6 +54,7 @@ class TestDB
     public $practice_entry_ids = array ();
 		
 	public $grade_ids = array ();
+	public $mode_ids = array ();
 
 	public $link = null;
 
@@ -82,6 +83,7 @@ class TestDB
 
 	 	$testdb->add_languages();
 		$testdb->add_grades();
+		$testdb->add_modes();
 
 		return $testdb;
 	}
@@ -480,7 +482,50 @@ class TestDB
 		}
 	}
 
-}
-	
+	private function add_modes()
+	{
+		$link = $this->link;
+		$mode_entries = array ();
+                $mode_entries[] = array(
+                                                                 "mode_id" => 0,
+                                                                 "source" => 'unknown',
+                                                                 "dest" => 'known'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 1,
+                                                                 "source" => 'known',
+                                                                 "dest" => 'unknown'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 2,
+                                                                 "source" => 'unknown',
+                                                                 "dest" => 'pronunciation'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 3,
+                                                                 "source" => 'pronunciation',
+                                                                 "dest" => 'known'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 4,
+                                                                 "source" => 'pronunciation',
+                                                                 "dest" => 'unknown'
+                                                                 );
+                $mode_entries[] = array(
+                                                                 "mode_id" => 5,
+                                                                 "source" => 'known',
+                                                                 "dest" => 'pronunciation'
+                                                                 );
+                foreach ($mode_entries as $mode)
+                {
+                        if(!$link->query(sprintf(
+                                                                 "INSERT into modes (mode_id, source, dest) values (%d, '%s', '%s')",
+                                                                 $mode["mode_id"], $mode["source"], $mode["dest"])
+                                                 ))
+                                exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 
+                        array_push($this->mode_ids, $mode["mode_id"]);
+		}
+	}
+}
 ?>
