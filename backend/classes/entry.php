@@ -613,15 +613,13 @@ class UserEntry extends Entry
 	public function user_can_read($user, $hint = null)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via($user, $hint)
-			|| $this->user_can_read_via_some_course($user);
+			|| $this->user_can_read_via($user, $hint);
 	}
 	
 	public function user_can_write($user, $hint = null)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via($user, $hint)
-			|| $this->user_can_write_via_some_course($user);
+			|| $this->user_can_write_via($user, $hint);
 	}
 	
 	private function user_can_read_via($user, $hint)
@@ -639,21 +637,6 @@ class UserEntry extends Entry
 		return $this->hint_relevant($hint) && $hint->user_can_write($user);
 	}
 	
-	private function user_can_write_via_some_course($user)
-	{
-		if (!$user) return false;
-		
-		foreach (array_merge($user->courses(), $user->courses_instructed()) as $course)
-		{
-			foreach ($course->lists() as $list)
-			{
-				if ($this->user_can_write_via($user, $list)) return true;
-			}
-		}
-		
-		return false;
-	}
-	
 	public function hint_relevant($hint)
 	{
 		if (!$hint) return false;
@@ -669,26 +652,6 @@ class UserEntry extends Entry
 				//  Unexpected error
 				EntryList::set_error_description("List whose list_id = " . $list->get_list_id() . " appears to contain a duplicate UserEntry whose user_entry_id = " . $this->get_user_entry_id());
 				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	private function user_can_read_via_some_course($user)
-	{
-		if (!$user) return false;
-		
-		foreach (array_merge($user->courses_studied(), $user->courses_instructed()) as $course)
-		{
-			foreach ($course->lists() as $list)
-			{
-				if ($this->user_can_read_via($user, $list)) return true;
-			}
-			
-			foreach ($course->tests() as $test)
-			{
-				if ($this->user_can_read_via($user, $test)) return true;
 			}
 		}
 		
