@@ -139,6 +139,31 @@ class Pattern extends CourseComponent
 		return $this->test_entry_id;
 	}
 	
+	private $test;
+	public function get_test()
+	{
+		if (!isset($this->test))
+		{
+			$mysqli = Connection::get_shared_instance();
+			$result = $mysqli->query(sprintf("SELECT course_unit_tests.* FROM course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id) WHERE test_entry_id = %d GROUP BY test_id", $this->get_test_entry_id()));
+			
+			$failure_message = "Test entry pattern failed to get test";
+			
+			if ($mysqli->error)
+			{
+				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			}
+			
+			if (!($this->test = Test::from_mysql_result_assoc($result->fetch_assoc())))
+			{
+				unset($this->test);
+				return static::set_error_description("$failure_message: " . Test::unset_error_description());
+			}
+		}
+		
+		return $this->test;
+	}
+	
 	private $prompt = null;
 	public function get_prompt()
 	{
@@ -157,6 +182,70 @@ class Pattern extends CourseComponent
 	public function get_contents()
 	{
 		return $this->contents;
+	}
+	
+	private $user_entry;
+	public function get_user_entry()
+	{
+		if (!isset($this->user_entry))
+		{
+			$mysqli = Connection::get_shared_instance();
+			$result = $mysqli->query(sprintf("SELECT user_entry_id FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = %d GROUP BY user_entry_id", $this->get_test_entry_id()));
+			
+			$failure_message = "Test entry pattern failed to get test entry";
+			
+			if ($mysqli->error)
+			{
+				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			}
+			
+			if (!($result_assoc = $result->fetch_assoc()))
+			{
+				return static::set_error_description("$failure_message: Failed to select user entry where test_entry_id = " . $this->get_test_entry_id() . ".");
+			}
+			
+			$this->user_entry = UserEntry::select_by_user_entry_id($result_assoc["user_entry_id"]);
+		}
+		
+		return $this->user_entry;
+	}
+	
+	public function get_contents_json_assoc()
+	{
+		if (!($user_entry = $this->get_user_entry())) return null;
+		
+		$from = array ();
+		switch ($this->get_mode())
+		{
+			case 0:
+			case 2:
+			{
+				array_push($from, $user_entry->get_words(1));
+			} break;
+			
+			case 1:
+			case 5:
+			{
+				array_push($from, $user_entry->get_words(0));
+			} break;
+			
+			case 3:
+			case 4:
+			{
+				array_push($from, array_pop($user_entry->get_pronunciations()));
+			} break;
+			
+			default:
+			{
+				array_push($from, $user_entry->get_words(1));
+				array_push($from, array_pop($user_entry->get_pronunciation()));
+			}
+		}
+		
+		return array (
+			"from" => $from,
+			"to" => $this->get_contents()
+		);
 	}
 	
 	private $mode = null;
@@ -192,6 +281,11 @@ class Pattern extends CourseComponent
 		return $course;
 	}
 	
+	public function set_message($message)
+	{
+		return parent::set_this_message($this, $message, "course_unit_test_entry_patterns", "pattern_id", $this->get_pattern_id());
+	}
+	
 	private function __construct($pattern_id, $test_entry_id, $mode, $prompt, $contents, $score)
 	{
 		$this->pattern_id = intval($pattern_id, 10);
@@ -212,7 +306,8 @@ class Pattern extends CourseComponent
 			"mode",
 			"prompt",
 			"contents",
-			"score"
+			"score",
+			"message"
 		);
 		
 		return self::assoc_contains_keys($result_assoc, $mysql_columns)
@@ -222,7 +317,8 @@ class Pattern extends CourseComponent
 				$result_assoc["mode"],
 				$result_assoc["prompt"],
 				$result_assoc["contents"],
-				$result_assoc["score"]
+				$result_assoc["score"],
+				$result_assoc["message"]
 			)
 			: null;
 	}
@@ -231,9 +327,10 @@ class Pattern extends CourseComponent
 	{
 		return $this->privacy_mask(array (
 			"patternId" => $this->get_pattern_id(),
-			"testEntryId" => $this->get_test_entry_id(),
-			"contents" => $this->get_contents(),
-			"score" => $this->get_score()
+			"prompt" => !!$this->get_prompt(),
+			"contents" => $this->get_contents_json_assoc(),
+			"score" => $this->get_score(),
+			"message" => $this->get_message()
 		), array (0 => "patternId"), $privacy);
 	}
 }

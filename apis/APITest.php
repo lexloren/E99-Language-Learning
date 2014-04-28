@@ -66,7 +66,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
 		{
-			Session::get()->set_result_assoc($test->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($test->json_assoc_detailed(false));
 		}
 	}
 	
@@ -283,7 +283,12 @@ class APITest extends APIBase
 		}
 	}
 	
-	public function entry_patterns()
+	public function entry_prompts()
+	{
+		return $this->entry_patterns(true);
+	}
+	
+	public function entry_patterns($prompts_only = false)
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
@@ -292,7 +297,7 @@ class APITest extends APIBase
 		{
 			if (($test_entry_id = array_search($entry, $test->get_entries())))
 			{
-				self::return_array_as_json(Pattern::select_all_for_test_entry_id($test_entry_id));
+				self::return_array_as_json(Pattern::select_all_for_test_entry_id($test_entry_id, $prompts_only));
 			}
 			else
 			{
@@ -322,6 +327,11 @@ class APITest extends APIBase
 				if (isset($_POST["score"]))
 				{
 					$pattern->set_score($_POST["score"]);
+				}
+				
+				if (isset($_POST["message"]))
+				{
+					$pattern->set_message($_POST["message"]);
 				}
 				
 				Session::get()->set_result_assoc($pattern->json_assoc());

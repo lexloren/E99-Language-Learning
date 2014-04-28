@@ -305,7 +305,7 @@ class Unit extends CourseComponent
 			"name" => $this->get_unit_name(),
 			"number" => $this->get_number(),
 			"courseId" => $this->get_course_id(),
-			//"owner" => $this->get_owner()->json_assoc(),
+			//"owner" => $this->get_owner()->json_assoc_condensed(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"listsCount" => $this->lists_count(),
 			"testsCount" => $this->tests_count(),
@@ -313,7 +313,7 @@ class Unit extends CourseComponent
 		), array (0 => "unitId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		

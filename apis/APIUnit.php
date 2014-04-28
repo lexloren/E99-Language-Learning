@@ -51,7 +51,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			Session::get()->set_result_assoc($unit->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($unit->json_assoc_detailed(false));
 		}
 	}
 	

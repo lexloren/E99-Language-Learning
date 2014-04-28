@@ -428,6 +428,11 @@ class Test extends CourseComponent
 		return null;
 	}
 	
+	public function get_patterns()
+	{
+		return self::get_collection("Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+	}
+	
 	public function executed()
 	{
 		return count($this->get_sittings()) > 0;
@@ -604,6 +609,16 @@ class Test extends CourseComponent
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
+	public function sittings_count()
+	{
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "test_id", $this->get_test_id());
+	}
+	
+	public function patterns_count()
+	{
+		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -617,11 +632,13 @@ class Test extends CourseComponent
 					: null)
 				: null,
 			"entriesCount" => $this->entries_count(),
+			"sittingsCount" => $this->sittings_count(),
+			"patternsCount" => $this->patterns_count(),
 			"message" => $this->get_message()
 		), array ("testId", "timeframe"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		
@@ -630,6 +647,8 @@ class Test extends CourseComponent
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->get_entries()) : null;
+		$assoc["sittings"] = $this->session_user_can_write() ? self::array_for_json($this->get_sittings()) : null;
+		$assoc["patterns"] = $this->session_user_can_write() ? self::array_for_json($this->get_patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

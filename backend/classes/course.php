@@ -635,7 +635,7 @@ class Course extends DatabaseRow
 			"name" => $this->get_course_name(),
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"isPublic" => $this->get_public(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"instructorsCount" => $this->instructors_count(),
@@ -648,7 +648,7 @@ class Course extends DatabaseRow
 		), array (0 => "courseId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		

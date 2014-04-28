@@ -88,6 +88,23 @@ class Sitting extends CourseComponent
 	{
 		return $this->get_test()->get_course();
 	}
+	public function get_score_json_assoc()
+	{
+		$mysqli = Connection::get_shared_instance();
+		$response_patterns = "(course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id))";
+		$result = $mysqli->query(sprintf("SELECT SUM(score) AS scoredTotal, SUM(unscored) AS unscoredCount FROM (SELECT score, IF(score IS NULL, 1, 0) AS unscored FROM $response_patterns WHERE sitting_id = %d) AS scores",
+			$this->get_sitting_id()
+		));
+		
+		if ($mysqli->error)
+		{
+			return static::set_error_description("Failed to get test sitting score: " . $mysqli->error . ".");
+		}
+		
+		return ($result_assoc = $result->fetch_assoc())
+			? $result_assoc
+			: static::set_error_description("Failed to get test sitting score!");
+	}
 	
 	private $student_id = null;
 	public function get_student_id()
@@ -222,6 +239,7 @@ class Sitting extends CourseComponent
 	public function user_can_execute($user)
 	{
 		return $this->get_test()->user_can_execute($user)
+			&& $this->get_user()->equals($user)
 			&& $this->get_entries_remaining() > 0;
 	}
 	
@@ -289,7 +307,9 @@ class Sitting extends CourseComponent
 	{
 		if (!$user) return false;
 		
-		return $this->user_can_write($user) || $user->equals($this->get_user());
+		return $this->user_can_write($user)
+			|| ($user->equals($this->get_user())
+				&& !$this->user_can_execute($this->get_user()));
 	}
 	
 	public function delete()
@@ -298,21 +318,34 @@ class Sitting extends CourseComponent
 		return self::delete_this($this, "course_unit_test_sittings", "sitting_id", $this->get_sitting_id());
 	}
 	
+	public function responses_count()
+	{
+		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+	}
+	
 	public function json_assoc($privacy = null)
 	{
-		//  Placeholder
-		return array ();
-		/*
 		return $this->privacy_mask(array (
 			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"userId" => $this->get_user_id(),
+			"student" => $this->get_user()->json_assoc(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
-			"responses" => self::array_for_json($this->get_responses()),
+			"responsesCount" => $this->responses_count(),
+			"score" => $this->get_score_json_assoc(),
 			"message" => $this->get_message()
 		), array (0 => "sittingId"), $privacy);
-		*/
+	}
+	
+	public function json_assoc_detailed($privacy = null)
+	{
+		$assoc = $this->json_assoc($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["responses"] = self::array_for_json($this->get_responses());
+		
+		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 }
 

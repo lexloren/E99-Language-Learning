@@ -80,12 +80,16 @@ class Entry extends DatabaseRow
 			$this->get_lang_code_1()
 		);
 	}
-	public function get_words()
+	public function get_words($i = null)
 	{
-		return array (
-			$this->get_lang_code_0() => $this->get_word_0(),
-			$this->get_lang_code_1() => $this->get_word_1()
-		);
+		return $i !== null
+			? ($i === 0
+				? $this->get_word_0()
+				: ($i === 1 ? $this->get_word_1() : null))
+			: array (
+					$this->get_lang_code_0() => $this->get_word_0(),
+					$this->get_lang_code_1() => $this->get_word_1()
+				);
 	}
 
 	protected $pronunciations = null;
@@ -265,7 +269,7 @@ class Entry extends DatabaseRow
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
-			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc() : null,
+			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc_condensed() : null,
 			"languages" => $entry->get_languages(),
 			"words" => $entry->get_words(),
 			"pronuncations" => $entry->get_pronunciations(),
@@ -275,17 +279,17 @@ class Entry extends DatabaseRow
 		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
 		{
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->detailed_json_assoc($privacy);
+				return $user_entry->json_assoc_detailed($privacy);
 			}
 		}
 		
-		return parent::detailed_json_assoc($privacy);
+		return parent::json_assoc_detailed($privacy);
 	}
 }
 
@@ -419,27 +423,10 @@ class UserEntry extends Entry
 	{
 		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_1() : null;
 	}
-	
-	public function get_languages()
-	{
-		return array (
-			$this->get_lang_code_0(),
-			$this->get_lang_code_1()
-		);
-	}
-	public function get_words()
-	{
-		return array (
-			$this->get_lang_code_0() => $this->get_word_0(),
-			$this->get_lang_code_1() => $this->get_word_1()
-		);
-	}
 
 	public function get_pronunciations()
 	{
-		return isset($this->pronunciations) && !!$this->pronunciations
-			? $this->pronunciations
-			: !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
+		return !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
 	}
 	
 	public function uncache_annotations()
@@ -778,7 +765,7 @@ class UserEntry extends Entry
 		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		

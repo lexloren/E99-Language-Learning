@@ -449,13 +449,13 @@ class EntryList extends DatabaseRow
 		return $this->privacy_mask(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
-			"owner" => $this->get_owner()->json_assoc(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"isPublic" => $this->get_public(),
 			"entriesCount" => $this->entries_count(),
 		), array (0 => "listId"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		

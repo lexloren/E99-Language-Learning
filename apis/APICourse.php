@@ -45,7 +45,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			Session::get()->set_result_assoc($course->detailed_json_assoc(false));
+			Session::get()->set_result_assoc($course->json_assoc_detailed(false));
 		}
 	}
 	

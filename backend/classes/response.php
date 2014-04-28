@@ -124,6 +124,21 @@ class Response extends CourseComponent
 	{
 		return $this->pattern_id;
 	}
+	public function get_pattern()
+	{
+		return $this->pattern_id
+			? Pattern::select_by_id($this->pattern_id)
+			: null;
+	}
+	
+	public function get_message()
+	{
+		return $this->get_pattern()->get_message();
+	}
+	public function set_message($message)
+	{
+		return $this->get_pattern()->set_message($message);
+	}
 	
 	private $timestamp = null;
 	public function get_timestamp()
@@ -175,19 +190,14 @@ class Response extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		//  Placeholder
-		return array ();
-		/*
 		return $this->privacy_mask(array (
-			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->json_assoc(),
+			"responseId" => $this->get_response_id(),
+			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"userId" => $this->get_user_id(),
-			"timeframe" => $this->get_timeframe()->json_assoc(),
-			"results" => self::array_for_json($this->get_results()),
-			"message" => $this->get_message()
-		), array (0 => "sittingId"), $privacy);
-		*/
+			"student" => $this->get_user()->json_assoc(),
+			"timestamp" => $this->get_timestamp(),
+			"pattern" => $this->get_pattern()->json_assoc()
+		), array (0 => "responseId"), $privacy);
 	}
 }
 

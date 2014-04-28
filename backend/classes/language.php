@@ -103,9 +103,9 @@ class Language extends DatabaseRow
 		);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc_detailed($privacy = null)
 	{
-		return parent::detailed_json_assoc($privacy);
+		return parent::json_assoc_detailed($privacy);
 	}
 }
 

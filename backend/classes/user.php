@@ -609,25 +609,35 @@ class User extends DatabaseRow
 		return self::count("lists", "user_id", $this->get_user_id());
 	}
 	
-	public function json_assoc($privacy = null)
+	public function json_assoc_condensed($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
 			"handle" => $this->get_handle(),
-			"email" => $this->get_email($privacy),
-			"languageYears" => $this->get_language_years_json_assoc(),
-			"nameGiven" => $this->get_name_given($privacy),
-			"nameFamily" => $this->get_name_family($privacy),
-			"coursesOwnedCount" => $this->courses_owned_count(),
-			"coursesInstructedCount" => $this->courses_instructed_count(),
-			"coursesStudiedCount" => $this->courses_studied_count(),
-			"coursesResearchedCount" => $this->courses_researched_count(),
-			"listsCount" => $this->lists_count(),
+			"email" => $this->get_email($privacy)
 		), array ("userId", "handle", "isSessionUser"), $privacy);
 	}
 	
-	public function detailed_json_assoc($privacy = null)
+	public function json_assoc($privacy = null)
+	{
+		$assoc = $this->json_assoc_condensed($privacy);
+		
+		$public_keys = array_keys($assoc);
+		
+		$assoc["languageYears"] = $this->get_language_years_json_assoc();
+		$assoc["nameGiven"] = $this->get_name_given($privacy);
+		$assoc["nameFamily"] = $this->get_name_family($privacy);
+		$assoc["coursesOwnedCount"] = $this->courses_owned_count();
+		$assoc["coursesInstructedCount"] = $this->courses_instructed_count();
+		$assoc["coursesStudiedCount"] = $this->courses_studied_count();
+		$assoc["coursesResearchedCount"] = $this->courses_researched_count();
+		$assoc["listsCount"] = $this->lists_count();
+		
+		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
+	}
+	
+	public function json_assoc_detailed($privacy = null)
 	{
 		$assoc = $this->json_assoc($privacy);
 		

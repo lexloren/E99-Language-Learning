@@ -36,7 +36,7 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate() || !($user = Session::get()->get_user())) return;
 		
-		Session::get()->set_result_assoc($user->detailed_json_assoc(false));
+		Session::get()->set_result_assoc($user->json_assoc_detailed(false));
 	}
 	
 	public function authenticate()
