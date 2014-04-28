@@ -245,7 +245,7 @@ class Unit extends CourseComponent
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		if (!($list = $list->copy_for_user($this->get_owner())))
+		if (!($list = $list->copy_for_user($this->get_owner(), $this)))
 		{
 			return static::set_error_description("Failed to add list: " . EntryList::unset_error_description());
 		}
@@ -320,8 +320,8 @@ class Unit extends CourseComponent
 		$public_keys = array_keys($assoc);
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["lists"] = self::array_for_json($this->lists());
-		$assoc["tests"] = self::array_for_json($this->tests());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["tests"] = self::json_array($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

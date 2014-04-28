@@ -298,13 +298,13 @@ class APIUser extends APIBase
 	public function student_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_student_courses());
+		self::return_array_as_json(Session::get()->get_user()->courses_studied());
 	}
 	
 	public function instructor_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_instructor_courses());
+		self::return_array_as_json(Session::get()->get_user()->courses_instructed());
 	}
 }
 

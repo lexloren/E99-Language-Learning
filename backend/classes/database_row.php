@@ -265,7 +265,7 @@ class DatabaseRow extends ErrorReporter
 		return $array;
 	}
 	
-	protected static function array_for_json($array)
+	protected static function json_array($array)
 	{
 		if (!is_array($array))
 		{

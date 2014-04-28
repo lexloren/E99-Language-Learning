@@ -328,25 +328,25 @@ class User extends DatabaseRow
 	public function uncache_all_courses()
 	{
 		$this->uncache_courses();
-		$this->uncache_instructor_courses();
-		$this->uncache_student_courses();
-		$this->uncache_researcher_courses();
+		$this->uncache_courses_instructed();
+		$this->uncache_courses_studied();
+		$this->uncache_courses_researched();
 	}
 	public function uncache_courses()
 	{
 		if (isset($this->courses)) unset($this->courses);
 	}
-	public function uncache_instructor_courses()
+	public function uncache_courses_instructed()
 	{
-		if (isset($this->instructor_courses)) unset($this->instructor_courses);
+		if (isset($this->courses_instructed)) unset($this->courses_instructed);
 	}
-	public function uncache_student_courses()
+	public function uncache_courses_studied()
 	{
-		if (isset($this->student_courses)) unset($this->student_courses);
+		if (isset($this->courses_studied)) unset($this->courses_studied);
 	}
-	public function uncache_researcher_courses()
+	public function uncache_courses_researched()
 	{
-		if (isset($this->researcher_courses)) unset($this->researcher_courses);
+		if (isset($this->courses_researched)) unset($this->courses_researched);
 	}
 	public function uncache_all()
 	{
@@ -534,28 +534,28 @@ class User extends DatabaseRow
 		return $language_years_assoc;
 	}
 	
-	private $instructor_courses;
-	public function get_instructor_courses()
+	private $courses_instructed;
+	public function courses_instructed()
 	{
 		$table = "course_instructors LEFT JOIN courses USING (course_id)";
-		return self::cache($this->instructor_courses, "Course", $table, "course_instructors.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->courses_instructed, "Course", $table, "course_instructors.user_id", $this->get_user_id(), "courses.*");
 	}
 	
-	private $student_courses;
-	public function get_student_courses()
+	private $courses_studied;
+	public function courses_studied()
 	{
 		$table = "course_students LEFT JOIN courses USING (course_id)";
-		return self::cache($this->student_courses, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->courses_studied, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
 	}
 	
-	private $researcher_courses;
-	public function get_researcher_courses()
+	private $courses_researched;
+	public function courses_researched()
 	{
 		$table = "course_researchers LEFT JOIN courses USING (course_id)";
-		return self::cache($this->researcher_courses, "Course", $table, "course_researchers.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->courses_researched, "Course", $table, "course_researchers.user_id", $this->get_user_id(), "courses.*");
 	}
 	
-	public function in_array($array)
+	public function in($array)
 	{
 		foreach ($array as $user)
 		{
@@ -568,12 +568,12 @@ class User extends DatabaseRow
 	public function user_can_read($user)
 	{
 		return parent::user_can_read($user)
-			|| $this->user_can_read_via_course($user);
+			|| $this->user_can_read_via_some_course($user);
 	}
 	
-	public function user_can_read_via_course($user)
+	public function user_can_read_via_some_course($user)
 	{
-		foreach (array_merge($this->courses(), $this->get_instructor_courses(), $this->get_student_courses()) as $course)
+		foreach (array_merge($this->courses(), $this->courses_instructed(), $this->courses_studied()) as $course)
 		{
 			if ($course->user_can_read($user)) return true;
 		}
@@ -649,11 +649,11 @@ class User extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["coursesOwned"] = self::array_for_json($this->courses());
-		$assoc["coursesInstructed"] = self::array_for_json($this->get_instructor_courses());
-		$assoc["coursesStudied"] = self::array_for_json($this->get_student_courses());
-		$assoc["coursesResearched"] = self::array_for_json($this->get_researcher_courses());
-		$assoc["lists"] = self::array_for_json($this->lists());
+		$assoc["coursesOwned"] = self::json_array($this->courses());
+		$assoc["coursesInstructed"] = self::json_array($this->courses_instructed());
+		$assoc["coursesStudied"] = self::json_array($this->courses_studied());
+		$assoc["coursesResearched"] = self::json_array($this->courses_researched());
+		$assoc["lists"] = self::json_array($this->lists());
 		
 		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
 	}

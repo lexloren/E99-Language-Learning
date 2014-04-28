@@ -351,7 +351,7 @@ class Sitting extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["responses"] = self::array_for_json($this->responses());
+		$assoc["responses"] = self::json_array($this->responses());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

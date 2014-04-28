@@ -345,7 +345,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_instructor($user)
 	{
-		return !!$user && $user->in_array($this->instructors());
+		return !!$user && $user->in($this->instructors());
 	}
 	
 	private $researchers;
@@ -360,7 +360,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_researcher($user)
 	{
-		return !!$user && $user->in_array($this->researchers());
+		return !!$user && $user->in($this->researchers());
 	}
 	
 	private $students;
@@ -375,7 +375,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_student($user)
 	{
-		return !!$user && $user->in_array($this->students());
+		return !!$user && $user->in($this->students());
 	}
 	
 	private $units;
@@ -654,12 +654,12 @@ class Course extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["instructors"] = self::array_for_json($this->instructors());
-		$assoc["students"] = self::array_for_json($this->students());
-		$assoc["researchers"] = self::array_for_json($this->researchers());
-		$assoc["units"] = self::array_for_json($this->units());
-		$assoc["lists"] = self::array_for_json($this->lists());
-		$assoc["tests"] = self::array_for_json($this->tests());
+		$assoc["instructors"] = self::json_array($this->instructors());
+		$assoc["students"] = self::json_array($this->students());
+		$assoc["researchers"] = self::json_array($this->researchers());
+		$assoc["units"] = self::json_array($this->units());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["tests"] = self::json_array($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

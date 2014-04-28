@@ -171,7 +171,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Test cannot set mode = $mode.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner(), true);
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
 		if (!in_array($entry, $this->entries()))
 		{
@@ -371,7 +371,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
 		$number = array_search($entry, $this->entries()) + 1;
 		
@@ -646,9 +646,9 @@ class Test extends CourseComponent
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->entries()) : null;
-		$assoc["sittings"] = $this->session_user_can_write() ? self::array_for_json($this->sittings()) : null;
-		$assoc["patterns"] = $this->session_user_can_write() ? self::array_for_json($this->patterns()) : null;
+		$assoc["entries"] = $this->session_user_can_write() ? self::json_array($this->entries()) : null;
+		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
+		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

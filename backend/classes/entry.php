@@ -610,39 +610,40 @@ class UserEntry extends Entry
 		return $this;
 	}*/
 	
-	public function user_can_read($user, $list = null)
+	public function user_can_read($user, $hint = null)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via($user, $list)
-			|| $this->user_can_read_via_course($user);
+			|| $this->user_can_read_via($user, $hint)
+			|| $this->user_can_read_via_some_course($user);
 	}
 	
-	public function user_can_write($user, $list = null)
+	public function user_can_write($user, $hint = null)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via($user, $list)
-			|| $this->user_can_write_via_course($user);
+			|| $this->user_can_write_via($user, $hint)
+			|| $this->user_can_write_via_some_course($user);
 	}
 	
-	private function user_can_read_via($user, $list)
+	private function user_can_read_via($user, $hint)
 	{
-		if (!$user || !$list) return false;
+		if (!$user || !$hint) return false;
 		
-		return $this->in_list($list) && $list->user_can_read($user);
+		return $this->hint_relevant($hint)
+			&& ($hint->user_can_read($user) || $hint->user_can_execute($user));
 	}
 	
-	private function user_can_write_via($user, $list)
+	private function user_can_write_via($user, $hint)
 	{
-		if (!$user || !$list) return false;
+		if (!$user || !$hint) return false;
 		
-		return $this->in_list($list) && $list->user_can_write($user);
+		return $this->hint_relevant($hint) && $hint->user_can_write($user);
 	}
 	
-	private function user_can_write_via_course($user)
+	private function user_can_write_via_some_course($user)
 	{
 		if (!$user) return false;
 		
-		foreach (array_merge($user->courses(), $user->get_instructor_courses()) as $course)
+		foreach (array_merge($user->courses(), $user->courses_instructed()) as $course)
 		{
 			foreach ($course->lists() as $list)
 			{
@@ -653,15 +654,15 @@ class UserEntry extends Entry
 		return false;
 	}
 	
-	public function in_list($list)
+	public function hint_relevant($hint)
 	{
-		if (!$list) return false;
+		if (!$hint) return false;
 		
 		//  Quick check
-		if (in_array($this, ($list_entries = $list->entries()))) return true;
+		if (in_array($this, ($entries = $hint->entries()))) return true;
 		
 		//  Robustness, in case of unexpected duplicate UserEntry
-		foreach ($list_entries as $entry)
+		foreach ($entries as $entry)
 		{
 			if ($entry->get_user_entry_id() === $this->get_user_entry_id())
 			{
@@ -674,11 +675,11 @@ class UserEntry extends Entry
 		return false;
 	}
 	
-	private function user_can_read_via_course($user)
+	private function user_can_read_via_some_course($user)
 	{
 		if (!$user) return false;
 		
-		foreach (array_merge($user->get_student_courses(), $user->get_instructor_courses()) as $course)
+		foreach (array_merge($user->courses_studied(), $user->courses_instructed()) as $course)
 		{
 			foreach ($course->lists() as $list)
 			{
@@ -694,7 +695,7 @@ class UserEntry extends Entry
 		return false;
 	}
 	
-	public function copy_for_user($user, $list = null)
+	public function copy_for_user($user, $hint = null)
 	{
 		if (!$user)
 		{
@@ -703,7 +704,7 @@ class UserEntry extends Entry
 		
 		if ($this->user_is_owner($user)) return $this;
 		
-		if (!$this->user_can_read($user, $list))
+		if (!$this->user_can_read($user, $hint))
 		{
 			return static::set_error_description("User cannot read user entry to copy.");
 		}
@@ -771,8 +772,8 @@ class UserEntry extends Entry
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["lists"] = self::array_for_json($this->lists());
-		$assoc["annotations"] = self::array_for_json($this->annotations());
+		$assoc["lists"] = self::json_array($this->lists());
+		$assoc["annotations"] = self::json_array($this->annotations());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

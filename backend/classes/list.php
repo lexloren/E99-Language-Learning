@@ -254,14 +254,14 @@ class EntryList extends DatabaseRow
 	public function user_can_read($user)
 	{
 		return $this->user_can_write($user)
-			|| $this->user_can_read_via_course($user)
+			|| $this->user_can_read_via_some_course($user)
 			|| $this->get_public();
 	}
 	
 	public function user_can_write($user)
 	{
 		return parent::user_can_write($user)
-			|| $this->user_can_write_via_course($user);
+			|| $this->user_can_write_via_some_course($user);
 	}
 	
 	public function session_user_can_write()
@@ -288,14 +288,14 @@ class EntryList extends DatabaseRow
 	}
 	
 	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
-	private function user_can_read_via_course($user)
+	private function user_can_read_via_some_course($user)
 	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->get_student_courses());
+		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_studied());
 	}
 	
-	private function user_can_write_via_course($user)
+	private function user_can_write_via_some_course($user)
 	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->get_instructor_courses());
+		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_instructed());
 	}
 	
 	public function delete()
@@ -312,7 +312,7 @@ class EntryList extends DatabaseRow
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function entries_add($entry_to_add)
+	public function entries_add($entry_to_add, $hint = null)
 	{
 		if (!$entry_to_add)
 		{
@@ -324,7 +324,7 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		if (!($entry_added = $entry_to_add->copy_for_user($this->get_owner())))
+		if (!($entry_added = $entry_to_add->copy_for_user($this->get_owner(), $hint)))
 		{
 			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
 		}
@@ -371,7 +371,7 @@ class EntryList extends DatabaseRow
 			return static::set_error_description("Session user cannot edit list.");
 		}
 		
-		if (!($entry = $entry->copy_for_user($this->get_owner())))
+		if (!($entry = $entry->copy_for_user($this->get_owner(), $this)))
 		{
 			return static::set_error_description("List failed to remove entry: " . Entry::unset_error_description());
 		}
@@ -461,7 +461,7 @@ class EntryList extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = self::array_for_json($this->entries());
+		$assoc["entries"] = self::json_array($this->entries());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
