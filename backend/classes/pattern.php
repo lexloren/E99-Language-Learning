@@ -28,8 +28,7 @@ class Pattern extends CourseComponent
 			return static::set_error_description("$failure_message: Session user cannot edit test.");
 		}
 		
-		if (!($entry = Entry::select_by_id(($entry_id = intval($entry_id, 10))))
-			|| !($entry = $entry->copy_for_user($test->get_owner(), $test)))
+		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), ($entry_id = intval($entry_id, 10)))))
 		{
 			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
 		}
@@ -95,8 +94,7 @@ class Pattern extends CourseComponent
 		
 		$entry_id = intval($entry_id, 10);
 		
-		if (!($entry = Entry::select_by_id($entry_id))
-			|| !($entry = $entry->copy_for_user($test->get_owner(), $test)))
+		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), $entry_id, false)))
 		{
 			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
 		}
