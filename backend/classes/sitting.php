@@ -101,9 +101,17 @@ class Sitting extends CourseComponent
 			return static::set_error_description("Failed to get test sitting score: " . $mysqli->error . ".");
 		}
 		
-		return ($result_assoc = $result->fetch_assoc())
-			? $result_assoc
-			: static::set_error_description("Failed to get test sitting score!");
+		if (!($result_assoc = $result->fetch_assoc()))
+		{
+			return static::set_error_description("Failed to get test sitting score!");
+		}
+		
+		foreach ($result_assoc as $key => &$value)
+		{
+			$value = intval($value, 10);
+		}
+		
+		return $result_assoc;
 	}
 	
 	private $student_id = null;

@@ -401,7 +401,7 @@ class User extends DatabaseRow
 	private $sittings;
 	public function sittings()
 	{
-		return self::cache($this->sittings, "Sitting", "course_unit_test_sittings", "user_id", $this->get_user_id());
+		return self::cache($this->sittings, "Sitting", "course_students CROSS JOIN course_unit_test_sittings USING (student_id)", "user_id", $this->get_user_id());
 	}
 	
 	private $languages;
