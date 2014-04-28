@@ -333,7 +333,7 @@ class EntryList extends DatabaseRow
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT IGNORE INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 			$this->list_id,
 			$entry_added->get_user_entry_id()
 		));

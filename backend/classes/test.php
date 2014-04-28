@@ -278,7 +278,7 @@ class Test extends CourseComponent
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode)",
+		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
 			$this->entries_count() + 1
@@ -289,17 +289,47 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to add entry: " . $mysqli->error . ".");
 		}
 		
-		$test_entry_id = $mysqli->insert_id;
-		if (isset($this->entries)) $this->entries[$test_entry_id] = $entry;
-		
-		$mysqli->query("INSERT INTO course_unit_test_entry_patterns (test_entry_id, prompt, mode, contents) SELECT test_entry_id, 1, $mode, IF($mode = 0, word_0, IF($mode = 1, word_1, word_1_pronun)) FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = $test_entry_id");
-		
-		if (!!$mysqli->error)
+		if (isset($this->entries))
 		{
-			return static::set_error_description("Test failed to add entry pattern: " . $mysqli->error . ".");
+			if ($mysqli->insert_id)
+			{
+				$this->entries[$mysqli->insert_id] = $entry;
+			}
+			else
+			{
+				$this->uncache_entries();
+			}
 		}
 		
-		return $this;
+		switch ($mode % 3)
+		{
+			case 1:
+			{
+				$contents = $entry->get_word_1();
+			} break;
+			
+			case 2:
+			{
+				$contents = array_pop($entry->get_pronunciations());
+			} break;
+			
+			default:
+			{
+				$contents = $entry->get_word_0();
+			}
+		}
+		
+		return Pattern::insert(
+					$this->get_test_id(),
+					$entry->get_entry_id(),
+					$contents,
+					true
+				)
+			? $this
+			: static::set_error_description(
+					"Test failed to add entry pattern: " .
+					Pattern::unset_error_description()
+				);
 	}
 	
 	public function entries_add_from_list($list, $mode = null)
