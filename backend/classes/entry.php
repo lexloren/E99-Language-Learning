@@ -73,14 +73,14 @@ class Entry extends DatabaseRow
 		return $this->lang_code_1;
 	}
 	
-	public function get_languages()
+	public function languages()
 	{
 		return array (
 			$this->get_lang_code_0(),
 			$this->get_lang_code_1()
 		);
 	}
-	public function get_words($i = null)
+	public function words($i = null)
 	{
 		return $i !== null
 			? ($i === 0
@@ -93,12 +93,12 @@ class Entry extends DatabaseRow
 	}
 
 	protected $pronunciations = null;
-	public function get_pronunciations()
+	public function pronunciations()
 	{
 		return $this->pronunciations;
 	}
 	
-	public function get_annotations()
+	public function annotations()
 	{
 		if (!!Session::get()
 			&& !!($session_user = Session::get()->get_user())
@@ -107,7 +107,7 @@ class Entry extends DatabaseRow
 			$error_description = static::get_error_description();
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->get_annotations();
+				return $user_entry->annotations();
 			}
 			static::unset_error_description();
 			static::set_error_description($error_description);
@@ -270,9 +270,9 @@ class Entry extends DatabaseRow
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
 			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc_condensed() : null,
-			"languages" => $entry->get_languages(),
-			"words" => $entry->get_words(),
-			"pronuncations" => $entry->get_pronunciations(),
+			"languages" => $entry->languages(),
+			"words" => $entry->words(),
+			"pronuncations" => $entry->pronunciations(),
 			"annotationsCount" => $this->annotations_count()
 		);
 		
@@ -424,9 +424,9 @@ class UserEntry extends Entry
 		return !!$this->get_entry() ? $this->get_entry()->get_lang_code_1() : null;
 	}
 
-	public function get_pronunciations()
+	public function pronunciations()
 	{
-		return !!$this->get_entry() ? $this->get_entry()->get_pronunciations() : null;
+		return !!$this->get_entry() ? $this->get_entry()->pronunciations() : null;
 	}
 	
 	public function uncache_annotations()
@@ -444,16 +444,16 @@ class UserEntry extends Entry
 	}
 
 	private $annotations;
-	public function get_annotations()
+	public function annotations()
 	{
 		$table = "user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
+		return self::cache($this->annotations, "Annotation", $table, "user_entry_id", $this->get_user_entry_id());
 	}
 	
 	private $lists;
-	public function get_lists()
+	public function lists()
 	{
-		return self::get_cached_collection($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
+		return self::cache($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
 	}
 
 	private function __construct($user_entry_id, $user_id, $entry_id,
@@ -523,7 +523,7 @@ class UserEntry extends Entry
 		
 		$succeeded = !!$this->set_word_0($this->get_entry()->get_word_0()) && $succeeded;
 		$succeeded = !!$this->set_word_1($this->get_entry()->get_word_1()) && $succeeded;
-		$pronunciations = $this->get_entry()->get_pronunciations();
+		$pronunciations = $this->get_entry()->pronunciations();
 		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
 		return $succeeded ? $this : static::set_error_description("$failure_message: " . static::unset_error_description());
@@ -576,7 +576,7 @@ class UserEntry extends Entry
 		{
 			if (($annotation = Annotation::insert($entry->get_user_entry_id(), $annotation_contents)))
 			{
-				$annotations = $entry->get_annotations();
+				$annotations = $entry->annotations();
 				array_push($annotations, $annotation);
 				return $entry;
 			}
@@ -642,9 +642,9 @@ class UserEntry extends Entry
 	{
 		if (!$user) return false;
 		
-		foreach (array_merge($user->get_courses(), $user->get_instructor_courses()) as $course)
+		foreach (array_merge($user->courses(), $user->get_instructor_courses()) as $course)
 		{
-			foreach ($course->get_lists() as $list)
+			foreach ($course->lists() as $list)
 			{
 				if ($this->user_can_write_via($user, $list)) return true;
 			}
@@ -658,7 +658,7 @@ class UserEntry extends Entry
 		if (!$list) return false;
 		
 		//  Quick check
-		if (in_array($this, ($list_entries = $list->get_entries()))) return true;
+		if (in_array($this, ($list_entries = $list->entries()))) return true;
 		
 		//  Robustness, in case of unexpected duplicate UserEntry
 		foreach ($list_entries as $entry)
@@ -680,12 +680,12 @@ class UserEntry extends Entry
 		
 		foreach (array_merge($user->get_student_courses(), $user->get_instructor_courses()) as $course)
 		{
-			foreach ($course->get_lists() as $list)
+			foreach ($course->lists() as $list)
 			{
 				if ($this->user_can_read_via($user, $list)) return true;
 			}
 			
-			foreach ($course->get_tests() as $test)
+			foreach ($course->tests() as $test)
 			{
 				if ($this->user_can_read_via($user, $test)) return true;
 			}
@@ -771,8 +771,8 @@ class UserEntry extends Entry
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["annotations"] = self::array_for_json($this->get_annotations());
+		$assoc["lists"] = self::array_for_json($this->lists());
+		$assoc["annotations"] = self::array_for_json($this->annotations());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

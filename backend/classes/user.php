@@ -355,11 +355,11 @@ class User extends DatabaseRow
 	}
 	
 	private $lists;
-	public function get_lists($course_ids = null)
+	public function lists($course_ids = null)
 	{
 		if ($course_ids === null)
 		{
-			return self::get_cached_collection($this->lists, "EntryList", "lists", "user_id", $this->get_user_id());
+			return self::cache($this->lists, "EntryList", "lists", "user_id", $this->get_user_id());
 		}
 		else
 		{
@@ -393,16 +393,22 @@ class User extends DatabaseRow
 	}
 	
 	private $courses;
-	public function get_courses()
+	public function courses()
 	{
-		return self::get_cached_collection($this->courses, "Course", "courses", "user_id", $this->get_user_id());
+		return self::cache($this->courses, "Course", "courses", "user_id", $this->get_user_id());
+	}
+	
+	private $sittings;
+	public function sittings()
+	{
+		return self::cache($this->sittings, "Sitting", "course_unit_test_sittings", "user_id", $this->get_user_id());
 	}
 	
 	private $languages;
-	public function get_languages()
+	public function languages()
 	{
 		$table = "user_languages LEFT JOIN languages USING (lang_id)";
-		return self::get_cached_collection($this->languages, "Language", $table, "user_id", $this->get_user_id());
+		return self::cache($this->languages, "Language", $table, "user_id", $this->get_user_id());
 	}
 	public function languages_add($language, $years = null)
 	{
@@ -492,7 +498,7 @@ class User extends DatabaseRow
 			return static::set_error_description("User cannot set language years to negative integer.");
 		}
 		
-		if (!in_array($language, $this->get_languages()))
+		if (!in_array($language, $this->languages()))
 		{
 			return static::set_error_description("User cannot set language years for language not already associated with user.");
 		}
@@ -532,21 +538,21 @@ class User extends DatabaseRow
 	public function get_instructor_courses()
 	{
 		$table = "course_instructors LEFT JOIN courses USING (course_id)";
-		return self::get_cached_collection($this->instructor_courses, "Course", $table, "course_instructors.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->instructor_courses, "Course", $table, "course_instructors.user_id", $this->get_user_id(), "courses.*");
 	}
 	
 	private $student_courses;
 	public function get_student_courses()
 	{
 		$table = "course_students LEFT JOIN courses USING (course_id)";
-		return self::get_cached_collection($this->student_courses, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->student_courses, "Course", $table, "course_students.user_id", $this->get_user_id(), "courses.*");
 	}
 	
 	private $researcher_courses;
 	public function get_researcher_courses()
 	{
 		$table = "course_researchers LEFT JOIN courses USING (course_id)";
-		return self::get_cached_collection($this->researcher_courses, "Course", $table, "course_researchers.user_id", $this->get_user_id(), "courses.*");
+		return self::cache($this->researcher_courses, "Course", $table, "course_researchers.user_id", $this->get_user_id(), "courses.*");
 	}
 	
 	public function in_array($array)
@@ -567,7 +573,7 @@ class User extends DatabaseRow
 	
 	public function user_can_read_via_course($user)
 	{
-		foreach (array_merge($this->get_courses(), $this->get_instructor_courses(), $this->get_student_courses()) as $course)
+		foreach (array_merge($this->courses(), $this->get_instructor_courses(), $this->get_student_courses()) as $course)
 		{
 			if ($course->user_can_read($user)) return true;
 		}
@@ -643,11 +649,11 @@ class User extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["coursesOwned"] = self::array_for_json($this->get_courses());
+		$assoc["coursesOwned"] = self::array_for_json($this->courses());
 		$assoc["coursesInstructed"] = self::array_for_json($this->get_instructor_courses());
 		$assoc["coursesStudied"] = self::array_for_json($this->get_student_courses());
 		$assoc["coursesResearched"] = self::array_for_json($this->get_researcher_courses());
-		$assoc["lists"] = self::array_for_json($this->get_lists());
+		$assoc["lists"] = self::array_for_json($this->lists());
 		
 		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
 	}

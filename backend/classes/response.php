@@ -41,7 +41,7 @@ class Response extends CourseComponent
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$test_entries = $test->get_entries();
+		$test_entries = $test->entries();
 		if (!($test_entry = $test_entries[$test_entry_id]))
 		{
 			return static::set_error_description("$failure_message: Test returned no entry for test_entry_id = $test_entry_id.");

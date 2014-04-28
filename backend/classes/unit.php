@@ -28,7 +28,7 @@ class Unit extends CourseComponent
 			return static::set_error_description("Session user cannot edit course.");
 		}
 		
-		$number = count($course->get_units()) + 1;
+		$number = count($course->units()) + 1;
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
@@ -82,7 +82,7 @@ class Unit extends CourseComponent
 		
 		if ($number === null || ($number = intval($number, 10)) < 1) return static::set_error_description("Course unit cannot set number to null or nonpositive integer.");
 		
-		if ($number > ($units_count = count($this->get_course()->get_units()))) $number = $units_count;
+		if ($number > ($units_count = count($this->get_course()->units()))) $number = $units_count;
 		
 		if ($number === $this->get_number()) return $this;
 			
@@ -174,16 +174,16 @@ class Unit extends CourseComponent
 	}
 	
 	private $tests;
-	public function get_tests()
+	public function tests()
 	{
-		return self::get_cached_collection($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
+		return self::cache($this->tests, "Test", "course_unit_tests", "unit_id", $this->get_unit_id());
 	}
 	
 	private $lists;
-	public function get_lists()
+	public function lists()
 	{
 		$table = "course_unit_lists LEFT JOIN lists USING (list_id)";
-		return self::get_cached_collection($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
+		return self::cache($this->lists, "EntryList", $table, "unit_id", $this->get_unit_id());
 	}
 	
 	private function __construct($unit_id, $course_id, $number, $name = null, $open = null, $close = null, $message = null)
@@ -257,7 +257,7 @@ class Unit extends CourseComponent
 			$list->get_list_id()
 		));
 		
-		$lists = $this->get_lists();
+		$lists = $this->lists();
 		array_push($lists, $list);
 		
 		$list->uncache_courses();
@@ -320,8 +320,8 @@ class Unit extends CourseComponent
 		$public_keys = array_keys($assoc);
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["lists"] = self::array_for_json($this->get_lists());
-		$assoc["tests"] = self::array_for_json($this->get_tests());
+		$assoc["lists"] = self::array_for_json($this->lists());
+		$assoc["tests"] = self::array_for_json($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

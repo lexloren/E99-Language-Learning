@@ -179,7 +179,7 @@ class EntryList extends DatabaseRow
 	}
 	
 	private $entries;
-	public function get_entries()
+	public function entries()
 	{
 		$user_entries = sprintf("SELECT * FROM user_entries LEFT JOIN (SELECT entry_id, %s FROM %s) AS reference USING (entry_id) WHERE user_id = %d",
 			Dictionary::language_code_columns(),
@@ -188,16 +188,16 @@ class EntryList extends DatabaseRow
 		);
 		
 		$table = "list_entries LEFT JOIN ($user_entries) AS user_entries USING (user_entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
+		return self::cache($this->entries, "UserEntry", $table, "list_id", $this->get_list_id());
 	}
 	
 	private $courses;
-	public function get_courses()
+	public function courses()
 	{
 		if (!isset($this->courses))
 		{
 			$table = "(course_unit_lists LEFT JOIN course_units USING (unit_id)) LEFT JOIN courses USING (course_id)";
-			if (self::get_cached_collection($this->courses, "Course", $table, "list_id", $this->get_list_id()))
+			if (self::cache($this->courses, "Course", $table, "list_id", $this->get_list_id()))
 			{
 				$courses_unique = array ();
 				foreach ($this->courses as $course)
@@ -273,7 +273,7 @@ class EntryList extends DatabaseRow
 	{
 		foreach ($courses as $course)
 		{
-			foreach ($course->get_lists() as $list)
+			foreach ($course->lists() as $list)
 			{
 				if ($list->list_id === $this->list_id)
 					//  Should now be true for all lists associated with all courses:
@@ -347,7 +347,7 @@ class EntryList extends DatabaseRow
 	{
 		if ($list == $this) return static::set_error_description("List cannot add entries from itself.");
 		
-		foreach ($list->get_entries() as $entry)
+		foreach ($list->entries() as $entry)
 		{
 			if (!$this->entries_add($entry))
 			{
@@ -424,7 +424,7 @@ class EntryList extends DatabaseRow
 		$list_copy_id = $mysqli->insert_id;
 		
 		$insertion_values = array ();
-		foreach ($this->get_entries() as $entry)
+		foreach ($this->entries() as $entry)
 		{
 			if (($entry_copy = $entry->copy_for_user($user, $this)))
 			{
@@ -461,7 +461,7 @@ class EntryList extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = self::array_for_json($this->get_entries());
+		$assoc["entries"] = self::array_for_json($this->entries());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

@@ -36,7 +36,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($course->get_lang_id_0(), TestDB::$lang_id_1);
 		$this->assertEquals($course->get_lang_id_1(), TestDB::$lang_id_0);
 		
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$this->assertCount(1, $instructors);
 		$this->assertTrue($course->session_user_is_instructor());
 		$this->assertFalse($course->session_user_is_student());
@@ -105,10 +105,10 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertNull(Course::select_by_id($this->db->course_ids[0]));
 	}
 	
-	public function test_get_lists()
+	public function test_lists()
 	{
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$lists = $course->get_lists();
+		$lists = $course->lists();
 		$this->assertNotNull($lists);
 		$this->assertCount(1, $lists);
 		$this->assertEquals($lists[0]->get_list_id(), $this->db->list_ids[0]);
@@ -159,11 +159,11 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		
-		$this->assertCount(0, $course->get_students());
+		$this->assertCount(0, $course->students());
 		$ret = $course->students_add($student);
 		$this->assertNotNull($ret);
 		
-		$students = $course->get_students();
+		$students = $course->students();
 		$this->assertCount(1, $students);
 		$this->assertEquals($student, $students[0]);
 	}
@@ -175,22 +175,22 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[3]);
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[4]);
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$students = $course->get_students();
+		$students = $course->students();
 		$this->assertCount(4, $students);
 		
 		//Session user is not set
 		$course->students_remove($students[0]);
-		$students = $course->get_students();
+		$students = $course->students();
 		$this->assertCount(4, $students);
 
 		//Session user set
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-		$students = $course->get_students();
+		$students = $course->students();
 		$student1 = $students[1];
 		$student2 = $students[2];
 		$course->students_remove($students[0]);
 		$course->students_remove($students[3]);
-		$students = $course->get_students();
+		$students = $course->students();
 		$this->assertCount(2, $students);
 		$this->assertTrue(in_array($student1, $students));
 		$this->assertTrue(in_array($student2, $students));
@@ -212,11 +212,11 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user);
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		
-		$this->assertCount(1, $course->get_instructors());
+		$this->assertCount(1, $course->instructors());
 		$ret = $course->instructors_add($instructor);
 		$this->assertNotNull($ret);
 		
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$this->assertCount(2, $instructors);
 		$this->assertTrue(in_array($instructor, $instructors));
 	}
@@ -228,22 +228,22 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[3]);
 		$this->db->add_course_instructor($this->db->course_ids[0], $this->db->user_ids[4]);
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$this->assertCount(5, $instructors);
 		
 		//Session user is not set
 		$course->instructors_remove($instructors[0]);
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$this->assertCount(5, $instructors);
 
 		//Session user set
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$instructor1 = $instructors[1];
 		$instructor2 = $instructors[2];
 		$course->instructors_remove($instructors[0]);
 		$course->instructors_remove($instructors[3]);
-		$instructors = $course->get_instructors();
+		$instructors = $course->instructors();
 		$this->assertCount(3, $instructors);
 		$this->assertTrue(in_array($instructor1, $instructors));
 		$this->assertTrue(in_array($instructor2, $instructors));
@@ -318,7 +318,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	public function test_course_test()
 	{
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$this->assertCount(0, $course->get_tests());
+		$this->assertCount(0, $course->tests());
 	}
 	
 	public function test_set_message()

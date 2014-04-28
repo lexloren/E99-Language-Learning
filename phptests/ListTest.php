@@ -134,7 +134,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 			$this->assertNotNull($ret);
 		}
 		
-		$entries = $list->get_entries();
+		$entries = $list->entries();
 		$this->assertCount(12, $entries);
 	}
 	
@@ -142,13 +142,13 @@ class ListTest extends PHPUnit_Framework_TestCase
 	{
 		//No session user set
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
-		$entries = $list->get_entries();
+		$entries = $list->entries();
 		$ret = $list->entries_remove($entries[0]);
 		$this->assertNull($ret);
 
 		//Session user set
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-		$entries = $list->get_entries();
+		$entries = $list->entries();
 		$this->assertCount(7, $entries);
 
 		$ret = $list->entries_remove($entries[0]);
@@ -158,7 +158,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$ret = $list->entries_remove($entries[4]);
 		$this->assertNotNull($ret);
 
-		$entries = $list->get_entries();
+		$entries = $list->entries();
 		$this->assertCount(4, $entries);
 	}
 	
@@ -180,11 +180,11 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertNull(EntryList::select_by_id($this->db->list_ids[0]));
 	}
 	
-	public function test_get_entries()
+	public function test_entries()
 	{
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		$entries = $list->get_entries();
+		$entries = $list->entries();
 		$this->assertCount(7, $entries);
 	}
 	
@@ -211,11 +211,11 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(1, $courses);
 		
 		//Copy course's list
-		$lists = $course->get_lists();
+		$lists = $course->lists();
 		$this->assertCount(1, $lists);
 		$course_list = $lists[0];
 		$this->assertTrue($course_list->session_user_can_read());
-		$entries = $course_list->get_entries();
+		$entries = $course_list->entries();
 		$this->assertCount(7, $entries);
 
 		//  Copies the list by virtue of its readability in the course
@@ -228,7 +228,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$copied_list = $course_list->copy_for_session_user();
 		$this->assertNotNull($copied_list);
 		$this->assertEquals($user1, $copied_list->get_owner());
-		$entries = $copied_list->get_entries();
+		$entries = $copied_list->entries();
 		$this->assertCount(7, $entries);
 		
 	}

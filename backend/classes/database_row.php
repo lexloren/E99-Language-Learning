@@ -111,7 +111,7 @@ class DatabaseRow extends ErrorReporter
 	{
 	}
 	
-	protected static function get_collection($member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
+	protected static function collect($member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
 	{
 		$cache = array ();
 			
@@ -139,11 +139,11 @@ class DatabaseRow extends ErrorReporter
 		return $cache;
 	}
 	
-	protected static function get_cached_collection(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
+	protected static function cache(&$cache, $member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
 	{
 		if (!isset($cache))
 		{
-			$cache = self::get_collection($member_class, $table, $anchor_column, $anchor_id, $columns, $order_by, $key_by);
+			$cache = self::collect($member_class, $table, $anchor_column, $anchor_id, $columns, $order_by, $key_by);
 		}
 		
 		return $cache;

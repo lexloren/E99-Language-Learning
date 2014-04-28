@@ -100,7 +100,7 @@ class Test extends CourseComponent
 	}
 	
 	private $entries;
-	public function get_entries()
+	public function entries()
 	{
 		$user_entries = "(course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id))";
 		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
@@ -108,7 +108,7 @@ class Test extends CourseComponent
 			Dictionary::join()
 		);
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
-		return self::get_cached_collection($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num", "test_entry_id");
+		return self::cache($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num", "test_entry_id");
 	}
 	public function uncache_entries()
 	{
@@ -127,9 +127,9 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		if ($number > ($entries_count = count($this->get_entries()))) $number = $entries_count;
+		if ($number > ($entries_count = count($this->entries()))) $number = $entries_count;
 		
-		if ($number === ($number_formerly = array_search($entry, $this->get_entries()) + 1)) return $this;
+		if ($number === ($number_formerly = array_search($entry, $this->entries()) + 1)) return $this;
 		
 		if ($number_formerly < 1) return static::set_error_description("Test cannot set entry number for entry not already in test.");
 			
@@ -173,7 +173,7 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner(), true);
 		
-		if (!in_array($entry, $this->get_entries()))
+		if (!in_array($entry, $this->entries()))
 		{
 			return static::set_error_description("Test cannot set mode for entry not already in test.");
 		}
@@ -199,7 +199,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to randomize entries because neither reorder nor remode requested.");
 		}
 		
-		$entries_ordered = $this->get_entries();
+		$entries_ordered = $this->entries();
 		$entries_count = count($entries_ordered);
 		
 		if ($renumber)
@@ -229,7 +229,7 @@ class Test extends CourseComponent
 		
 		for ($i = 0; $i < $entries_count; $i ++)
 		{
-			$mode = $remode ? rand(0, 2) : "mode";
+			$mode = $remode ? rand(0, 6) : "mode";
 			
 			$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
 		
@@ -267,9 +267,9 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to add entry: " . Entry::unset_error_description());
 		}
 		
-		$mode = $mode === null ? rand(0, 2) : intval($mode, 10);
+		$mode = $mode === null ? rand(0, 6) : intval($mode, 10);
 		
-		if ($mode > 2 || $mode < 0)
+		if ($mode > 6 || $mode < 0)
 		{
 			return static::set_error_description("Test cannot set mode = $mode.");
 		}
@@ -310,7 +310,7 @@ class Test extends CourseComponent
 			
 			case 2:
 			{
-				$contents = array_pop($entry->get_pronunciations());
+				$contents = array_pop($entry->pronunciations());
 			} break;
 			
 			default:
@@ -344,7 +344,7 @@ class Test extends CourseComponent
 			return static::set_error_description("Test failed to update because some student has already begun executing the test.");
 		}
 		
-		foreach ($list->get_entries() as $entry)
+		foreach ($list->entries() as $entry)
 		{
 			if (!$this->entries_add($entry, $mode))
 			{
@@ -373,7 +373,7 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner());
 		
-		$number = array_search($entry, $this->get_entries()) + 1;
+		$number = array_search($entry, $this->entries()) + 1;
 		
 		if ($number < 1) return static::set_error_description("Test cannot remove entry not already in test.");
 		
@@ -405,9 +405,9 @@ class Test extends CourseComponent
 	}
 	
 	private $sittings;
-	public function get_sittings()
+	public function sittings()
 	{
-		return self::get_cached_collection($this->sittings, "Sitting", "course_unit_test_sittings", "test_id", $this->get_test_id());
+		return self::cache($this->sittings, "Sitting", "course_unit_test_sittings", "test_id", $this->get_test_id());
 	}
 	public function uncache_sittings()
 	{
@@ -415,7 +415,7 @@ class Test extends CourseComponent
 	}
 	public function get_sitting_for_user($user)
 	{
-		foreach ($this->get_sittings() as $sitting)
+		foreach ($this->sittings() as $sitting)
 		{
 			if (!$sitting->get_user())
 			{
@@ -428,14 +428,14 @@ class Test extends CourseComponent
 		return null;
 	}
 	
-	public function get_patterns()
+	public function patterns()
 	{
-		return self::get_collection("Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+		return self::collect("Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function executed()
 	{
-		return count($this->get_sittings()) > 0;
+		return count($this->sittings()) > 0;
 	}
 	
 	public function unexecute()
@@ -646,9 +646,9 @@ class Test extends CourseComponent
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->get_entries()) : null;
-		$assoc["sittings"] = $this->session_user_can_write() ? self::array_for_json($this->get_sittings()) : null;
-		$assoc["patterns"] = $this->session_user_can_write() ? self::array_for_json($this->get_patterns()) : null;
+		$assoc["entries"] = $this->session_user_can_write() ? self::array_for_json($this->entries()) : null;
+		$assoc["sittings"] = $this->session_user_can_write() ? self::array_for_json($this->sittings()) : null;
+		$assoc["patterns"] = $this->session_user_can_write() ? self::array_for_json($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

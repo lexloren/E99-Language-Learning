@@ -155,9 +155,9 @@ class Sitting extends CourseComponent
 	}
 	
 	private $responses;
-	public function get_responses()
+	public function responses()
 	{
-		return self::get_cached_collection($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+		return self::cache($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
 	private $timeframe = null;
@@ -207,7 +207,7 @@ class Sitting extends CourseComponent
 	}
 	
 	private $entries_remaining;
-	public function get_entries_remaining()
+	public function entries_remaining()
 	{
 		if (!isset($this->entries_remaining))
 		{
@@ -240,17 +240,17 @@ class Sitting extends CourseComponent
 	{
 		return $this->get_test()->user_can_execute($user)
 			&& $this->get_user()->equals($user)
-			&& $this->get_entries_remaining() > 0;
+			&& $this->entries_remaining() > 0;
 	}
 	
 	public function next_json_assoc()
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return static::set_error_description("Session user cannot execute test" . (!$this->get_entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+			return static::set_error_description("Session user cannot execute test" . (!$this->entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
 		}
 		
-		if (!count($entries_remaining = $this->get_entries_remaining()))
+		if (!count($entries_remaining = $this->entries_remaining()))
 		{
 			return static::set_error_description("Session user has already responded to all test entries.");
 		}
@@ -343,7 +343,7 @@ class Sitting extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["responses"] = self::array_for_json($this->get_responses());
+		$assoc["responses"] = self::array_for_json($this->responses());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

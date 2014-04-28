@@ -169,7 +169,7 @@ class APIList extends APIBase
 		{
 			if ($list->session_user_can_read())
 			{
-				$entries = $list->get_entries();
+				$entries = $list->entries();
 			
 				$entries_returnable = array ();
 				foreach ($entries as $entry)
@@ -214,7 +214,7 @@ class APIList extends APIBase
 				}
 			}
 			
-			self::return_array_as_json($list->get_entries());
+			self::return_array_as_json($list->entries());
 		}
 	}
 	
@@ -235,7 +235,7 @@ class APIList extends APIBase
 					}
 				}
 				
-				self::return_array_as_json($list->get_entries());
+				self::return_array_as_json($list->entries());
 			}
 		}
 	}

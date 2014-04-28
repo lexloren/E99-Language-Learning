@@ -232,7 +232,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_lists());
+			self::return_array_as_json($course->lists());
 		}
 	}
 	
@@ -243,7 +243,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_tests());
+			self::return_array_as_json($course->tests());
 		}
 	}
 	
@@ -253,7 +253,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_units());
+			self::return_array_as_json($course->units());
 		}
 	}
 	
@@ -263,7 +263,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_students());
+			self::return_array_as_json($course->students());
 		}
 	}
 	
@@ -285,7 +285,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_students());
+				self::return_array_as_json($course->students());
 			}
 		}
 	}
@@ -296,7 +296,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->get_instructors());
+			self::return_array_as_json($course->instructors());
 		}
 	}
 	
@@ -318,7 +318,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_instructors());
+				self::return_array_as_json($course->instructors());
 			}
 		}
 	}
@@ -341,7 +341,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_students());
+				self::return_array_as_json($course->students());
 			}
 		}
 	}
@@ -364,7 +364,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_instructors());
+				self::return_array_as_json($course->instructors());
 			}
 		}
 	}
@@ -376,7 +376,7 @@ class APICourse extends APIBase
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course"))
 			&& ($course->session_user_can_write() || $course->session_user_is_researcher()))
 		{
-			self::return_array_as_json($course->get_researchers());
+			self::return_array_as_json($course->researchers());
 		}
 	}
 	
@@ -398,7 +398,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_researchers());
+				self::return_array_as_json($course->researchers());
 			}
 		}
 	}
@@ -422,7 +422,7 @@ class APICourse extends APIBase
 					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
 				}
 				
-				self::return_array_as_json($course->get_researchers());
+				self::return_array_as_json($course->researchers());
 			}
 		}
 	}

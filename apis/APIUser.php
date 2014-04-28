@@ -79,13 +79,19 @@ class APIUser extends APIBase
 	public function lists()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_lists(isset($_GET["course_ids"]) ? explode(",", $_GET["course_ids"]) : null));
+		self::return_array_as_json(Session::get()->get_user()->lists(isset($_GET["course_ids"]) ? explode(",", $_GET["course_ids"]) : null));
+	}
+	
+	public function sittings()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		self::return_array_as_json(Session::get()->get_user()->sittings());
 	}
 	
 	public function languages()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_languages());
+		self::return_array_as_json(Session::get()->get_user()->languages());
 	}
 	
 	//  needs back-end implementation
@@ -189,7 +195,7 @@ class APIUser extends APIBase
 				$language_years[$lang_code] = $years;
 			}
 			
-			$user_languages = $user->get_languages();
+			$user_languages = $user->languages();
 			
 			foreach ($user_languages as $language)
 			{
@@ -251,7 +257,7 @@ class APIUser extends APIBase
 		} else {
 			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
 			$practice = Practice::generate($list_ids, $entries_count);
-			self::return_array_as_json($practice->get_entries());
+			self::return_array_as_json($practice->entries());
 		}
 	}
 
@@ -286,7 +292,7 @@ class APIUser extends APIBase
 	public function courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
-		self::return_array_as_json(Session::get()->get_user()->get_courses());
+		self::return_array_as_json(Session::get()->get_user()->courses());
 	}
 	
 	public function student_courses()

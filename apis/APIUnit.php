@@ -124,7 +124,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->get_lists());
+			self::return_array_as_json($unit->lists());
 		}
 	}
 	
@@ -178,7 +178,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->get_tests());
+			self::return_array_as_json($unit->tests());
 		}
 	}
 }

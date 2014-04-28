@@ -220,24 +220,24 @@ class Pattern extends CourseComponent
 			case 0:
 			case 2:
 			{
-				array_push($from, $user_entry->get_words(1));
+				array_push($from, $user_entry->words(1));
 			} break;
 			
 			case 1:
 			case 5:
 			{
-				array_push($from, $user_entry->get_words(0));
+				array_push($from, $user_entry->words(0));
 			} break;
 			
 			case 3:
 			case 4:
 			{
-				array_push($from, array_pop($user_entry->get_pronunciations()));
+				array_push($from, array_pop($user_entry->pronunciations()));
 			} break;
 			
 			default:
 			{
-				array_push($from, $user_entry->get_words(1));
+				array_push($from, $user_entry->words(1));
 				array_push($from, array_pop($user_entry->get_pronunciation()));
 			}
 		}
