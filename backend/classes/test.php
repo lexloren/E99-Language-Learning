@@ -166,14 +166,14 @@ class Test extends CourseComponent
 		
 		$mode = intval($mode, 10);
 		
-		if ($mode > 2 || $mode < 0)
+		if ($mode > 6 || $mode < 0)
 		{
 			return static::set_error_description("Test cannot set mode = $mode.");
 		}
 		
 		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		if (!in_array($entry, $this->entries()))
+		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
 		{
 			return static::set_error_description("Test cannot set mode for entry not already in test.");
 		}
@@ -182,7 +182,39 @@ class Test extends CourseComponent
 		
 		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 		
+		if (isset($this->modes)) $this->modes[$test_entry_id] = $mode;
+		
 		return $this;
+	}
+	
+	private $modes;
+	public function get_entry_mode($entry)
+	{
+		if (!isset($this->modes))
+		{
+			$mysqli = Connection::get_shared_instance();
+		
+			$result = $mysqli->query("SELECT test_entry_id, mode FROM course_unit_test_entries WHERE test_id = " . $this->get_test_id());
+			
+			if (!!$mysqli->error)
+			{
+				return static::set_error_description("Test failed to get entry mode: " . $mysqli->error . ".");
+			}
+			
+			$this->modes = array ();
+			
+			while (($result_assoc = $result->fetch_assoc()))
+			{
+				$this->modes[intval($result_assoc["test_entry_id"], 10)] = intval($result_assoc["mode"], 10);
+			}
+		}
+		
+		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
+		{
+			return static::set_error_description("Test cannot get mode for entry not already in test.");
+		}
+		
+		return $this->modes[$test_entry_id];
 	}
 	
 	public function entries_randomize($renumber = true, $remode = false)
@@ -404,6 +436,27 @@ class Test extends CourseComponent
 		return $this;
 	}
 	
+	public function entry_options($entry)
+	{
+		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
+		{
+			return static::set_error_description("Test cannot get options for entry not already in test.");
+		}
+		
+		$patterns = $this->patterns();
+		$patterns_returnable = array ();
+		
+		foreach ($patterns as $pattern)
+		{
+			if ($pattern->get_test_entry_id() === $test_entry_id)
+			{
+				array_push($patterns_returnable, $pattern);
+			}
+		}
+		
+		return $patterns_returnable;
+	}
+	
 	private $sittings;
 	public function sittings()
 	{
@@ -428,9 +481,10 @@ class Test extends CourseComponent
 		return null;
 	}
 	
+	private $patterns;
 	public function patterns()
 	{
-		return self::collect("Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+		return self::cache($this->patterns, "Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id, mode)", "test_id", $this->get_test_id());
 	}
 	
 	public function executed()
@@ -609,6 +663,29 @@ class Test extends CourseComponent
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
+	public function entries_json_array()
+	{
+		$json_array = array ();
+		
+		foreach ($this->entries() as $test_entry_id => $entry)
+		{
+			$entry_assoc = $entry->json_assoc();
+			$entry_assoc["testEntryId"] = $test_entry_id;
+			$entry_assoc["mode"] = $this->get_entry_mode($entry);
+			$entry_assoc["options"] = self::json_array($this->entry_options($entry));
+			
+			foreach ($entry_assoc["options"] as &$option)
+			{
+				unset($option["hiddenFromSessionUser"]);
+				unset($option["sessionUserPermissions"]);
+			}
+			
+			array_push($json_array, $entry_assoc);
+		}
+		
+		return $json_array;
+	}
+	
 	public function sittings_count()
 	{
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "test_id", $this->get_test_id());
@@ -633,7 +710,7 @@ class Test extends CourseComponent
 				: null,
 			"entriesCount" => $this->entries_count(),
 			"sittingsCount" => $this->sittings_count(),
-			"patternsCount" => $this->patterns_count(),
+			//  "patternsCount" => $this->patterns_count(),
 			"message" => $this->get_message()
 		), array ("testId", "timeframe"), $privacy);
 	}
@@ -646,9 +723,9 @@ class Test extends CourseComponent
 		
 		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["entries"] = $this->session_user_can_write() ? self::json_array($this->entries()) : null;
+		$assoc["entries"] = $this->session_user_can_write() ? $this->entries_json_array() : null;
 		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
-		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
+		//  $assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
