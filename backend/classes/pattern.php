@@ -236,7 +236,7 @@ class Pattern extends CourseComponent
 			default:
 			{
 				array_push($from, $user_entry->words(1));
-				array_push($from, array_pop($user_entry->get_pronunciation()));
+				array_push($from, array_pop($user_entry->pronunciations()));
 			}
 		}
 		
@@ -325,8 +325,8 @@ class Pattern extends CourseComponent
 	{
 		return $this->privacy_mask(array (
 			"patternId" => $this->get_pattern_id(),
-			"prompt" => !!$this->get_prompt(),
-			"contents" => $this->get_contents_json_assoc(),
+			//  "prompt" => !!$this->get_prompt(),
+			"contents" => $this->get_contents(),
 			"score" => $this->get_score(),
 			"message" => $this->get_message()
 		), array (0 => "patternId"), $privacy);
