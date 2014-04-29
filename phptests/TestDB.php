@@ -488,39 +488,39 @@ class TestDB
 		$mode_entries = array ();
                 $mode_entries[] = array(
                                                                  "mode_id" => 0,
-                                                                 "source" => 'unknown',
-                                                                 "dest" => 'known'
+                                                                 "from" => 'unknown',
+                                                                 "to" => 'known'
                                                                  );
                 $mode_entries[] = array(
                                                                  "mode_id" => 1,
-                                                                 "source" => 'known',
-                                                                 "dest" => 'unknown'
+                                                                 "from" => 'known',
+                                                                 "to" => 'unknown'
                                                                  );
                 $mode_entries[] = array(
                                                                  "mode_id" => 2,
-                                                                 "source" => 'unknown',
-                                                                 "dest" => 'pronunciation'
+                                                                 "from" => 'unknown',
+                                                                 "to" => 'pronunciation'
                                                                  );
                 $mode_entries[] = array(
                                                                  "mode_id" => 3,
-                                                                 "source" => 'pronunciation',
-                                                                 "dest" => 'known'
+                                                                 "from" => 'pronunciation',
+                                                                 "to" => 'known'
                                                                  );
                 $mode_entries[] = array(
                                                                  "mode_id" => 4,
-                                                                 "source" => 'pronunciation',
-                                                                 "dest" => 'unknown'
+                                                                 "from" => 'pronunciation',
+                                                                 "to" => 'unknown'
                                                                  );
                 $mode_entries[] = array(
                                                                  "mode_id" => 5,
-                                                                 "source" => 'known',
-                                                                 "dest" => 'pronunciation'
+                                                                 "from" => 'known',
+                                                                 "to" => 'pronunciation'
                                                                  );
                 foreach ($mode_entries as $mode)
                 {
                         if(!$link->query(sprintf(
-                                                                 "INSERT into modes (mode_id, source, dest) values (%d, '%s', '%s')",
-                                                                 $mode["mode_id"], $mode["source"], $mode["dest"])
+                                                                 "INSERT into modes (mode_id, `from`, `to`) values (%d, '%s', '%s')",
+                                                                 $mode["mode_id"], $mode["from"], $mode["to"])
                                                  ))
                                 exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 

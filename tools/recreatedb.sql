@@ -350,11 +350,11 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
 DROP TABLE IF EXISTS `modes`;
 CREATE TABLE IF NOT EXISTS `modes` (
   `mode_id` tinyint(3) unsigned NOT NULL,
-  `source` char(255) default NULL,
-  `dest` char(255) default NULL,
+  `from` char(255) default NULL,
+  `to` char(255) default NULL,
   PRIMARY KEY  (`mode_id`),
-  KEY `source` (`source`),
-  KEY `dest` (`dest`)
+  KEY `from` (`from`),
+  KEY `to` (`to`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
