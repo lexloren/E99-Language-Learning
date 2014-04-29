@@ -6,40 +6,45 @@ require_once "./backend/classes.php";
 class Sitting extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($test_id)
 	{
-		if (!($session_user = Session::get()->get_user())) return static::set_error_description("Session user has not reauthenticated.");
+		if (!($session_user = Session::get()->get_user())) return static::errors_push("Session user has not reauthenticated.");
 		
-		if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
-		{
-			return static::set_error_description("Failed to insert test sitting: " . Test::unset_error_description());
-		}
-		
-		if (!$test->session_user_can_execute())
-		{
-			return static::set_error_description("Session user cannot execute test.");
-		}
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_sittings (test_id, student_id, start) SELECT %d, student_id, %d FROM course_students WHERE course_id = %d AND user_id = %d",
-			$test->get_test_id(),
-			time(),
-			$test->get_course_id(),
-			$session_user->get_user_id()
-		));
-		
-		if (!!$mysqli->error)
-		{
-			return static::set_error_description("Failed to insert test sitting: " . $mysqli->error . ".");
-		}
-		
-		$test->uncache_sittings();
-		
-		return self::select_by_id($mysqli->insert_id);
+		return Connection::transact(
+			function () use ($test_id)
+			{
+				if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
+				{
+					return static::errors_push("Failed to insert test sitting: " . Test::errors_unset());
+				}
+				
+				if (!$test->session_user_can_execute())
+				{
+					return static::errors_push("Session user cannot execute test.");
+				}
+				
+				$mysqli = Connection::get_shared_instance();
+				
+				$mysqli->query(sprintf("INSERT INTO course_unit_test_sittings (test_id, student_id, start) SELECT %d, student_id, %d FROM course_students WHERE course_id = %d AND user_id = %d",
+					$test->get_test_id(),
+					time(),
+					$test->get_course_id(),
+					$session_user->get_user_id()
+				));
+				
+				if (!!$mysqli->error)
+				{
+					return static::errors_push("Failed to insert test sitting: " . $mysqli->error . ".");
+				}
+				
+				$test->uncache_sittings();
+				
+				return self::select_by_id($mysqli->insert_id);
+			}
+		);
 	}
 	
 	public static function select_by_id($sitting_id)
@@ -57,11 +62,11 @@ class Sitting extends CourseComponent
 			($test_id = intval($test_id, 10)), ($user_id = intval($user_id, 10))
 		));
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error . ".");
+		if (!!$mysqli->error) return static::errors_push("Failed to select from $table: " . $mysqli->error . ".");
 		
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Failed to select any rows from $table where test_id = $test_id and user_id = $user_id.");
+			return static::errors_push("Failed to select any rows from $table where test_id = $test_id and user_id = $user_id.");
 		}
 		
 		return self::from_mysql_result_assoc($result_assoc);
@@ -98,12 +103,12 @@ class Sitting extends CourseComponent
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to get test sitting score: " . $mysqli->error . ".");
+			return static::errors_push("Failed to get test sitting score: " . $mysqli->error . ".");
 		}
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Failed to get test sitting score!");
+			return static::errors_push("Failed to get test sitting score!");
 		}
 		
 		foreach ($result_assoc as $key => &$value)
@@ -129,17 +134,17 @@ class Sitting extends CourseComponent
 				$this->get_student_id()
 			));
 			
-			if (!!$mysqli->error) return static::set_error_description("Failed to select sitting user: " . $mysqli->error . ".");
+			if (!!$mysqli->error) return static::errors_push("Failed to select sitting user: " . $mysqli->error . ".");
 			
 			if (!$result || $result->num_rows != 1 || !($result_assoc = $result->fetch_assoc()))
 			{
-				return static::set_error_description("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
+				return static::errors_push("Failed to select sitting user: No user selected for student_id = " . $this->get_student_id() . ".");
 			}
 			
 			if (!($this->user = User::select_by_id($result_assoc["user_id"])))
 			{
 				unset($this->user);
-				return static::set_error_description("Failed to select sitting user: " . User::unset_error_description());
+				return static::errors_push("Failed to select sitting user: " . User::errors_unset());
 			}
 		}
 		
@@ -228,7 +233,7 @@ class Sitting extends CourseComponent
 			
 			if (!!$mysqli->error)
 			{
-				return static::set_error_description("Session failed to get entries remaining: " . $mysqli->error . ".");
+				return static::errors_push("Session failed to get entries remaining: " . $mysqli->error . ".");
 			}
 			
 			$this->entries_remaining = array ();
@@ -255,12 +260,12 @@ class Sitting extends CourseComponent
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return static::set_error_description("Session user cannot execute test" . (!$this->entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+			return static::errors_push("Session user cannot execute test" . (!$this->entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
 		}
 		
 		if (!count($entries_remaining = $this->entries_remaining()))
 		{
-			return static::set_error_description("Session user has already responded to all test entries.");
+			return static::errors_push("Session user has already responded to all test entries.");
 		}
 		
 		$entry = array_shift($entries_remaining);
@@ -276,12 +281,12 @@ class Sitting extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Test failed to get mask for next entry for session user.");
+			return static::errors_push("Test failed to get mask for next entry for session user.");
 		}
 		
 		$mode = $result_assoc["mode"];
@@ -292,7 +297,7 @@ class Sitting extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		$options = array ();

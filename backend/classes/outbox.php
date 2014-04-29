@@ -5,7 +5,7 @@ require_once "./backend/classes.php";
 
 class Outbox extends ErrorReporter
 {
-	protected static $error_description = null;
+	protected static $errors = null;
 	
 	public static function send($sender, $to, $subject, $contents)
 	{
@@ -16,7 +16,7 @@ class Outbox extends ErrorReporter
 		{
 			if ($sender instanceof Course) $course_id = $sender->get_course_id();
 			else if ($sender instanceof User) $user_id = $sender->get_user_id();
-			else return static::set_error_description("Sender class must be Course or User.");
+			else return static::errors_push("Sender class must be Course or User.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -31,14 +31,14 @@ class Outbox extends ErrorReporter
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert message into outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert message into outbox: " . $mysqli->error . ".");
 		}
 		
 		$result = $mysqli->query("SELECT * FROM outbox");
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to select messages from outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to select messages from outbox: " . $mysqli->error . ".");
 		}
 		
 		$sent_message_ids = array ();
@@ -58,7 +58,7 @@ class Outbox extends ErrorReporter
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to delete sent messages from outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to delete sent messages from outbox: " . $mysqli->error . ".");
 		}
 		
 		return in_array($message_id, $sent_message_ids) ? $sender : false;

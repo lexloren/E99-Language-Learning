@@ -6,26 +6,26 @@ require_once "./backend/classes.php";
 class Unit extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($course_id, $name = null, $timeframe = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
 		if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
 		{
-			return static::set_error_description("Failed to insert unit: " . Course::unset_error_description());
+			return static::errors_push("Failed to insert unit: " . Course::errors_unset());
 		}
 		
 		if (!$course->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
 		$number = count($course->units()) + 1;
@@ -41,7 +41,7 @@ class Unit extends CourseComponent
 			$message
 		));
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to insert unit: " . $mysqli->error . ".");
+		if (!!$mysqli->error) return static::errors_push("Failed to insert unit: " . $mysqli->error . ".");
 		
 		$course->uncache_units();
 		
@@ -78,33 +78,38 @@ class Unit extends CourseComponent
 	}
 	public function set_number($number)
 	{
-		if (!$this->session_user_can_write()) return static::set_error_description("Session user cannot edit course unit.");
+		if (!$this->session_user_can_write()) return static::errors_push("Session user cannot edit course unit.");
 		
-		if ($number === null || ($number = intval($number, 10)) < 1) return static::set_error_description("Course unit cannot set number to null or nonpositive integer.");
+		if ($number === null || ($number = intval($number, 10)) < 1) return static::errors_push("Course unit cannot set number to null or nonpositive integer.");
 		
 		if ($number > ($units_count = count($this->get_course()->units()))) $number = $units_count;
 		
 		if ($number === $this->get_number()) return $this;
-			
-		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
-		
-		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
-		
-		$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
-		
-		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
-		
-		$mysqli->query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
-		
-		if ($mysqli->error) return static::set_error_description("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
-		
-		if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
-		
-		$this->number = $number;
-		
-		return $this;
+		return Connection::transact(
+			function () use ($number, $units_count)
+			{
+				$mysqli = Connection::get_shared_instance();
+				
+				$mysqli->query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
+				
+				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				
+				$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+				
+				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				
+				$mysqli->query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
+				
+				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				
+				if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
+				
+				$this->number = $number;
+				
+				return $this;
+			}
+		);
 	}
 	
 	private $name = null;
@@ -225,37 +230,47 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
-		if (($return = self::delete_this($this, "course_units", "unit_id", $this->get_unit_id())))
-		{
-			$this->get_course()->uncache_units();
-			
-			$mysqli = Connection::get_shared_instance();
-			
-			$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
-			
-			if ($mysqli->error) return static::set_error_description("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
-		}
-		return $return;
+		return Connection::transact(
+			function ()
+			{
+				if (($return = self::delete_this($this, "course_units", "unit_id", $this->get_unit_id())))
+				{
+					$this->get_course()->uncache_units();
+					
+					$mysqli = Connection::get_shared_instance();
+					
+					$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+					
+					if ($mysqli->error) return static::errors_push("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
+				}
+				return $return;
+			}
+		);
 	}
 	
 	public function lists_add($list)
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
 		if (!($list = $list->copy_for_user($this->get_owner(), $this)))
 		{
-			return static::set_error_description("Failed to add list: " . EntryList::unset_error_description());
+			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
 		
-		$mysqli->query(sprintf("INSERT IGNORE INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d)",
+		$mysqli->query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
 			$this->get_unit_id(),
 			$list->get_list_id()
 		));
+		
+		if (!!$mysqli->error)
+		{
+			return static::errors_push("Unit failed to add list: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+		}
 		
 		$lists = $this->lists();
 		array_push($lists, $list);
@@ -269,7 +284,7 @@ class Unit extends CourseComponent
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();

@@ -28,24 +28,32 @@ class APIEntry extends APIBase
 		{
 			$entry = $entry->copy_for_session_user();
 			
-			$updates = 0;
-			
-			if (isset($_POST["word_0"]))
-			{
-				$updates += !!$entry->set_word_0($_POST["word_0"]);
-			}
-			
-			if (isset($_POST["word_1"]))
-			{
-				$updates += !!$entry->set_word_1($_POST["word_1"]);
-			}
-			
-			if (isset($_POST["word_1_pronun"]))
-			{
-				$updates += !!$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
-			}
-			
-			self::return_updates_as_json("Entry", Entry::unset_error_description(), $updates ? $entry->json_assoc() : null);
+			if (Connection::transact(
+				function () use ($entry)
+				{
+					$errors = 0;
+					
+					if (isset($_POST["word_0"]))
+					{
+						$errors += !$entry->set_word_0($_POST["word_0"]);
+					}
+					
+					if (isset($_POST["word_1"]))
+					{
+						$errors += !$entry->set_word_1($_POST["word_1"]);
+					}
+					
+					if (isset($_POST["word_1_pronun"]))
+					{
+						$errors += !$entry->set_word_1_pronunciation($_POST["word_1_pronun"]);
+					}
+					
+					if ($errors) return null;
+					
+					return $entry;
+				}
+			)) Session::get()->set_result_assoc($entry->json_assoc());
+			else Session::get()->set_error_assoc("Entry Modification", Entry::errors_unset());
 		}
 	}
 	
@@ -70,7 +78,7 @@ class APIEntry extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Entry Find", Dictionary::unset_error_description());
+				Session::get()->set_error_assoc("Entry Find", Dictionary::errors_unset());
 			}
 		}
 	}

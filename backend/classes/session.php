@@ -48,11 +48,11 @@ class Session
 		return !$this->result_assoc || !!$this->result_assoc["isError"];
 	}
 	
-	public function set_mixed_assoc($error_title, $error_description, $result, $result_information = null)
+	public function set_mixed_assoc($error_title, $errors, $result, $result_information = null)
 	{
 		$this->result_assoc = self::result_assoc($result, $result_information);
 		
-		foreach (self::error_assoc($error_title, $error_description) as $key => $value)
+		foreach (self::error_assoc($error_title, $errors) as $key => $value)
 		{
 			if (!!$value && !$this->result_assoc[$key])
 			{

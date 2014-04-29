@@ -6,60 +6,70 @@ require_once "./backend/classes.php";
 class Course extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.", ErrorReporter::ERRCODE_AUTHENTICATION);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
-		
-		$language_0_matches = sprintf("languages_0.lang_code = '%s'",
-			$mysqli->escape_string($lang_code_0)
+		return Connection::transact(
+			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public)
+			{
+				$mysqli = Connection::get_shared_instance();
+				
+				$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
+				
+				$language_0_matches = sprintf("languages_0.lang_code = '%s'",
+					$mysqli->escape_string($lang_code_0)
+				);
+				$language_1_matches = sprintf("languages_1.lang_code = '%s'",
+					$mysqli->escape_string($lang_code_1)
+				);
+				$language_codes_match = "$language_0_matches AND $language_1_matches";
+				
+				$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
+				
+				$name = ($name !== null && strlen($name) > 0)
+					? "'".$mysqli->escape_string($name)."'"
+					: "NULL";
+				$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+				$close = !!$timeframe ? $timeframe->get_close() : "NULL";
+				$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+				$public = $public ? 1 : 0;
+				
+				$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
+					"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
+				));
+				
+				if (!!$mysqli->error)
+				{
+					return static::errors_push("Failed to insert course: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+				}
+				
+				if (!($course = self::select_by_id($mysqli->insert_id)))
+				{
+					return null;
+				}
+				
+				$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+					$course->get_course_id(),
+					Session::get()->get_user()->get_user_id()
+				));
+				
+				if (!!$mysqli->error)
+				{
+					return static::errors_push("Failed to insert course instructor: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+				}
+				
+				Session::get()->get_user()->uncache_all();
+				
+				return $course;
+			}
 		);
-		$language_1_matches = sprintf("languages_1.lang_code = '%s'",
-			$mysqli->escape_string($lang_code_1)
-		);
-		$language_codes_match = "$language_0_matches AND $language_1_matches";
-		
-		$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
-		
-		$name = ($name !== null && strlen($name) > 0)
-			? "'".$mysqli->escape_string($name)."'"
-			: "NULL";
-		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
-		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
-		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$public = $public ? 1 : 0;
-		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
-		));
-		
-		if (!!$mysqli->error)
-		{
-			return static::set_error_description("Failed to insert course: " . $mysqli->error . ".");
-		}
-		
-		if (!($course = self::select_by_id($mysqli->insert_id)))
-		{
-			return null;
-		}
-		
-		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
-			$course->get_course_id(),
-			Session::get()->get_user()->get_user_id()
-		));
-		
-		Session::get()->get_user()->uncache_all();
-		
-		return $course;
 	}
 	
 	public static function select_by_id($course_id)
@@ -104,7 +114,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -119,7 +129,7 @@ class Course extends DatabaseRow
 			return self::find_by_entry_ids($entry_ids);
 		}
 		
-		return static::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
+		return static::errors_push("Failed to find course(s) by entry ids: " . Dictionary::errors_unset());
 	}
 	
 	public static function find_by_user_query($query)
@@ -131,7 +141,7 @@ class Course extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return static::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
+		return static::errors_push("Failed to find course(s) by user handles: " . User::errors_unset());
 	}
 
 	public static function find_by_user_ids($user_ids)
@@ -154,7 +164,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -179,7 +189,7 @@ class Course extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by languages: " . $mysqli->error . ".");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -485,7 +495,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -497,7 +507,7 @@ class Course extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to add course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to add course user: " . $mysqli->error . ".");
 		}
 		
 		if (isset($array)) array_push($array, $user);
@@ -511,7 +521,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		
 		return $this->users_add($this->instructors, "course_instructors", $user);
@@ -526,7 +536,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		
 		return $this->users_add($this->researchers, "course_researchers", $user);
@@ -536,7 +546,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -548,7 +558,7 @@ class Course extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to remove course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to remove course user: " . $mysqli->error . ".");
 		}
 		
 		if (isset($array)) array_drop($array, $user);
@@ -562,7 +572,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		return $this->users_remove($this->instructors, "course_instructors", $user);
 	}
@@ -571,7 +581,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		return $this->users_remove($this->researchers, "course_researchers", $user);
 	}

@@ -6,14 +6,14 @@ require_once "./backend/classes.php";
 class EntryList extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($name = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -25,7 +25,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert list: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert list: " . $mysqli->error . ".");
 		}
 		
 		Session::get()->get_user()->uncache_lists();
@@ -65,7 +65,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -80,7 +80,7 @@ class EntryList extends DatabaseRow
 			return self::find_by_entry_ids($entry_ids);
 		}
 		
-		return static::set_error_description("Failed to find list(s) by entry ids: " . Dictionary::unset_error_description());
+		return static::errors_push("Failed to find list(s) by entry ids: " . Dictionary::errors_unset());
 	}
 	
 	public static function find_by_user_query($query)
@@ -92,7 +92,7 @@ class EntryList extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return static::set_error_description("Failed to find list(s) by user handles: " . User::unset_error_description());
+		return static::errors_push("Failed to find list(s) by user handles: " . User::errors_unset());
 	}
 	
 	public static function find_by_user_ids($user_ids)
@@ -110,7 +110,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -161,7 +161,7 @@ class EntryList extends DatabaseRow
 	}
 	public function set_public($public)
 	{
-		return static::set_error_description("List.set_public() not yet implemented.");
+		return static::errors_push("List.set_public() not yet implemented.");
 	}
 	
 	public function uncache_entries()
@@ -312,21 +312,21 @@ class EntryList extends DatabaseRow
 	
 	//  Adds an entry to this list
 	//      Returns this list
-	public function entries_add($entry_to_add, $hint = null)
+	public function entries_add($entry_to_add, $hint = null, $ignoring_permissions = false)
 	{
 		if (!$entry_to_add)
 		{
-			return static::set_error_description("List cannot add null entry.");
+			return static::errors_push("List cannot add null entry.");
 		}
 		
-		if (!$this->session_user_can_write())
+		if (!$ignoring_permissions && !$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit list.");
+			return static::errors_push("Session user cannot edit list.");
 		}
 		
 		if (!($entry_added = $entry_to_add->copy_for_user($this->get_owner(), $hint)))
 		{
-			return static::set_error_description("List failed to add entry: " . Entry::unset_error_description());
+			return static::errors_push("List failed to add entry: " . Entry::errors_unset());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -338,23 +338,33 @@ class EntryList extends DatabaseRow
 			$entry_added->get_user_entry_id()
 		));
 		
+		if (!!$mysqli->error)
+		{
+			return static::errors_push("List failed to insert entry: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+		}
+		
 		$entry_added->uncache_lists();
 		
 		return $this;
 	}
 	
-	public function entries_add_from_list($list)
+	public function entries_add_from_list($list, $ignoring_permissions = false)
 	{
-		if ($list == $this) return static::set_error_description("List cannot add entries from itself.");
+		if ($list == $this) return static::errors_push("List cannot add entries from itself.");
 		
-		foreach ($list->entries() as $entry)
-		{
-			if (!$this->entries_add($entry))
+		return Connection::transact(
+			function () use ($list, $ignoring_permissions)
 			{
-				return null;
+				$mysqli = Connection::get_shared_instance();
+				
+				foreach ($list->entries() as $entry)
+				{
+					if (!$this->entries_add($entry, $list, $ignoring_permissions)) return null;
+				}
+				
+				return $this;
 			}
-		}
-		return $this;
+		);
 	}
 	
 	//  Adds an entry to this list
@@ -363,17 +373,17 @@ class EntryList extends DatabaseRow
 	{
 		if (!$entry)
 		{
-			return static::set_error_description("List cannot remove null entry.");
+			return static::errors_push("List cannot remove null entry.");
 		}
 		
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit list.");
+			return static::errors_push("Session user cannot edit list.");
 		}
 		
 		if (!($entry = $entry->copy_for_user($this->get_owner(), $this)))
 		{
-			return static::set_error_description("List failed to remove entry: " . Entry::unset_error_description());
+			return static::errors_push("List failed to remove entry: " . Entry::errors_unset());
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -385,7 +395,7 @@ class EntryList extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("List failed to remove entry: " . $mysqli->error . ".");
+			return static::errors_push("List failed to remove entry: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);
@@ -399,7 +409,7 @@ class EntryList extends DatabaseRow
 	{
 		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		return $this->copy_for_user($session_user);
@@ -409,39 +419,33 @@ class EntryList extends DatabaseRow
 	{
 		if (!$this->user_can_read($user))
 		{
-			return static::set_error_description("User cannot read list.");
+			return static::errors_push("User cannot read list to copy.");
 		}
 		
-		if ($this->get_owner()->equals($user)) return $this;
-		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
-			$user->get_user_id(),
-			$this->get_list_id()
-		));
-		
-		$list_copy_id = $mysqli->insert_id;
-		
-		$insertion_values = array ();
-		foreach ($this->entries() as $entry)
-		{
-			if (($entry_copy = $entry->copy_for_user($user, $this)))
+		return Connection::transact(
+			function () use ($user)
 			{
-				$user_entry_copy_id = $entry_copy->get_user_entry_id();
-				array_push($insertion_values, "($list_copy_id, $user_entry_copy_id)");
+				$mysqli = Connection::get_shared_instance();
+				
+				$mysqli->query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
+					$user->get_user_id(),
+					$this->get_list_id()
+				));
+				
+				if (!!$mysqli->error)
+				{
+					return static::errors_push("List failed to copy for user: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+				}
+
+				if (!($list_copy = self::select_by_id(($list_copy_id = $mysqli->insert_id)))
+					|| !$list_copy->entries_add_from_list($this, true))
+				{
+					return static::errors_push("List failed to copy for user: " . $mysqli->error . ".", ErrorReporter::ERRCODE_UNKNOWN);
+				}
+				
+				return $list_copy;
 			}
-			else
-			{
-				return static::set_error_description("List failed to copy for user: " . Entry::unset_error_description());
-			}
-		}
-		
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES %s",
-			implode(", ", $insertion_values)
-		));
-		
-		return self::select_by_id($list_copy_id);
+		);
 	}
 	
 	public function json_assoc($privacy = null)

@@ -4,7 +4,7 @@ class Language extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
 	protected static $instances_by_id = array ();
-	protected static $error_description = null;
+	protected static $errors = null;
 	
 	public static function select_by_id($lang_id)
 	{

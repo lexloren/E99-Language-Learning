@@ -5,7 +5,7 @@ require_once "./backend/classes.php";
 
 class Annotation extends DatabaseRow
 {
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function select_by_id($annotation_id)
@@ -84,7 +84,7 @@ class Annotation extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error . ".");
+			return Annotation::errors_push("Failed to insert annotation: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		return self::select_by_id($mysqli->insert_id);

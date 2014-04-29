@@ -6,7 +6,7 @@ require_once "./backend/classes.php";
 class Grade extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($point, $desc_short = null, $desc_long = null)
@@ -76,7 +76,7 @@ class Grade extends DatabaseRow
 
 	public function delete()
 	{
-		return static::set_error_description("Failed to delete grade.");
+		return static::errors_push("Failed to delete grade.");
 	}
 
 	public function json_assoc($privacy = null)

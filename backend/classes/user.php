@@ -6,7 +6,7 @@ require_once "./backend/classes.php";
 class User extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	private static function random_alphanumeric($length)
@@ -91,31 +91,31 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			return static::set_error_description("Email must conform to the standard pattern.");
+			return static::errors_push("Email must conform to the standard pattern.");
 		}
 		
 		if (!self::validate_password($password))
 		{
-			return static::set_error_description("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			return static::errors_push("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		
 		if (!self::validate_handle($handle))
 		{
-			return static::set_error_description("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			return static::errors_push("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 
 		//  Check whether requested handle conflicts with any existing handle
 		$existing_users = self::find($handle);
 		if (count($existing_users) > 0)
 		{
-			return static::set_error_description("The requested handle is already in use.");
+			return static::errors_push("The requested handle is already in use.");
 		}
 
 		//  Check whether requested email conflicts with any existing email
 		$existing_users = self::find($email);
 		if (count($existing_users) > 0)
 		{
-			return static::set_error_description("The requested email is already in use.");
+			return static::errors_push("The requested email is already in use.");
 		}
 		
 		//  Good to go, so insert the new user
@@ -129,7 +129,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to insert user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert user: " . $mysqli->error . ".");
 		}
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -166,7 +166,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("User failed to set password: " . $mysqli->error . ".");
+			return static::errors_push("User failed to set password: " . $mysqli->error . ".");
 		}
 		
 		return $this;
@@ -185,7 +185,7 @@ class User extends DatabaseRow
 		{
 			return $status;
 		}
-		else return static::set_error_description("Failed to get user status: " . Status::unset_error_description());
+		else return static::errors_push("Failed to get user status: " . Status::errors_unset());
 	}
 	public function set_status($status)
 	{
@@ -210,7 +210,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("User failed to check password: " . $mysqli->error . ".");
+			return static::errors_push("User failed to check password: " . $mysqli->error . ".");
 		}
 		
 		return $result->num_rows === 1;
@@ -227,7 +227,7 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			return static::set_error_description("Email failed to conform to standard pattern.");
+			return static::errors_push("Email failed to conform to standard pattern.");
 		}
 		
 		if (!self::update_this($this, "users", array ("email" => $email), "user_id", $this->get_user_id()))
@@ -318,7 +318,7 @@ class User extends DatabaseRow
 	
 	public function delete()
 	{
-		return static::set_error_description("Failed to delete user.");
+		return static::errors_push("Failed to delete user.");
 	}
 	
 	public function uncache_lists()
@@ -379,7 +379,7 @@ class User extends DatabaseRow
 			
 			if (!!$mysqli->error)
 			{
-				return static::set_error_description("User failed to get lists by course id: " . $mysqli->error . ".");
+				return static::errors_push("User failed to get lists by course id: " . $mysqli->error . ".");
 			}
 			
 			$lists = array ();
@@ -414,12 +414,12 @@ class User extends DatabaseRow
 	{
 		if (!$language)
 		{
-			return static::set_error_description("Failed to add null user language.");
+			return static::errors_push("Failed to add null user language.");
 		}
 		
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if ($years === null)
@@ -428,7 +428,7 @@ class User extends DatabaseRow
 		}
 		else if (($years = intval($years, 10)) < 0)
 		{
-			return static::set_error_description("User cannot add language with negative years.");
+			return static::errors_push("User cannot add language with negative years.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -441,7 +441,7 @@ class User extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to add user language: " . $mysqli->error . ".");
+			return static::errors_push("Failed to add user language: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->languages)) array_push($this->languages, $language);
@@ -452,12 +452,12 @@ class User extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if (!$language)
 		{
-			return static::set_error_description("User cannot remove null user language.");
+			return static::errors_push("User cannot remove null user language.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -470,7 +470,7 @@ class User extends DatabaseRow
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Failed to remove user language: " . $mysqli->error . ".");
+			return static::errors_push("Failed to remove user language: " . $mysqli->error . ".");
 		}
 		
 		if (isset($this->languages)) array_drop($this->languages, $language);
@@ -481,12 +481,12 @@ class User extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if (!$language)
 		{
-			return static::set_error_description("User cannot update null user language.");
+			return static::errors_push("User cannot update null user language.");
 		}
 		
 		if ($years === null)
@@ -495,19 +495,19 @@ class User extends DatabaseRow
 		}
 		else if (($years = intval($years, 10)) < 0)
 		{
-			return static::set_error_description("User cannot set language years to negative integer.");
+			return static::errors_push("User cannot set language years to negative integer.");
 		}
 		
 		if (!in_array($language, $this->languages()))
 		{
-			return static::set_error_description("User cannot set language years for language not already associated with user.");
+			return static::errors_push("User cannot set language years for language not already associated with user.");
 		}
 			
 		$mysqli = Connection::get_shared_instance();
 		
 		$mysqli->query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_language_id()));
 		
-		if ($mysqli->error) return static::set_error_description("User Modification", "User failed to set language years: " . $mysqli->error . ".");
+		if ($mysqli->error) return static::errors_push("User Modification", "User failed to set language years: " . $mysqli->error . ".");
 		
 		return $this;
 	}
@@ -520,7 +520,7 @@ class User extends DatabaseRow
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
+			return static::errors_push("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
 		}
 		
 		$language_years_assoc = array ();

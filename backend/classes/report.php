@@ -5,25 +5,25 @@ require_once "./backend/classes.php";
 
 class Report extends ErrorReporter
 {
-	protected static $error_description = null;
+	protected static $errors = null;
 	public static function get_course_student_practice_report($course_id, $user_id)
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return static::set_error_description("Invalid course id.");
+			return static::errors_push("Invalid course id.");
 
 		$student_user = User::select_by_id($user_id);
 		if (!$student_user)
-			return static::set_error_description("Invalid student id.");
+			return static::errors_push("Invalid student id.");
 
 		$permissions = self::check_permissions($course, $session_user, $student_user);
 		
 		if (1 != $permissions)
-			return static::set_error_description("Do not have access to this information.");
+			return static::errors_push("Do not have access to this information.");
 		
 		$progress_stat = self::generate_class_progress_stat($course_id);
 		if (!$progress_stat)
@@ -39,15 +39,15 @@ class Report extends ErrorReporter
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return static::set_error_description("Invalid course id.");
+			return static::errors_push("Invalid course id.");
 
 		$permissions = self::check_permissions($course, $session_user, null);
 		if (0 == $permissions)
-			return static::set_error_description("Do not have access to this information.");
+			return static::errors_push("Do not have access to this information.");
 		
 		$students = $course->students();
 		
@@ -90,7 +90,7 @@ class Report extends ErrorReporter
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Database query failed.");
 		}
 
 		$num_user_entries = $result->num_rows;
@@ -141,7 +141,7 @@ class Report extends ErrorReporter
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Database query failed.");
 		}
 		
 		$num_units = $result->num_rows;
@@ -220,7 +220,7 @@ class Report extends ErrorReporter
 		
 		if ($mysqli->error)
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Database query failed.");
 		}
 		
 		$progress_stat = array();

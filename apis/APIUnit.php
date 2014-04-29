@@ -22,7 +22,7 @@ class APIUnit extends APIBase
 			
 			if (!($unit = Unit::insert($course->get_course_id(), $name, $timeframe, $message)))
 			{
-				Session::get()->set_error_assoc("Unit Insertion", Unit::unset_error_description());
+				Session::get()->set_error_assoc("Unit Insertion", Unit::errors_unset());
 			}
 			else
 			{
@@ -63,7 +63,7 @@ class APIUnit extends APIBase
 		{
 			if (!$unit->delete())
 			{
-				Session::get()->set_error_assoc("Unit Deletion", Unit::unset_error_description());
+				Session::get()->set_error_assoc("Unit Deletion", Unit::errors_unset());
 			}
 			else
 			{
@@ -114,7 +114,7 @@ class APIUnit extends APIBase
 				}
 			}
 			
-			self::return_updates_as_json("Unit", Unit::unset_error_description(), $updates ? $unit->json_assoc() : null);
+			self::return_updates_as_json("Unit", Unit::errors_unset(), $updates ? $unit->json_assoc() : null);
 		}
 	}
 	
@@ -140,7 +140,7 @@ class APIUnit extends APIBase
 				{
 					if (!$unit->lists_add(EntryList::select_by_id($list_id)))
 					{
-						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::unset_error_description());
+						Session::get()->set_error_assoc("Unit-Lists Addition", Unit::errors_unset());
 						return;
 					}
 				}
@@ -162,7 +162,7 @@ class APIUnit extends APIBase
 				{
 					if (!$unit->lists_remove(EntryList::select_by_id($list_id)))
 					{
-						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::unset_error_description());
+						Session::get()->set_error_assoc("Unit-Lists Removal", Unit::errors_unset());
 						return;
 					}
 				}

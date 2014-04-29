@@ -41,20 +41,20 @@ class APIBase
 		}
 		else if (!($object = $class_name::select_by_id(($id = intval($array[$id_key], 10)))))
 		{
-			Session::get()->set_error_assoc("$class_name Selection", $class_name::unset_error_description());
+			Session::get()->set_error_assoc("$class_name Selection", $class_name::errors_unset());
 		}
 		
 		return $object;
 	}
 	
-	protected static function return_updates_as_json($class_name, $error_description, $result_assoc, $result_information = null)
+	protected static function return_updates_as_json($class_name, $errors, $result_assoc, $result_information = null)
 	{
 		$error_title = "$class_name Modification";
 		if ($result_assoc)
 		{
-			if ($error_description)
+			if ($errors)
 			{
-				Session::get()->set_mixed_assoc($error_title, $error_description, $result_assoc);
+				Session::get()->set_mixed_assoc($error_title, $errors, $result_assoc);
 			}
 			else
 			{
@@ -63,9 +63,9 @@ class APIBase
 		}
 		else
 		{
-			if (!$error_description) $error_description = "No updates requested.";
+			if (!$errors) $errors = "No updates requested.";
 			
-			Session::get()->set_error_assoc($error_title, $error_description);
+			Session::get()->set_error_assoc($error_title, $errors);
 		}
 	}
 	

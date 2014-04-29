@@ -6,31 +6,31 @@ require_once "./backend/classes.php";
 class Pattern extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		$failure_message = "Failed to insert test entry pattern";
 		
 		if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
 		{
-			return static::set_error_description("$failure_message: " . Test::unset_error_description());
+			return static::errors_push("$failure_message: " . Test::errors_unset());
 		}
 		
 		if (!$test->session_user_can_write() && !($test->session_user_can_execute() && !$prompt && $score === null))
 		{
-			return static::set_error_description("$failure_message: Session user cannot edit test.");
+			return static::errors_push("$failure_message: Session user cannot edit test.");
 		}
 		
 		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), ($entry_id = intval($entry_id, 10)))))
 		{
-			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
+			return static::errors_push("$failure_message: " . Entry::errors_unset());
 		}
 		
 		$score = $score !== null ? intval($score, 10) : "NULL";
@@ -44,7 +44,7 @@ class Pattern extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		return self::select_by_id($mysqli->insert_id);
@@ -61,7 +61,7 @@ class Pattern extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("Failed to select all test entry patterns for test_entry_id = $test_entry_id:" . $mysqli->error . ".");
+			return static::errors_push("Failed to select all test entry patterns for test_entry_id = $test_entry_id:" . $mysqli->error . ".");
 		}
 		
 		$patterns = array ();
@@ -89,14 +89,14 @@ class Pattern extends CourseComponent
 		
 		if (!($test = Test::select_by_id($test_id)))
 		{
-			return static::set_error_description("$failure_message: " . Test::unset_error_description());
+			return static::errors_push("$failure_message: " . Test::errors_unset());
 		}
 		
 		$entry_id = intval($entry_id, 10);
 		
 		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), $entry_id, false)))
 		{
-			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
+			return static::errors_push("$failure_message: " . Entry::errors_unset());
 		}
 		
 		$user_entry_id = $entry->get_user_entry_id();
@@ -107,7 +107,7 @@ class Pattern extends CourseComponent
 		
 		if (!!$mysqli->error)
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
 		}
 		
 		if ($result->num_rows > 0 && ($result_assoc = $result->fetch_assoc()))
@@ -117,7 +117,7 @@ class Pattern extends CourseComponent
 		
 		if (!$insert_if_necessary)
 		{
-			return static::set_error_description("$failure_message: No pattern found!");
+			return static::errors_push("$failure_message: No pattern found!");
 		}
 		
 		return static::insert($test_id, $entry_id, $contents);
@@ -149,13 +149,13 @@ class Pattern extends CourseComponent
 			
 			if ($mysqli->error)
 			{
-				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+				return static::errors_push("$failure_message: " . $mysqli->error . ".");
 			}
 			
 			if (!($this->test = Test::from_mysql_result_assoc($result->fetch_assoc())))
 			{
 				unset($this->test);
-				return static::set_error_description("$failure_message: " . Test::unset_error_description());
+				return static::errors_push("$failure_message: " . Test::errors_unset());
 			}
 		}
 		
@@ -194,12 +194,12 @@ class Pattern extends CourseComponent
 			
 			if ($mysqli->error)
 			{
-				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+				return static::errors_push("$failure_message: " . $mysqli->error . ".");
 			}
 			
 			if (!($result_assoc = $result->fetch_assoc()))
 			{
-				return static::set_error_description("$failure_message: Failed to select user entry where test_entry_id = " . $this->get_test_entry_id() . ".");
+				return static::errors_push("$failure_message: Failed to select user entry where test_entry_id = " . $this->get_test_entry_id() . ".");
 			}
 			
 			$this->user_entry = UserEntry::select_by_user_entry_id($result_assoc["user_entry_id"]);
@@ -273,7 +273,7 @@ class Pattern extends CourseComponent
 		
 		if (!($course = Course::select($unit_courses, "test_entry_id", $this->get_test_entry_id())))
 		{
-			return static::set_error_description("Failed to get course for test entry pattern: " . Course::unset_error_description());
+			return static::errors_push("Failed to get course for test entry pattern: " . Course::errors_unset());
 		}
 		
 		return $course;

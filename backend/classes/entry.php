@@ -7,7 +7,7 @@ class Entry extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
 	protected static $instances_by_id = array ();
-	protected static $error_description = null;
+	protected static $errors = null;
 	
 	public static function select_by_id($entry_id, $promote_automatically = true)
 	{
@@ -104,13 +104,13 @@ class Entry extends DatabaseRow
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = static::get_error_description();
+			$errors = static::$errors;
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
 				return $user_entry->annotations();
 			}
-			static::unset_error_description();
-			static::set_error_description($error_description);
+			static::errors_unset();
+			static::$errors = $errors;
 		}
 		
 		return array ();
@@ -135,13 +135,13 @@ class Entry extends DatabaseRow
 			&& !!($session_user = Session::get()->get_user())
 			)
 		{
-			$error_description = static::get_error_description();
+			$errors = static::$errors;
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
 				return $user_entry->revert();
 			}
-			static::unset_error_description();
-			static::set_error_description($error_description);
+			static::errors_unset();
+			static::$errors = $errors;
 		}
 		
 		return $this;
@@ -205,7 +205,7 @@ class Entry extends DatabaseRow
 	{
 		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return self::set_error_description("Session user has not reauthenticated.");
+			return self::errors_push("Session user has not reauthenticated.");
 		}
 		
 		return ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false))
@@ -242,7 +242,7 @@ class Entry extends DatabaseRow
 	{
 		if (!Session::get() || !($session_user = Session::get()->get_user()))
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		return $this->copy_for_user($session_user);
@@ -250,7 +250,7 @@ class Entry extends DatabaseRow
 	
 	public function copy_for_user($user)
 	{
-		if (!$user) return static::set_error_description("Failed to copy entry for null user.");
+		if (!$user) return static::errors_push("Failed to copy entry for null user.");
 		
 		return UserEntry::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id());
 	}
@@ -315,11 +315,11 @@ class UserEntry extends Entry
 		
 		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error . ".");
+		if (!!$mysqli->error) return static::errors_push("Failed to select from $table: " . $mysqli->error . ".");
 		
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Failed to select any rows from $table where $column = $id.");
+			return static::errors_push("Failed to select any rows from $table where $column = $id.");
 		}
 		
 		return self::select_by_user_id_entry_id($result_assoc["user_id"], $result_assoc["entry_id"]);
@@ -355,11 +355,16 @@ class UserEntry extends Entry
 		{
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
-			$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
-					"SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d",
+			$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
+					"SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 				$user_id,
 				$entry_id
 			));
+			
+			if ($mysqli->error)
+			{
+				return static::errors_push("Failed to insert user entry: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			}
 		}
 		
 		$query = sprintf("SELECT * FROM (SELECT entry_id, %s FROM %s WHERE entry_id = %d) AS reference LEFT JOIN user_entries USING (entry_id) WHERE user_id = %d",
@@ -374,7 +379,7 @@ class UserEntry extends Entry
 		if (!$result || !($result_assoc = $result->fetch_assoc()))
 		{
 			return $insert_if_necessary
-				? static::set_error_description("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " . (!!$mysqli->error ? $mysqli->error : $query))
+				? static::errors_push("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " . (!!$mysqli->error ? $mysqli->error : $query))
 				: null;
 		}
 		
@@ -516,7 +521,7 @@ class UserEntry extends Entry
 		
 		if (!$this->get_entry())
 		{
-			return static::set_error_description("$failure_message: No dictionary entry associated with user entry where user_entry_id = " . $this->get_user_entry_id());
+			return static::errors_push("$failure_message: No dictionary entry associated with user entry where user_entry_id = " . $this->get_user_entry_id());
 		}
 		
 		$succeeded = true;
@@ -526,7 +531,7 @@ class UserEntry extends Entry
 		$pronunciations = $this->get_entry()->pronunciations();
 		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
 		
-		return $succeeded ? $this : static::set_error_description("$failure_message: " . static::unset_error_description());
+		return $succeeded ? $this : static::errors_push("$failure_message: " . static::errors_unset());
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -565,11 +570,11 @@ class UserEntry extends Entry
 	
 	/*public function annotations_add($annotation_contents)
 	{
-		self::set_error_description("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
+		self::errors_push("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
 		
 		if (!$this->session_user_can_read())
 		{
-			return static::set_error_description("Session user cannot read entry.");
+			return static::errors_push("Session user cannot read entry.");
 		}
 		
 		if (($entry = $this->copy_for_session_user()))
@@ -580,7 +585,7 @@ class UserEntry extends Entry
 				array_push($annotations, $annotation);
 				return $entry;
 			}
-			return static::set_error_description("Entry failed to add annotation: " . Annotation::unset_error_description());
+			return static::errors_push("Entry failed to add annotation: " . Annotation::errors_unset());
 		}
 		
 		return null;
@@ -588,21 +593,21 @@ class UserEntry extends Entry
 	
 	public function annotations_remove($annotation)
 	{
-		self::set_error_description("Called deprecated method UserEntry.annotations_remove() (use instead Annotation.delete()).");
+		self::errors_push("Called deprecated method UserEntry.annotations_remove() (use instead Annotation.delete()).");
 		
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not owner of user entry.");
+			return static::errors_push("Session user is not owner of user entry.");
 		}
 		
 		if ($annotation->get_user_entry_id() !== $this->get_user_entry_id())
 		{
-			return static::set_error_description("User entry is not associated with annotation.");
+			return static::errors_push("User entry is not associated with annotation.");
 		}
 		
 		if (!$annotation->delete())
 		{
-			return static::set_error_description("Entry failed to remove annotation: " . Annotation::unset_error_description());
+			return static::errors_push("Entry failed to remove annotation: " . Annotation::errors_unset());
 		}
 		
 		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
@@ -650,7 +655,7 @@ class UserEntry extends Entry
 			if ($entry->get_user_entry_id() === $this->get_user_entry_id())
 			{
 				//  Unexpected error
-				EntryList::set_error_description("List whose list_id = " . $list->get_list_id() . " appears to contain a duplicate UserEntry whose user_entry_id = " . $this->get_user_entry_id());
+				EntryList::errors_push("List whose list_id = " . $list->get_list_id() . " appears to contain a duplicate UserEntry whose user_entry_id = " . $this->get_user_entry_id());
 				return true;
 			}
 		}
@@ -662,14 +667,14 @@ class UserEntry extends Entry
 	{
 		if (!$user)
 		{
-			return static::set_error_description("Failed to copy entry for null user.");
+			return static::errors_push("Failed to copy entry for null user.");
 		}
 		
 		if ($this->user_is_owner($user)) return $this;
 		
 		if (!$this->user_can_read($user, $hint))
 		{
-			return static::set_error_description("User cannot read user entry to copy.");
+			return static::errors_push("User cannot read user entry to copy.");
 		}
 		
 		$mysqli = Connection::get_shared_instance();
@@ -689,7 +694,7 @@ class UserEntry extends Entry
 		$failure_message = "Failed to update repetition details";
 		if (!($user_entry = $this->copy_for_session_user()))
 		{
-			return static::set_error_description("$failure_message: " . self::unset_error_description());
+			return static::errors_push("$failure_message: " . self::errors_unset());
 		}
 		
 		$user_entry_id = $user_entry->get_user_entry_id();
@@ -716,7 +721,7 @@ class UserEntry extends Entry
 			"WHERE user_entry_id = $user_entry_id"
 			))
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
 		}
 
 		$user_entry->interval = $new_interval;
