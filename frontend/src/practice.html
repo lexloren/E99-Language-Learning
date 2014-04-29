@@ -15,13 +15,6 @@
 		.flashcard {
 			font-size: 24px;
 			text-align: center;
-			width: 500px;
-		}
-		.translation {
-			width: 500px;
-		}
-		hr {
-			border-color: #333333; 
 		}
 	</style>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -54,7 +47,9 @@
 	<img src="images/ajax-loader.gif" id="loader-show-lists">
 	<div class="form-group"id="deck-selection-form">
 	</div>
-  <h4>Show on side 1:</h4>
+	<div class="row">
+<div class="form-group col-md-2" id="side1">
+  <h4>Question:</h4>
   <div class="radio">
   <label>
     <input type="radio" name="side1Radios" id="side1-word" value="showword" checked>
@@ -73,51 +68,68 @@
     Translations
   </label>
 </div>
-  <div id="side2-form">
-    <h4>Show on side 2:</h4>
-    <div class="checkbox">
-    <label>
-      <input type="checkbox" id="side2-word"> Words
-    </label>
-  </div>
+</div>
+<div class="form-group col-md-2" id="side2">
+  <h4>Answer:</h4>
+  <div class="radio">
+  <label>
+    <input type="radio" name="side2Radios" id="side2-word" value="showword" checked>
+    Words
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side2Radios" id="side2-pronounce" value="showpro">
+    Pronunciations
+  </label>
+</div>
+<div class="radio">
+  <label>
+    <input type="radio" name="side2Radios" id="side2-trans" value="showtrans">
+    Translations
+  </label>
+</div>
+</div>
+<div class="col-md-2">
+  <h4>Show additional word info?:</h4>
   <div class="checkbox">
     <label>
-      <input type="checkbox" id="side2-pronounce"> Pronunciations
+      <input type="checkbox" id="side3"> Show
     </label>
-  </div>
-  <div class="checkbox">
-    <label>
-      <input type="checkbox" id="side2-trans"> Translations
-    </label>
-  </div>
-  </div>
-  <button type="submit" class="btn btn-primary" id="get-cards">Get Cards</button>
+</div>
+<p class="help-block">This is the option you have not selected to practice with.</p>
+</div>
+<div class="col-md-2">
+  <h4>Number of words to practice:</h4>
+  <input type="text" class="form-control" id="numCards" value="50">
+<p class="help-block">Xenogloss will automatically choose the words that you need the most help with.</p>
+</div>
+</div>
+  <button type="submit" class="btn btn-primary" id="get-cards">Learn</button>
 </form>
 </div>
 	
 	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically. -->
-		<div align="center" id="loader-get-cards"><img src="images/ajax-loader.gif"></div>
 		<div id="flashcard-container">
-		<div>
-		<h4>Test your knowledge:</h4>
+		<div align="center" id="loader-get-cards"><img src="images/ajax-loader.gif"></div>
+		<div class="row">
+			<div class="col-md-5">
+			<p>Question:</p>
+			<div class="panel panel-default flashcard">
+			<div class="panel-body">
+				<div id="flashcard-side1">Word</div>
+			</div>
+			</div>
+			<p>Answer:</p>
 			<div class="panel panel-default flashcard" id="flashcard-word">
 			<div class="panel-body">
-				<div id="flashcard-side1"></div>
-				<div id="flashcard-2a"></div>
-				<div id="flashcard-2b"></div>
-				<div><button type="button" class="btn btn-primary" id="flashcard-flip">Flip!</button></div>
+				<div id="flashcard-2a">Translation</div>
+				<div><button type="button" class="btn btn-lg btn-primary" id="flashcard-flip">?</button></div>
 			</div>
 			</div>
-			<div class="alert alert-info translation" id="translation-panel">
-			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
-			<div align="center" id="loader-get-trans"><img src="images/ajax-loader.gif"></div>
-				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
-			</div>
-		</div>
-		
-		<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
+			<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
 		<div id="card-followup-container">
-		<h4>Rate your knowledge to continue:</h4>
+		<p>Click a star or enter a number 1-5 to rate your knowledge and continue:</p>
 		<div class="btn-group">
 			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
@@ -125,9 +137,25 @@
 			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
 		</div>
-		<br/>
-		<br/>
-		<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>
+		</div>
+			</div>
+			<div id="flashcard-3" class="col-md-5">
+			<p>Additional Info: </p>
+			<div class="alert alert-info flashcard">
+			<div id="flashcard-2b">Pronounciation</div>
+			</div>
+			</div>
+			<div class="col-md-7">
+			<hr/>
+			<div class="alert alert-info translation" id="translation-panel" >
+				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
+			</div>
+			</div>
+		</div>		
+		<div class="row">
+			<div class="col-md-offset-5">
+			<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>
+			</div>
 		</div>
 	</div>
 	

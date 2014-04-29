@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+    <link href="css/starter-template.css" rel="stylesheet">
+	<style>
+		.flashcard {
+			font-size: 24px;
+			text-align: center;
+
+		}
+	</style>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+	    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	<script src="../tests/resources/jquery.mockjax.js"></script>
+	<script>
+
+var URL = "http://cscie99.fictio.us/";
+var wordList = [];
+	
+var listsURL = URL + 'user_lists.php';
+var practiceURL = URL + 'user_practice.php';
+var dictionaryURL = URL + 'entry_find.php';
+
+$.mockjax({
+  url: practiceURL,
+  responseText: {
+	"isError":false, 
+	"errorTitle":null,
+	"errorDescription":null,
+	"result":[
+	{
+		"entryId":12003,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"(n) toughness (of a material)",
+			"jp":"\u3058\u3093\u6027"
+		},
+		"pronuncations":{
+			"jp":"\u3058\u3093\u305b\u3044"
+		}
+	},
+	{
+		"entryId":28,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"fastening",
+			"jp":"\u3006"
+		},
+		"pronuncations":{
+			"jp":"\u3057\u3081"
+		}
+	},
+	{
+		"entryId":50234,
+		"languages":["en","jp"],
+		"owner":{
+			"userId":6,
+			"isSessionUser":true,
+			"handle":"practitioner",
+			"email":"lloren@gmail.com",
+			"nameGiven":"","nameFamily":""
+		},
+		"words":{
+			"en":"(n) (comp) Gopher",
+			"jp":"\u30b4\u30fc\u30d5\u30a1\u30fc"
+		},
+		"pronuncations":{
+			"jp":null
+		}
+	}],"resultInformation":null}
+});
+
+$.mockjax({
+  url: dictionaryURL,
+  responseText: {"isError":false,"errorTitle":null,"errorDescription":null,"result":[{"entryId":840521,"languages":["en","jp"],"words":{"en":"melt","jp":"\u878d"},"pronuncations":{"jp":"rong2 \/ \u30e6\u30a6 \/ \u3068.\u3051\u308b \/ \u3068.\u304b\u3059"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":840520,"languages":["en","jp"],"words":{"en":"dissolve","jp":"\u878d"},"pronuncations":{"jp":"rong2 \/ \u30e6\u30a6 \/ \u3068.\u3051\u308b \/ \u3068.\u304b\u3059"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421001,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u901a"},"pronuncations":{"jp":"\u3086\u3046\u305a\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420978,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u5408"},"pronuncations":{"jp":"\u3086\u3046\u3054\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420983,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u8cc7"},"pronuncations":{"jp":"\u3086\u3046\u3057"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421048,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u548c"},"pronuncations":{"jp":"\u3086\u3046\u308f"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":174529,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u91d1\u878d"},"pronuncations":{"jp":"\u304d\u3093\u3086\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420982,"languages":["en","jp"],"words":{"en":"loan","jp":"\u878d\u8cc7"},"pronuncations":{"jp":"\u3086\u3046\u3057"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420974,"languages":["en","jp"],"words":{"en":"fusion","jp":"\u878d\u5408"},"pronuncations":{"jp":"\u3086\u3046\u3054\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":423412,"languages":["en","jp"],"words":{"en":"fusion","jp":"\u7194\u878d"},"pronuncations":{"jp":"\u3088\u3046\u3086\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":423377,"languages":["en","jp"],"words":{"en":"fusion","jp":"\u6eb6\u878d"},"pronuncations":{"jp":"\u3088\u3046\u3086\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421009,"languages":["en","jp"],"words":{"en":"finance","jp":"\u878d\u901a"},"pronuncations":{"jp":"\u3086\u305a"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420977,"languages":["en","jp"],"words":{"en":"uniting","jp":"\u878d\u5408"},"pronuncations":{"jp":"\u3086\u3046\u3054\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421015,"languages":["en","jp"],"words":{"en":"finance","jp":"\u878d\u901a"},"pronuncations":{"jp":"\u3086\u305a\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421003,"languages":["en","jp"],"words":{"en":"finance","jp":"\u878d\u901a"},"pronuncations":{"jp":"\u3086\u3046\u3065\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}}],"resultInformation":{"pageSize":15,"pageNumber":1,"pagesCount":17,"entriesFoundCount":255}} 
+});
+
+/* end mockjax */
+
+
+function navbar() {
+	$('#navbar').load('navbar.html');
+	$('#nav-signout').on('click', function(event) {
+		event.preventDefault();
+		signout();
+	});
+}
+
+function pageSetup() {
+	navbar();
+	statusBoxes();
+}
+
+function statusBoxes() {
+	$('#doc-body').prepend(
+		'<div id="success" class="alert alert-success">' + 
+		'<button type="button" class="close success-close" aria-hidden="true">&times;</button>' + 
+		'<div id="success-text"></div>' +
+		'</div>' + 
+		'<div id="failure" class="alert alert-danger">' + 
+		'<button type="button" class="close failure-close"  aria-hidden="true">&times;</button>' + 
+		'<div id="failure-text"></div>' +
+		'</div>');
+	$('#success').hide();
+    $('#failure').hide();
+	$(document).on('click', '.success-close', function () {
+		$('#success').hide();
+	});
+	$(document).on('click', '.failure-close', function () {
+		$('#failure').hide();
+	});	
+}
+
+function successMessage(message) {
+	$('#success-text').html(message);
+	$('#success').show();
+}
+
+function failureMessage(message) {
+	$('#failure-text').html(message);
+	$('#failure').show();
+}
+
+$( document ).ready(function() {
+	pageSetup();
+	getCards();
+
+		/* rating buttons */
+	$(".rating-button").click(function(event) {
+		event.preventDefault();
+		send_rating(this.value);
+		shiftCards();
+		nextCard();
+	});
+	
+	/* char/word lookup */
+	$(document).on('click', '.char-of-word', function () {
+		get_dictionary(this.innerHTML, 1);
+	});
+		
+	/* hide lookup panel */
+	$(document).on('click', '.dictionary-close', function () {
+		$('#translation-panel').hide();
+	});	
+	
+	/* flip flashcard */
+	$('#flashcard-flip').click(function(event) {
+		event.preventDefault();
+		flip_card();
+	});
+	
+});
+
+/* split the word into individual characters */
+function getWord(word) {
+	var myarray = word.split('');
+	var newWord = '';
+	$.each(myarray, function() {
+		newWord = newWord.concat('<span class="char-of-word">' + this + '</span>');
+	});
+	return newWord;
+}
+
+function getCards() {
+	
+	/* have all appropriate boxes been checked? */
+	var currentURL = URL + 'user_practice.php';
+	$.getJSON( currentURL, {
+		list_ids: 1,
+		entries_count: 50
+		}, function( data ) {
+		if (data.isError === true) {
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
+		} else {
+			wordList = data.result;
+			nextCard();
+		}
+		$("#loader-get-cards").hide();
+		$('#flashcard-container').show();
+		$('#card-followup-container').show();
+	})
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	});
+}
+
+function shiftCards() {
+	wordList.shift();
+}
+
+function get_dictionary(word, page) {
+	$('#translation-panel-inner').html('');
+	$('#translation-panel').show();
+	
+	var currentURL = URL + 'entry_find.php';
+	var langcodes = wordList[0].languages[0] + ',' + wordList[0].languages[1];
+	$.getJSON( currentURL, {
+		query : word,
+		langs : langcodes,
+		page_size : 5,
+		page_num : page
+	}, function( data ) {
+		if (data.isError === true) {
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
+		} else {
+			$.each( data.result, function() {
+			$('#translation-panel-inner').append('<div>' + this.words[this.languages[1]] + ' : ' + this.words[this.languages[0]] +
+				' : ' + this.pronuncations[this.languages[1]] + '</div>');
+			});
+			$('#translation-panel-inner').append('<div><a href="#" id="next_dict">[next page]</a></div>');
+			$('#next_dict').on('click', function (event) {
+				event.preventDefault();
+				get_dictionary(word, page + 1);
+			});
+		}
+	})
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+	});
+}
+
+function nextCard() {
+	if (wordList.length === 0) {
+		practice_complete();
+	} else {
+		$('#translation-panel-inner').html('Want to know more? Click on a character to find related words.');
+		$("#loader-get-trans").hide();
+		
+		var word = getWord(wordList[0].words[wordList[0].languages[1]]);
+		var pronun = wordList[0].pronuncations[wordList[0].languages[1]];
+		var trans = wordList[0].words[wordList[0].languages[0]];
+		var secondanswer = false;
+		
+		/* populate side 1 */
+		populate_side1(word);
+
+		/* populate side 2 */
+		populate_2a(trans);
+		populate_2b(pronun);
+		$('#flashcard-side1').show();
+		$('#flashcard-2a').hide();
+		$('#flashcard-flip').show();
+	}
+}
+
+function populate_side1(string) {
+	$('#flashcard-side1').html(string);
+}
+
+function populate_2a(string) {
+	$('#flashcard-2a').html(string);
+	$('#flashcard-2b').html('');
+}
+
+function populate_2b(string) {
+	$('#flashcard-2b').html('');
+	$('#flashcard-2b').append(string);
+}
+
+function flip_card() {
+	$('#flashcard-2a').show();
+	$('#flashcard-flip').hide();
+}	
+
+function practice_complete() {
+	$("#success").html('Practice complete!');
+	$("#success").show();
+}
+
+/* send student ratings to the backend */
+function send_rating(value) {
+	return;
+}	
+	</script>
+	
+  </head>
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div id="navbar"></div>
+	<br/>
+    <div class="container" role="main" id="doc-body">
+
+	<!-- The "introductory section, where  student selects which decks they would like to practice. -->
+
+	
+	<!-- This div contains the actual flashcards. Individual cards should be populated dynamically. -->
+		<div id="flashcard-container">
+		<div class="row">
+			<div class="col-md-5">
+			<div class="panel panel-default flashcard">
+			<div class="panel-body">
+				<div id="flashcard-side1">Word</div>
+			</div>
+			</div>
+			<div class="panel panel-default flashcard" id="flashcard-word">
+			<div class="panel-body">
+				<div id="flashcard-2a">Translation</div>
+				<div><button type="button" class="btn btn-lg btn-primary" id="flashcard-flip">?</button></div>
+			</div>
+			</div>
+			<div class="alert alert-info flashcard">
+			<div id="flashcard-2b">Pronounciation</div>
+			</div>
+			</div>
+			<div class="alert alert-info translation col-md-7" id="translation-panel" >
+			<button type="button" class="close dictionary-close"  aria-hidden="true">&times;</button>
+				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
+			</div>
+		</div>
+		<div id="card-followup-container">
+		<h4>Rate your knowledge to continue:</h4>
+		<div class="btn-group">
+			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="3" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
+			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
+		</div>
+		<br/>
+		<br/>
+		<button type="button" class="btn btn-default btn-lg" id="button-new-deck">New Deck</button>
+		</div>
+	</div>
+	
+  </body>
+</html>

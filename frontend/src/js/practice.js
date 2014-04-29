@@ -4,8 +4,20 @@
  */
 
 var URL = "http://cscie99.fictio.us/";
-var cardFrontUp = true;
 var wordList = [];
+var qword = false;
+var qpronun = false;
+var qtrans = false;
+var aword = false;
+var apronun = false;
+var atrans = false;
+var iword = false;
+var ipronun = false;
+var itrans = false;
+
+var listsURL = URL + 'user_lists.php';
+var practiceURL = URL + 'user_practice.php';
+var dictionaryURL = URL + 'entry_find.php';
 
 /* prepare */
 
@@ -38,18 +50,11 @@ function handleClicks() {
 	$(".rating-button").click(function(event) {
 		event.preventDefault();
 		send_rating(this.value);
-		shiftCards();
-		nextCard();
 	});
 	
 	/* char/word lookup */
 	$(document).on('click', '.char-of-word', function () {
 		get_dictionary(this.innerHTML, 1);
-	});
-		
-	/* hide lookup panel */
-	$(document).on('click', '.dictionary-close', function () {
-		$('#translation-panel').hide();
 	});	
 	
 	/* flip flashcard */
@@ -63,11 +68,32 @@ function handleClicks() {
 		event.preventDefault();
 		setupDoc();
 	});
+	
+	$(document).keypress(function(e) {
+		if(e.which == 13) {
+			flip_card();
+		}
+		if(e.which == 49) {
+			send_rating(1);
+		}
+		if(e.which == 50) {
+			send_rating(2);
+		}
+		if(e.which == 51) {
+			send_rating(3);
+		}
+		if(e.which == 52) {
+			send_rating(4);
+		}
+		if(e.which == 53) {
+			send_rating(5);
+		}
+	});
 }
-
 
 /* split the word into individual characters */
 function getWord(word) {
+	if (word == null) return null;
 	var myarray = word.split('');
 	var newWord = '';
 	$.each(myarray, function() {
@@ -143,42 +169,111 @@ function get_dictionary(word, page) {
 	});
 }
 
+/* returns true if options are ok, false if problem */
+function readOptions() {
+	qword = false;
+	qpronun = false;
+	qtrans = false;
+	aword = false;
+	apronun = false;
+	atrans = false;
+	iword = false;
+	ipronun = false;
+	itrans = false;
+	
+	var showThird = $('#side3').prop('checked');
+	/* get checked options, removing invalid ones */
+	if ($('#side1-word').prop('checked') === true) {
+		$('#side2-word').removeAttr('checked');
+		qword = true;
+	}
+	else if ($('#side1-pronounce').prop('checked') === true) {
+		$('#side2-pronounce').removeAttr('checked');
+		qpronun = true;
+	}
+	else if ($('#side1-trans').prop('checked') === true) {
+		$('#side2-trans').removeAttr('checked');
+		qtrans = true;
+	}	
+	if ($('#side2-word').prop('checked') === true) {
+		aword = true;
+	}
+	else if ($('#side2-pronounce').prop('checked') === true) {
+		apronun = true;
+	}	
+	else if (($('#side2-trans').prop('checked') === true)) {
+		atrans = true;
+	}
+	
+	/* get mode from selection */
+	if (qword) {
+		if (apronun) {
+			mode = 2;
+			if (showThird) {
+				itrans = true;
+			}
+		}
+		else if (atrans) {
+			mode = 0;
+			if (showThird) {
+				ipronun = true;
+			}
+		}
+	} else if (qpronun) {
+		if (aword) {
+			mode = 4;
+			if (showThird) {
+				itrans = true;
+			}
+		}
+		else if (atrans) {
+			mode = 3;
+			if (showThird) {
+				iword = true;
+			}
+		}
+	} else if (qtrans) {
+		if (apronun) {
+			mode = 1;
+			if (showThird) {
+				iword = true;
+			}
+		}
+		else if (aword) {
+			mode = 5;
+			if (showThird) {
+				ipronun = true;
+			}
+		}
+	} else {
+		return false;
+	}
+	return true;
+}
+
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
 	
-	/* have all appropriate boxes been checked? */
-	var side1Ok = false;
-	var side2Ok = false;
-	if ($('#side1-word').prop('checked') === true) {
-		side1Ok = true;
-		$('#side2-word').removeAttr('checked');
+	if ( readOptions() == false) {
+		failureMessage('Please select a question and answer.');
 	}
-	else if ($('#side1-pronounce').prop('checked') === true) {
-		side1Ok = true;
-		$('#side2-pronounce').removeAttr('checked');
-		$('#side2-pronounce').removeAttr('checked');
-	}
-	else if ($('#side1-trans').prop('checked') === true) {
-		side1Ok = true;
-		$('#side2-trans').removeAttr('checked');
-	}	
-	if (($('#side2-word').prop('checked') === true) || 
-		(($('#side2-pronounce').prop('checked') === true)) || 
-		(($('#side2-trans').prop('checked') === true))) {
-			side2Ok = true;
-	}
-	if ((side1Ok === false) || (side2Ok === false)) {
-			failureMessage('Please ensure that at least one box is checked for each side of the flshcard.');
-			return;
-	}
-	
-	$('#deck-selection-container').hide();
-	$("#loader-get-cards").show();
-
 	var requestedDecks = [];
 	$("input[name='wordlist'][type='checkbox']:checked").each(function() {
 		requestedDecks.push(this.id);
 	});
+	if (requestedDecks.length == 0) {
+		failureMessage('Please select at least one deck.');
+			return;
+	}	
+	var cardsReturned = $('#numCards').val();
+	if  (!($.isNumeric(cardsReturned)) || (cardsReturned < 1)) {
+		failureMessage('Invalid number of words.');
+		return;
+	}
+	
+	$('#deck-selection-container').hide();
+	$("#loader-get-cards").show();
+	
 	var decks = '';
 	for (var i = 0; i < requestedDecks.length - 1; i++) {
 		decks = decks + requestedDecks[i] + ',';
@@ -187,105 +282,83 @@ function getCards() {
 	var currentURL = URL + 'user_practice.php';
 	$.getJSON( currentURL, {
 		list_ids: decks,
-		entries_count: 50
+		entries_count: cardsReturned
 		}, function( data ) {
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
 			wordList = data.result;
-			nextCard();
+			$('#flashcard-container').show();
+			$('#card-followup-container').hide();
+			nextCard();	
 		}
 		$("#loader-get-cards").hide();
-		$('#flashcard-container').show();
-		$('#card-followup-container').show();
 	})
 	.fail(function(error) {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 	});
 }
 
-/* use the first card to populate the "flashcard view", using view preferences that the user specified earlier */
+/* use the next card to populate the "flashcard view", using view preferences that the user specified earlier */
 function nextCard() {
+	$('#card-followup-container').hide();
 	if (wordList.length === 0) {
 		practice_complete();
 	} else {
-		$('#translation-panel-inner').html('Want to know more? Click on a character to find related words.');
-		$("#loader-get-trans").hide();
-		
 		var word = getWord(wordList[0].words[wordList[0].languages[1]]);
-		var pronun = wordList[0].pronuncations[wordList[0].languages[1]];
-		var trans = wordList[0].words[wordList[0].languages[0]];
-		var secondanswer = false;
+		var pronun = getWord(wordList[0].pronuncations[wordList[0].languages[1]]);
+		var trans = getWord(wordList[0].words[wordList[0].languages[0]]);
 		
 		/* populate side 1 */
-		if ($('#side1-word').prop('checked') === true) {
-			populate_side1(word);
-			$('#side1-word').removeAttr('checked');
+		if (qword) {
+			$('#flashcard-side1').html(word);
 		}
-		else if ($('#side1-pronounce').prop('checked') === true) {
-			populate_side1(pronun);
-			$('#side1-pronounce').removeAttr('checked');
+		else if (qpronun) {
+			$('#flashcard-side1').html(pronun);
 		}
-		else if ($('#side1-trans').prop('checked') === true) {
-			populate_side1(trans);
-			$('#side1-trans').removeAttr('checked');
+		else if (qtrans) {
+			$('#flashcard-side1').html(trans);
 		}
 		
 		/* populate side 2 */
-		if ($('#side2-word').prop('checked') === true) {
-			populate_2a(word);
-			secondanswer = true;
+		if (aword) {
+			$('#flashcard-2a').html(word);
 		}
-		if (($('#side2-pronounce').prop('checked') === true) && (pronun != null)) {
-			if (secondanswer != true) {
-				populate_2a(pronun);
-				secondanswer = true;
-			} else {
-				populate_2b(pronun);
-			}
+		if (apronun) {
+			$('#flashcard-2a').html(pronun);
 		}
-		if (($('#side2-trans').prop('checked') === true) && (trans != null)) {
-			if (secondanswer != true) {
-				populate_2a(trans);
-			} else {
-				populate_2b(trans);
-			}
+		if (atrans) {
+			$('#flashcard-2a').html(trans);
+		}
+
+		/* populate side 3 */
+		if (iword) {
+			$('#flashcard-2b').html(word);
+		}
+		if (ipronun) {
+			$('#flashcard-2b').html(pronun);
+		}
+		if (itrans) {
+			$('#flashcard-2b').html(trans);
 		}
 		
 		$('#flashcard-side1').show();
+		$('#flashcard-flip').show();
 		$('#flashcard-2a').hide();
-		$('#flashcard-2b').hide();
-		cardFrontUp = true;
+		$('#flashcard-3').hide();
 	}
-}
-
-function populate_side1(string) {
-	$('#flashcard-side1').html(string);
-}
-
-function populate_2a(string) {
-	$('#flashcard-2a').html(string);
-	$('#flashcard-2b').html('');
-}
-
-function populate_2b(string) {
-	$('#flashcard-2b').html('<hr/>');
-	$('#flashcard-2b').append(string);
 }
 
 function flip_card() {
-	if (cardFrontUp == true) {
-		$('#flashcard-side1').hide();
-		$('#flashcard-2a').show();
+	$('#flashcard-2a').show();
+	if ($('#side3').prop('checked')) {
 		$('#flashcard-2b').show();
-		cardFrontUp = false;
-	} else { 
-		$('#flashcard-side1').show();
-		$('#flashcard-2a').hide();
-		$('#flashcard-2b').hide();
-		cardFrontUp = true;
+		$('#flashcard-3').show();
 	}
+	$('#card-followup-container').show();
+	$('#flashcard-flip').hide();
+	
 }
 
 function practice_complete() {
@@ -299,6 +372,8 @@ function practice_complete() {
 
 /* send student ratings to the backend */
 function send_rating(value) {
+	shiftCards();
+	nextCard();
 	var currentURL = URL + 'user_practice_response.php';
 	$.post(currentURL, 
         { 'entry_id' : wordList[0].entryId, 'correctness' : value }, function(data) {
