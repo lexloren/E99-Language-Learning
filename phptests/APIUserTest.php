@@ -324,12 +324,48 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->find($this->db->emails[0], true);
 	}
 	
+	public function test_select()
+	{
+		//Session not set
+		$this->obj->select();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->select();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		$this->assertEquals($result["userId"], $this->db->user_ids[0]);
+	}
+	
+	public function test_languages()
+	{
+		//Session not set
+		$this->obj->languages();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		$this->assertCount(0, $result);
+	}
+	
 	public function testUpdate()
 	{
 		$_POST["email"] = "newemail1@domain.com";
 		$_POST["name_given"] = "NewGiven";
 		$_POST["name_family"] = "NewFamily";
 		$_POST["email"] = "newemail1@domain.com";
+		
+		$_POST["langs"] = implode(",", array("en=5", "cn=2"));
 
 		//Session not set
 		$this->obj->update();
@@ -351,6 +387,99 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($result["email"], $_POST["email"]);
 		$this->assertEquals($result["nameGiven"], $_POST["name_given"]);
 		$this->assertEquals($result["nameFamily"], $_POST["name_family"]);
+		
+		$langYears = $result["languageYears"];
+		$this->assertCount(2, $langYears);
+		
+		$this->assertTrue(array_key_exists("en", $langYears[0]) || array_key_exists("en", $langYears[1]));
+		$this->assertTrue(array_key_exists("cn", $langYears[0]) || array_key_exists("cn", $langYears[1]));
+		
+		$langYearEN = $langYears[0];
+		$langYearCN = $langYears[1];
+
+		if (!array_key_exists("en", $langYearEN))
+		{
+			$langYearEN = $langYears[1];
+			$langYearCN = $langYears[0];
+		}
+
+		$this->assertEquals($langYearEN["en"], 5);
+		$this->assertEquals($langYearCN["cn"], 2);
+		
+		//print_r($result);
+	}
+	
+	public function test_languages_add()
+	{
+		//No handle set
+		$_POST["langs"] = implode(",", array(TestDB::$lang_code_0, TestDB::$lang_code_1));
+		$this->obj->languages_add();
+		$this->assertTrue(Session::get()->has_error());
+
+		//handle set, correct langs
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages_add();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		
+		$langYears = $result["languageYears"];
+		$this->assertCount(2, $langYears);
+		$this->assertTrue(array_key_exists(TestDB::$lang_code_0, $langYears[0]) || array_key_exists(TestDB::$lang_code_0, $langYears[1]));
+		$this->assertTrue(array_key_exists(TestDB::$lang_code_1, $langYears[0]) || array_key_exists(TestDB::$lang_code_1, $langYears[1]));
+	}
+	
+	public function test_languages_remove()
+	{
+		//No handle set
+		$_POST["langs"] = implode(",", array(TestDB::$lang_code_0, TestDB::$lang_code_1));
+		$this->obj->languages_remove();
+		$this->assertTrue(Session::get()->has_error());
+
+		//handle set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages_remove();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		
+		//$langYears = $result["languageYears"];
+		//$this->assertCount(1, $langYears);
+		//$this->assertTrue(array_key_exists(TestDB::$lang_code_0, $langYears[0]));
+	}
+	
+	public function test_courses()
+	{
+		$this->obj->courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->courses();
+		$this->assertFalse(Session::get()->has_error());
+	}
+	
+	public function test_student_courses()
+	{
+		$this->obj->student_courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->student_courses();
+		$this->assertFalse(Session::get()->has_error());
+	}
+
+	public function test_instructor_courses()
+	{
+		$this->obj->instructor_courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->instructor_courses();
+		$this->assertFalse(Session::get()->has_error());
 	}
 }
 

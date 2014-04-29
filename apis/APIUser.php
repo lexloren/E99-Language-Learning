@@ -180,13 +180,14 @@ class APIUser extends APIBase
 		
 		if (isset($_POST["langs"]))
 		{
-			$lang_codes = explode(",", $_POST["langs"]);
+			$lang_code_years = explode(",", $_POST["langs"]);
 			
 			$language_years = array ();
-			foreach ($lang_codes as $lang_code)
+			foreach ($lang_code_years as $lang_code_year)
 			{
-				$lang_code = explode("=", $lang_code);
-				$years = count($lang_code) == 2 ? array_pop($lang_code) : null;
+				$lang_code_year = explode("=", $lang_code_year);
+				$years = count($lang_code_year) == 2 ? array_pop($lang_code_year) : null;
+				$lang_code = array_pop($lang_code_year);
 				if ($years !== null && strlen($years) == 0)
 				{
 					$years = null;
