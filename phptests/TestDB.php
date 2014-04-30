@@ -51,7 +51,9 @@ class TestDB
 	private static $course_unit_name = 'some unit';
 	
 	public $practice_list_ids = array ();
-    public $practice_entry_ids = array ();
+	public $practice_user_entry_ids = array ();
+	public $practice_entry_ids = array();
+	public $practice_ids = array();
 		
 	public $grade_ids = array ();
 	public $mode_ids = array ();
@@ -86,6 +88,7 @@ class TestDB
 		$testdb->add_modes();
 
 		return $testdb;
+	
 	}
 
 	public function add_users($num)
@@ -408,7 +411,7 @@ class TestDB
 		$link = $this->link;
 		for ($i = 1; $i <= $num_lists; $i++)
 		{
-			$link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
+			$link->query(sprintf("INSERT INTO lists (user_id, name, public) VALUES (%d, '%s', 1)",
 								 $user_id,
 								 $link->escape_string(self::$list_name).$i
 								 ));
@@ -417,26 +420,37 @@ class TestDB
 			
 			for ($j = 1; $j <= $num_entries; $j++)
 			{
-				$link->query(sprintf(
-									 "INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
-									 self::$lang_id_0, self::$lang_id_1, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j));
+				$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+					self::$lang_id_0, self::$lang_id_1, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j));
 				
 				$entry_id = $link->insert_id;
 				array_push($this->practice_entry_ids, $entry_id);
 				
 				$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
-									 $entry_id, $user_id, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j
-									 ));
+						$entry_id, $user_id, self::$word_0.$i.$j, self::$word_1.$i.$j, self::$word_1_pronun.$i.$j
+						));
 				
 				$user_entry_id = $link->insert_id;
+				array_push($this->practice_user_entry_ids, $user_entry_id);
 				
 				$link->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d)",
 									 $list_id,
 									 $user_entry_id
 									 ));
-				
+
 				if (!$link->insert_id)
 					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+				foreach($this->mode_ids as $mode) 
+				{
+					$link->query(sprintf("INSERT INTO user_practice (user_entry_id, mode) VALUES(%d, %d)",
+                                                                        $user_entry_id,
+									$mode
+                                                                        ));
+					$practice_id = $link->insert_id;
+					if (!$link->insert_id)
+	                                        exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
+					array_push($this->practice_ids, $practice_id);
+				}
 			}
 		}
 	}

@@ -3,145 +3,243 @@
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
 
-//  Let's think of a "Practice" object as representing one practice session
-class Practice
+class Practice extends DatabaseRow
 {
 	const PRACTICE_ENTRIES_CNT = 50;
-	
-	//  SHOULD THIS BE A PUBLIC STATIC FUNCTION RETURNING A NEW PRACTICE OBJECT?
-	public static function generate($list_ids, $entries_count)
-	{
-		$count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
-			intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
-		
-		$list_ids_str = join(', ', $list_ids);
 
-		$learned_entries = Connection::query(sprintf(
-			"SELECT entry_id FROM user_entries WHERE entry_id IN (".
-			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s)) ".
-			"AND user_id = %d ORDER BY 'interval'",
-			$list_ids_str, Session::get()->get_user()->get_user_id()
-		));
-		
-		$failure_message = "Failed to generate practice session";
-		if (!!($error = Connection::query_error_clear()))
+	/***    CLASS/STATIC    ***/
+	protected static $errors = null;
+        protected static $instances_by_id = array ();
+        protected static $error_description = null;
+
+	public static function select_by_id($practice_entry_id)
+        {
+                return parent::select("user_practice", "practice_entry_id", $practice_entry_id);
+        }
+
+	public static function insert($user_entry_id)
+	{
+		$modes = self::get_all_modes();
+		$user_practice_set = array();
+		$mysqli = Connection::get_shared_instance();
+
+		foreach($modes as $mode)
 		{
-			return null;
-			//  return static::errors_push("$failure_message: $error.");
+			$mysqli->query("INSERT IGNORE INTO user_practice (user_entry_id, mode) values($user_entry_id, $mode)");
+			if (!!$mysqli->error)
+	                        return static::errors_push("Failed to insert user_practice: " . $mysqli->error . ".");
+                
+	                if (($user_practice = self::select_by_id($mysqli->insert_id)))
+        	        {
+				array_push($user_practice_set, $user_practice);
+                	}
 		}
-		
-		$learned_entry_set = self::from_mysql_entry_id_assoc($learned_entries)->get_entry_ids();
-		$learned_count = count($learned_entry_set);
-		
-		$not_learned_entries = Connection::query(sprintf(
-			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) AND entry_id NOT IN (%s)",
-			$list_ids_str,
-			join(', ', $learned_entry_set))
-		);
-		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return null;
-			//  return static::errors_push("$failure_message: $error.");
-		}
-		
-		$not_learned_entry_set = self::from_mysql_entry_id_assoc($not_learned_entries)->get_entry_ids();
-		$not_learned_count = count($not_learned_entry_set);
-		
-		if (($learned_count + $not_learned_count) == 0 || $count_limit == 0)
-		{
-			return new Practice(array ());
-		}
-		else
-		{
-			$new_entry_count = min(
-				$not_learned_count,
-				ceil($not_learned_count / ($learned_count + $not_learned_count) * $count_limit)
-			);
-		
-			$practice_entry_set = array_merge(
-				array_slice($not_learned_entry_set, 0, $new_entry_count),
-				array_slice($learned_entry_set, 0, $count_limit - $new_entry_count)
-			);
-			return new Practice($practice_entry_set);
-		}
+		return $user_practice_set;
+	}
+
+	public static function get_mode_from_direction($practice_from, $practice_to)
+	{
+		$mysqli = Connection::get_shared_instance();
+		$result = $mysqli->query("SELECT mode_id FROM modes WHERE `from` = '$practice_from' ".
+				"AND `to` = '$practice_to'");
+		if (!!$mysqli->error) return static::errors_push("Failed to select from mode: " . $mysqli->error . ".");
+		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
+                        return static::errors_push("Failed to select any mode for given where direction $practice_from => $practice_to");
+
+		return intval($result_assoc["mode_id"], 10);
 	}
 	
-	private $entry_ids = null;
-	public function get_entry_ids()
+	public static function get_direction_from_mode($mode)
 	{
-		return $this->entry_ids;
+		$mysqli = Connection::get_shared_instance();
+		$result = $mysqli->query("SELECT `from`, `to` FROM modes WHERE mode_id = $mode");
+		if (!!$mysqli->error) return static::errors_push("Failed to select from direction: " . $mysqli->error . ".");
+                if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
+                {
+                        return static::errors_push("Failed to select any direction for given mode $mode");
+                }
+		
+		return array("practice_from" => $result_assoc["from"], "practice_to" => $result_assoc["to"]);
 	}
 
-	private $entries = null;
-	public function entries()
+	public static function get_all_modes()
 	{
-		return $this->entries;
-	}
-
-	private function __construct($entry_ids)
-	{
-		if (!is_array($entry_ids))
-		{
-			Session::get()->set_error_assoc("Construct", "Practice accepts entry_ids array, invalid input.");
-			return;
+		$mysqli = Connection::get_shared_instance();
+		$result = $mysqli->query("SELECT mode_id FROM modes");
+		if (!!$mysqli->error) return static::errors_push("Failed to select from mode: " . $mysqli->error . ".");
+		$modes = array();
+		while (($result_assoc = $result->fetch_assoc()))
+                {
+			array_push($modes, intval($result_assoc["mode_id"]));
 		}
-		$this->entries = array ();
-		foreach ($entry_ids as $entry_id)
-		{
-			$entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-			array_push($this->entries, $entry);
-		}
-		$this->entry_ids = $entry_ids;
+		return $modes;
 	}
 
-	private static function from_mysql_entry_id_assoc($result)
+        /***    INSTANCE    ***/
+
+	private $practice_entry_id = null;
+        public function get_practice_entry_id()
+        {
+                return $this->practice_entry_id;
+        }
+
+	private $user_entry_id = null;
+	public function get_user_entry_id()
 	{
-		$entry_ids = array ();
-		if (!!$result)
+		return $this->user_entry_id;
+	}
+
+	private $mode = null;
+	public function get_mode()
+	{
+		return $this->mode;
+	}
+
+	private $interval = null;
+	public function get_interval()
+	{
+		return $this->interval;
+	}
+
+	private $efactor = null;
+	public function get_efactor()
+	{
+		return $this->efactor;
+	}
+
+	private $entry = null;
+	public function get_entry()
+	{
+		return $this->entry;
+	}
+
+	private function __construct($practice_entry_id, $user_entry_id, $mode, $interval, $efactor)
+	{
+		$this->practice_entry_id = intval($practice_entry_id,10);
+		$this->user_entry_id = intval($user_entry_id, 10);
+		$this->mode = intval($mode, 10);
+		$this->interval = intval($interval, 10);
+		$this->efactor = floatval($efactor);
+		$this->entry = UserEntry::select_by_user_entry_id(intval($user_entry_id, 10));
+
+		self::register($this->practice_entry_id, $this);
+	}
+
+        public static function generate($list_ids, $practice_from, $practice_to, $entries_count)
+        {
+		$practice_set = array();
+		$mode = self::get_mode_from_direction($practice_from, $practice_to);
+		if(isset($mode))
 		{
-			while (($result_assoc = $result->fetch_assoc()))
-			{
-				array_push($entry_ids, $result_assoc["entry_id"]);
+	                $count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
+        	                intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
+                
+                	$mysqli = Connection::get_shared_instance();
+	                $list_ids_str = join(', ', $list_ids);
+
+			$new_entries = $mysqli->query(sprintf(
+                	        "SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) ".
+				"AND entry_id NOT IN (SELECT entry_id from user_entries where user_id = %d)",
+	                        $list_ids_str,
+        	                Session::get()->get_user()->get_user_id()
+			));
+
+			if (!!$mysqli->error) return static::errors_push("Failed to select entries: " . $mysqli->error . ".");
+
+			while (($new_entry_assoc = $new_entries->fetch_assoc()))
+        	        {
+				$entry_id = intval($new_entry_assoc["entry_id"], 10);
+				$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
+				self::insert($user_entry->get_user_entry_id());
 			}
-		}
-		return new Practice($entry_ids);
+
+                	$result = $mysqli->query(sprintf(
+                        	"SELECT practice_entry_id, user_entry_id, `mode`, `interval`, efactor FROM user_practice ".
+				"LEFT JOIN user_entries USING (user_entry_id) WHERE mode = $mode AND entry_id IN (".
+        	                "SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s)) ".
+                	        "AND user_id = %d ORDER BY `interval`",
+                        	$list_ids_str, Session::get()->get_user()->get_user_id()
+	                ));
+			if (!!$mysqli->error) return static::errors_push("Failed to select Practice entries: " . $mysqli->error . ".");
+	                if (!$result || $result->num_rows === 0)
+                	        return static::errors_push("Failed to select any practice entries for given direction $practice_from => $practice_to.");
+
+			while (($result_assoc = $result->fetch_assoc()) && !!($count_limit--))
+			{
+				array_push($practice_set, self::from_mysql_result_assoc($result_assoc));
+			}
+                }
+		return $practice_set;
+        }
+
+	public static function from_mysql_result_assoc($result_assoc)
+        {
+                $mysql_columns = array (
+                        "practice_entry_id",
+                        "user_entry_id",
+                        "mode",
+			"interval",
+			"efactor"
+                );
+                
+                return self::assoc_contains_keys($result_assoc, $mysql_columns)
+                        ? new self(
+                                $result_assoc["practice_entry_id"],
+                                $result_assoc["user_entry_id"],
+                                $result_assoc["mode"],
+                                $result_assoc["interval"],
+                                $result_assoc["efactor"]
+                        )
+                        : null;
+        }
+
+	public function get_user_entry_results_count()
+	{	
+		$mysqli = Connection::get_shared_instance();
+
+                $iteration_result = $mysqli->query(sprintf(
+                        "SELECT COUNT(*) AS row_count FROM user_entry_results " .
+                        "WHERE user_entry_id = %d", $this->get_user_entry_id()
+                ));
+		if (!!$mysqli->error) return static::errors_push("Error fetching user_entry_results: " . $mysqli->error . ".");
+                $iteration_assoc = $iteration_result->fetch_assoc();
+                return intval($iteration_assoc["row_count"], 10);
 	}
-	
-	//  SHOULD THIS BE CLASS- OR INSTANCE- SCOPE?
-	public static function update_practice_response($entry_id, $grade_id)
-	{
-		Connection::query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (".
-			"(SELECT user_entry_id FROM user_entries WHERE user_id = %d AND entry_id = %d), %d)",
-			Session::get()->get_user()->get_user_id(),
-			$entry_id,
-			$grade_id
-		));
-		
-		$failure_message = "Failed to update practice response details";
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return null;
-			//  return static::errors_push("$failure_message: $error.");
-		}
-		
-		if (!Connection::query_insert_id() ||
-			!($grade_result = Connection::query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id")))
-			|| !!($error = Connection::query_error_clear()))
-		{
-			return null;
-			//  return static::errors_push("$failure_message" . (!!$error ? ": $error." : "."));
-		}
-		
-		$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
-		if (!$grade_point || !$user_entry)
-		{
-			return null;
-			//  return static::errors_push("$failure_message!");
-		}
-		return $user_entry->update_repetition_details($grade_point->get_point());
-	}
+
+	public function update_practice_response($grade_id)
+        {
+                $mysqli = Connection::get_shared_instance();
+		$failure_message = "Failed to update practice response";
+                
+                $mysqli->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id, mode) VALUES (%d, %d, %d)",
+                        $this->get_user_entry_id(), $grade_id, $this->get_mode()
+                ));
+                
+                if (!$mysqli->insert_id || !!$mysqli->error ||
+                        !($grade = Grade::select_by_id($grade_id)))
+			return static::errors_push("$failure_message: " . $mysqli->error . ".");
+                $point = $grade->get_point();
+
+		$_efactor = $this->get_efactor() + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
+                $new_efactor = min(max($_efactor, 1.3), 2.5);
+		$user_entry_results_count = $this->get_user_entry_results_count();
+                if ($user_entry_results_count == 0 || $user_entry_results_count == 1)
+                        $new_interval = 1;
+                else if ($user_entry_results_count == 2)
+                        $new_interval = 6;
+                else
+                        $new_interval = round($this->get_interval() * $new_efactor);
+
+                if(!$mysqli->query(
+                        "UPDATE user_practice SET `interval` = $new_interval, efactor = $new_efactor ".
+                        "WHERE practice_entry_id = $this->practice_entry_id"
+                        ))
+                        return static::errors_push("$failure_message: " . $mysqli->error . ".");
+
+                $this->interval = $new_interval;
+                $this->efactor = $new_efactor;
+                return $this;
+        }
 }
 
 ?>

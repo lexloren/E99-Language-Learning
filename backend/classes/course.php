@@ -48,7 +48,7 @@ class Course extends DatabaseRow
 					return static::errors_push("Failed to insert course: $error.", ErrorReporter::ERRCODE_DATABASE);
 				}
 				
-				if (!($course = self::select_by_id(Connection::query_insert_id())))
+				if (!($course = Course::select_by_id(Connection::query_insert_id())))
 				{
 					return null;
 				}

@@ -171,21 +171,23 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($result[0]["owner"]["handle"], $this->db->handles[0]);
 	}
 
-	public function testPractice()
+	/*public function testPractice()
 	{
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 		$_SESSION["handle"] = $this->db->handles[0];
 		$_GET["list_ids"] = join(', ', $this->db->practice_list_ids);
+		$_GET["practice_from"] = "unknown";
+		$_GET["practice_to"] = "known";
 		$this->obj->practice();
 
-		$this->assertFalse(Session::get()->has_error());
+		$this->assertNull(Practice::errors_get());
 
 		$result_assoc = Session::get()->get_result_assoc();
 		$this->assertNotNull($result_assoc);
 
 		$result = $result_assoc["result"];
 		$this->assertNotNull($result);
-		$this->assertCount(count($this->db->practice_entry_ids), $result);
+		$this->assertCount(20, $result);
 
 		//  Removed 'owner' from Entry JSON because it's not used by front end
 		//      and incurs heavy queries on the database for no reason
@@ -293,7 +295,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertTrue(Session::get()->has_error());
-	}
+	}*/
 	
 	private function find($query, $should_find)
 	{

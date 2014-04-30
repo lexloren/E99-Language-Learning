@@ -213,25 +213,6 @@ class Entry extends DatabaseRow
 			: null;
 	}*/
 	
-	public function get_interval()
-	{
-		return ($user_entry = $this->copy_for_session_user())
-			? $user_entry->get_interval()
-			: null;
-	}
-	public function get_efactor()
-	{
-		return ($user_entry = $this->copy_for_session_user())
-			? $user_entry->get_efactor()
-			: null;
-	}
-	public function update_repetition_details($point)
-	{
-		return ($user_entry = $this->copy_for_session_user())
-			? $user_entry->update_repetition_details($point)
-			: null;
-	}
-	
 	public function user_can_read($user)
 	{
 		return true;
@@ -401,18 +382,6 @@ class UserEntry extends Entry
 		return !!$this->get_user_id() ? User::select_by_id($this->get_user_id()) : null;
 	}
 	
-	private $interval = null;
-	public function get_interval()
-	{
-		return $this->interval;
-	}
-
-	private $efactor = null;
-	public function get_efactor()
-	{
-		return $this->efactor;
-	}
-	
 	public function get_entry()
 	{
 		return Entry::select_by_id($this->get_entry_id(), false);
@@ -461,7 +430,6 @@ class UserEntry extends Entry
 	}
 
 	private function __construct($user_entry_id, $user_id, $entry_id,
-		$interval, $efactor,
 		$lang_code_0, $lang_code_1,
 		$word_0, $word_1, $pronunciation = null)
 	{
@@ -476,9 +444,6 @@ class UserEntry extends Entry
 			$lang_code_1 => $pronunciation
 		);
 		
-		$this->interval = intval($interval, 10);
-		$this->efactor = floatval($efactor);
-
 		$entries_by_id_for_user_id = self::entries_by_id_for_user_id($this->user_id);
 		$entries_by_id_for_user_id[$this->entry_id] = $this;
 	}
@@ -489,8 +454,6 @@ class UserEntry extends Entry
 			"user_entry_id",
 			"user_id",
 			"entry_id",
-			//"interval",
-			//"efactor",
 			"lang_code_0",
 			"lang_code_1",
 			"word_0",
@@ -503,8 +466,6 @@ class UserEntry extends Entry
 				$result_assoc["user_entry_id"],
 				$result_assoc["user_id"],
 				$result_assoc["entry_id"],
-				0, //$result_assoc["interval"],
-				2.5, //$result_assoc["efactor"],
 				$result_assoc["lang_code_0"],
 				$result_assoc["lang_code_1"],
 				$result_assoc["word_0"],
@@ -689,51 +650,6 @@ class UserEntry extends Entry
 		}
 		
 		return self::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id(), false);
-	}
-	
-	public function update_repetition_details($point)
-	{
-		$failure_message = "Entry failed to update repetition details";
-		
-		if (!($user_entry = $this->copy_for_session_user()))
-		{
-			return static::errors_push("$failure_message: " . self::errors_unset());
-		}
-		
-		$user_entry_id = $user_entry->get_user_entry_id();
-		
-		$_efactor = $user_entry->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
-		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$iteration_result = Connection::query(
-			"SELECT COUNT(*) AS row_count FROM user_entry_results " .
-			"WHERE user_entry_id = $user_entry_id"
-		);
-		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("$failure_message: $error.");
-		}
-		
-		$iteration_assoc = $iteration_result->fetch_assoc();
-		$iteration_count = intval($iteration_assoc["row_count"], 10);
-		if ($iteration_count == 0 || $iteration_count == 1)
-			$new_interval = 1;
-		else if ($iteration_count == 2)
-			$new_interval = 6;
-		else
-			$new_interval = round($user_entry->interval * $new_efactor);
-
-		if(!Connection::query(
-			"UPDATE user_entries SET `interval` = $new_interval, efactor = $new_efactor ".
-			"WHERE user_entry_id = $user_entry_id"
-			) || !!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("$failure_message: $error.");
-		}
-
-		$user_entry->interval = $new_interval;
-		$user_entry->efactor = $new_efactor;
-		return $user_entry;
 	}
 	
 	public function annotations_count()

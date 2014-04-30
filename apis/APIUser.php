@@ -17,7 +17,7 @@ class APIUser extends APIBase
 			//  Finally, send the user information to the front end
 			if (!($user = User::insert($email, $handle, $password)))
 			{
-				Session::get()->set_error_assoc("User Insertion", User::errors_unset());
+				Session::get()->set_error_assoc("User Insertion", User::unset_error_description());
 			}
 			else
 			{
@@ -108,7 +108,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::errors_unset() . "\n\n". User::errors_unset()), $updates ? $user->json_assoc() : null);
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -131,7 +131,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::errors_unset() . "\n\n". User::errors_unset()), $updates ? $user->json_assoc() : null);
+			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -175,14 +175,13 @@ class APIUser extends APIBase
 		
 		if (isset($_POST["langs"]))
 		{
-			$lang_code_years = explode(",", $_POST["langs"]);
+			$lang_codes = explode(",", $_POST["langs"]);
 			
 			$language_years = array ();
-			foreach ($lang_code_years as $lang_code_year)
+			foreach ($lang_codes as $lang_code)
 			{
-				$lang_code_year = explode("=", $lang_code_year);
-				$years = count($lang_code_year) == 2 ? array_pop($lang_code_year) : null;
-				$lang_code = array_pop($lang_code_year);
+				$lang_code = explode("=", $lang_code);
+				$years = count($lang_code) == 2 ? array_pop($lang_code) : null;
 				if ($years !== null && strlen($years) == 0)
 				{
 					$years = null;
@@ -225,35 +224,47 @@ class APIUser extends APIBase
 			}
 		}
 		
-		self::return_updates_as_json("User", User::errors_unset(), $updates ? $user->json_assoc() : null);
+		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->json_assoc() : null);
 	}
 	
 	public function practice()
 	{
 		if (!Session::get()->reauthenticate()) return;
 
-		//  Nirmal, do you check for session_user_can_read() on the lists requested for practice?
 		$list_ids = array ();
-		if (isset($_GET["list_ids"]))
+		if (self::validate_request($_GET, array ("list_ids", "practice_from", "practice_to")))
 		{
 			foreach (explode(",", $_GET["list_ids"]) as $list_id)
 			{
-				if (!($list = EntryList::select_by_id(intval($list_id, 10))))
+				$list = EntryList::select_by_id(intval($list_id, 10));
+				if (!$list)
 		                {
                 		        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
 					return;
 	        	        }
-				array_push($list_ids, $list->get_list_id());
+				else if($list->session_user_can_read())
+                                {
+                                        array_push($list_ids, $list->get_list_id());
+                                }
 			}
+			$practice_from = strtolower($_GET["practice_from"]);
+			$practice_to = strtolower($_GET["practice_to"]);
 		}
 
-		if (empty($list_ids))
+		if (empty($list_ids) || !isset($practice_from) || !isset($practice_to))
 		{
-			Session::get()->set_error_assoc("Request Invalid", "User-practice get must include list_ids.");
+			Session::get()->set_error_assoc("Request Invalid", "User-practice get must include list_ids, practice_from & practce_to.");
 		} else {
 			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
-			$practice = Practice::generate($list_ids, $entries_count);
-			self::return_array_as_json($practice->entries());
+			if (($practice_set = Practice::generate($list_ids, $practice_from, $practice_to, $entries_count)))
+                        {
+				self::return_array_as_json($practice_set);
+                        }
+                        else
+                        {
+                                Session::get()->set_error_assoc("Practice generate", Practice::errors_unset());
+                        }
+
 		}
 	}
 
@@ -261,25 +272,24 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!isset($_POST["entry_id"]) || !($entry = Entry::select_by_id(intval($_POST["entry_id"], 10))))
+		if (($practice_entry = self::validate_selection_id($_POST, "practice_entry_id", "Practice")))
 		{
-			Session::get()->set_error_assoc("Unknown Entry", "Back end failed to select entry with entry_id = ".
-							(isset($_POST["entry_id"]) ? $_POST["entry_id"] : ''));
+			Session::get()->set_error_assoc("Unknown PracticeEntry", "Back end failed to select practice-entry");
 		}
 		else if (!isset($_POST["grade_id"]) || !($grade = Grade::select_by_id(intval($_POST["grade_id"], 10))))
+		if (($grade = self::validate_selection_id($_POST, "grade_id", "Grade")))
 		{
-			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade with grade_id = ".
-                                                        (isset($_POST["grade_id"]) ? $_POST["grade_id"] : ''));
+			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade id");
 		}
 		else
 		{
-			if (($result = Practice::update_practice_response($_POST["entry_id"], $_POST["grade_id"])))
+			if (($result = $practice_entry->update_practice_response($grade->get_grade_id())))
 			{
 				Session::get()->set_result_assoc($result->json_assoc());
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Entry Practice", "Unfortunately, this application module does not report errors.");
+				Session::get()->set_error_assoc("Practice Response", Practice::errors_unset());
 			}
 		}
 	}
