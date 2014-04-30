@@ -145,15 +145,16 @@ class TestDB
 			self::$lang_id_1, self::$lang_id_1, $link->escape_string('Chinese in Chinese')));
 	}
 	
-	public function add_list($user_id, $entry_ids)
+	public function add_list($user_id, $entry_ids, $is_public=0)
 	{
 		$suffix = count($this->list_ids);
 		$name = self::$list_name.$suffix;
 		
 		$link = $this->link;
-		$link->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
+		$link->query(sprintf("INSERT INTO lists (user_id, name, public) VALUES (%d, '%s', %d)",
 			$user_id,
-			$link->escape_string($name)
+			$link->escape_string($name),
+			$is_public
 		));
 
 		if (!$link->insert_id)
