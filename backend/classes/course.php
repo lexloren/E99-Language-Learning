@@ -19,50 +19,48 @@ class Course extends DatabaseRow
 		return Connection::transact(
 			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public)
 			{
-				$mysqli = Connection::get_shared_instance();
-				
 				$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
 				
 				$language_0_matches = sprintf("languages_0.lang_code = '%s'",
-					$mysqli->escape_string($lang_code_0)
+					Connection::escape($lang_code_0)
 				);
 				$language_1_matches = sprintf("languages_1.lang_code = '%s'",
-					$mysqli->escape_string($lang_code_1)
+					Connection::escape($lang_code_1)
 				);
 				$language_codes_match = "$language_0_matches AND $language_1_matches";
 				
 				$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
 				
 				$name = ($name !== null && strlen($name) > 0)
-					? "'".$mysqli->escape_string($name)."'"
+					? "'".Connection::escape($name)."'"
 					: "NULL";
 				$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 				$close = !!$timeframe ? $timeframe->get_close() : "NULL";
-				$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+				$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
 				$public = $public ? 1 : 0;
 				
-				$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
+				Connection::query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
 					"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
 				));
 				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert course: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+					return static::errors_push("Failed to insert course: $error.", ErrorReporter::ERRCODE_DATABASE);
 				}
 				
-				if (!($course = self::select_by_id($mysqli->insert_id)))
+				if (!($course = self::select_by_id(Connection::insert_id())))
 				{
 					return null;
 				}
 				
-				$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+				Connection::query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
 					$course->get_course_id(),
 					Session::get()->get_user()->get_user_id()
 				));
 				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert course instructor: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+					return static::errors_push("Failed to insert course instructor: $error.", ErrorReporter::ERRCODE_DATABASE);
 				}
 				
 				Session::get()->get_user()->uncache_all();
@@ -101,20 +99,18 @@ class Course extends DatabaseRow
 			$entry_id = intval($entry_id, 10);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		$course_units = "(courses CROSS JOIN course_units USING (course_id))";
 		$unit_lists = "($course_units CROSS JOIN course_unit_lists USING (unit_id))";
 		$course_lists = "($unit_lists CROSS JOIN lists ON course_unit_lists.list_id = lists.list_id AND (lists.user_id = courses.user_id OR lists.public))";
 		$course_user_entries = "($course_lists CROSS JOIN user_entries USING (user_entry_id))";
 		
-		$result = $mysqli->query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) GROUP BY course_id",
+		$result = Connection::query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) GROUP BY course_id",
 			implode(",", $entry_ids)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by entry_ids: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -153,18 +149,16 @@ class Course extends DatabaseRow
 		
 		$user_ids_string = implode(",", $user_ids);
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Don't include this information because student identities should be private
 		//  $courses_studied = "(SELECT course_id FROM courses CROSS JOIN course_students USING (course_id) WHERE students.user_id IN ($user_ids_string)) AS courses_studied";
 		
 		$course_ids_instructed = "SELECT course_id FROM courses CROSS JOIN course_instructors USING (course_id) WHERE course_instructors.user_id IN ($user_ids_string)";
 		
-		$result = $mysqli->query("SELECT * FROM courses WHERE (user_id IN ($user_ids_string) OR course_id IN ($course_ids_instructed)) AND courses.public GROUP BY course_id");
+		$result = Connection::query("SELECT * FROM courses WHERE (user_id IN ($user_ids_string) OR course_id IN ($course_ids_instructed)) AND courses.public GROUP BY course_id");
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by user_ids: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -172,8 +166,6 @@ class Course extends DatabaseRow
 
 	public static function find_by_languages($lang_codes)
 	{
-		$mysqli = Connection::get_shared_instance();
-
 		$lang_ids = array ();
 		foreach ($lang_codes as $lang_code)
 		{
@@ -185,11 +177,11 @@ class Course extends DatabaseRow
 		
 		$lang_ids_string = implode(",", $lang_ids);
 		
-		$result = $mysqli->query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) GROUP BY course_id");
+		$result = Connection::query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) GROUP BY course_id");
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find course(s) by languages: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by languages: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -498,16 +490,14 @@ class Course extends DatabaseRow
 			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
+		Connection::query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to add course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to add course user: $error.");
 		}
 		
 		if (isset($array)) array_push($array, $user);
@@ -549,16 +539,14 @@ class Course extends DatabaseRow
 			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM $table WHERE course_id = %d AND user_id = %d",
+		Connection::query(sprintf("DELETE FROM $table WHERE course_id = %d AND user_id = %d",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to remove course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to remove course user: $error.");
 		}
 		
 		if (isset($array)) array_drop($array, $user);

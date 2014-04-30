@@ -18,9 +18,12 @@ class Language extends DatabaseRow
 	
 	public static function select_all()
 	{
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT * FROM languages");
 		
-		$result = $mysqli->query("SELECT * FROM languages");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select all languages: $error.");
+		}
 		
 		$languages = array ();
 		
@@ -53,11 +56,14 @@ class Language extends DatabaseRow
 		{
 			$this->names = array ();
 			
-			$mysqli = Connection::get_shared_instance();
-			
 			$naming = "(SELECT lang_id AS lang_id_name, lang_code AS lang_code_name FROM languages) AS language_naming";
 			
-			$result = $mysqli->query("SELECT * FROM (language_names CROSS JOIN languages USING (lang_id)) LEFT JOIN $naming USING (lang_id_name)");
+			$result = Connection::query("SELECT * FROM (language_names CROSS JOIN languages USING (lang_id)) LEFT JOIN $naming USING (lang_id_name)");
+			
+			if (!!($error = Connection::query_error_clear()))
+			{
+				return static::errors_push("Failed to select language names: $error.");
+			}
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{

@@ -19,26 +19,24 @@ class Outbox extends ErrorReporter
 			else return static::errors_push("Sender class must be Course or User.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO outbox (user_id, course_id, `to`, `subject`, `contents`) VALUES ($user_id, $course_id, '%s', '%s', '%s')",
-			$mysqli->escape_string($to),
-			$mysqli->escape_string($subject),
-			$mysqli->escape_string($contents)
+		Connection::query(sprintf("INSERT INTO outbox (user_id, course_id, `to`, `subject`, `contents`) VALUES ($user_id, $course_id, '%s', '%s', '%s')",
+			Connection::escape($to),
+			Connection::escape($subject),
+			Connection::escape($contents)
 		));
 		
-		$message_id = $mysqli->insert_id;
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to insert message into outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert message into outbox: $error.");
 		}
 		
-		$result = $mysqli->query("SELECT * FROM outbox");
+		$message_id = Connection::insert_id();
 		
-		if (!!$mysqli->error)
+		$result = Connection::query("SELECT * FROM outbox");
+		
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to select messages from outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to select messages from outbox: $error.");
 		}
 		
 		$sent_message_ids = array ();
@@ -52,13 +50,13 @@ class Outbox extends ErrorReporter
 			else break;
 		}
 		
-		$mysqli->query(sprintf("DELETE FROM outbox WHERE message_id IN (%s)",
+		Connection::query(sprintf("DELETE FROM outbox WHERE message_id IN (%s)",
 			implode(",", $sent_message_ids)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to delete sent messages from outbox: " . $mysqli->error . ".");
+			return static::errors_push("Failed to delete sent messages from outbox: $error.");
 		}
 		
 		return in_array($message_id, $sent_message_ids) ? $sender : false;

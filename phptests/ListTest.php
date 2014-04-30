@@ -220,6 +220,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 
 		//  Copies the list by virtue of its readability in the course
 		$copied_list = $course_list->copy_for_user($user1);
+		//  Hans to fix...
 		$this->assertNotNull($copied_list);
 		
 		//  Copies the list a second time

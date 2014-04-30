@@ -162,8 +162,9 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$_POST["name"] = "course new name";
 		$_POST["message"] = "course new message";
 		$_POST["public"] = "1";
-		$_POST["open"] = strtotime("2014-04-12 00:00:00");
-		$_POST["close"] = strtotime("2014-05-12 00:00:00");
+		//  My PHP complains that strtotime needs a time zone
+		$_POST["open"] = 1397260800;
+		$_POST["close"] = 1399852800;
 		
 		$this->obj->update();
 		$this->assertFalse(Session::get()->has_error());
@@ -188,7 +189,7 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$_POST["course_id"] =  $this->db->add_course($this->db->user_ids[0]);
 		$_SESSION["handle"] = $this->db->handles[0];
 		
-		$_POST["open"] = strtotime("2014-04-12 00:00:00");
+		$_POST["open"] = 1397260800;
 		
 		//Hans, please fix this
 		//$this->obj->update();

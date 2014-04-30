@@ -93,14 +93,17 @@ class Session
 		
 		$handle = strtolower($handle);
 		
-		$mysqli = Connection::get_shared_instance();
-			
 		//  See whether we can authenticate with the handle and password posted
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle = '%s' OR email = '%s') AND pswd_hash = PASSWORD('%s')",
-			$mysqli->escape_string($handle),
-			$mysqli->escape_string($handle),
-			$mysqli->escape_string($password)
+		$result = Connection::query(sprintf("SELECT * FROM users WHERE (handle = '%s' OR email = '%s') AND pswd_hash = PASSWORD('%s')",
+			Connection::escape($handle),
+			Connection::escape($handle),
+			Connection::escape($password)
 		));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			self::set_error_assoc("Authentication Failure", "The database failed to authenticate the session user.");
+		}
 		
 		if (($user_assoc = $result->fetch_assoc()) && $result->num_rows === 1)
 		{
@@ -111,16 +114,21 @@ class Session
 			$_SESSION["handle"] = $this->user->get_handle();
 			
 			//  Start a PHP session (using cookies), and update the database accordingly
-			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
-				$mysqli->escape_string($session),
+			Connection::query(sprintf("UPDATE users SET session = '%s' WHERE user_id = %d",
+				Connection::escape($session),
 				$this->user->get_user_id()
 			));
+			
+			if (!!($error = Connection::query_error_clear()))
+			{
+				self::set_error_assoc("Authentication Failure", "The database failed to authenticate the session user.");
+			}
 			
 			Session::get()->set_result_assoc($this->user->json_assoc());
 		}
 		else
 		{
-			self::set_error_assoc("Invalid Credentials", "The handle and password entered match no users in the database.");
+			self::set_error_assoc("Credentials Invalidity", "The handle and password entered match no users in the database.");
 		}
 	}
 	
@@ -131,27 +139,30 @@ class Session
 	{
 		if (!!($session_id_old = $this->session_start()) && isset($_SESSION["handle"]))
 		{
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
-				$mysqli->escape_string($session_id_old),
-				$mysqli->escape_string($_SESSION["handle"])
+			$result = Connection::query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
+				Connection::escape($session_id_old),
+				Connection::escape($_SESSION["handle"])
 			));
 			
-			if (!$result || !($result_assoc = $result->fetch_assoc()))
+			if (!!Connection::query_error_clear() || !$result || !($result_assoc = $result->fetch_assoc()))
 			{
 				$this->session_end();
-				//self::set_error_assoc("Invalid Session", "The user session is not valid. Please authenticate.");
 				return ($this->result_assoc = null);
 			}
 			
 			$session_id_new = $session_id_old; //$this->session_regenerate_id();
 			
-			$mysqli->query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
-				$mysqli->escape_string($session_id_new),
-				$mysqli->escape_string($session_id_old),
-				$mysqli->escape_string($_SESSION["handle"])
+			Connection::query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
+				Connection::escape($session_id_new),
+				Connection::escape($session_id_old),
+				Connection::escape($_SESSION["handle"])
 			));
+			
+			if (!!Connection::query_error_clear())
+			{
+				$this->session_end();
+				return ($this->result_assoc = null);
+			}
 			
 			return ($this->user = User::from_mysql_result_assoc($result_assoc));
 		}
@@ -167,10 +178,14 @@ class Session
 		
 		if (!!$session_id && strlen($session_id) > 0)
 		{
-			$mysqli = Connection::get_shared_instance();
-			$mysqli->query(sprintf("UPDATE users SET session = NULL WHERE session = '%s'",
-				$mysqli->escape_string($session_id)
+			Connection::query(sprintf("UPDATE users SET session = NULL WHERE session = '%s'",
+				Connection::escape($session_id)
 			));
+			
+			if (!!Connection::query_error_clear())
+			{
+				exit("Application failed to end session.");
+			}
 
 			$this->session_end();
 		}

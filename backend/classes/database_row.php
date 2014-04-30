@@ -23,19 +23,20 @@ class DatabaseRow extends ErrorReporter
 	
 	protected static function select($table, $column, $id, $override_safety = false)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		if (!$override_safety)
 		{
-			if (is_string($id)) $id = "'".$mysqli->escape_string($id)."'";
+			if (is_string($id)) $id = "'".Connection::escape($id)."'";
 			else $id = intval($id, 10);
 		}
 		
 		if (isset(static::$instances_by_id[$id])) return static::$instances_by_id[$id];
 		
-		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id LOCK IN SHARE MODE");
+		$result = Connection::query("SELECT * FROM $table WHERE $column = $id LOCK IN SHARE MODE");
 		
-		if (!!$mysqli->error) return static::errors_push("Failed to select from $table: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select from $table: $error.", ErrorReporter::ERRCODE_DATABASE);
+		}
 		
 		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
@@ -52,15 +53,13 @@ class DatabaseRow extends ErrorReporter
 			return static::errors_push("Failed to delete from $table where $column = $id: Session user is not owner.", ErrorReporter::ERRCODE_PERMISSIONS);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM $table WHERE $column = %d",
+		Connection::query(sprintf("DELETE FROM $table WHERE $column = %d",
 			intval($id, 10)
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to delete from $table where $column = $id: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return static::errors_push("Failed to delete from $table where $column = $id: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		if (isset(static::$instances_by_id[$id])) unset(static::$instances_by_id[$id]);
@@ -71,13 +70,11 @@ class DatabaseRow extends ErrorReporter
 	{
 		$id = intval($id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
 		
-		$result = $mysqli->query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to count $table where $column = $id: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return static::errors_push("Failed to count $table where $column = $id: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		if ($result->num_rows == 0) return 0;
@@ -117,13 +114,11 @@ class DatabaseRow extends ErrorReporter
 			
 		$anchor_id = intval($anchor_id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
-	
-		$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
+		$result = Connection::query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return static::errors_push("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		while (($result_assoc = $result->fetch_assoc()))
@@ -151,8 +146,6 @@ class DatabaseRow extends ErrorReporter
 	
 	protected static function update_this($instance, $table, $assignments, $id_column, $id, $override_safety = false)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		$assignments_sql = array ();
 		foreach ($assignments as $column => $value)
 		{
@@ -160,7 +153,7 @@ class DatabaseRow extends ErrorReporter
 			{
 				if (is_string($value))
 				{
-					$value = "'".$mysqli->escape_string($value)."'";
+					$value = "'".Connection::escape($value)."'";
 				}
 				else
 				{
@@ -181,9 +174,9 @@ class DatabaseRow extends ErrorReporter
 		
 		$id = intval($id, 10);
 		
-		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
+		$result = Connection::query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
 		
-		return !$mysqli->error ? $instance : static::errors_push("$failure_message: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+		return !($error = Connection::query_error_clear()) ? $instance : static::errors_push("$failure_message: $error.", ErrorReporter::ERRCODE_DATABASE);
 	}
 	
 	protected function get_owner()

@@ -16,8 +16,6 @@ class Unit extends CourseComponent
 			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		if (!($course = Course::select_by_id(($course_id = intval($course_id, 10)))))
 		{
 			return static::errors_push("Failed to insert unit: " . Course::errors_unset());
@@ -31,9 +29,9 @@ class Unit extends CourseComponent
 		$number = count($course->units()) + 1;
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
-		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+		$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
 		
-		$mysqli->query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
+		Connection::query(sprintf("INSERT INTO course_units (course_id, name, num, open, close, message) VALUES (%d, %s, %d, %s, %s, %s)",
 			$course_id,
 			!!$name && strlen($name) > 0 ? "'$name'" : "NULL",
 			$number,
@@ -41,11 +39,14 @@ class Unit extends CourseComponent
 			$message
 		));
 		
-		if (!!$mysqli->error) return static::errors_push("Failed to insert unit: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to insert unit: $error.");
+		}
 		
 		$course->uncache_units();
 		
-		return self::select_by_id($mysqli->insert_id);
+		return self::select_by_id(Connection::insert_id());
 	}
 	
 	public static function select_by_id($unit_id)
@@ -89,19 +90,26 @@ class Unit extends CourseComponent
 		return Connection::transact(
 			function () use ($number, $units_count)
 			{
-				$mysqli = Connection::get_shared_instance();
+				Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
 				
-				$mysqli->query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+				}
 				
-				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
 				
-				$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+				}
 				
-				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
 				
-				$mysqli->query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
-				
-				if ($mysqli->error) return static::errors_push("Unit Modification", "Failed to reorder course units: " . $mysqli->error . ".");
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+				}
 				
 				if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
 				
@@ -237,11 +245,12 @@ class Unit extends CourseComponent
 				{
 					$this->get_course()->uncache_units();
 					
-					$mysqli = Connection::get_shared_instance();
+					Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
 					
-					$mysqli->query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
-					
-					if ($mysqli->error) return static::errors_push("Unit Deletion", "Failed to reorder course units: " . $mysqli->error . ".");
+					if (!!($error = Connection::query_error_clear()))
+					{
+						return static::errors_push("Unit Deletion", "Failed to reorder course units: $error.");
+					}
 				}
 				return $return;
 			}
@@ -260,16 +269,14 @@ class Unit extends CourseComponent
 			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
+		Connection::query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
 			$this->get_unit_id(),
 			$list->get_list_id()
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Unit failed to add list: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return static::errors_push("Unit failed to add list: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		$lists = $this->lists();
@@ -287,12 +294,15 @@ class Unit extends CourseComponent
 			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM course_unit_lists WHERE unit_id = %d AND list_id = %d",
+		Connection::query(sprintf("DELETE FROM course_unit_lists WHERE unit_id = %d AND list_id = %d",
 			$this->get_unit_id(),
 			$list->get_list_id()
 		));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Unit failed to remove list: $error.", ErrorReporter::ERRCODE_DATABASE);
+		}
 		
 		if (isset($this->lists)) array_drop($this->lists, $list);
 		

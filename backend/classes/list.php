@@ -16,21 +16,19 @@ class EntryList extends DatabaseRow
 			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
+		Connection::query(sprintf("INSERT INTO lists (user_id, name) VALUES (%d, '%s')",
 			Session::get()->get_user()->get_user_id(),
-			$mysqli->escape_string($name)
+			Connection::escape($name)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to insert list: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert list: $error.");
 		}
 		
 		Session::get()->get_user()->uncache_lists();
 		
-		return self::select_by_id($mysqli->insert_id);
+		return self::select_by_id(Connection::insert_id());
 	}
 	
 	private static function lists_from_mysql_result($result)
@@ -59,13 +57,11 @@ class EntryList extends DatabaseRow
 		
 		$entry_ids_string = implode(",", $entry_ids);
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT lists.* FROM (lists CROSS JOIN list_entries USING (list_id)) CROSS JOIN user_entries USING (user_entry_id) WHERE entry_id IN ($entry_ids_string) GROUP BY list_id");
 		
-		$result = $mysqli->query("SELECT lists.* FROM (lists CROSS JOIN list_entries USING (list_id)) CROSS JOIN user_entries USING (user_entry_id) WHERE entry_id IN ($entry_ids_string) GROUP BY list_id");
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find list(s) by entry_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find list(s) by entry_ids: $error.");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -104,13 +100,11 @@ class EntryList extends DatabaseRow
 		
 		$user_ids_string = implode(",", $user_ids);
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT * FROM lists WHERE user_id IN ($user_ids_string) GROUP BY list_id");
 		
-		$result = $mysqli->query("SELECT * FROM lists WHERE user_id IN ($user_ids_string) GROUP BY list_id");
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find list(s) by user_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find list(s) by user_ids: $error.");
 		}
 		
 		return self::lists_from_mysql_result($result);
@@ -329,18 +323,16 @@ class EntryList extends DatabaseRow
 			return static::errors_push("List failed to add entry: " . Entry::errors_unset());
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
+		Connection::query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 			$this->list_id,
 			$entry_added->get_user_entry_id()
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("List failed to insert entry: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return static::errors_push("List failed to insert entry: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		$entry_added->uncache_lists();
@@ -355,8 +347,6 @@ class EntryList extends DatabaseRow
 		return Connection::transact(
 			function () use ($list, $ignoring_permissions)
 			{
-				$mysqli = Connection::get_shared_instance();
-				
 				foreach ($list->entries() as $entry)
 				{
 					if (!$this->entries_add($entry, $list, $ignoring_permissions)) return null;
@@ -386,16 +376,14 @@ class EntryList extends DatabaseRow
 			return static::errors_push("List failed to remove entry: " . Entry::errors_unset());
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND user_entry_id = %d",
+		Connection::query(sprintf("DELETE FROM list_entries WHERE list_id = %d AND user_entry_id = %d",
 			$this->get_list_id(),
 			$entry->get_user_entry_id()
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("List failed to remove entry: " . $mysqli->error . ".");
+			return static::errors_push("List failed to remove entry: $error.");
 		}
 		
 		if (isset($this->entries)) array_drop($this->entries, $entry);
@@ -425,22 +413,20 @@ class EntryList extends DatabaseRow
 		return Connection::transact(
 			function () use ($user)
 			{
-				$mysqli = Connection::get_shared_instance();
-				
-				$mysqli->query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
+				Connection::query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
 					$user->get_user_id(),
 					$this->get_list_id()
 				));
 				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("List failed to copy for user: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_DATABASE);
 				}
 
-				if (!($list_copy = self::select_by_id(($list_copy_id = $mysqli->insert_id)))
+				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::insert_id())))
 					|| !$list_copy->entries_add_from_list($this, true))
 				{
-					return static::errors_push("List failed to copy for user: " . $mysqli->error . ".", ErrorReporter::ERRCODE_UNKNOWN);
+					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_UNKNOWN);
 				}
 				
 				return $list_copy;

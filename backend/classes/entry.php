@@ -307,15 +307,16 @@ class UserEntry extends Entry
 	
 	public static function select_by_user_entry_id($user_entry_id)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		$table = "user_entries";
 		$column = "user_entry_id";
 		$id = intval($user_entry_id, 10);
 		
-		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
+		$result = Connection::query("SELECT * FROM $table WHERE $column = $id");
 		
-		if (!!$mysqli->error) return static::errors_push("Failed to select from $table: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select from $table: $error.");
+		}
 		
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
 		{
@@ -349,21 +350,19 @@ class UserEntry extends Entry
 			return $entries_by_id_for_user_id[$entry_id];
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		if ($insert_if_necessary)
 		{
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
-			$mysqli->query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
+			Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
 					"SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 				$user_id,
 				$entry_id
 			));
 			
-			if ($mysqli->error)
+			if (!!($error = Connection::query_error_clear()))
 			{
-				return static::errors_push("Failed to insert user entry: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+				return static::errors_push("Failed to insert user entry: $error.", ErrorReporter::ERRCODE_DATABASE);
 			}
 		}
 		
@@ -374,12 +373,12 @@ class UserEntry extends Entry
 			$user_id
 		);
 		
-		$result = $mysqli->query($query);
+		$result = Connection::query($query);
 		
-		if (!$result || !($result_assoc = $result->fetch_assoc()))
+		if (!!($error = Connection::query_error_clear()) || !$result || !($result_assoc = $result->fetch_assoc()))
 		{
 			return $insert_if_necessary
-				? static::errors_push("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " . (!!$mysqli->error ? $mysqli->error : $query))
+				? static::errors_push("Failed to select user entry where user_id = $user_id and entry_id = $entry_id: " . (!!$error ? $error : $query))
 				: null;
 		}
 		
@@ -677,21 +676,25 @@ class UserEntry extends Entry
 			return static::errors_push("User cannot read user entry to copy.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Insert into user_entries the dictionary row corresponding to this Entry object
 		//      If such a row already exists in user_entries, ignore the insertion error
-		$mysqli->query(sprintf("INSERT IGNORE INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d",
+		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
 			$user->get_user_id(),
 			$this->get_user_entry_id()
 		));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Entry failed to copy for user: $error.");
+		}
 		
 		return self::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id(), false);
 	}
 	
 	public function update_repetition_details($point)
 	{
-		$failure_message = "Failed to update repetition details";
+		$failure_message = "Entry failed to update repetition details";
+		
 		if (!($user_entry = $this->copy_for_session_user()))
 		{
 			return static::errors_push("$failure_message: " . self::errors_unset());
@@ -699,14 +702,18 @@ class UserEntry extends Entry
 		
 		$user_entry_id = $user_entry->get_user_entry_id();
 		
-		$mysqli = Connection::get_shared_instance();
-
 		$_efactor = $user_entry->efactor + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
 		$new_efactor = min(max($_efactor, 1.3), 2.5);
-		$iteration_result = $mysqli->query(
+		$iteration_result = Connection::query(
 			"SELECT COUNT(*) AS row_count FROM user_entry_results " .
 			"WHERE user_entry_id = $user_entry_id"
 		);
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("$failure_message: $error.");
+		}
+		
 		$iteration_assoc = $iteration_result->fetch_assoc();
 		$iteration_count = intval($iteration_assoc["row_count"], 10);
 		if ($iteration_count == 0 || $iteration_count == 1)
@@ -716,12 +723,12 @@ class UserEntry extends Entry
 		else
 			$new_interval = round($user_entry->interval * $new_efactor);
 
-		if(!$mysqli->query(
+		if(!Connection::query(
 			"UPDATE user_entries SET `interval` = $new_interval, efactor = $new_efactor ".
 			"WHERE user_entry_id = $user_entry_id"
-			))
+			) || !!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: $error.");
 		}
 
 		$user_entry->interval = $new_interval;

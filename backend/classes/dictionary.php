@@ -41,12 +41,10 @@ class Dictionary extends ErrorReporter
 	
 	public static function query($query, $lang_codes, $pagination = null, $exact_matches_only = false)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Make sure the language codes are safe
 		foreach ($lang_codes as &$lang_code)
 		{
-			$lang_code = $mysqli->escape_string($lang_code);
+			$lang_code = Connection::escape($lang_code);
 		}
 		
 		if ($exact_matches_only)
@@ -63,7 +61,7 @@ class Dictionary extends ErrorReporter
 		//  Now perform the query
 		//      First, decode the query and make sure it's safe
 		//      For BOTH the PHP sprintf() and the SQL query
-		$query = str_replace("%", "%%", $mysqli->escape_string($query));
+		$query = str_replace("%", "%%", Connection::escape($query));
 		
 		//      Second, take all the pieces created above and run the SQL query
 		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 $op '$wc%s$wc' OR word_1 $op '$wc%s$wc') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
@@ -75,9 +73,9 @@ class Dictionary extends ErrorReporter
 			implode("','", $lang_codes)
 		);
 		
-		if (!($result = $mysqli->query($query)))
+		if (!($result = Connection::query($query)) || !!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to find entry: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find entry: $error.");
 		}
 		
 		//  Save information about query results in static properties
@@ -122,16 +120,14 @@ class Dictionary extends ErrorReporter
 		
 		if (!in_array($entry_id, array_keys(self::$entries_by_id)))
 		{
-			$mysqli = Connection::get_shared_instance();
-			
-			$result = $mysqli->query(sprintf("SELECT %s FROM %s WHERE entry_id = $entry_id",
+			$result = Connection::query(sprintf("SELECT %s FROM %s WHERE entry_id = $entry_id",
 				self::default_columns(),
 				self::join()
 			));
 			
-			if (!$result || !($result_assoc = $result->fetch_assoc()))
+			if (!!($error = Connection::query_error_clear()) || !$result || !($result_assoc = $result->fetch_assoc()))
 			{
-				return static::errors_push("Failed to select dictionary entry where entry_id = $entry_id.");
+				return static::errors_push("Failed to select dictionary entry where entry_id = $entry_id" . (!!$error ? ": $error." : "."));
 			}
 			
 			self::$entries_by_id[$entry_id] = Entry::from_mysql_result_assoc($result_assoc);
@@ -144,32 +140,42 @@ class Dictionary extends ErrorReporter
 	{
 		$lang_id = intval($lang_id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT * FROM languages WHERE lang_id = $lang_id");
 		
-		$result = $mysqli->query("SELECT * FROM languages WHERE lang_id = $lang_id");
+		$failure_message = "Failed to select language where language_id = $lang_id";
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("$failure_message: $error.");
+		}
 		
 		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return $result_assoc["lang_code"];
 		}
 		
-		return static::errors_push("Failed to select language where language_id = $lang_id.");
+		return static::errors_push("$failure_message.");
 	}
 	
 	public static function get_lang_id($lang_code)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
-		$result = $mysqli->query(sprintf("SELECT * FROM languages WHERE lang_code = '%s'",
-			$mysqli->escape_string($lang_code)
+		$result = Connection::query(sprintf("SELECT * FROM languages WHERE lang_code = '%s'",
+			Connection::escape($lang_code)
 		));
+		
+		$failure_message = "Failed to select language where language_code = '$lang_code'";
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("$failure_message: $error.");
+		}
 		
 		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return intval($result_assoc["lang_id"], 10);
 		}
 		
-		return static::errors_push("Failed to select language where language_code = '$lang_code'.");
+		return static::errors_push("$failure_message.");
 	}
 }
 

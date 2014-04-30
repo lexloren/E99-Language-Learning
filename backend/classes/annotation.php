@@ -75,19 +75,17 @@ class Annotation extends DatabaseRow
 	{
 		$user_entry_id = intval($user_entry_id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+		Connection::query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
 			$user_entry_id,
-			$mysqli->escape_string($contents)
+			Connection::escape($contents)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return Annotation::errors_push("Failed to insert annotation: " . $mysqli->error . ".", ErrorReporter::ERRCODE_DATABASE);
+			return Annotation::errors_push("Failed to insert annotation: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
-		return self::select_by_id($mysqli->insert_id);
+		return self::select_by_id(Connection::insert_id());
 	}
 	
 	public function delete()

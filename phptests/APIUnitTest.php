@@ -120,8 +120,9 @@ class APIUnitTest extends PHPUnit_Framework_TestCase
 		$_POST["name"] = "Lesson 1";
 		$_POST["num"] = 1;
 		$_POST["message"] = "Lesson for dummies";
-		$_POST["open"] = strtotime("2014-04-12 00:00:00");
-		$_POST["close"] = strtotime("2014-05-12 00:00:00");
+		//  My PHP complains that strtotime needs a time zone
+		$_POST["open"] = 1397260800;
+		$_POST["close"] = 1399852800;
 
 		$_SESSION["handle"] = $this->db->handles[0];
 		$this->obj->update();

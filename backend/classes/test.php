@@ -26,23 +26,21 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit course unit.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$name = $name !== null ? "'" . $mysqli->escape_string($name) . "'" : "NULL";
-		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
+		$name = $name !== null ? "'" . Connection::escape($name) . "'" : "NULL";
+		$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 		
-		$mysqli->query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
+		Connection::query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to insert test: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert test: $error.");
 		}
 		
 		$unit->uncache_tests();
 		
-		return self::select_by_id($mysqli->insert_id);
+		return self::select_by_id(Connection::insert_id());
 	}
 	
 	public static function select_by_id($test_id)
@@ -136,23 +134,33 @@ class Test extends CourseComponent
 				
 				if ($number_formerly < 1) return static::errors_push("Test cannot set entry number for entry not already in test.");
 					
-				$mysqli = Connection::get_shared_instance();
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 				
-				$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
+				}
 				
-				if ($mysqli->error) return static::errors_push("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $number_formerly));
 				
-				$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $number_formerly));
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
+				}
 				
-				if ($mysqli->error) return static::errors_push("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
 				
-				$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
+				}
 				
-				if ($mysqli->error) return static::errors_push("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 				
-				$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
-				
-				if ($mysqli->error) return static::errors_push("Test Modification", "Failed to reorder test entries: " . $mysqli->error . ".");
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
+				}
 				
 				$this->uncache_entries();
 				
@@ -183,9 +191,12 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot set mode for entry not already in test.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
+		Connection::query(sprintf("UPDATE course_unit_test_entries SET mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
 		
-		$mysqli->query(sprintf("UPDATE course_unit_test_entries SET mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Test failed to update entry mode: $error.");
+		}
 		
 		if (isset($this->modes)) $this->modes[$test_entry_id] = $mode;
 		
@@ -197,13 +208,11 @@ class Test extends CourseComponent
 	{
 		if (!isset($this->modes))
 		{
-			$mysqli = Connection::get_shared_instance();
-		
-			$result = $mysqli->query("SELECT test_entry_id, mode FROM course_unit_test_entries WHERE test_id = " . $this->get_test_id());
+			$result = Connection::query("SELECT test_entry_id, mode FROM course_unit_test_entries WHERE test_id = " . $this->get_test_id());
 			
-			if (!!$mysqli->error)
+			if (!!($error = Connection::query_error_clear()))
 			{
-				return static::errors_push("Test failed to get entry mode: " . $mysqli->error . ".");
+				return static::errors_push("Test failed to get entry mode: $error.");
 			}
 			
 			$this->modes = array ();
@@ -233,7 +242,7 @@ class Test extends CourseComponent
 		
 		if (!$renumber && !$remode)
 		{
-			return static::errors_push("Test failed to randomize entries because neither reorder nor remode requested.");
+			return static::errors_push("Test failed to randomize entries because neither renumber nor remode requested.");
 		}
 		
 		return Connection::transact(
@@ -253,13 +262,11 @@ class Test extends CourseComponent
 					
 					$this->uncache_entries();
 					
-					$mysqli = Connection::get_shared_instance();
+					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $this->get_test_id()));
 					
-					$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $this->get_test_id()));
-					
-					if ($mysqli->error)
+					if (!!($error = Connection::query_error_clear()))
 					{
-						return static::errors_push("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+						return static::errors_push("Test-Entries Randomization", "Failed to update test entries: $error.");
 					}
 				}
 				else
@@ -271,11 +278,11 @@ class Test extends CourseComponent
 				{
 					$mode = $remode ? rand(0, 6) : "mode";
 					
-					$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
+					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
 				
-					if ($mysqli->error)
+					if (!!($error = Connection::query_error_clear()))
 					{
-						return static::errors_push("Test-Entries Randomization", "Failed to update test entries: " . $mysqli->error . ".");
+						return static::errors_push("Test-Entries Randomization", "Failed to update test entries: $error.");
 					}
 				}
 				
@@ -316,26 +323,24 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot set mode = $mode.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
+		Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
 			$this->get_test_id(),
 			$entry->get_user_entry_id(),
 			$this->entries_count() + 1
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Test failed to add entry: " . $mysqli->error . ".");
+			return static::errors_push("Test failed to add entry: $error.");
 		}
 		
 		if (isset($this->entries))
 		{
-			if ($mysqli->insert_id)
+			if (Connection::insert_id())
 			{
-				$this->entries[$mysqli->insert_id] = $entry;
+				$this->entries[Connection::insert_id()] = $entry;
 			}
 			else
 			{
@@ -427,28 +432,26 @@ class Test extends CourseComponent
 		return Connection::transact(
 			function () use ($entry, $number)
 			{
-				$mysqli = Connection::get_shared_instance();
-				
-				$mysqli->query(sprintf("DELETE FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d LIMIT 1",
+				Connection::query(sprintf("DELETE FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d LIMIT 1",
 					$this->get_test_id(),
 					$entry->get_user_entry_id()
 				));
 				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Test failed to remove entry: " . $mysqli->error . ".");
+					return static::errors_push("Test failed to remove entry: $error.");
 				}
 				
 				if (isset($this->entries)) array_drop($this->entries, $entry);
 				
-				$mysqli->query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num",
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num",
 					$this->get_test_id(),
 					$entry->get_user_entry_id()
 				));
 				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Test failed to remove entry: " . $mysqli->error . ".");
+					return static::errors_push("Test failed to remove entry: $error.");
 				}
 				
 				return $this->entries();
@@ -519,15 +522,13 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit test.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM course_unit_test_sittings WHERE test_id = %d",
+		Connection::query(sprintf("DELETE FROM course_unit_test_sittings WHERE test_id = %d",
 			$this->get_test_id()
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Test failed to unexecute: " . $mysqli->error . ".");
+			return static::errors_push("Test failed to unexecute: $error.");
 		}
 		
 		$this->uncache_sittings();

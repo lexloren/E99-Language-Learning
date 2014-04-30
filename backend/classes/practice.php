@@ -14,23 +14,37 @@ class Practice
 		$count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
 			intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
 		
-		$mysqli = Connection::get_shared_instance();
 		$list_ids_str = join(', ', $list_ids);
 
-		$learned_entries = $mysqli->query(sprintf(
+		$learned_entries = Connection::query(sprintf(
 			"SELECT entry_id FROM user_entries WHERE entry_id IN (".
 			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s)) ".
 			"AND user_id = %d ORDER BY 'interval'",
 			$list_ids_str, Session::get()->get_user()->get_user_id()
 		));
+		
+		$failure_message = "Failed to generate practice session";
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return null;
+			//  return static::errors_push("$failure_message: $error.");
+		}
+		
 		$learned_entry_set = self::from_mysql_entry_id_assoc($learned_entries)->get_entry_ids();
 		$learned_count = count($learned_entry_set);
 		
-		$not_learned_entries = $mysqli->query(sprintf(
+		$not_learned_entries = Connection::query(sprintf(
 			"SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) AND entry_id NOT IN (%s)",
 			$list_ids_str,
 			join(', ', $learned_entry_set))
 		);
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return null;
+			//  return static::errors_push("$failure_message: $error.");
+		}
+		
 		$not_learned_entry_set = self::from_mysql_entry_id_assoc($not_learned_entries)->get_entry_ids();
 		$not_learned_count = count($not_learned_entry_set);
 		
@@ -97,28 +111,34 @@ class Practice
 	//  SHOULD THIS BE CLASS- OR INSTANCE- SCOPE?
 	public static function update_practice_response($entry_id, $grade_id)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (".
+		Connection::query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (".
 			"(SELECT user_entry_id FROM user_entries WHERE user_id = %d AND entry_id = %d), %d)",
 			Session::get()->get_user()->get_user_id(),
 			$entry_id,
 			$grade_id
 		));
 		
-		if (!$mysqli->insert_id ||
-			!($grade_result = $mysqli->query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id"))))
+		$failure_message = "Failed to update practice response details";
+		if (!!($error = Connection::query_error_clear()))
 		{
-			Session::get()->set_error_assoc("response", "Failed to update practice response details: " . $mysqli->error . ".");
-			return;
+			return null;
+			//  return static::errors_push("$failure_message: $error.");
+		}
+		
+		if (!Connection::insert_id() ||
+			!($grade_result = Connection::query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id")))
+			|| !!($error = Connection::query_error_clear()))
+		{
+			return null;
+			//  return static::errors_push("$failure_message" . (!!$error ? ": $error." : "."));
 		}
 		
 		$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
 		$grade_point = Grade::from_mysql_result_assoc($grade_result->fetch_assoc());
 		if (!$grade_point || !$user_entry)
 		{
-			Session::get()->set_error_assoc("response", "Failed to update practice response details: " . $mysqli->error . ".");
-			return;
+			return null;
+			//  return static::errors_push("$failure_message!");
 		}
 		return $user_entry->update_repetition_details($grade_point->get_point());
 	}

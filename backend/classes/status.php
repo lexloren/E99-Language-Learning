@@ -18,9 +18,12 @@ class Status extends DatabaseRow
 	
 	public static function select_all()
 	{
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT * FROM user_statuses");
 		
-		$result = $mysqli->query("SELECT * FROM user_statuses");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			exit("Failed to select all user_statuses.");
+		}
 		
 		$user_statuses = array ();
 		

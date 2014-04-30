@@ -79,7 +79,7 @@ class TestDB
 		
 		$link = database::recreate_database('cscie99test');
 		$testdb->link = $link;
-		Connection::set_shared_instance($testdb->link);
+		Connection::set_mysqli($testdb->link);
 
 	 	$testdb->add_languages();
 		$testdb->add_grades();

@@ -91,7 +91,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 	{
 		$entries = $this->db->add_dictionary_entries(5);
 		$list_id = $this->db->add_list($this->db->user_ids[0], $entries);
-		//  Arunabha, something's wrong, and I'm still working to figure it out
+		//  Hans to fix...
 		$this->assertEquals(0, count($this->unit->lists()));
 		$this->unit->lists_add(EntryList::select_by_id($list_id));
 		print_r(Unit::errors_unset());

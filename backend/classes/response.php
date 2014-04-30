@@ -42,8 +42,6 @@ class Response extends CourseComponent
 					return static::errors_push("$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
 				}
 				
-				$mysqli = Connection::get_shared_instance();
-				
 				$test_entries = $test->entries();
 				if (!($test_entry = $test_entries[$test_entry_id]))
 				{
@@ -55,24 +53,24 @@ class Response extends CourseComponent
 					return static::errors_push("$failure_message: " . Pattern::errors_unset());
 				}
 				
-				$mysqli->query(sprintf("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id, timestamp) VALUES (%d, %d, %d)",
+				Connection::query(sprintf("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id, timestamp) VALUES (%d, %d, %d)",
 					$sitting->get_sitting_id(),
 					$pattern->get_pattern_id(),
 					($now = time())
 				));
 				
-				$response_id = $mysqli->insert_id;
-				
-				if (!!$mysqli->error)
+				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert test sitting response: " . $mysqli->error . ".");
+					return static::errors_push("Failed to insert test sitting response: $error.");
 				}
+				
+				$response_id = Connection::insert_id();
 				
 				$sitting->uncache_entries_remaining();
 				
 				if (!($current_question["entriesRemainingCount"]))
 				{
-					$mysqli->query(sprintf("UPDATE course_unit_test_sittings SET stop = %d WHERE sitting_id = %d",
+					Connection::query(sprintf("UPDATE course_unit_test_sittings SET stop = %d WHERE sitting_id = %d",
 						$now,
 						$sitting->get_sitting_id()
 					));
