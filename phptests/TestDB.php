@@ -33,7 +33,7 @@ class TestDB
 	public $user_entry_ids = array ();
 	public $annotation_ids = array ();
 	
-	private static $entry_annotation = 'Some user annotation';
+	public static $entry_annotation = 'Some user annotation';
 
 	//lists table
 	public $list_ids = array ();
