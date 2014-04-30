@@ -340,19 +340,21 @@ class EntryList extends DatabaseRow
 		return $this;
 	}
 	
-	public function entries_add_from_list($list, $ignoring_permissions = false)
+	public function entries_add_from_list($other, $ignoring_permissions = false)
 	{
-		if ($list == $this) return static::errors_push("List cannot add entries from itself.");
+		if ($other == $this) return static::errors_push("List cannot add entries from itself.");
+		
+		$list = $this;
 		
 		return Connection::transact(
-			function () use ($list, $ignoring_permissions)
+			function () use ($list, $other, $ignoring_permissions)
 			{
-				foreach ($list->entries() as $entry)
+				foreach ($other->entries() as $entry)
 				{
-					if (!$this->entries_add($entry, $list, $ignoring_permissions)) return null;
+					if (!$list->entries_add($entry, $other, $ignoring_permissions)) return null;
 				}
 				
-				return $this;
+				return $list;
 			}
 		);
 	}
@@ -410,12 +412,14 @@ class EntryList extends DatabaseRow
 			return static::errors_push("User cannot read list to copy.");
 		}
 		
+		$list = $this;
+		
 		return Connection::transact(
-			function () use ($user)
+			function () use ($list, $user)
 			{
 				Connection::query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
 					$user->get_user_id(),
-					$this->get_list_id()
+					$list->get_list_id()
 				));
 				
 				if (!!($error = Connection::query_error_clear()))
@@ -424,7 +428,7 @@ class EntryList extends DatabaseRow
 				}
 
 				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::query_insert_id())))
-					|| !$list_copy->entries_add_from_list($this, true))
+					|| !$list_copy->entries_add_from_list($list, true))
 				{
 					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_UNKNOWN);
 				}

@@ -40,7 +40,7 @@ class Session
 	//Used by unit tests
 	public function set_user($user)
 	{
-		$this->user = $user;
+		return ($this->user = $user);
 	}
 	
 	public function has_error()
@@ -65,6 +65,11 @@ class Session
 	public function set_error_assoc($title, $description)
 	{
 		$this->result_assoc = self::error_assoc($title, $description);
+	}
+	
+	public function unset_result_assoc()
+	{
+		return ($this->result_assoc = null);
 	}
 
 	//  Sets result_assoc
@@ -139,32 +144,38 @@ class Session
 	{
 		if (!!($session_id_old = $this->session_start()) && isset($_SESSION["handle"]))
 		{
-			$result = Connection::query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
-				Connection::escape($session_id_old),
-				Connection::escape($_SESSION["handle"])
-			));
-			
-			if (!!Connection::query_error_clear() || !$result || !($result_assoc = $result->fetch_assoc()))
-			{
-				$this->session_end();
-				return ($this->result_assoc = null);
-			}
-			
-			$session_id_new = $session_id_old; //$this->session_regenerate_id();
-			
-			Connection::query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
-				Connection::escape($session_id_new),
-				Connection::escape($session_id_old),
-				Connection::escape($_SESSION["handle"])
-			));
-			
-			if (!!Connection::query_error_clear())
-			{
-				$this->session_end();
-				return ($this->result_assoc = null);
-			}
-			
-			return ($this->user = User::from_mysql_result_assoc($result_assoc));
+			$session = $this;
+			return Connection::transact(
+				function () use ($session)
+				{
+					$result = Connection::query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
+						Connection::escape($session_id_old),
+						Connection::escape($_SESSION["handle"])
+					));
+					
+					if (!!Connection::query_error_clear() || !$result || !($result_assoc = $result->fetch_assoc()))
+					{
+						$session->session_end();
+						return $session->unset_result_assoc();
+					}
+					
+					$session_id_new = $session_id_old; //$this->session_regenerate_id();
+					
+					Connection::query(sprintf("UPDATE users SET session = '%s' WHERE session = '%s' AND handle = '%s'",
+						Connection::escape($session_id_new),
+						Connection::escape($session_id_old),
+						Connection::escape($_SESSION["handle"])
+					));
+					
+					if (!!Connection::query_error_clear())
+					{
+						$session->session_end();
+						return $session->unset_result_assoc();
+					}
+					
+					return $session->set_user(User::from_mysql_result_assoc($result_assoc));
+				}
+			);
 		}
 		
 		return ($this->result_assoc = null);

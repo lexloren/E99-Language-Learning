@@ -87,35 +87,37 @@ class Unit extends CourseComponent
 		
 		if ($number === $this->get_number()) return $this;
 		
+		$unit = $this;
+		
 		return Connection::transact(
-			function () use ($number, $units_count)
+			function () use ($unit, $number, $units_count)
 			{
-				Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $this->get_unit_id()));
+				Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $unit->get_unit_id()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
 				}
 				
-				Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+				Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
 				}
 				
-				Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $this->get_course_id(), $number));
+				Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $unit->get_course_id(), $number));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
 				}
 				
-				if (!self::update_this($this, "course_units", array ("num" => $number), "unit_id", $this->get_unit_id())) return null;
+				if (!self::update_this($unit, "course_units", array ("num" => $number), "unit_id", $unit->get_unit_id())) return null;
 				
-				$this->number = $number;
+				$unit->number = $number;
 				
-				return $this;
+				return $unit;
 			}
 		);
 	}
@@ -279,8 +281,7 @@ class Unit extends CourseComponent
 			return static::errors_push("Unit failed to add list: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
-		$lists = $this->lists();
-		array_push($lists, $list);
+		if (isset($this->lists)) array_push($this->lists, $list);
 		
 		$list->uncache_courses();
 		

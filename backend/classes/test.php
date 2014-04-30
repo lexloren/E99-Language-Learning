@@ -116,55 +116,57 @@ class Test extends CourseComponent
 	{
 		if (!$this->session_user_can_write()) return static::errors_push("Session user cannot edit test.");
 		
+		$test = $this;
+		
 		return Connection::transact(
-			function () use ($entry, $number)
+			function () use ($test, $entry, $number)
 			{
-				if ($this->executed())
+				if ($test->executed())
 				{
 					return static::errors_push("Test failed to update because some student has already begun executing the test.");
 				}
 				
 				if ($number === null || ($number = intval($number, 10)) < 1) return static::errors_push("Test cannot set entry number to null or nonpositive integer.");
 				
-				$entry = $entry->copy_for_user($this->get_owner(), $this);
+				$entry = $entry->copy_for_user($test->get_owner(), $test);
 				
 				if ($number > ($entries_count = count($this->entries()))) $number = $entries_count;
 				
-				if ($number === ($number_formerly = array_search($entry, $this->entries()) + 1)) return $this;
+				if ($number === ($number_formerly = array_search($entry, $test->entries()) + 1)) return $test;
 				
 				if ($number_formerly < 1) return static::errors_push("Test cannot set entry number for entry not already in test.");
 					
-				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $entries_count + 1 WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
 				}
 				
-				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $this->get_test_id(), $number_formerly));
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num", $test->get_test_id(), $number_formerly));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
 				}
 				
-				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $this->get_test_id(), $number));
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + 1 WHERE test_id = %d AND num >= %d ORDER BY num DESC", $test->get_test_id(), $number));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
 				}
 				
-				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entry->get_user_entry_id()));
+				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $number WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
 					return static::errors_push("Test Modification", "Failed to renumber test entries: $error.");
 				}
 				
-				$this->uncache_entries();
+				$test->uncache_entries();
 				
-				return $this;
+				return $test;
 			}
 		);
 	}
@@ -245,10 +247,12 @@ class Test extends CourseComponent
 			return static::errors_push("Test failed to randomize entries because neither renumber nor remode requested.");
 		}
 		
+		$test = $this;
+		
 		return Connection::transact(
-			function () use ($renumber, $remode)
+			function () use ($test, $renumber, $remode)
 			{
-				$entries_ordered = $this->entries();
+				$entries_ordered = $test->entries();
 				$entries_count = count($entries_ordered);
 				
 				if ($renumber)
@@ -260,9 +264,9 @@ class Test extends CourseComponent
 						array_push($entries_randomized, array_splice($entries_ordered, rand(0, count($entries_ordered)), 1));
 					}
 					
-					$this->uncache_entries();
+					$test->uncache_entries();
 					
-					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $this->get_test_id()));
+					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $test->get_test_id()));
 					
 					if (!!($error = Connection::query_error_clear()))
 					{
@@ -278,7 +282,7 @@ class Test extends CourseComponent
 				{
 					$mode = $remode ? rand(0, 6) : "mode";
 					
-					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $this->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
+					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
 				
 					if (!!($error = Connection::query_error_clear()))
 					{
@@ -286,7 +290,7 @@ class Test extends CourseComponent
 					}
 				}
 				
-				return $this->entries();
+				return $test->entries();
 			}
 		);
 	}
@@ -323,60 +327,81 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot set mode = $mode.");
 		}
 		
-		//  Insert into list_entries for $this->list_id and $entry->entry_id
-		//      If this entry already exists in the list, then ignore the error
-		Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
-			$this->get_test_id(),
-			$entry->get_user_entry_id(),
-			$this->entries_count() + 1
-		));
+		$test = $this;
 		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("Test failed to add entry: $error.");
-		}
-		
-		if (isset($this->entries))
-		{
-			if (Connection::query_insert_id())
+		return Connection::transact(
+			function () use ($test)
 			{
-				$this->entries[Connection::query_insert_id()] = $entry;
+				//  Insert into list_entries for $this->list_id and $entry->entry_id
+				//      If this entry already exists in the list, then ignore the error
+				Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
+					$test->get_test_id(),
+					$entry->get_user_entry_id(),
+					$test->entries_count() + 1
+				));
+				
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test failed to add entry: $error.");
+				}
+				
+				if (isset($test->entries))
+				{
+					if (Connection::query_insert_id())
+					{
+						$test->entries[Connection::query_insert_id()] = $entry;
+					}
+					else
+					{
+						$test->uncache_entries();
+					}
+				}
+				
+				$result = Connection::query("SELECT mode_id AS mode FROM modes");
+				
+				if (!!($error = Connection::query_error_clear()))
+				{
+					return static::errors_push("Test failed to add entry: $error.");
+				}
+				
+				while (($result_assoc = $result->fetch_assoc()))
+				{
+					$mode = intval($result_assoc["mode"], 10);
+					
+					switch ($mode % 3)
+					{
+						case 1:
+						{
+							$contents = $entry->get_word_1();
+						} break;
+						
+						case 2:
+						{
+							$contents = array_pop($entry->pronunciations());
+						} break;
+						
+						default:
+						{
+							$contents = $entry->get_word_0();
+						}
+					}
+					
+					return Pattern::insert(
+								$test->get_test_id(),
+								$entry->get_entry_id(),
+								$contents,
+								true,
+								null,
+								$mode
+							)
+						? $test->entries()
+						: static::errors_push(
+								"Test failed to add entry pattern: " .
+								Pattern::errors_unset()
+							);
+				}
 			}
-			else
-			{
-				$this->uncache_entries();
-			}
-		}
-		
-		switch ($mode % 3)
-		{
-			case 1:
-			{
-				$contents = $entry->get_word_1();
-			} break;
-			
-			case 2:
-			{
-				$contents = array_pop($entry->pronunciations());
-			} break;
-			
-			default:
-			{
-				$contents = $entry->get_word_0();
-			}
-		}
-		
-		return Pattern::insert(
-					$this->get_test_id(),
-					$entry->get_entry_id(),
-					$contents,
-					true
-				)
-			? $this->entries()
-			: static::errors_push(
-					"Test failed to add entry pattern: " .
-					Pattern::errors_unset()
-				);
+		);
 	}
 	
 	public function entries_add_from_list($list, $mode = null)
@@ -391,17 +416,16 @@ class Test extends CourseComponent
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
 		
+		$test = $this;
+		
 		return Connection::transact(
-			function () use ($list, $mode)
+			function () use ($test, $list, $mode)
 			{
 				foreach ($list->entries() as $entry)
 				{
-					if (!$this->entries_add($entry, $mode))
-					{
-						return null;
-					}
+					if (!$test->entries_add($entry, $mode)) return null;
 				}
-				return $this->entries();
+				return $test->entries();
 			}
 		);
 	}
@@ -429,11 +453,13 @@ class Test extends CourseComponent
 		
 		if ($number < 1) return static::errors_push("Test cannot remove entry not already in test.");
 		
+		$test = $this;
+		
 		return Connection::transact(
-			function () use ($entry, $number)
+			function () use ($test, $entry, $number)
 			{
 				Connection::query(sprintf("DELETE FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d LIMIT 1",
-					$this->get_test_id(),
+					$test->get_test_id(),
 					$entry->get_user_entry_id()
 				));
 				
@@ -442,10 +468,10 @@ class Test extends CourseComponent
 					return static::errors_push("Test failed to remove entry: $error.");
 				}
 				
-				if (isset($this->entries)) array_drop($this->entries, $entry);
+				if (isset($test->entries)) array_drop($test->entries, $entry);
 				
 				Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num - 1 WHERE test_id = %d AND num > %d ORDER BY num",
-					$this->get_test_id(),
+					$test->get_test_id(),
 					$entry->get_user_entry_id()
 				));
 				
@@ -454,7 +480,7 @@ class Test extends CourseComponent
 					return static::errors_push("Test failed to remove entry: $error.");
 				}
 				
-				return $this->entries();
+				return $test->entries();
 			}
 		);
 	}

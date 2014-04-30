@@ -9,7 +9,7 @@ class Pattern extends CourseComponent
 	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null)
+	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null, $mode = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -38,7 +38,9 @@ class Pattern extends CourseComponent
 		$contents = Connection::escape($contents);
 		$prompt = !!$prompt ? 1 : 0;
 		
-		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
+		$mode = $mode === null ? "mode" : intval($mode, 10);
+		
+		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
