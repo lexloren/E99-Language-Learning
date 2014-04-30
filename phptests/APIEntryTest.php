@@ -96,7 +96,7 @@ class APIEntryTest extends PHPUnit_Framework_TestCase
 		$_GET["exact"] = 0;
 		
 		$_GET["page_size"] = 17;
-		$_GET["page_num"] = 0;
+		$_GET["page_num"] = 1;
 		
 		$this->obj->find();
 		
