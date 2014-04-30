@@ -67,7 +67,7 @@
         <table id="lists" class="table">
         </table>
         <div id="search-list">    
-          <button class="btn btn-primary" type="button" onclick="showForm('#searchListForm','#search\-list');">Search Decks</button>  
+          <button class="btn btn-primary" type="button" onclick="showForm('#searchListForm','#search\-list');">Add Deck</button>  
         </div> 
 	      <!--- List Search Form --->
         <form class="form-inline" id="searchListForm" role="form">
@@ -82,12 +82,12 @@
                 <input type="text" class="form-control" id="entrysearch" placeholder="search word">
               </div>
               <div class="form-group">
-                <label>From: </label>
+                <label>Language 1: </label>
                 <select class="form-control" id="lang1">
                 </select>
               </div>
               <div class="form-group">
-                <label>To: </label>
+                <label>Language 2: </label>
                 <select class="form-control" id="lang2">
                 </select>
               </div>
@@ -102,6 +102,7 @@
           </div> 
         </form>
         <div id="deck-loader"><img src="images/ajax-loader.gif"></div>
+        <div id="searchHeader"></div>
         <table class="table" id="searchResults">
         </table>   
         <h4>Tests</h4>
