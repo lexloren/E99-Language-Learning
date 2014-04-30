@@ -59,8 +59,73 @@ class APIEntryTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->db->word_1s[0], $result["words"][TestDB::$lang_code_1]);
 	}
 	
-	public function test_update()
+	public function test_update_word0()
 	{
+		$_POST["entry_id"] = $this->db->entry_ids[0];
+		$_POST["word_0"] = "new word 1";
+
+		//Session user not set
+		$this->obj->update();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session user set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->update();
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		
+		$words = $result["words"];
+		$this->assertNotNull($_POST["word_0"], $words[TestDB::$lang_code_0]);
+	}
+
+	public function test_update_word1()
+	{
+		$_POST["entry_id"] = $this->db->entry_ids[0];
+		$_POST["word_1"] = "new word 1";
+
+		//Session user not set
+		$this->obj->update();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session user set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->update();
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		
+		$words = $result["words"];
+		$this->assertNotNull($_POST["word_1"], $words[TestDB::$lang_code_1]);
+	}
+
+	public function test_update_pronun()
+	{
+		$_POST["entry_id"] = $this->db->entry_ids[0];
+		$_POST["word_1_pronun"] = "new word 1 pronun";
+
+		//Session user not set
+		$this->obj->update();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session user set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->update();
+		$this->assertFalse(Session::get()->has_error());
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		
+		$result = $result_assoc["result"];		
+		$this->assertNotNull($result);
+		
+		$pronuncations = $result["pronuncations"];
+		$this->assertNotNull($_POST["word_1_pronun"], $pronuncations[TestDB::$lang_code_1]);
 	}
 
 	public function test_find_exact()
