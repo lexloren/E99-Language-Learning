@@ -14,7 +14,7 @@ class Sitting extends CourseComponent
 		if (!($session_user = Session::get()->get_user())) return static::errors_push("Session user has not reauthenticated.");
 		
 		return Connection::transact(
-			function () use ($test_id)
+			function () use ($test_id, $session_user)
 			{
 				if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
 				{

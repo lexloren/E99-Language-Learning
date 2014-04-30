@@ -16,7 +16,7 @@ class Response extends CourseComponent
 		$test_entry_id = intval($test_entry_id, 10);
 		
 		return Connection::transact(
-			function () use ($test_entry_id, $contents)
+			function () use ($test_entry_id, $contents, $session_user)
 			{
 				$failure_message = "Failed to insert test sitting response";
 				

@@ -240,14 +240,15 @@ class Unit extends CourseComponent
 	
 	public function delete()
 	{
+		$unit = $this;
 		return Connection::transact(
-			function ()
+			function () use ($unit)
 			{
-				if (($return = self::delete_this($this, "course_units", "unit_id", $this->get_unit_id())))
+				if (($return = self::delete_this($unit, "course_units", "unit_id", $unit->get_unit_id())))
 				{
-					$this->get_course()->uncache_units();
+					$unit->get_course()->uncache_units();
 					
-					Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $this->get_course_id(), $this->get_number()));
+					Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
 					
 					if (!!($error = Connection::query_error_clear()))
 					{

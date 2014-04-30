@@ -330,7 +330,7 @@ class Test extends CourseComponent
 		$test = $this;
 		
 		return Connection::transact(
-			function () use ($test)
+			function () use ($test, $entry, $mode)
 			{
 				//  Insert into list_entries for $this->list_id and $entry->entry_id
 				//      If this entry already exists in the list, then ignore the error
