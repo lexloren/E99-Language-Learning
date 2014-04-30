@@ -232,19 +232,26 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_POST, "list_id", "EntryList")))
 		{
-			if (self::validate_request($_POST, "entry_ids"))
-			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			if (Connection::transact(
+				function () use ($list)
 				{
-					if (!$list->entries_remove(Entry::select_by_id($entry_id)))
+					if (self::validate_request($_POST, "entry_ids"))
 					{
-						Session::get()->set_error_assoc("List-Entries Removal", EntryList::errors_unset());
-						return;
+						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+						{
+							if (!$list->entries_remove(Entry::select_by_id($entry_id)))
+							{
+								return null;
+							}
+						}
+						
+						return $list;
 					}
+					
+					return null;
 				}
-				
-				self::return_array_as_json($list->entries());
-			}
+			)) self::return_array_as_json($list->entries());
+			else Session::get()->set_error_assoc("List-Entries Removal", EntryList::errors_unset());
 		}
 	}
 }

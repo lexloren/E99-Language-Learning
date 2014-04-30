@@ -145,9 +145,9 @@ class Session
 		if (!!($session_id_old = $this->session_start()) && isset($_SESSION["handle"]))
 		{
 			$session = $this;
-			return Connection::transact(
-				function () use ($session)
-				{
+			//return Connection::transact(
+			//	function () use ($session)
+			//	{
 					$result = Connection::query(sprintf("SELECT * FROM users WHERE session = '%s' AND handle = '%s' AND TIMESTAMPDIFF(MINUTE, timestamp, CURRENT_TIMESTAMP) < 60",
 						Connection::escape($session_id_old),
 						Connection::escape($_SESSION["handle"])
@@ -174,8 +174,8 @@ class Session
 					}
 					
 					return $session->set_user(User::from_mysql_result_assoc($result_assoc));
-				}
-			);
+		//		}
+		//	);
 		}
 		
 		return ($this->result_assoc = null);
