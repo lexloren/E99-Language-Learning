@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 29 april 2014 kl 07:14
+-- Skapad: 30 april 2014 kl 07:49
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=82 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=83 ;
 
 -- --------------------------------------------------------
 
@@ -163,14 +163,14 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   `test_id` bigint(20) unsigned NOT NULL,
   `user_entry_id` bigint(20) unsigned NOT NULL,
   `num` smallint(5) unsigned NOT NULL,
-  `mode` tinyint(1) unsigned NOT NULL default '1',
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   PRIMARY KEY  (`test_entry_id`),
   UNIQUE KEY `test_id` (`test_id`,`num`),
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=24 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=21 ;
 
 -- --------------------------------------------------------
 
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `prompt` (`prompt`),
   KEY `mode` (`mode`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=44 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=49 ;
 
 -- --------------------------------------------------------
 
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_responses` (
   UNIQUE KEY `sitting_id` (`sitting_id`,`pattern_id`),
   KEY `timestamp` (`timestamp`),
   KEY `pattern_id` (`pattern_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=51 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=56 ;
 
 -- --------------------------------------------------------
 
@@ -347,13 +347,13 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
 
 DROP TABLE IF EXISTS `modes`;
 CREATE TABLE IF NOT EXISTS `modes` (
-  `mode_id` tinyint(3) unsigned NOT NULL,
+  `mode_id` tinyint(3) unsigned NOT NULL auto_increment,
   `from` char(255) default NULL,
   `to` char(255) default NULL,
   PRIMARY KEY  (`mode_id`),
-  KEY `from` (`from`),
+  UNIQUE KEY `from_to` (`from`,`to`),
   KEY `to` (`to`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
 
 -- --------------------------------------------------------
 
@@ -372,7 +372,7 @@ CREATE TABLE IF NOT EXISTS `outbox` (
   PRIMARY KEY  (`message_id`),
   KEY `user_id` (`user_id`),
   KEY `course_id` (`course_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -488,12 +488,12 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
 
 DROP TABLE IF EXISTS `user_practice`;
 CREATE TABLE IF NOT EXISTS `user_practice` (
-  `practice_id` bigint(20) unsigned NOT NULL auto_increment,
+  `practice_entry_id` bigint(20) unsigned NOT NULL auto_increment,
   `user_entry_id` bigint(20) unsigned NOT NULL,
-  `mode` tinyint(3) unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   `interval` int(11) NOT NULL default '0',
   `efactor` decimal(3,2) NOT NULL default '2.50',
-  PRIMARY KEY  (`practice_id`),
+  PRIMARY KEY  (`practice_entry_id`),
   UNIQUE KEY `user_entry_id` (`user_entry_id`,`mode`),
   KEY `mode` (`mode`),
   KEY `interval` (`interval`),
@@ -569,6 +569,7 @@ ALTER TABLE `course_unit_tests`
 -- Restriktioner för tabell `course_unit_test_entries`
 --
 ALTER TABLE `course_unit_test_entries`
+  ADD CONSTRAINT `course_unit_test_entries_ibfk_6` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entries_ibfk_4` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entries_ibfk_5` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -576,6 +577,7 @@ ALTER TABLE `course_unit_test_entries`
 -- Restriktioner för tabell `course_unit_test_entry_patterns`
 --
 ALTER TABLE `course_unit_test_entry_patterns`
+  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -641,7 +643,7 @@ ALTER TABLE `user_entry_annotations`
 -- Restriktioner för tabell `user_entry_results`
 --
 ALTER TABLE `user_entry_results`
-  ADD CONSTRAINT `user_entry_results_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_entry_results_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_entry_results_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -656,5 +658,5 @@ ALTER TABLE `user_languages`
 -- Restriktioner för tabell `user_practice`
 --
 ALTER TABLE `user_practice`
-  ADD CONSTRAINT `user_practice_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_practice_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_practice_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;

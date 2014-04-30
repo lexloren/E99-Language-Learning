@@ -104,7 +104,7 @@ class Connection
 		
 		if (static::$enforce_query_error_clearing && !static::$error_cleared)
 		{
-			exit("SQL–error-handling error: Cannot submit query before having cleared for error from prior query.\n\tPrior query: " . static::$query . "\n\tThis query: $query");
+			exit("SQL–error-handling error: Cannot submit query before having cleared for error from prior query.\n\tPrior query: " . static::$query . "\n\tThis query: $query\n");
 		}
 		
 		static::$error_cleared = false;
