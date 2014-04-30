@@ -5,11 +5,6 @@ require_once "./backend/classes.php";
 
 class APIUser extends APIBase
 {
-	public function __construct($user, $mysqli)
-	{	
-		parent::__construct($user, $mysqli);
-	}
-
 	public function register()
 	{
 		if (self::validate_request($_POST, array ("email", "handle", "password")))

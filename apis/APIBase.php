@@ -13,12 +13,6 @@ class APIBase
 	protected $mysqli = null;
 	protected $user = null;
 	
-	public function __construct($user, $mysqli) 
-	{
-		$this->user = $user;
-		$this->mysqli = $mysqli;
-	}
-	
 	protected static function validate_request($array, $keys)
 	{
 		if (is_string($keys)) $keys = array ($keys, $keys);
