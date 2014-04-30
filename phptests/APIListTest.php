@@ -73,42 +73,49 @@ class APIListTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(Session::get()->has_error());
 	}
 	
-	public function test_list_find()
+	public function test_list_find_by_list_ids()
 	{
-		$user_obj = User::select_by_id($this->db->user_ids[0]);
-		Session::get()->set_user($user_obj);
-		
-		$list_setup = array ();
-		array_push($list_setup, EntryList::insert('New List1'));
-		array_push($list_setup, EntryList::insert('New List2'));
-		array_push($list_setup, EntryList::insert('NoMatch EntryList1'));
-		/*
+		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+
 		$_SESSION["handle"] = $this->db->handles[0];
-		$_GET["query"] = "New";
+		$_GET["list_ids"] = implode(",", array($this->db->list_ids[0], $this->db->list_ids[2]));
+		
 		$this->obj->find();
 		$result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
 		$this->assertEquals(count($lists), 2);
-		$_GET["query"] = "new";
+	}
+	
+	public function test_list_find_by_user_ids()
+	{
+		$this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
+		$this->db->add_list($this->db->user_ids[1], $this->db->entry_ids, 1);
+		$this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["user_ids"] = implode(",", array($this->db->user_ids[0], $this->db->user_ids[1]));
+		
 		$this->obj->find();
 		$result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
 		$this->assertEquals(count($lists), 2);
-		$_GET["query"] = "New";
-		$_GET["exact"] = 1;
+	}
+	
+	public function test_list_find_by_entry_ids()
+	{
+		$entries1 = $this->db->add_dictionary_entries(5);
+		$entries2 = $this->db->add_dictionary_entries(5);
+		$entries3 = $this->db->add_dictionary_entries(5);
+		$this->db->add_list($this->db->user_ids[0], $entries1);
+		$this->db->add_list($this->db->user_ids[0], $entries2);
+		$this->db->add_list($this->db->user_ids[0], $entries3);
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$_GET["entry_ids"] = implode(",", array($entries1[2], $entries1[3], $entries3[0], $entries3[1]));
+		
 		$this->obj->find();
 		$result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
-		$this->assertEquals(count($lists), 0);
-		$_GET["query"] = "New List1";
-		$_GET["exact"] = 1;
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
-		$this->assertEquals(count($lists), 1);
-		$_GET["query"] = "";
-		$_GET["exact"] = 0;
-		$this->obj->find();
-		$result_assoc = Session::get()->get_result_assoc(); $lists = $result_assoc["result"];
-		$this->assertEquals(count($lists), 4);
-		foreach($list_setup as $list)       $list->delete();
-		*/
+		$this->assertEquals(count($lists), 2);
 	}
 	
 	public function test_delete()

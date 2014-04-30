@@ -104,6 +104,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
+				//Hans, set_open/set_close crashes; I am not sure if this is necessary.
 				if (isset($_POST["open"]))
 				{
 					$updates += !!$unit->set_open($_POST["open"]);
