@@ -133,7 +133,7 @@ class User extends DatabaseRow
 			return static::errors_push("Failed to insert user: $error.");
 		}
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	/***    INSTANCE    ***/

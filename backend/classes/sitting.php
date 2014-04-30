@@ -40,7 +40,7 @@ class Sitting extends CourseComponent
 				
 				$test->uncache_sittings();
 				
-				return self::select_by_id(Connection::insert_id());
+				return self::select_by_id(Connection::query_insert_id());
 			}
 		);
 	}

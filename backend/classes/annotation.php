@@ -85,7 +85,7 @@ class Annotation extends DatabaseRow
 			return Annotation::errors_push("Failed to insert annotation: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	public function delete()

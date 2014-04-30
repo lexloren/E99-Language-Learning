@@ -64,7 +64,7 @@ class Response extends CourseComponent
 					return static::errors_push("Failed to insert test sitting response: $error.");
 				}
 				
-				$response_id = Connection::insert_id();
+				$response_id = Connection::query_insert_id();
 				
 				$sitting->uncache_entries_remaining();
 				

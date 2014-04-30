@@ -40,7 +40,7 @@ class Test extends CourseComponent
 		
 		$unit->uncache_tests();
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	public static function select_by_id($test_id)
@@ -338,9 +338,9 @@ class Test extends CourseComponent
 		
 		if (isset($this->entries))
 		{
-			if (Connection::insert_id())
+			if (Connection::query_insert_id())
 			{
-				$this->entries[Connection::insert_id()] = $entry;
+				$this->entries[Connection::query_insert_id()] = $entry;
 			}
 			else
 			{

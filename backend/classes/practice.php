@@ -125,7 +125,7 @@ class Practice
 			//  return static::errors_push("$failure_message: $error.");
 		}
 		
-		if (!Connection::insert_id() ||
+		if (!Connection::query_insert_id() ||
 			!($grade_result = Connection::query(sprintf("SELECT * FROM grades WHERE grade_id = $grade_id")))
 			|| !!($error = Connection::query_error_clear()))
 		{

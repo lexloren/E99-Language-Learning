@@ -129,7 +129,7 @@ class Connection
 		return static::mysqli()->escape_string($string);
 	}
 	
-	public static function insert_id()
+	public static function query_insert_id()
 	{
 		return static::mysqli()->insert_id;
 	}

@@ -28,7 +28,7 @@ class EntryList extends DatabaseRow
 		
 		Session::get()->get_user()->uncache_lists();
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	private static function lists_from_mysql_result($result)
@@ -423,7 +423,7 @@ class EntryList extends DatabaseRow
 					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_DATABASE);
 				}
 
-				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::insert_id())))
+				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::query_insert_id())))
 					|| !$list_copy->entries_add_from_list($this, true))
 				{
 					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_UNKNOWN);

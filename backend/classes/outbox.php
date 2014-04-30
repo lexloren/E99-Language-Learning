@@ -30,7 +30,7 @@ class Outbox extends ErrorReporter
 			return static::errors_push("Failed to insert message into outbox: $error.");
 		}
 		
-		$message_id = Connection::insert_id();
+		$message_id = Connection::query_insert_id();
 		
 		$result = Connection::query("SELECT * FROM outbox");
 		

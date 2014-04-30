@@ -46,7 +46,7 @@ class Unit extends CourseComponent
 		
 		$course->uncache_units();
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	public static function select_by_id($unit_id)

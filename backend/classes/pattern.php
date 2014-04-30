@@ -45,7 +45,7 @@ class Pattern extends CourseComponent
 			return static::errors_push("$failure_message: $error.");
 		}
 		
-		return self::select_by_id(Connection::insert_id());
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	public static function select_all_for_test_entry_id($test_entry_id, $prompts_only = true)
