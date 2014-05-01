@@ -198,8 +198,8 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertContains($result[0]["practiceEntryId"], $this->db->practice_ids);
 		$this->assertContains($result[0]["userEntryId"], $this->db->practice_user_entry_ids);
 		$this->assertContains($result[0]["entryId"], $this->db->practice_entry_ids);
-		$mode = Practice::get_mode_from_direction("unknown language", "known language");
-		$this->assertEquals($result[0]["mode"], $mode);
+		$mode = Mode::select_by_direction("unknown language", "known language");
+		$this->assertEquals($result[0]["mode"], $mode->get_mode_id());
 	}
 
 	public function testPracticeWrongListIds()
