@@ -338,10 +338,12 @@ class TestDB
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': ');
 			
 			$grade_indx = rand(0, count($this->grade_ids) - 1);
+			$mode_indx = rand(0, count($this->mode_ids) - 1);
 			
-			$this->link->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id) VALUES (%d, %d)",
+			$this->link->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id, mode) VALUES (%d, %d, %d)",
 				$user_entry_id,
-				$this->grade_ids[$grade_indx]
+				$this->grade_ids[$grade_indx],
+				$this->mode_ids[$mode_indx]
 			));
 
 			if (!$this->link->insert_id)

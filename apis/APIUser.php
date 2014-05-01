@@ -17,7 +17,7 @@ class APIUser extends APIBase
 			//  Finally, send the user information to the front end
 			if (!($user = User::insert($email, $handle, $password)))
 			{
-				Session::get()->set_error_assoc("User Insertion", User::unset_error_description());
+				Session::get()->set_error_assoc("User Insertion", User::errors_unset());
 			}
 			else
 			{
@@ -108,7 +108,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
+			self::return_updates_as_json("User", trim(Language::errors_unset() . "\n\n". User::errors_unset()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -131,7 +131,7 @@ class APIUser extends APIBase
 				}
 			}
 		
-			self::return_updates_as_json("User", trim(Language::unset_error_description() . "\n\n". User::unset_error_description()), $updates ? $user->json_assoc() : null);
+			self::return_updates_as_json("User", trim(Language::errors_unset() . "\n\n". User::errors_unset()), $updates ? $user->json_assoc() : null);
 		}
 	}
 	
@@ -224,7 +224,7 @@ class APIUser extends APIBase
 			}
 		}
 		
-		self::return_updates_as_json("User", User::unset_error_description(), $updates ? $user->json_assoc() : null);
+		self::return_updates_as_json("User", User::errors_unset(), $updates ? $user->json_assoc() : null);
 	}
 	
 	public function practice()
