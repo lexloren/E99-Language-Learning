@@ -49,7 +49,7 @@ class ErrorReporter
 	}
 	protected static function errors_describe($errors)
 	{
-		return $errors ? implode("\n", $errors) : null;
+		return $errors ? implode("\n", array_reverse($errors)) : null;
 	}
 	public static function errors_unset()
 	{

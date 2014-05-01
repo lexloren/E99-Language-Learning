@@ -15,42 +15,51 @@ class Response extends CourseComponent
 		
 		$test_entry_id = intval($test_entry_id, 10);
 		
-		return Connection::transact(
-			function () use ($test_entry_id, $contents, $session_user)
+		$error_message;
+		$error_code;
+		
+		return ($result = Connection::transact(
+			function () use ($test_entry_id, $contents, $session_user, &$error_message, &$error_code)
 			{
 				$failure_message = "Failed to insert test sitting response";
 				
 				if (!($test = Test::select_by_test_entry_id(($test_entry_id = intval($test_entry_id, 10)))))
 				{
-					return static::errors_push("$failure_message: " . Test::errors_unset());
+					$error_message = "$failure_message: " . Test::errors_unset();
+					return null;
 				}
 				
 				if (!($sitting = $test->get_sitting_for_user(Session::get()->get_user())))
 				{
-					return static::errors_push("$failure_message: Test returned no sitting for session user.");
+					$error_message = "$failure_message: Test returned no sitting for session user.";
+					return null;
 				}
 				
 				if (!$sitting->session_user_can_execute())
 				{
-					return static::errors_push("$failure_message: Session user cannot execute sitting.");
+					$error_message = "$failure_message: Session user cannot execute sitting.";
+					return null;
 				}
 				
 				$current_question = $sitting->next_json_assoc();
 				
 				if ($current_question["testEntryId"] !== $test_entry_id)
 				{
-					return static::errors_push("$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.");
+					$error_message = "$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.";
+					return null;
 				}
 				
 				$test_entries = $test->entries();
 				if (!($test_entry = $test_entries[$test_entry_id]))
 				{
-					return static::errors_push("$failure_message: Test returned no entry for test_entry_id = $test_entry_id.");
+					$error_message = "$failure_message: Test returned no entry for test_entry_id = $test_entry_id.";
+					return null;
 				}
 				
 				if (!($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $test_entry->get_entry_id(), $contents)))
 				{
-					return static::errors_push("$failure_message: " . Pattern::errors_unset());
+					$error_message = "$failure_message: " . Pattern::errors_unset();
+					return null;
 				}
 				
 				Connection::query(sprintf("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id, timestamp) VALUES (%d, %d, %d)",
@@ -61,7 +70,8 @@ class Response extends CourseComponent
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert test sitting response: $error.");
+					$error_message = "Failed to insert test sitting response: $error.";
+					return null;
 				}
 				
 				$response_id = Connection::query_insert_id();
@@ -76,9 +86,9 @@ class Response extends CourseComponent
 					));
 				}
 				
-				return self::select_by_id($response_id);
+				return Response::select_by_id($response_id);
 			}
-		);
+		)) ? $result : static::errors_push($error_message);
 	}
 	
 	public static function select_by_id($response_id)

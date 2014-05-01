@@ -639,8 +639,9 @@ class UserEntry extends Entry
 		
 		//  Insert into user_entries the dictionary row corresponding to this Entry object
 		//      If such a row already exists in user_entries, ignore the insertion error
-		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
+		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = %d",
 			$user->get_user_id(),
+			$this->get_user_entry_id(),
 			$this->get_user_entry_id()
 		));
 		

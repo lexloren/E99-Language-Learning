@@ -180,7 +180,7 @@ class APIUnitTest extends PHPUnit_Framework_TestCase
 		
 		$_SESSION["handle"] = $this->db->handles[0];
 		$_POST["unit_id"] = $unit_id;
-		$_POST["list_ids"] = implode(",", array($list1_id));
+		$_POST["list_ids"] = implode(",", array (0 => $list1_id));
 		
 		$this->obj->lists_remove();
 		
@@ -189,9 +189,8 @@ class APIUnitTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($result_assoc);
 		
 		$result = $result_assoc["result"];
-		$this->assertNotNull($result);		
-		//print_r($result);
-		$this->assertEquals($result["listsCount"], 1);
+		$this->assertNotNull($result);
+		$this->assertCount(1, $result);
 	}
 	public function test_lists_remove()
 	{
@@ -211,9 +210,8 @@ class APIUnitTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($result_assoc);
 		
 		$result = $result_assoc["result"];
-		$this->assertNotNull($result);		
-		//print_r($result);
-		$this->assertEquals($result["listsCount"], 2);
+		$this->assertNotNull($result);
+		$this->assertCount(2, $result);
 	}
 	public function test_test()
 	{

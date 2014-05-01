@@ -91,11 +91,12 @@ class UnitTest extends PHPUnit_Framework_TestCase
 	{
 		$entries = $this->db->add_dictionary_entries(5);
 		$list_id = $this->db->add_list($this->db->user_ids[0], $entries);
-		//  Hans to fix...
-		$this->assertEquals(0, count($this->unit->lists()));
-		$this->unit->lists_add(EntryList::select_by_id($list_id));
-		print_r(Unit::errors_unset());
-		$this->assertEquals(1, count($this->unit->lists()));
+		$this->assertCount(0, $this->unit->lists());
+		$this->assertNotNull(($list = EntryList::select_by_id($list_id)));
+		$this->assertTrue($list->get_owner()->is_session_user());
+		$this->assertTrue($this->unit->get_owner()->is_session_user());
+		$this->unit->lists_add($list);
+		$this->assertCount(1, $this->unit->lists());
 		$got_lists = $this->unit->lists();
 		$this->assertEquals($got_lists[0]->get_list_id(), $list_id);
 	}

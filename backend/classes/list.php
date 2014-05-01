@@ -414,8 +414,11 @@ class EntryList extends DatabaseRow
 		
 		$list = $this;
 		
-		return Connection::transact(
-			function () use ($list, $user)
+		$error_code;
+		$error_message;
+		
+		return ($result = Connection::transact(
+			function () use ($list, $user, &$error_code, &$error_message)
 			{
 				Connection::query(sprintf("INSERT INTO lists (user_id, name) SELECT %d, name FROM lists WHERE list_id = %d",
 					$user->get_user_id(),
@@ -424,18 +427,22 @@ class EntryList extends DatabaseRow
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_DATABASE);
+					$error_message = "List failed to copy for user: $error.";
+					$error_code = ErrorReporter::ERRCODE_DATABASE;
+					return null;
 				}
 
 				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::query_insert_id())))
 					|| !$list_copy->entries_add_from_list($list, true))
 				{
-					return static::errors_push("List failed to copy for user: $error.", ErrorReporter::ERRCODE_UNKNOWN);
+					$error_message = "List failed to copy for user: $error.";
+					$error_code = ErrorReporter::ERRCODE_UNKNOWN;
+					return null;
 				}
 				
 				return $list_copy;
 			}
-		);
+		)) ? $result : static::errors_push($error_message, $error_code);
 	}
 	
 	public function json_assoc($privacy = null)

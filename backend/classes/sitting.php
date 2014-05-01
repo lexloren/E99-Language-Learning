@@ -13,17 +13,21 @@ class Sitting extends CourseComponent
 	{
 		if (!($session_user = Session::get()->get_user())) return static::errors_push("Session user has not reauthenticated.");
 		
-		return Connection::transact(
-			function () use ($test_id, $session_user)
+		$error_message;
+		
+		return ($result = Connection::transact(
+			function () use ($test_id, $session_user, &$error_message)
 			{
 				if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
 				{
-					return static::errors_push("Failed to insert test sitting: " . Test::errors_unset());
+					$error_message = "Failed to insert test sitting: " . Test::errors_unset();
+					return null;
 				}
 				
 				if (!$test->session_user_can_execute())
 				{
-					return static::errors_push("Session user cannot execute test.");
+					$error_message = "Session user cannot execute test.";
+					return null;
 				}
 				
 				Connection::query(sprintf("INSERT INTO course_unit_test_sittings (test_id, student_id, start) SELECT %d, student_id, %d FROM course_students WHERE course_id = %d AND user_id = %d",
@@ -35,14 +39,15 @@ class Sitting extends CourseComponent
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert test sitting: $error.");
+					$error_message = "Failed to insert test sitting: $error.";
+					return null;
 				}
 				
 				$test->uncache_sittings();
 				
-				return self::select_by_id(Connection::query_insert_id());
+				return Sitting::select_by_id(Connection::query_insert_id());
 			}
-		);
+		)) ? $result : static::errors_push($error_message);
 	}
 	
 	public static function select_by_id($sitting_id)

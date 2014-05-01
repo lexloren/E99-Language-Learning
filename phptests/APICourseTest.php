@@ -313,11 +313,10 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		
 		$_POST["course_id"] = $course_id;
 		$_SESSION["handle"] = $this->db->handles[0];
-		$_POST["user_ids"] = implode(",", array($this->db->user_ids[2], $this->db->user_ids[3]));
+		$_POST["user_ids"] = implode(",", array ($this->db->user_ids[2], $this->db->user_ids[3]));
 		$this->obj->students_remove();
 		
 		$result_assoc = Session::get()->get_result_assoc();
-		//print_r($result_assoc);
 		$result = $result_assoc["result"];
 		$this->assertNotNull($result);
 		$this->assertCount(1, $result);

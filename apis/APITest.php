@@ -188,28 +188,41 @@ class APITest extends APIBase
 		{
 			$mode = isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
 			
-			if (isset($_POST["list_ids"]))
-			{
-				$list_ids = explode(",", $_POST["list_ids"]);
-				
-				foreach ($list_ids as $list_id)
+			if (Connection::transact(
+				function () use ($test, $mode)
 				{
-					if (($list = EntryList::select_by_id($list_id))
-						&& $list->session_user_can_read())
+					$errors = 0;
+					
+					if (isset($_POST["list_ids"]))
 					{
-						$test->entries_add_from_list($list, $mode);
+						$list_ids = explode(",", $_POST["list_ids"]);
+						
+						foreach ($list_ids as $list_id)
+						{
+							if (($list = EntryList::select_by_id($list_id))
+								&& $list->session_user_can_read())
+							{
+								if (!$test->entries_add_from_list($list, $mode)) $errors ++;
+							}
+							else $errors ++;
+						}
 					}
+					
+					if (isset($_POST["entry_ids"]))
+					{
+						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+						{
+							if (!($entry = Entry::select_by_id($entry_id))) $errors ++;
+							if (!$test->entries_add($entry, $mode)) $errors ++;
+						}
+					}
+					
+					if ($errors) return null;
+					
+					return $test;
 				}
-			}
-			
-			if (isset($_POST["entry_ids"]))
-			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-				{
-					$test->entries_add(Entry::select_by_id($entry_id), $mode);
-				}
-			}
-			Session::get()->set_result_assoc($test->entries_json_array());
+			)) Session::get()->set_result_assoc($test->entries_json_array());
+			else Session::get()->set_error_assoc("Test-Entries Addition", Test::errors_unset());
 		}
 	}
 	
@@ -221,16 +234,25 @@ class APITest extends APIBase
 		{
 			if (self::validate_request($_POST, "entry_ids"))
 			{
-				foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-				{
-					if (!$test->entries_remove(Entry::select_by_id($entry_id)))
+				if (Connection::transact(
+					function () use ($test)
 					{
-						Session::get()->set_error_assoc("Test-Entries Removal", Test::errors_unset());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+						{
+							if (!$test->entries_remove(Entry::select_by_id($entry_id)))
+							{
+								$errors ++;
+							}
+						}
+						
+						if ($errors) return null;
+						
+						return $test;
 					}
-				}
-				
-				Session::get()->set_result_assoc($test->entries_json_array());
+				)) Session::get()->set_result_assoc($test->entries_json_array());
+				else Session::get()->set_error_assoc("Test-Entries Removal", Test::errors_unset());
 			}
 		}
 	}
@@ -247,10 +269,8 @@ class APITest extends APIBase
 			if (!$test->entries_randomize($renumber, $remode))
 			{
 				Session::get()->set_error_assoc("Test-Entries Randomization", Test::errors_unset());
-				return;
 			}
-			
-			Session::get()->set_result_assoc($test->entries_json_array());
+			else Session::get()->set_result_assoc($test->entries_json_array());
 		}
 	}
 	
@@ -261,42 +281,50 @@ class APITest extends APIBase
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test"))
 			&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry")))
 		{
-			$updates = 0;
-			
-			if (isset($_POST["number"]))
-			{
-				$updates += !!$test->set_entry_number($entry, $_POST["number"]);
-			}
-			
-			if (isset($_POST["mode"]))
-			{
-				$mode = intval($_POST["mode"], 10);
-				
-				$updates += !!$test->set_entry_mode($entry, $mode);
-			}
-			
-			if (isset($_POST["options"]))
-			{
-				$options = explode(",", $_POST["options"]);
-				
-				foreach ($options as $option)
+			if (Connection::transact(
+				function () use ($test, $entry)
 				{
-					if (($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $option)))
+					$errors = 0;
+					
+					if (isset($_POST["number"]))
 					{
-						$updates += !!$pattern->set_prompt(true);
+						$errors += !$test->set_entry_number($entry, $_POST["number"]);
 					}
-				}
-				
-				foreach ($test->entry_options($entry) as $option)
-				{
-					if (!in_array($option->get_contents(), $options))
+					
+					if (isset($_POST["mode"]))
 					{
-						$updates += !!$option->set_prompt(false);
+						$mode = intval($_POST["mode"], 10);
+						
+						$errors += !$test->set_entry_mode($entry, $mode);
 					}
+					
+					if (isset($_POST["options"]))
+					{
+						$options = explode(",", $_POST["options"]);
+						
+						foreach ($options as $option)
+						{
+							if (($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $option)))
+							{
+								$errors += !$pattern->set_prompt(true);
+							}
+						}
+						
+						foreach ($test->entry_options($entry) as $option)
+						{
+							if (!in_array($option->get_contents(), $options))
+							{
+								$errors += !$option->set_prompt(false);
+							}
+						}
+					}
+					
+					if ($errors) return null;
+					
+					return $test;
 				}
-			}
-			
-			self::return_updates_as_json("Test", Test::errors_unset(), $updates ? $test->json_assoc() : null);
+			)) Session::get()->set_result_assoc($test->json_assoc());
+			else Session::get()->set_error_assoc("Test Modification", Test::errors_unset());
 		}
 	}
 	
@@ -317,11 +345,9 @@ class APITest extends APIBase
 			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], true)))
 			{
 				$pattern->set_prompt(true);
-				
 				Session::get()->set_result_assoc($pattern->json_assoc());
-				return;
 			}
-			Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
+			else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 		}
 	}
 	
@@ -337,11 +363,9 @@ class APITest extends APIBase
 			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"])))
 			{
 				$pattern->set_prompt(false);
-				
 				Session::get()->set_result_assoc($pattern->json_assoc());
-				return;
 			}
-			Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
+			else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 		}
 	}
 	
@@ -376,18 +400,30 @@ class APITest extends APIBase
 			
 			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], false)))
 			{
-				if (isset($_POST["score"]))
+				if (Connection::transact(
+					function () use ($pattern)
+					{
+						$errors = 0;
+						
+						if (isset($_POST["score"]))
+						{
+							$errors += !$pattern->set_score($_POST["score"]);
+						}
+						
+						if (isset($_POST["message"]))
+						{
+							$errors += !$pattern->set_message($_POST["message"]);
+						}
+						
+						if ($errors) return null;
+						
+						return $pattern;
+					}
+				))
 				{
-					$pattern->set_score($_POST["score"]);
+					Session::get()->set_result_assoc($pattern->json_assoc());
+					return;
 				}
-				
-				if (isset($_POST["message"]))
-				{
-					$pattern->set_message($_POST["message"]);
-				}
-				
-				Session::get()->set_result_assoc($pattern->json_assoc());
-				return;
 			}
 			Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 		}
@@ -399,28 +435,22 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			if (!($sitting = $test->execute_for_session_user()))
-			{
-				Session::get()->set_error_assoc("Test Execution", Test::errors_unset());
-				return;
-			}
-			
-			if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
-			{
-				if (!Response::insert($_POST["test_entry_id"], $_POST["contents"]))
+			if (($result = Connection::transact(
+				function () use ($test)
 				{
-					Session::get()->set_error_assoc("Test Execution", Response::errors_unset());
-					return;
+					if (!($sitting = $test->execute_for_session_user())) return null;
+					
+					if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
+					{
+						if (!Response::insert($_POST["test_entry_id"], $_POST["contents"])) return null;
+					}
+					
+					if (!($next_json_assoc = $sitting->next_json_assoc())) return null;
+					
+					return $next_json_assoc;
 				}
-			}
-			
-			if (!($next_json_assoc = $sitting->next_json_assoc()))
-			{
-				Session::get()->set_error_assoc("Test Execution", Sitting::errors_unset());
-				return;
-			}
-			
-			Session::get()->set_result_assoc($next_json_assoc);
+			))) Session::get()->set_result_assoc($result);
+			else Session::get()->set_error_assoc("Test Execution", Test::errors_unset());
 		}
 	}
 }

@@ -88,38 +88,45 @@ class Unit extends CourseComponent
 		if ($number === $this->get_number()) return $this;
 		
 		$unit = $this;
+		$error_message;
 		
-		return Connection::transact(
-			function () use ($unit, $number, $units_count)
+		return ($result = Connection::transact(
+			function () use ($unit, $number, $units_count, &$error_message)
 			{
 				Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $unit->get_unit_id()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+					$error_message = "Failed to reorder course units: $error.";
+					return null;
 				}
 				
 				Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+					$error_message = "Failed to reorder course units: $error.";
+					return null;
 				}
 				
 				Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $unit->get_course_id(), $number));
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Unit Modification", "Failed to reorder course units: $error.");
+					$error_message = "Failed to reorder course units: $error.";
+					return null;
 				}
 				
-				if (!self::update_this($unit, "course_units", array ("num" => $number), "unit_id", $unit->get_unit_id())) return null;
+				if (!self::update_this($unit, "course_units", array ("num" => $number), "unit_id", $unit->get_unit_id()))
+				{
+					return null;
+				}
 				
 				$unit->number = $number;
 				
 				return $unit;
 			}
-		);
+		)) ? $result : static::errors_push($error_message);
 	}
 	
 	private $name = null;
@@ -241,8 +248,9 @@ class Unit extends CourseComponent
 	public function delete()
 	{
 		$unit = $this;
-		return Connection::transact(
-			function () use ($unit)
+		$error_message;
+		return ($result = Connection::transact(
+			function () use ($unit, &$error_message)
 			{
 				if (($return = self::delete_this($unit, "course_units", "unit_id", $unit->get_unit_id())))
 				{
@@ -252,12 +260,13 @@ class Unit extends CourseComponent
 					
 					if (!!($error = Connection::query_error_clear()))
 					{
-						return static::errors_push("Unit Deletion", "Failed to reorder course units: $error.");
+						$error_message = "Failed to reorder course units: $error.";
+						return null;
 					}
 				}
 				return $return;
 			}
-		);
+		)) ? $result : static::errors_push($error_message);
 	}
 	
 	public function lists_add($list)
@@ -267,7 +276,8 @@ class Unit extends CourseComponent
 			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		if (!($list = $list->copy_for_user($this->get_owner(), $this)))
+		if (!$list->get_owner()->equals($this->get_owner())
+			&& !($list = $list->copy_for_user($this->get_owner(), $this)))
 		{
 			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}

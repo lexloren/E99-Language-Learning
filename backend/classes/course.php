@@ -16,8 +16,10 @@ class Course extends DatabaseRow
 			return static::errors_push("Session user has not reauthenticated.", ErrorReporter::ERRCODE_AUTHENTICATION);
 		}
 		
-		return Connection::transact(
-			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public)
+		$error_message;
+		
+		return ($result = Connection::transact(
+			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public, &$error_message)
 			{
 				$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
 				
@@ -45,11 +47,13 @@ class Course extends DatabaseRow
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert course: $error.", ErrorReporter::ERRCODE_DATABASE);
+					$error_message = "Failed to insert course: $error.";
+					return null;
 				}
 				
 				if (!($course = Course::select_by_id(Connection::query_insert_id())))
 				{
+					$error_message = "Failed to select inserted course.";
 					return null;
 				}
 				
@@ -60,14 +64,15 @@ class Course extends DatabaseRow
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					return static::errors_push("Failed to insert course instructor: $error.", ErrorReporter::ERRCODE_DATABASE);
+					$error_message = "Failed to insert course instructor: $error.";
+					return null;
 				}
 				
 				Session::get()->get_user()->uncache_all();
 				
 				return $course;
 			}
-		);
+		)) ? $result : static::errors_push($error_message, ErrorReporter::ERRCODE_DATABASE);
 	}
 	
 	public static function select_by_id($course_id)
