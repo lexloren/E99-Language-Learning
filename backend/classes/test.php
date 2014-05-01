@@ -69,6 +69,7 @@ class Test extends CourseComponent
 	}
 	public function set_test_name($name)
 	{
+		if (strlen($name) === 0) $name = null;
 		if (!self::update_this($this, "course_unit_tests", array ("name" => $name), "test_id", $this->get_test_id()))
 		{
 			return null;
@@ -108,6 +109,16 @@ class Test extends CourseComponent
 		);
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
 		return self::cache($this->entries, "UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num", "test_entry_id");
+	}
+	public function entries_by_number()
+	{
+		$user_entries = "(course_unit_test_entries LEFT JOIN user_entries USING (user_entry_id))";
+		$language_codes = sprintf("(SELECT entry_id, %s FROM %s) AS reference",
+			Dictionary::language_code_columns(),
+			Dictionary::join()
+		);
+		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
+		return self::collect("UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
 	}
 	public function uncache_entries()
 	{
@@ -262,19 +273,20 @@ class Test extends CourseComponent
 		return ($result = Connection::transact(
 			function () use ($test, $renumber, $remode, &$error_message)
 			{
-				$entries_ordered = $test->entries();
+				$entries_ordered = array_values($test->entries());
 				$entries_count = count($entries_ordered);
 				
 				if ($renumber)
 				{
-					$entries_randomized = array ();
+					$entries_reordered = array ();
 					
 					while (count($entries_ordered) > 0)
 					{
-						array_push($entries_randomized, array_splice($entries_ordered, rand(0, count($entries_ordered)), 1));
+						$i = rand(0, count($entries_ordered) - 1);
+						array_push($entries_reordered, $entries_ordered[$i]);
+						unset($entries_ordered[$i]);
+						$entries_ordered = array_values($entries_ordered);
 					}
-					
-					$test->uncache_entries();
 					
 					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = num + $entries_count WHERE test_id = %d", $test->get_test_id()));
 					
@@ -286,14 +298,17 @@ class Test extends CourseComponent
 				}
 				else
 				{
-					$entries_randomized = $entries_ordered;
+					$entries_reordered = $entries_ordered;
 				}
 				
-				for ($i = 0; $i < $entries_count; $i ++)
+				foreach ($test->entries() as $test_entry_id => $entry)
 				{
 					$mode = $remode ? rand(0, 6) : "mode";
 					
-					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = $i + 1, mode = $mode WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entries_randomized[$i]->get_user_entry_id()));
+					Connection::query(sprintf("UPDATE course_unit_test_entries SET num = %d, mode = $mode WHERE test_id = %d AND test_entry_id = $test_entry_id",
+						array_search($entry, $entries_reordered) + 1,
+						$test->get_test_id()
+					));
 				
 					if (!!($error = Connection::query_error_clear()))
 					{
@@ -578,10 +593,9 @@ class Test extends CourseComponent
 			"course_unit_tests",
 			!!$timeframe
 				? $timeframe->mysql_assignments()
-				: array ("open" => "NULL", "close" => "NULL"),
+				: array ("open" => null, "close" => null),
 			"test_id",
-			$this->get_test_id(),
-			true
+			$this->get_test_id()
 		)) return null;
 		
 		$this->timeframe = $timeframe;
@@ -614,7 +628,7 @@ class Test extends CourseComponent
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
 		
-		$timer = intval($timer, 10) > 0 ? intval($timer, 10) : "NULL";
+		$timer = intval($timer, 10) > 0 ? intval($timer, 10) : null;
 		
 		return parent::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id());
 	}
@@ -713,10 +727,16 @@ class Test extends CourseComponent
 	{
 		$json_array = array ();
 		
-		foreach ($this->entries() as $test_entry_id => $entry)
+		if (!($entries_by_number = $this->entries_by_number()))
+		{
+			echo static::errors_unset();
+			return null;
+		}
+		
+		foreach ($entries_by_number as $entry)
 		{
 			$entry_assoc = $entry->json_assoc();
-			$entry_assoc["testEntryId"] = $test_entry_id;
+			$entry_assoc["testEntryId"] = array_search($entry, $this->entries());
 			$entry_assoc["mode"] = $this->get_entry_mode($entry);
 			$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 			

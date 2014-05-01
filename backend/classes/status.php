@@ -8,12 +8,12 @@ class Status extends DatabaseRow
 	
 	public static function select_by_id($status_id)
 	{
-		return parent::select("user_statuses", "status_id", $status_id);
+		return parent::select("user_statuses", "status_id", intval($status_id, 10));
 	}
 	
 	public static function select_by_description($status_desc)
 	{
-		return parent::select("user_statuses", "desc", $status_desc);
+		return parent::select("user_statuses", "`desc`", $status_desc);
 	}
 	
 	public static function select_all()

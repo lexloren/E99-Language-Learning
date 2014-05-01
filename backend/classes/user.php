@@ -174,13 +174,13 @@ class User extends DatabaseRow
 	private $status_id = null;
 	public function get_status_id()
 	{
-		$this->status_id;
+		return $this->status_id;
 	}
-	public function get_status($status)
+	public function get_status()
 	{
-		if (!$this->get_status_id()) return null;
+		if (!($status_id = $this->get_status_id())) return null;
 		
-		if (($status = Status::select_by_id($this->get_status_id())))
+		if (($status = Status::select_by_id($status_id)))
 		{
 			return $status;
 		}
@@ -188,7 +188,7 @@ class User extends DatabaseRow
 	}
 	public function set_status($status)
 	{
-		if (!self::update_this($this, "users", array ("status_id" => ($status_id = $status->get_status_id())), "user_id", $this->get_user_id()))
+		if (!self::update_this($this, "users", array ("status_id" => ($status_id = !!$status ? $status->get_status_id() : null)), "user_id", $this->get_user_id()))
 		{
 			return null;
 		}
@@ -242,6 +242,7 @@ class User extends DatabaseRow
 	}
 	public function set_name_family($name_family)
 	{
+		if (strlen($name_family) === 0) $name_family = null;
 		if (!self::update_this($this, "users", array ("name_family" => $name_family), "user_id", $this->get_user_id()))
 		{
 			return null;
@@ -257,6 +258,7 @@ class User extends DatabaseRow
 	}
 	public function set_name_given($name_given)
 	{
+		if (strlen($name_given) === 0) $name_given = null;
 		if (!self::update_this($this, "users", array ("name_given" => $name_given), "user_id", $this->get_user_id()))
 		{
 			return null;
@@ -494,7 +496,7 @@ class User extends DatabaseRow
 			return static::errors_push("User cannot set language years for language not already associated with user.");
 		}
 			
-		Connection::query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_language_id()));
+		Connection::query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_lang_id()));
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
@@ -624,6 +626,7 @@ class User extends DatabaseRow
 		$assoc["languageYears"] = $this->get_language_years_json_assoc();
 		$assoc["nameGiven"] = $this->get_name_given($privacy);
 		$assoc["nameFamily"] = $this->get_name_family($privacy);
+		$assoc["status"] = !!$this->get_status() ? $this->get_status()->json_assoc() : null;
 		$assoc["coursesOwnedCount"] = $this->courses_owned_count();
 		$assoc["coursesInstructedCount"] = $this->courses_instructed_count();
 		$assoc["coursesStudiedCount"] = $this->courses_studied_count();

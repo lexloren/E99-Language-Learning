@@ -77,6 +77,7 @@ class CourseComponent extends DatabaseRow
 	}
 	protected static function set_this_message($instance, $message, $table, $column, $id)
 	{
+		if (strlen($message) === 0) $message = null;
 		if (!self::update_this($instance, $table, array ("message" => $message), $column, $id))
 		{
 			return null;

@@ -381,7 +381,7 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$_POST["name_family"] = "NewFamily";
 		$_POST["email"] = "newemail1@domain.com";
 		
-		$_POST["langs"] = implode(",", array("en=5", "cn=2"));
+		$_POST["langs"] = implode(",", array("en 5", "cn 2"));
 
 		//Session not set
 		$this->obj->update();

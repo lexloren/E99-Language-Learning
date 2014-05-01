@@ -156,10 +156,9 @@ class Unit extends CourseComponent
 			"course_units",
 			!!$timeframe
 				? $timeframe->mysql_assignments()
-				: array ("open" => "NULL", "close" => "NULL"),
+				: array ("open" => null, "close" => null),
 			"unit_id",
-			$this->get_unit_id(),
-			true
+			$this->get_unit_id()
 		)) return null;
 		
 		$this->timeframe = $timeframe;

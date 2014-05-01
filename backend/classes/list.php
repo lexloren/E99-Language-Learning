@@ -140,6 +140,7 @@ class EntryList extends DatabaseRow
 	}
 	public function set_list_name($name)
 	{
+		if (strlen($name) === 0) $name = null;
 		if (!self::update_this($this, "lists", array ("name" => $name), "list_id", $this->get_list_id()))
 		{
 			return null;

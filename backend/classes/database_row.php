@@ -25,7 +25,7 @@ class DatabaseRow extends ErrorReporter
 	{
 		if (!$override_safety)
 		{
-			if (is_string($id)) $id = "'".Connection::escape($id)."'";
+			if (is_string($id)) $id = "'" . Connection::escape($id) . "'";
 			else $id = intval($id, 10);
 		}
 		
@@ -155,10 +155,11 @@ class DatabaseRow extends ErrorReporter
 				{
 					$value = "'".Connection::escape($value)."'";
 				}
-				else
+				else if ($value !== null)
 				{
 					$value = intval($value, 10);
 				}
+				else $value = "NULL";
 			}
 			
 			array_push($assignments_sql, "$column = $value");

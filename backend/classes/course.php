@@ -302,10 +302,9 @@ class Course extends DatabaseRow
 			"courses",
 			!!$timeframe
 				? $timeframe->mysql_assignments()
-				: array ("open" => "NULL", "close" => "NULL"),
+				: array ("open" => null, "close" => null),
 			"course_id",
-			$this->get_course_id(),
-			true
+			$this->get_course_id()
 		)) return null;
 		
 		$this->timeframe = $timeframe;
@@ -332,6 +331,7 @@ class Course extends DatabaseRow
 	}
 	public function set_message($message)
 	{
+		if (strlen($message) === 0) $message = null;
 		if (!self::update_this($this, "courses", array ("message" => $message), "course_id", $this->get_course_id()))
 		{
 			return null;
