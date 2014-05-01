@@ -19,11 +19,12 @@ class Practice extends DatabaseRow
 
 	public static function insert($user_entry_id)
 	{
-		$modes = self::get_all_modes();
+		$modes = Mode::select_all();
 		$user_practice_set = array();
 
-		foreach($modes as $mode)
+		foreach($modes as $mode_obj)
 		{
+			$mode = $mode_obj->get_mode_id();
 			Connection::query("INSERT IGNORE INTO user_practice (user_entry_id, mode) values($user_entry_id, $mode)");
 			if (!!($error = Connection::query_error_clear()))
 	                        return static::errors_push("Failed to insert user_practice: " . $error . ".");
@@ -34,41 +35,6 @@ class Practice extends DatabaseRow
                 	}
 		}
 		return $user_practice_set;
-	}
-
-	public static function get_mode_from_direction($practice_from, $practice_to)
-	{
-		$result = Connection::query("SELECT mode_id FROM modes WHERE LOWER(`from`) = '$practice_from' ".
-				"AND LOWER(`to`) = '$practice_to'");
-		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from mode: " . $error . ".");
-		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
-                        return static::errors_push("Failed to select any mode for given where direction $practice_from => $practice_to");
-
-		return intval($result_assoc["mode_id"], 10);
-	}
-	
-	public static function get_direction_from_mode($mode)
-	{
-		$result = Connection::query("SELECT `from`, `to` FROM modes WHERE mode_id = $mode");
-		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from direction: " . $error . ".");
-                if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
-                {
-                        return static::errors_push("Failed to select any direction for given mode $mode");
-                }
-		
-		return array("practice_from" => $result_assoc["from"], "practice_to" => $result_assoc["to"]);
-	}
-
-	public static function get_all_modes()
-	{
-		$result = Connection::query("SELECT mode_id FROM modes");
-		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from mode: " . $error . ".");
-		$modes = array();
-		while (($result_assoc = $result->fetch_assoc()))
-                {
-			array_push($modes, intval($result_assoc["mode_id"]));
-		}
-		return $modes;
 	}
 
         /***    INSTANCE    ***/
@@ -129,8 +95,8 @@ class Practice extends DatabaseRow
         public static function generate($list_ids, $practice_from, $practice_to, $entries_count)
         {
 		$practice_set = array();
-		$mode = self::get_mode_from_direction($practice_from, $practice_to);
-		if(isset($mode))
+		$mode_obj = Mode::select_by_direction($practice_from, $practice_to);
+		if(!!($mode_obj) && ($mode = $mode_obj->get_mode_id()))
 		{
 	                $count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
         	                intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;

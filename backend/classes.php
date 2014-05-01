@@ -13,6 +13,7 @@ require_once "./backend/classes/annotation.php";
 require_once "./backend/classes/list.php";
 require_once "./backend/classes/practice.php";
 require_once "./backend/classes/grade.php";
+require_once "./backend/classes/mode.php";
 require_once "./backend/classes/course.php";
 require_once "./backend/classes/course_component.php";
 require_once "./backend/classes/unit.php";
