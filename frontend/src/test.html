@@ -60,6 +60,21 @@
         <button type="button" stype="button" class="btn" onclick="cancelUpdate('#updateTestForm','#test\-update');">Cancel</button> &nbsp;
 				<button class="btn btn-primary" type="button" onclick="saveUpdate();">Save</button><br /><br /> 
         </form> 
+        <!--- Test Sittings --->
+        <div id="student-sittings">
+          <h4>Sittings</h4>
+          <div id="sitting-loader"><img src="images/ajax-loader.gif"></div>
+          <table id="sitting-list" class="table">
+            <thead>
+              <tr>
+                <td>Student</td>
+                <td>Response Count</td>
+                <td>Scored Responses</td>
+                <td></td>
+              </tr>
+            </thead>
+          </table>
+        </div>        
         <!--- Test Entries --->
         <div id="test-entries">
           <h4>Entries</h4>
@@ -67,37 +82,89 @@
           <table id="entry-list" class="table">
             <thead>
               <tr>
-                <td></td>
                 <td>Word</td>
                 <td>Pronunciation</td>
                 <td>Translation</td>
-                <td></td>
+                <td>Order</td>
+                <td>Mode &nbsp; <span id="mode-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="top" title="Mode refers to the Question/Answer type.<br/>0: Unknown Lang./Known Lang.<br/>1: Known Lang./Unknown Lang.<br/>2: Unknown Lang./Pronunciation<br/>3: Pronunciation/Known Lang.<br/>4: Pronunciation/Unknown Lang.<br/>5: Known Lang./Pronunciation<br/>6: Unknown Lang./Pronunciation"></span></td>
+                <td>Multiple Choice</td>
                 <td></td>
               </tr>
             </thead>
+            <script>$('#mode-info').tooltip({html: true});</script>
           </table>
+          <div id="choice-loader"><img src="images/ajax-loader.gif"><br /> &nbsp; </div>
+          <div id="multi-choice" class="container-left">
+            <div id="choice-note"></div>
+            <table id="choice-list" class="table">
+            </table>
+            <div id="choiceform" class="form-group form-inline">
+            </div>
+            <span class="glyphicon glyphicon-arrow-left span-action" onclick="hideOptions();" title="Return to entries"></span> &nbsp; <span class="span-action" onclick="hideOptions();">Return to entries</span>
+          </div>
+          <div id="entry-addition">
+            <strong>[Add entries from dictionary]</strong> &nbsp; 
+            <span class="span-action" onclick="toggleSearch('#list\-add')">[Add entries from flashcard decks]</span><br /> &nbsp;
+          </div>
           <!--- Entry Search Form --->
           <div id="dict-add">
-            <h5>Add entries from the dictionary:</h5>
             <form class="form-inline" role="form" id="dict-search">
               <div class="form-group">
                 <label class="sr-only" for="entrysearch">Enter search text</label>
                 <input type="text" class="form-control" id="entrysearch" placeholder="Enter text to search for">
               </div>
               <div class="form-group">
-                <label>From: </label>
-                <select class="form-control" id="lang1">
+                <label>Language 1: </label>
+                <select class="form-control" id="entry-lang1">
                 </select>
               </div>
               <div class="form-group">
-                <label>To: </label>
-                <select class="form-control" id="lang2">
+                <label>Language 2: </label>
+                <select class="form-control" id="entry-lang2">
                 </select>
               </div>
               <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br /> &nbsp;
             </form>
             <div id="dict-loader"><img src="images/ajax-loader.gif"></div>
             <table class="table" id="dictionary"></table>
+          </div>
+          <!--- List Search Form --->
+          <div id="list-add">
+            <form class="form-inline" id="searchListForm" role="form">
+              <div class="form-group">
+                <span class="span-action" onclick="myDecks();">[View My Decks]</span> &nbsp; 
+                <span class="span-action" onclick="showSearch('#word-search');">[Search by Word]</span> &nbsp; 
+                <span class="span-action" onclick="showSearch('#owner-search');">[Search by Owner]</span> &nbsp;
+                <br /> &nbsp;
+                <div id="word-search">
+                  <div class="form-group">
+                    <label class="sr-only" for="wordsearch">Enter search text</label>
+                    <input type="text" class="form-control" id="wordsearch" placeholder="search word">
+                  </div>
+                  <div class="form-group">
+                    <label>Language 1: </label>
+                    <select class="form-control" id="deck-lang1">
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Language 2: </label>
+                    <select class="form-control" id="deck-lang2">
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-primary" onclick="search_entry_deck(1);">Search</button><br />&nbsp;
+                </div>
+                <div id="owner-search">
+                  <div class="form-group">
+                    <input type="text" class="form-control" id="ownerCriteria" placeholder="username or email" required autofocus>
+                  </div>
+                  <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button><br />&nbsp;
+                </div>
+              </div> 
+            </form>
+            <div id="deck-loader"><img src="images/ajax-loader.gif"></div>
+            <div id="searchHeader"></div>
+            <table class="table" id="searchResults">
+            </table>
           </div>
         </div>
         <!--- Test Sitting --->
