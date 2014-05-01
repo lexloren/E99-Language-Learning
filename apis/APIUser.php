@@ -77,6 +77,22 @@ class APIUser extends APIBase
 		self::return_array_as_json(Session::get()->get_user()->lists(isset($_GET["course_ids"]) ? explode(",", $_GET["course_ids"]) : null));
 	}
 	
+	public function student_courses_lists()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		$lists = array ();
+		foreach (Session::get()->get_user()->courses_studied() as $course)
+		{
+			foreach ($course->lists() as $list)
+			{
+				if (!in_array($list, $lists)) array_push($lists, $list);
+			}
+		}
+		
+		self::return_array_as_json($lists);
+	}
+	
 	public function sittings()
 	{
 		if (!Session::get()->reauthenticate()) return;
