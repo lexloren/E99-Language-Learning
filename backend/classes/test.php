@@ -143,7 +143,7 @@ class Test extends CourseComponent
 				
 				$entry = $entry->copy_for_user($test->get_owner(), $test);
 				
-				if ($number > ($entries_count = count($this->entries()))) $number = $entries_count;
+				if ($number > ($entries_count = count($test->entries()))) $number = $entries_count;
 				
 				if ($number === ($number_formerly = array_search($entry, $test->entries()) + 1)) return $test;
 				
