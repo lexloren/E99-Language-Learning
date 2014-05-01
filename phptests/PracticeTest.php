@@ -32,14 +32,14 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$entries_count = 50;
 		$user_obj = User::select_by_id($this->db->user_ids[1]);
                 Session::get()->set_user($user_obj);
-                $practice_set = Practice::generate($this->db->practice_list_ids, "unknown", "known", $entries_count);
+                $practice_set = Practice::generate($this->db->practice_list_ids, "UnKnown Language", "Known Language", $entries_count);
 		$this->assertNotNull($practice_set);
 		$this->assertCount(20, $practice_set);
 		$this->assertContains($practice_set[0]->get_entry()->get_entry_id(), $this->db->practice_entry_ids);
 
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);
-		$practice_set = Practice::generate($this->db->practice_list_ids, "unknown", "known", $entries_count);
+		$practice_set = Practice::generate($this->db->practice_list_ids, "UnKnown Language", "Known Language", $entries_count);
 		$this->assertNotNull($practice_set);
                 $this->assertCount(20, $practice_set);
 		$entry_id = $practice_set[1]->get_entry()->get_entry_id();
@@ -60,18 +60,18 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 	{
 		$this->db->add_list($this->db->user_ids[0], array ());
 
-		$practice_set = Practice::generate($this->db->list_ids, "unknown", "known", 50);
+		$practice_set = Practice::generate($this->db->list_ids, "UnKnown Language", "Known Language", 50);
 		$this->assertEmpty($practice_set);	
 		$this->assertNotNull(Practice::errors_unset());
 	}
 
 	public function testPracticeGenerateWrongInput()
 	{
-                $practice_set = Practice::generate($this->db->practice_list_ids, "known", "unknown", -6);
+                $practice_set = Practice::generate($this->db->practice_list_ids, "Known Language", "UnKnown Language", -6);
 		$this->assertNotNull($practice_set);
 		$this->assertCount(20, $practice_set);
 		
-		$practice = Practice::generate(array (), "known", "unknown", -2);
+		$practice = Practice::generate(array (), "Known Language", "UnKnown Language", -2);
                 $this->assertEmpty($practice);
 		$this->assertNotNull(Practice::errors_unset());
 	}
@@ -98,6 +98,28 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$this->assertNull(Practice::errors_get());
 		$this->assertEquals(13.0, $practice->get_interval());
 		$this->assertEquals(3, $user_entry_results_count);
+	}
+
+	public function testPracticeJsonAssoc()
+	{
+		$practice = Practice::select_by_id($this->db->practice_ids[0]);
+		$practice_entry_id = $practice->get_practice_entry_id();
+		$user_entry_id = $practice->get_user_entry_id();
+		$mode = $practice->get_mode();
+		$interval = $practice->get_interval();
+		$efactor = $practice->get_efactor();
+		$practice_json = $practice->json_assoc();
+
+		$this->assertArrayHasKey("practiceEntryId", $practice_json);
+                $this->assertArrayHasKey("userEntryId", $practice_json);
+                $this->assertArrayHasKey("mode", $practice_json);
+                $this->assertArrayHasKey("interval", $practice_json);
+                $this->assertArrayHasKey("efactor", $practice_json);
+		$this->assertEquals($practice_json["practiceEntryId"], $this->db->practice_ids[0]);
+		$this->assertEquals($practice_json["userEntryId"], $user_entry_id);
+		$this->assertEquals($practice_json["mode"], $mode);
+		$this->assertEquals($practice_json["interval"], $interval);
+		$this->assertEquals($practice_json["efactor"], $efactor);
 	}
 	
 }

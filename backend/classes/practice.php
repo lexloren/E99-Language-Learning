@@ -38,8 +38,8 @@ class Practice extends DatabaseRow
 
 	public static function get_mode_from_direction($practice_from, $practice_to)
 	{
-		$result = Connection::query("SELECT mode_id FROM modes WHERE `from` = '$practice_from' ".
-				"AND `to` = '$practice_to'");
+		$result = Connection::query("SELECT mode_id FROM modes WHERE LOWER(`from`) = '$practice_from' ".
+				"AND LOWER(`to`) = '$practice_to'");
 		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from mode: " . $error . ".");
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
                         return static::errors_push("Failed to select any mode for given where direction $practice_from => $practice_to");
@@ -107,6 +107,11 @@ class Practice extends DatabaseRow
 	public function get_entry()
 	{
 		return $this->entry;
+	}
+
+	public function get_owner()
+	{
+		return $this->get_entry()->get_owner();
 	}
 
 	private function __construct($practice_entry_id, $user_entry_id, $mode, $interval, $efactor)
@@ -233,6 +238,18 @@ class Practice extends DatabaseRow
                 $this->efactor = $new_efactor;
                 return $this;
         }
+
+	public function json_assoc($privacy = null)
+	{
+		return $this->privacy_mask(array (
+			"practiceEntryId" => $this->get_practice_entry_id(),
+			"userEntryId" => $this->get_user_entry_id(),
+			"mode" => $this->get_mode(),
+			"interval" => $this->get_interval(),
+			"efactor" => $this->get_efactor(),
+			"entryId" => $this->get_entry()->get_entry_id()
+		), array (0 => "practiceEntryId"), $privacy);
+	}
 }
 
 ?>

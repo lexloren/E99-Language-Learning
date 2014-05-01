@@ -504,28 +504,28 @@ class TestDB
 		$link = $this->link;
 		$mode_entries = array ();
                 $mode_entries[] = array(
-                                                                 "from" => 'unknown',
-                                                                 "to" => 'known'
+                                                                 "from" => 'Unknown Language',
+                                                                 "to" => 'Known Language'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "from" => 'known',
-                                                                 "to" => 'unknown'
+                                                                 "from" => 'Known Language',
+                                                                 "to" => 'Unknown Language'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "from" => 'unknown',
-                                                                 "to" => 'pronunciation'
+                                                                 "from" => 'Unknown Language',
+                                                                 "to" => 'Unknown Pronunciation'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "from" => 'pronunciation',
-                                                                 "to" => 'known'
+                                                                 "from" => 'Unknown Pronunciation',
+                                                                 "to" => 'Known Language'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "from" => 'pronunciation',
-                                                                 "to" => 'unknown'
+                                                                 "from" => 'Unknown Pronunciation',
+                                                                 "to" => 'Unknown Language'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "from" => 'known',
-                                                                 "to" => 'pronunciation'
+                                                                 "from" => 'Known Language',
+                                                                 "to" => 'Unknown Pronunciation'
                                                                  );
                 foreach ($mode_entries as $mode)
                 {

@@ -239,17 +239,12 @@ class APIUser extends APIBase
 			{
 				$list = EntryList::select_by_id(intval($list_id, 10));
 				if (!$list)
-		                {
-                		        Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
-					return;
-	        	        }
+                		        return Session::get()->set_error_assoc("Unknown List", "Back end failed to select list with list_id = $list_id.");
 				else if($list->session_user_can_read())
-                                {
                                         array_push($list_ids, $list->get_list_id());
-                                }
 			}
-			$practice_from = strtolower($_GET["practice_from"]);
-			$practice_to = strtolower($_GET["practice_to"]);
+			$practice_from = str_replace("_", " ", strtolower($_GET["practice_from"]));
+			$practice_to = str_replace("_", " ", strtolower($_GET["practice_to"]));
 		}
 
 		if (empty($list_ids) || !isset($practice_from) || !isset($practice_to))
@@ -258,14 +253,9 @@ class APIUser extends APIBase
 		} else {
 			$entries_count = isset($_GET["entries_count"]) ? $_GET["entries_count"] : 0;
 			if (($practice_set = Practice::generate($list_ids, $practice_from, $practice_to, $entries_count)))
-                        {
 				self::return_array_as_json($practice_set);
-                        }
                         else
-                        {
                                 Session::get()->set_error_assoc("Practice generate", Practice::errors_unset());
-                        }
-
 		}
 	}
 
@@ -274,25 +264,19 @@ class APIUser extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 		
 		if (($practice_entry = self::validate_selection_id($_POST, "practice_entry_id", "Practice")))
-		{
-			Session::get()->set_error_assoc("Unknown PracticeEntry", "Back end failed to select practice-entry");
-		}
-		else if (!isset($_POST["grade_id"]) || !($grade = Grade::select_by_id(intval($_POST["grade_id"], 10))))
-		if (($grade = self::validate_selection_id($_POST, "grade_id", "Grade")))
-		{
-			Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade id");
-		}
-		else
-		{
-			if (($result = $practice_entry->update_practice_response($grade->get_grade_id())))
+                {
+			if (($grade = self::validate_selection_id($_POST, "grade_id", "Grade")))
 			{
-				Session::get()->set_result_assoc($result->json_assoc());
-			}
-			else
-			{
+				if (!!$practice_entry && ($result = $practice_entry->update_practice_response($grade->get_grade_id())))
+					return Session::get()->set_result_assoc($result->json_assoc());
+
 				Session::get()->set_error_assoc("Practice Response", Practice::errors_unset());
 			}
+			else
+				Session::get()->set_error_assoc("Unknown Grade", "Back end failed to select grade id");
 		}
+		else
+			Session::get()->set_error_assoc("Unknown PracticeEntry", "Back end failed to select practice-entry");
 	}
 	
 	//  Courses owned by the user
