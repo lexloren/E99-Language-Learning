@@ -528,53 +528,6 @@ class UserEntry extends Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
-	/*public function annotations_add($annotation_contents)
-	{
-		self::errors_push("Called deprecated method UserEntry.annotations_add() (use instead Annotation::insert()).");
-		
-		if (!$this->session_user_can_read())
-		{
-			return static::errors_push("Session user cannot read entry.");
-		}
-		
-		if (($entry = $this->copy_for_session_user()))
-		{
-			if (($annotation = Annotation::insert($entry->get_user_entry_id(), $annotation_contents)))
-			{
-				$annotations = $entry->annotations();
-				array_push($annotations, $annotation);
-				return $entry;
-			}
-			return static::errors_push("Entry failed to add annotation: " . Annotation::errors_unset());
-		}
-		
-		return null;
-	}
-	
-	public function annotations_remove($annotation)
-	{
-		self::errors_push("Called deprecated method UserEntry.annotations_remove() (use instead Annotation.delete()).");
-		
-		if (!$this->session_user_is_owner())
-		{
-			return static::errors_push("Session user is not owner of user entry.");
-		}
-		
-		if ($annotation->get_user_entry_id() !== $this->get_user_entry_id())
-		{
-			return static::errors_push("User entry is not associated with annotation.");
-		}
-		
-		if (!$annotation->delete())
-		{
-			return static::errors_push("Entry failed to remove annotation: " . Annotation::errors_unset());
-		}
-		
-		if (isset($this->annotations)) array_drop($this->annotations, $annotation);
-		
-		return $this;
-	}*/
-	
 	public function user_can_read($user, $hint = null)
 	{
 		return $this->user_can_write($user)

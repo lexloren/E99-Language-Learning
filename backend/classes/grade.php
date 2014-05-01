@@ -76,7 +76,7 @@ class Grade extends DatabaseRow
 
 	public function delete()
 	{
-		return static::errors_push("Failed to delete grade.");
+		return static::errors_push("Grade deletion forbidden.");
 	}
 
 	public function json_assoc($privacy = null)
