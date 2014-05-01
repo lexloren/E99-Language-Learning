@@ -75,6 +75,13 @@ class Annotation extends DatabaseRow
 	{
 		$user_entry_id = intval($user_entry_id, 10);
 		
+		$user_entry = UserEntry::select_by_user_entry_id($user_entry_id);
+		
+		if (!$user_entry->session_user_can_write())
+		{
+			return static::errors_push("Failed to insert annotation: Session user cannot edit user entry.");
+		}
+		
 		Connection::query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
 			$user_entry_id,
 			Connection::escape($contents)
@@ -90,6 +97,8 @@ class Annotation extends DatabaseRow
 	
 	public function delete()
 	{
+		$this->get_user_entry()->uncache_annotations();
+		
 		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
 	

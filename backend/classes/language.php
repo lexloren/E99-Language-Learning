@@ -101,6 +101,11 @@ class Language extends DatabaseRow
 			: null;
 	}
 
+	public function delete()
+	{
+		return static::errors_push("Language deletion forbidden.");
+	}
+
 	public function json_assoc($privacy = null)
 	{
 		return array (
