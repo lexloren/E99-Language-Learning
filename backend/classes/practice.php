@@ -96,8 +96,9 @@ class Practice extends DatabaseRow
         {
 		$practice_set = array();
 		$mode_obj = Mode::select_by_direction($practice_from, $practice_to);
-		if(!!($mode_obj) && ($mode = $mode_obj->get_mode_id()))
+		if(!!($mode_obj))
 		{
+			$mode = $mode_obj->get_mode_id();
 	                $count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
         	                intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
                 
