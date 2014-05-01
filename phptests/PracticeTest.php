@@ -27,7 +27,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 			//      $this->db->close();
 	}
 
-	public function testGenerate()
+	public function testPracticeGenerate()
 	{
 		$entries_count = 50;
 		$user_obj = User::select_by_id($this->db->user_ids[1]);
@@ -56,7 +56,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($interval, 0);
 	}
 
-	public function testGenerateEmptyList()
+	public function testPracticeGenerateEmptyList()
 	{
 		$this->db->add_list($this->db->user_ids[0], array ());
 
@@ -65,7 +65,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull(Practice::errors_unset());
 	}
 
-	public function testGenerateWrongInput()
+	public function testPracticeGenerateWrongInput()
 	{
                 $practice_set = Practice::generate($this->db->practice_list_ids, "known", "unknown", -6);
 		$this->assertNotNull($practice_set);
@@ -76,7 +76,7 @@ class PracticeTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull(Practice::errors_unset());
 	}
 
-	public function testUpdatePracticeResponse()
+	public function testPracticeResponse()
 	{
 		$practice = Practice::select_by_id($this->db->practice_ids[0]);
 		$old_interval = $practice->get_interval();

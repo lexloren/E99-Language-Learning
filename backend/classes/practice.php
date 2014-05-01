@@ -21,15 +21,14 @@ class Practice extends DatabaseRow
 	{
 		$modes = self::get_all_modes();
 		$user_practice_set = array();
-		$mysqli = Connection::get_shared_instance();
 
 		foreach($modes as $mode)
 		{
-			$mysqli->query("INSERT IGNORE INTO user_practice (user_entry_id, mode) values($user_entry_id, $mode)");
-			if (!!$mysqli->error)
-	                        return static::errors_push("Failed to insert user_practice: " . $mysqli->error . ".");
+			Connection::query("INSERT IGNORE INTO user_practice (user_entry_id, mode) values($user_entry_id, $mode)");
+			if (!!($error = Connection::query_error_clear()))
+	                        return static::errors_push("Failed to insert user_practice: " . $error . ".");
                 
-	                if (($user_practice = self::select_by_id($mysqli->insert_id)))
+	                if (($user_practice = self::select_by_id(Connection::query_insert_id())))
         	        {
 				array_push($user_practice_set, $user_practice);
                 	}
@@ -39,10 +38,9 @@ class Practice extends DatabaseRow
 
 	public static function get_mode_from_direction($practice_from, $practice_to)
 	{
-		$mysqli = Connection::get_shared_instance();
-		$result = $mysqli->query("SELECT mode_id FROM modes WHERE `from` = '$practice_from' ".
+		$result = Connection::query("SELECT mode_id FROM modes WHERE `from` = '$practice_from' ".
 				"AND `to` = '$practice_to'");
-		if (!!$mysqli->error) return static::errors_push("Failed to select from mode: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from mode: " . $error . ".");
 		if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
                         return static::errors_push("Failed to select any mode for given where direction $practice_from => $practice_to");
 
@@ -51,9 +49,8 @@ class Practice extends DatabaseRow
 	
 	public static function get_direction_from_mode($mode)
 	{
-		$mysqli = Connection::get_shared_instance();
-		$result = $mysqli->query("SELECT `from`, `to` FROM modes WHERE mode_id = $mode");
-		if (!!$mysqli->error) return static::errors_push("Failed to select from direction: " . $mysqli->error . ".");
+		$result = Connection::query("SELECT `from`, `to` FROM modes WHERE mode_id = $mode");
+		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from direction: " . $error . ".");
                 if (!$result || $result->num_rows === 0 || !($result_assoc = $result->fetch_assoc()))
                 {
                         return static::errors_push("Failed to select any direction for given mode $mode");
@@ -64,9 +61,8 @@ class Practice extends DatabaseRow
 
 	public static function get_all_modes()
 	{
-		$mysqli = Connection::get_shared_instance();
-		$result = $mysqli->query("SELECT mode_id FROM modes");
-		if (!!$mysqli->error) return static::errors_push("Failed to select from mode: " . $mysqli->error . ".");
+		$result = Connection::query("SELECT mode_id FROM modes");
+		if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select from mode: " . $error . ".");
 		$modes = array();
 		while (($result_assoc = $result->fetch_assoc()))
                 {
@@ -134,17 +130,16 @@ class Practice extends DatabaseRow
 	                $count_limit = (isset($entries_count) && intval($entries_count, 10) > 0) ? 
         	                intval($entries_count, 10) : self::PRACTICE_ENTRIES_CNT;
                 
-                	$mysqli = Connection::get_shared_instance();
 	                $list_ids_str = join(', ', $list_ids);
 
-			$new_entries = $mysqli->query(sprintf(
+			$new_entries = Connection::query(sprintf(
                 	        "SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) ".
 				"AND entry_id NOT IN (SELECT entry_id from user_entries where user_id = %d)",
 	                        $list_ids_str,
         	                Session::get()->get_user()->get_user_id()
 			));
 
-			if (!!$mysqli->error) return static::errors_push("Failed to select entries: " . $mysqli->error . ".");
+			if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select entries: " . $error . ".");
 
 			while (($new_entry_assoc = $new_entries->fetch_assoc()))
         	        {
@@ -153,14 +148,14 @@ class Practice extends DatabaseRow
 				self::insert($user_entry->get_user_entry_id());
 			}
 
-                	$result = $mysqli->query(sprintf(
+                	$result = Connection::query(sprintf(
                         	"SELECT practice_entry_id, user_entry_id, `mode`, `interval`, efactor FROM user_practice ".
 				"LEFT JOIN user_entries USING (user_entry_id) WHERE mode = $mode AND entry_id IN (".
         	                "SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s)) ".
                 	        "AND user_id = %d ORDER BY `interval`",
                         	$list_ids_str, Session::get()->get_user()->get_user_id()
 	                ));
-			if (!!$mysqli->error) return static::errors_push("Failed to select Practice entries: " . $mysqli->error . ".");
+			if (!!($error = Connection::query_error_clear())) return static::errors_push("Failed to select Practice entries: " . $error . ".");
 	                if (!$result || $result->num_rows === 0)
                 	        return static::errors_push("Failed to select any practice entries for given direction $practice_from => $practice_to.");
 
@@ -195,29 +190,26 @@ class Practice extends DatabaseRow
 
 	public function get_user_entry_results_count()
 	{	
-		$mysqli = Connection::get_shared_instance();
-
-                $iteration_result = $mysqli->query(sprintf(
+                $iteration_result = Connection::query(sprintf(
                         "SELECT COUNT(*) AS row_count FROM user_entry_results " .
                         "WHERE user_entry_id = %d", $this->get_user_entry_id()
                 ));
-		if (!!$mysqli->error) return static::errors_push("Error fetching user_entry_results: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear())) return static::errors_push("Error fetching user_entry_results: " . $error . ".");
                 $iteration_assoc = $iteration_result->fetch_assoc();
                 return intval($iteration_assoc["row_count"], 10);
 	}
 
 	public function update_practice_response($grade_id)
         {
-                $mysqli = Connection::get_shared_instance();
 		$failure_message = "Failed to update practice response";
                 
-                $mysqli->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id, mode) VALUES (%d, %d, %d)",
+                Connection::query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id, mode) VALUES (%d, %d, %d)",
                         $this->get_user_entry_id(), $grade_id, $this->get_mode()
                 ));
                 
-                if (!$mysqli->insert_id || !!$mysqli->error ||
+                if (!Connection::query_insert_id() || !!($error = Connection::query_error_clear()) ||
                         !($grade = Grade::select_by_id($grade_id)))
-			return static::errors_push("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: " . $error . ".");
                 $point = $grade->get_point();
 
 		$_efactor = $this->get_efactor() + (0.1 - (4 - $point) * (0.08 + (4 - $point) * 0.02));
@@ -230,11 +222,12 @@ class Practice extends DatabaseRow
                 else
                         $new_interval = round($this->get_interval() * $new_efactor);
 
-                if(!$mysqli->query(
+		Connection::query(
                         "UPDATE user_practice SET `interval` = $new_interval, efactor = $new_efactor ".
                         "WHERE practice_entry_id = $this->practice_entry_id"
-                        ))
-                        return static::errors_push("$failure_message: " . $mysqli->error . ".");
+                        );
+                if(!!($error = Connection::query_error_clear()))
+                        return static::errors_push("$failure_message: " . $error . ".");
 
                 $this->interval = $new_interval;
                 $this->efactor = $new_efactor;

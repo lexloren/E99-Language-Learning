@@ -502,44 +502,36 @@ class TestDB
 		$link = $this->link;
 		$mode_entries = array ();
                 $mode_entries[] = array(
-                                                                 "mode_id" => 0,
                                                                  "from" => 'unknown',
                                                                  "to" => 'known'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "mode_id" => 1,
                                                                  "from" => 'known',
                                                                  "to" => 'unknown'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "mode_id" => 2,
                                                                  "from" => 'unknown',
                                                                  "to" => 'pronunciation'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "mode_id" => 3,
                                                                  "from" => 'pronunciation',
                                                                  "to" => 'known'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "mode_id" => 4,
                                                                  "from" => 'pronunciation',
                                                                  "to" => 'unknown'
                                                                  );
                 $mode_entries[] = array(
-                                                                 "mode_id" => 5,
                                                                  "from" => 'known',
                                                                  "to" => 'pronunciation'
                                                                  );
                 foreach ($mode_entries as $mode)
                 {
-                        if(!$link->query(sprintf(
-                                                                 "INSERT into modes (mode_id, `from`, `to`) values (%d, '%s', '%s')",
-                                                                 $mode["mode_id"], $mode["from"], $mode["to"])
-                                                 ))
+			$link->query(sprintf("INSERT into modes (`from`, `to`) values ('%s', '%s')",
+                                             $mode["from"], $mode["to"]));
+                        if(!$link->insert_id)
                                 exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
-
-                        array_push($this->mode_ids, $mode["mode_id"]);
+                        array_push($this->mode_ids, $link->insert_id);
 		}
 	}
 }
