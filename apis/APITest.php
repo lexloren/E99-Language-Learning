@@ -17,8 +17,9 @@ class APITest extends APIBase
 					$name = isset($_POST["name"]) && strlen($_POST["name"]) > 0 ? $_POST["name"] : null;
 					$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 					$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
+					$timer = isset($_POST["timer"]) ? intval($_POST["timer"], 10) : null;
 					
-					if (($test = Test::insert($unit->get_unit_id(), $name, $timeframe, $message)))
+					if (($test = Test::insert($unit->get_unit_id(), $name, $timeframe, $timer, $message)))
 					{
 						$errors = 0;
 						
@@ -129,6 +130,11 @@ class APITest extends APIBase
 					if (isset($_POST["message"]))
 					{
 						$errors += !$test->set_message($_POST["message"]);
+					}
+					
+					if (isset($_POST["timer"]))
+					{
+						$errors += !$test->set_timer($_POST["timer"]);
 					}
 					
 					if (isset($_POST["open"]) && isset($_POST["close"]))

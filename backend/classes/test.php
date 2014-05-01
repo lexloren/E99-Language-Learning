@@ -9,7 +9,7 @@ class Test extends CourseComponent
 	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($unit_id, $name = null, $timeframe = null, $message = null)
+	public static function insert($unit_id, $name = null, $timeframe = null, $timer = null, $message = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -30,8 +30,9 @@ class Test extends CourseComponent
 		$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
 		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
 		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
+		$timer = !!$timer && ($timer = intval($timer, 10)) > 0 ? $timer : "NULL";
 		
-		Connection::query("INSERT INTO course_unit_tests (unit_id, name, open, close, message) VALUES ($unit_id, $name, $open, $close, $message)");
+		Connection::query("INSERT INTO course_unit_tests (unit_id, name, open, close, timer, message) VALUES ($unit_id, $name, $open, $close, $timer, $message)");
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
@@ -613,7 +614,9 @@ class Test extends CourseComponent
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
 		
-		return parent::update_this($this, "course_unit_tests", array ("timer" => intval($timer, 10)), "test_id", $this->get_test_id());
+		$timer = intval($timer, 10) > 0 ? intval($timer, 10) : "NULL";
+		
+		return parent::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id());
 	}
 	
 	//  inherits: protected $message;
@@ -622,12 +625,13 @@ class Test extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
-	private function __construct($test_id, $unit_id, $name = null, $open = null, $close = null, $message = null)
+	private function __construct($test_id, $unit_id, $name = null, $open = null, $close = null, $timer = null, $message = null)
 	{
 		$this->test_id = intval($test_id, 10);
 		$this->unit_id = intval($unit_id, 10);
 		$this->name = !!$name ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
+		$this->timer = intval($timer, 10);
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
 		self::register($this->test_id, $this);
@@ -641,6 +645,7 @@ class Test extends CourseComponent
 			"name",
 			"open",
 			"close",
+			"timer",
 			"message"
 		);
 		
@@ -651,6 +656,7 @@ class Test extends CourseComponent
 				$result_assoc["name"],
 				$result_assoc["open"],
 				$result_assoc["close"],
+				$result_assoc["timer"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -748,6 +754,7 @@ class Test extends CourseComponent
 					? $this->get_timeframe()->json_assoc()
 					: null)
 				: null,
+			"timer" => $this->get_timer(),
 			"entriesCount" => $this->entries_count(),
 			"sittingsCount" => $this->sittings_count(),
 			//  "patternsCount" => $this->patterns_count(),

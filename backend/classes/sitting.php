@@ -256,14 +256,38 @@ class Sitting extends CourseComponent
 	{
 		return $this->get_test()->user_can_execute($user)
 			&& $this->get_user()->equals($user)
-			&& $this->entries_remaining() > 0;
+			&& $this->entries_remaining() > 0
+			&& time() - $this->get_timeframe()->get_open() <= $this->get_test()->get_timer();
+	}
+	
+	public function user_cannot_execute_reasons()
+	{
+		$reasons = array ();
+		if (!$this->get_test()->user_can_execute($user))
+		{
+			array_push($reasons, "because user cannot execute test");
+		}
+		if (!$this->get_user()->equals($user))
+		{
+			array_push($reasons, "because sitting pertains to another student");
+		}
+		if (!$this->entries_remaining())
+		{
+			array_push($reasons, "because user has already responded to all test entries");
+		}
+		if (time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer())
+		{
+			array_push($reasons, "because test time limit has elapsed");
+		}
+		
+		return $reasons;
 	}
 	
 	public function next_json_assoc()
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return static::errors_push("Session user cannot execute test" . (!$this->entries_remaining() ? " because session user has already responded to all test entries" : "") . ".");
+			return static::errors_push("Session user cannot execute test " . implode(" and ", $this->user_cannot_execute_reasons()) . ".");
 		}
 		
 		if (!count($entries_remaining = $this->entries_remaining()))
