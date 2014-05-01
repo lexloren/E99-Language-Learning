@@ -304,10 +304,11 @@ class APITest extends APIBase
 						
 						foreach ($options as $option)
 						{
-							if (($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $option)))
+							if (($pattern = Pattern::insert($test->get_test_id(), $entry->get_entry_id(), $option, true)))
 							{
 								$errors += !$pattern->set_prompt(true);
 							}
+							else $errors ++;
 						}
 						
 						foreach ($test->entry_options($entry) as $option)
@@ -342,7 +343,7 @@ class APITest extends APIBase
 		{
 			Pattern::errors_unset();
 			
-			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], true)))
+			if ($pattern || ($pattern = Pattern::insert($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], true)))
 			{
 				$pattern->set_prompt(true);
 				Session::get()->set_result_assoc($pattern->json_assoc());
@@ -360,7 +361,7 @@ class APITest extends APIBase
 		{
 			Pattern::errors_unset();
 			
-			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"])))
+			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents_mode($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"])))
 			{
 				$pattern->set_prompt(false);
 				Session::get()->set_result_assoc($pattern->json_assoc());
@@ -398,7 +399,7 @@ class APITest extends APIBase
 		{
 			Pattern::errors_unset();
 			
-			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], false)))
+			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents_mode($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"])))
 			{
 				if (Connection::transact(
 					function () use ($pattern)

@@ -56,7 +56,7 @@ class Response extends CourseComponent
 					return null;
 				}
 				
-				if (!($pattern = Pattern::select_by_test_id_entry_id_contents($test->get_test_id(), $test_entry->get_entry_id(), $contents)))
+				if (!($pattern = Pattern::insert($test->get_test_id(), $test_entry->get_entry_id(), $contents)))
 				{
 					$error_message = "$failure_message: " . Pattern::errors_unset();
 					return null;

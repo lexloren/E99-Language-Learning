@@ -9,7 +9,7 @@ class Pattern extends CourseComponent
 	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null, $mode = null)
+	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null, $mode = null, $default = false)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -37,17 +37,20 @@ class Pattern extends CourseComponent
 		
 		$contents = Connection::escape($contents);
 		$prompt = !!$prompt ? 1 : 0;
+		$default = !!$default ? 1 : 0;
 		
 		$mode = $mode === null ? "mode" : intval($mode, 10);
 		
-		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
+		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE pattern_id = LAST_INSERT_ID(pattern_id)", $test->get_test_id(), $entry->get_user_entry_id()));
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
 			return static::errors_push("$failure_message: $error.");
 		}
 		
-		return self::select_by_id(Connection::query_insert_id());
+		return Connection::query_insert_id()
+			? self::select_by_id(Connection::query_insert_id())
+			: self::select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, is_string($mode) ? null : $mode);
 	}
 	
 	public static function select_all_for_test_entry_id($test_entry_id, $prompts_only = true)
@@ -77,11 +80,11 @@ class Pattern extends CourseComponent
 		return parent::select("course_unit_test_entry_patterns", "pattern_id", $pattern_id);
 	}
 	
-	public static function select_by_test_id_entry_id_contents($test_id, $entry_id, $contents, $insert_if_necessary = true)
+	public static function select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, $mode = null)
 	{
 		$test_id = intval($test_id, 10);
 		
-		$failure_message = "Failed to select test entry pattern by test_id, entry_id, contents";
+		$failure_message = "Failed to select test entry pattern by test_id, entry_id, contents, mode";
 		
 		if (!($test = Test::select_by_id($test_id)))
 		{
@@ -99,7 +102,16 @@ class Pattern extends CourseComponent
 		
 		$contents = Connection::escape($contents);
 		
-		$result = Connection::query("SELECT * FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND contents = '$contents'");
+		if ($mode === null)
+		{
+			$result = Connection::query("SELECT * FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND contents = '$contents'");
+		}
+		else
+		{
+			$mode = intval($mode, 10);
+			
+			$result = Connection::query("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND course_unit_test_entry_patterns.mode = $mode AND contents = '$contents'");
+		}
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
@@ -111,12 +123,7 @@ class Pattern extends CourseComponent
 			return self::from_mysql_result_assoc($result_assoc);
 		}
 		
-		if (!$insert_if_necessary)
-		{
-			return static::errors_push("$failure_message: No pattern found!");
-		}
-		
-		return static::insert($test_id, $entry_id, $contents);
+		return static::errors_push("$failure_message: No pattern found!");
 	}
 	
 	/***    INSTANCE    ***/

@@ -333,11 +333,6 @@ class Test extends CourseComponent
 		
 		$mode = $mode === null ? rand(0, 6) : intval($mode, 10);
 		
-		if ($mode > 6 || $mode < 0)
-		{
-			return static::errors_push("Test cannot set mode = $mode.");
-		}
-		
 		$test = $this;
 		$error_message;
 		
@@ -358,16 +353,9 @@ class Test extends CourseComponent
 					return null;
 				}
 				
-				if (isset($test->entries))
+				if (isset($test->entries) && Connection::query_insert_id())
 				{
-					if (Connection::query_insert_id())
-					{
-						$test->entries[Connection::query_insert_id()] = $entry;
-					}
-					else
-					{
-						$test->uncache_entries();
-					}
+					$test->entries[Connection::query_insert_id()] = $entry;
 				}
 				
 				$result = Connection::query("SELECT mode_id AS mode FROM modes");
@@ -378,45 +366,31 @@ class Test extends CourseComponent
 					return null;
 				}
 				
+				$modes = array ();
 				while (($result_assoc = $result->fetch_assoc()))
 				{
-					$mode = intval($result_assoc["mode"], 10);
-					
-					switch ($mode % 3)
-					{
-						case 1:
-						{
-							$contents = $entry->get_word_1();
-						} break;
-						
-						case 2:
-						{
-							$contents = array_pop($entry->pronunciations());
-						} break;
-						
-						default:
-						{
-							$contents = $entry->get_word_0();
-						}
-					}
-					
-					if (Pattern::insert(
+					array_push($modes, intval($result_assoc["mode"], 10));
+				}
+				
+				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($entry->pronunciations()));
+				
+				foreach ($modes as $mode)
+				{
+					if (!Pattern::insert(
 								$test->get_test_id(),
 								$entry->get_entry_id(),
-								$contents,
+								$contents[$mode % 3],
 								true,
 								null,
 								$mode
 									))
 					{
-						return $test->entries();
-					}
-					else
-					{
 						$error_message = "Test failed to add entry pattern: " . Pattern::errors_unset();
 						return null;
 					}
 				}
+				
+				return $test->entries();
 			}
 		)) ? $result : static::errors_push($error_message);
 	}
