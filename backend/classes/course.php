@@ -391,29 +391,37 @@ class Course extends DatabaseRow
 		$table = "course_students LEFT JOIN users USING (user_id)";
 		return self::cache($this->units, "Unit", "course_units", "course_id", $this->get_course_id(), "*", "ORDER BY num");
 	}
-	public function lists()
+	public function lists($limit_to_open_units = true)
 	{
 		$lists = array ();
 		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->lists() as $list)
+			if (!$limit_to_open_units
+				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
 			{
-				if (!in_array($list, $lists))
+				foreach ($unit->lists() as $list)
 				{
-					array_push($lists, $list);
+					if (!in_array($list, $lists))
+					{
+						array_push($lists, $list);
+					}
 				}
 			}
 		}
 		return $lists;
 	}
-	public function tests()
+	public function tests($limit_to_open_units = true)
 	{
 		$tests = array ();
 		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->tests() as $test)
+			if (!$limit_to_open_units
+				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
 			{
-				array_push($tests, $test);
+				foreach ($unit->tests() as $test)
+				{
+					array_push($tests, $test);
+				}
 			}
 		}
 		return $tests;

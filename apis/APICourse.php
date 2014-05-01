@@ -235,7 +235,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->lists());
+			self::return_array_as_json($course->lists(!$course->session_user_can_write()));
 		}
 	}
 	
@@ -246,7 +246,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->tests());
+			self::return_array_as_json($course->tests(!$course->session_user_can_write()));
 		}
 	}
 	
