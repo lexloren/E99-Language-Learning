@@ -258,24 +258,30 @@ class Unit extends CourseComponent
 	{
 		$unit = $this;
 		$error_message;
-		return ($result = Connection::transact(
-			function () use ($unit, &$error_message)
+		Connection::query("START TRANSACTION");
+ 		Connection::query_error_clear();
+		if ((self::delete_this($unit, "course_units", "unit_id", $unit->get_unit_id())))
+		{
+			$unit->get_course()->uncache_units();
+					
+			Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
+					
+			if (!!($error = Connection::query_error_clear()))
 			{
-				if (($return = self::delete_this($unit, "course_units", "unit_id", $unit->get_unit_id())))
-				{
-					$unit->get_course()->uncache_units();
-					
-					Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num >= %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
-					
-					if (!!($error = Connection::query_error_clear()))
-					{
-						$error_message = "Failed to reorder course units: $error.";
-						return null;
-					}
-				}
-				return $return;
+	                        Connection::query("ROLLBACK");
+        	                Connection::query_error_clear();
+				return static::errors_push("Failed to reorder course units: $error.");
 			}
-		)) ? $result : static::errors_push($error_message);
+			Connection::query("COMMIT");
+			Connection::query_error_clear();
+			return $unit;
+		}
+		else
+		{
+			Connection::query("ROLLBACK");
+			Connection::query_error_clear();
+			return static::errors_push("Failed to reorder course units: $error.");
+		}
 	}
 	
 	public function lists_add($list)
