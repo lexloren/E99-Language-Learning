@@ -5,7 +5,7 @@ require_once "./backend/classes.php";
 
 class Annotation extends DatabaseRow
 {
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	public static function select_by_id($annotation_id)
@@ -75,23 +75,30 @@ class Annotation extends DatabaseRow
 	{
 		$user_entry_id = intval($user_entry_id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
+		$user_entry = UserEntry::select_by_user_entry_id($user_entry_id);
 		
-		$mysqli->query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
-			$user_entry_id,
-			$mysqli->escape_string($contents)
-		));
-		
-		if (!!$mysqli->error)
+		if (!$user_entry->session_user_can_write())
 		{
-			return Annotation::set_error_description("Failed to insert annotation: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert annotation: Session user cannot edit user entry.");
 		}
 		
-		return self::select_by_id($mysqli->insert_id);
+		Connection::query(sprintf("INSERT INTO user_entry_annotations (user_entry_id, contents) VALUES (%d, '%s')",
+			$user_entry_id,
+			Connection::escape($contents)
+		));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return Annotation::errors_push("Failed to insert annotation: $error.", ErrorReporter::ERRCODE_DATABASE);
+		}
+		
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	public function delete()
 	{
+		$this->get_user_entry()->uncache_annotations();
+		
 		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
 	

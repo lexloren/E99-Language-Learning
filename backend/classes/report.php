@@ -5,25 +5,25 @@ require_once "./backend/classes.php";
 
 class Report extends ErrorReporter
 {
-	protected static $error_description = null;
+	protected static $errors = null;
 	public static function get_course_student_practice_report($course_id, $user_id)
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return static::set_error_description("Invalid course id.");
+			return static::errors_push("Invalid course id.");
 
 		$student_user = User::select_by_id($user_id);
 		if (!$student_user)
-			return static::set_error_description("Invalid student id.");
+			return static::errors_push("Invalid student id.");
 
 		$permissions = self::check_permissions($course, $session_user, $student_user);
 		
 		if (1 != $permissions)
-			return static::set_error_description("Do not have access to this information.");
+			return static::errors_push("Do not have access to this information.");
 		
 		$progress_stat = self::generate_class_progress_stat($course_id);
 		if (!$progress_stat)
@@ -39,15 +39,15 @@ class Report extends ErrorReporter
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 	
 		$course = Course::select_by_id($course_id);
 		if (!$course)
-			return static::set_error_description("Invalid course id.");
+			return static::errors_push("Invalid course id.");
 
 		$permissions = self::check_permissions($course, $session_user, null);
 		if (0 == $permissions)
-			return static::set_error_description("Do not have access to this information.");
+			return static::errors_push("Do not have access to this information.");
 		
 		$students = $course->students();
 		
@@ -78,19 +78,17 @@ class Report extends ErrorReporter
 	
 	private static function create_course_report_for_student($course_id, $user_id, $progress_stat)
 	{
-		$mysqli = Connection::get_shared_instance();
-
 		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course_id);
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
 		$sql = sprintf("SELECT user_entry_id FROM list_entries WHERE list_id IN (%s)", $sql);
 		$sql = sprintf("SELECT entry_id FROM user_entries WHERE user_entry_id IN (%s)", $sql);
 		$sql = sprintf("SELECT * FROM user_entries WHERE user_id = %d AND entry_id IN (%s)", $user_id, $sql);
 		
-		$result = $mysqli->query($sql);
+		$result = Connection::query($sql);
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Failed to create course report for student: $error.");
 		}
 
 		$num_user_entries = $result->num_rows;
@@ -110,7 +108,13 @@ class Report extends ErrorReporter
 			$entryReport = Array();
 
 			$sql = sprintf("SELECT * FROM user_entry_results WHERE user_entry_id = %d", $user_entry_id);
-			$result_practice = $mysqli->query($sql);
+			$result_practice = Connection::query($sql);
+			
+			if (!!($error = Connection::query_error_clear()))
+			{
+				return static::errors_push("Failed to create course report for student: $error.");
+			}
+			
 			$num_practiced = $result_practice->num_rows;
 
 			$entryReport["entryId"] = $entry_id;
@@ -134,14 +138,12 @@ class Report extends ErrorReporter
 	
 	private static function create_units_report($course_id)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		$sql = "SELECT * FROM course_units WHERE course_id = ".$course_id;
-		$result = $mysqli->query($sql);
+		$result = Connection::query($sql);
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Failed to create units report: $error.");
 		}
 		
 		$num_units = $result->num_rows;
@@ -163,7 +165,6 @@ class Report extends ErrorReporter
 		
 	private static function get_class_average_point_for_entry($entry_id, $course_id)
 	{
-		$mysqli = Connection::get_shared_instance();
 		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries ".
 				"WHERE grades.grade_id = user_entry_results.grade_id ".
 				"AND user_entry_results.user_entry_id = user_entries.user_entry_id ".
@@ -175,7 +176,12 @@ class Report extends ErrorReporter
 				
 		//print($sql);
 		
-		$result = $mysqli->query($sql);
+		$result = Connection::query($sql);
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to get class average point for entry: $error.");
+		}
 
 		$result_assoc = $result->fetch_assoc();
 		
@@ -187,7 +193,6 @@ class Report extends ErrorReporter
 	
 	private static function get_student_average_point_for_entry($entry_id, $user_id)
 	{
-		$mysqli = Connection::get_shared_instance();
 		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries
 				WHERE grades.grade_id = user_entry_results.grade_id 
 				AND user_entry_results.user_entry_id = user_entries.user_entry_id
@@ -197,7 +202,12 @@ class Report extends ErrorReporter
 				
 		//print($sql);
 		
-		$result = $mysqli->query($sql);
+		$result = Connection::query($sql);
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to get student average point for entry: $error.");
+		}
 
 		$result_assoc = $result->fetch_assoc();
 		
@@ -214,13 +224,11 @@ class Report extends ErrorReporter
 		$sql = sprintf("SELECT user_entry_id FROM list_entries WHERE list_id IN (%s)", $sql);
 		$sql = sprintf("SELECT entry_id FROM user_entries WHERE user_entry_id IN (%s)", $sql);
 		
-		$mysqli = Connection::get_shared_instance();
-
-		$result = $mysqli->query($sql);
+		$result = Connection::query($sql);
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Database query failed.");
+			return static::errors_push("Failed to generate class progress stat: $error.");
 		}
 		
 		$progress_stat = array();

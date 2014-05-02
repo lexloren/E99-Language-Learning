@@ -21,7 +21,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_unit_list($course_unit_id, $list_id);
 	}
 	
-	public function test_course_insert()
+	public function test_insert()
 	{
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
 		$this->assertNull($course);
@@ -59,7 +59,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertFalse($course->get_public());
 	}
 	
-	public function test_course_find()
+	public function test_find()
         {
                 $user_obj = User::select_by_id($this->db->user_ids[0]);
                 Session::get()->set_user($user_obj);

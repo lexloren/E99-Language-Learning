@@ -4,23 +4,26 @@ class Status extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
 	protected static $instances_by_id = array ();
-	protected static $error_description = null;
+	protected static $errors = null;
 	
 	public static function select_by_id($status_id)
 	{
-		return parent::select("user_statuses", "status_id", $status_id);
+		return parent::select("user_statuses", "status_id", intval($status_id, 10));
 	}
 	
 	public static function select_by_description($status_desc)
 	{
-		return parent::select("user_statuses", "desc", $status_desc);
+		return parent::select("user_statuses", "`desc`", $status_desc);
 	}
 	
 	public static function select_all()
 	{
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT * FROM user_statuses");
 		
-		$result = $mysqli->query("SELECT * FROM user_statuses");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			exit("Failed to select all user_statuses.");
+		}
 		
 		$user_statuses = array ();
 		

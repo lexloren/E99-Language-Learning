@@ -3,7 +3,7 @@
  * 
  */
 
-var URL = "http://cscie99.fictio.us/";
+var URL = window.location.origin + "/";
 var wordList = [];
 var qword = false;
 var qpronun = false;

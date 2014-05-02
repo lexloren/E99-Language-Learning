@@ -195,6 +195,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 
 		//Try to copy a private list of user0 for user1; should fail
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
+		$this->assertEquals($user0, $list->get_owner());
 		$copied_list = $list->copy_for_user($user1);
 		$this->assertNull($copied_list);
 		
@@ -203,6 +204,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$course_unit_id = $this->db->add_course_unit($course_id);
 		$list_id = $this->db->add_list($user0->get_user_id(), $this->db->entry_ids);
 		$this->db->add_unit_list($course_unit_id, $list_id);
+		$this->assertTrue(in_array(EntryList::select_by_id($list_id), Unit::select_by_id($course_unit_id)->lists()));
 		
 		$course = Course::select_by_id($course_id);
 		Session::get()->set_user($course->get_owner());
@@ -214,23 +216,22 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$lists = $course->lists();
 		$this->assertCount(1, $lists);
 		$course_list = $lists[0];
+		
+		//  Arunabha, the session user can't copy a list for another user
+		//      We have to set the session user to the user
+		//      who is performing the copy and will receive the copied list
+		Session::get()->set_user($user1);
+		$this->assertTrue($course->session_user_is_student());
 		$this->assertTrue($course_list->session_user_can_read());
 		$entries = $course_list->entries();
 		$this->assertCount(7, $entries);
 
 		//  Copies the list by virtue of its readability in the course
-		$copied_list = $course_list->copy_for_user($user1);
-		$this->assertNotNull($copied_list);
-		
-		//  Copies the list a second time
-		Session::get()->set_user($user1);
-		$this->assertTrue($course_list->session_user_can_read());
 		$copied_list = $course_list->copy_for_session_user();
 		$this->assertNotNull($copied_list);
 		$this->assertEquals($user1, $copied_list->get_owner());
 		$entries = $copied_list->entries();
 		$this->assertCount(7, $entries);
-		
 	}
 }
 

@@ -73,10 +73,11 @@ class CourseComponent extends DatabaseRow
 	}
 	public function set_message($message)
 	{
-		return static::set_error_description("CourseComponent subclass failed to override default implementation of set_message.");
+		return static::errors_push("CourseComponent subclass failed to override default implementation of set_message.");
 	}
 	protected static function set_this_message($instance, $message, $table, $column, $id)
 	{
+		if (strlen($message) === 0) $message = null;
 		if (!self::update_this($instance, $table, array ("message" => $message), $column, $id))
 		{
 			return null;

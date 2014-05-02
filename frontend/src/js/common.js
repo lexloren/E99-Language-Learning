@@ -98,3 +98,7 @@ function authorize(data) {
 		window.location.replace("login.html");
 	}
 }
+
+function prettyDate(datetime){
+  return datetime.toDateString() + ' ' + datetime.toLocaleTimeString();
+}

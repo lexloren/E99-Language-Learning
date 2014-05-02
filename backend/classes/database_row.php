@@ -23,44 +23,43 @@ class DatabaseRow extends ErrorReporter
 	
 	protected static function select($table, $column, $id, $override_safety = false)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		if (!$override_safety)
 		{
-			if (is_string($id)) $id = "'".$mysqli->escape_string($id)."'";
+			if (is_string($id)) $id = "'" . Connection::escape($id) . "'";
 			else $id = intval($id, 10);
 		}
 		
 		if (isset(static::$instances_by_id[$id])) return static::$instances_by_id[$id];
 		
-		$result = $mysqli->query("SELECT * FROM $table WHERE $column = $id");
+		$result = Connection::query("SELECT * FROM $table WHERE $column = $id LOCK IN SHARE MODE");
 		
-		if (!!$mysqli->error) return static::set_error_description("Failed to select from $table: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select from $table: $error.", ErrorReporter::ERRCODE_DATABASE);
+		}
 		
 		if (!!$result && $result->num_rows > 0 && !!($result_assoc = $result->fetch_assoc()))
 		{
 			return static::from_mysql_result_assoc($result_assoc);
 		}
 		
-		return static::set_error_description("Failed to select any rows from $table where $column = $id.");
+		return static::errors_push("Failed to select any rows from $table where $column = $id.", ErrorReporter::ERRCODE_UNKNOWN);
 	}
 	
 	protected static function delete_this($instance, $table, $column, $id)
 	{
 		if (!$instance->session_user_can_write())
 		{
-			return static::set_error_description("Failed to delete from $table where $column = $id: Session user is not owner.");
+			return static::errors_push("Failed to delete from $table where $column = $id: Session user is not owner.", ErrorReporter::ERRCODE_PERMISSIONS);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM $table WHERE $column = %d",
+		Connection::query(sprintf("DELETE FROM $table WHERE $column = %d",
 			intval($id, 10)
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to delete from $table where $column = $id: " . $mysqli->error . ".");
+			return static::errors_push("Failed to delete from $table where $column = $id: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		if (isset(static::$instances_by_id[$id])) unset(static::$instances_by_id[$id]);
@@ -71,20 +70,18 @@ class DatabaseRow extends ErrorReporter
 	{
 		$id = intval($id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
 		
-		$result = $mysqli->query("SELECT COUNT($column) AS count FROM $table WHERE $column = $id GROUP BY $column");
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to count $table where $column = $id: " . $mysqli->error . ".");
+			return static::errors_push("Failed to count $table where $column = $id: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		if ($result->num_rows == 0) return 0;
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return static::set_error_description("Failed to count $table where $column = $id.");
+			return static::errors_push("Failed to count $table where $column = $id.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		return intval($result_assoc["count"], 10);
@@ -94,14 +91,14 @@ class DatabaseRow extends ErrorReporter
 	{
 		if (!isset($assoc) || !$assoc || !is_array($assoc))
 		{
-			return static::set_error_description("Invalid result_assoc: " . $assoc . ".");
+			return static::errors_push("Invalid result_assoc: " . $assoc . ".", ErrorReporter::ERRCODE_UNKNOWN);
 		}
 		
 		$keys_missing = array_diff($keys, array_keys($assoc));
 		
 		if (count($keys_missing) > 0)
 		{
-			return static::set_error_description("Missing keys in result_assoc: " . implode(", ", $keys_missing) . ".");
+			return static::errors_push("Missing keys in result_assoc: " . implode(", ", $keys_missing) . ".", ErrorReporter::ERRCODE_UNKNOWN);
 		}
 		
 		return true;
@@ -117,13 +114,11 @@ class DatabaseRow extends ErrorReporter
 			
 		$anchor_id = intval($anchor_id, 10);
 		
-		$mysqli = Connection::get_shared_instance();
-	
-		$result = $mysqli->query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
+		$result = Connection::query("SELECT $columns FROM $table WHERE $anchor_column = $anchor_id $order_by");
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: " . $mysqli->error . ".");
+			return static::errors_push("Failed to select $columns from $table where $anchor_column = $anchor_id $order_by: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
 		while (($result_assoc = $result->fetch_assoc()))
@@ -131,7 +126,7 @@ class DatabaseRow extends ErrorReporter
 			if (!($member = $member_class::from_mysql_result_assoc($result_assoc)))
 			{
 				unset ($cache);
-				return static::set_error_description("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::unset_error_description());
+				return static::errors_push("Failed to select from $table where $anchor_column = $anchor_id: " . $member_class::errors_unset(), ErrorReporter::ERRCODE_UNKNOWN);
 			}
 			$cache[$key_by !== null ? $result_assoc[$key_by] : count($cache)] = $member;
 		}
@@ -151,8 +146,6 @@ class DatabaseRow extends ErrorReporter
 	
 	protected static function update_this($instance, $table, $assignments, $id_column, $id, $override_safety = false)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		$assignments_sql = array ();
 		foreach ($assignments as $column => $value)
 		{
@@ -160,12 +153,13 @@ class DatabaseRow extends ErrorReporter
 			{
 				if (is_string($value))
 				{
-					$value = "'".$mysqli->escape_string($value)."'";
+					$value = "'".Connection::escape($value)."'";
 				}
-				else
+				else if ($value !== null)
 				{
 					$value = intval($value, 10);
 				}
+				else $value = "NULL";
 			}
 			
 			array_push($assignments_sql, "$column = $value");
@@ -176,14 +170,14 @@ class DatabaseRow extends ErrorReporter
 		
 		if (!$instance->session_user_can_write())
 		{
-			return static::set_error_description("$failure_message: Session user is not owner.");
+			return static::errors_push("$failure_message: Session user is not owner.", ErrorReporter::ERRCODE_PERMISSIONS);
 		}
 		
 		$id = intval($id, 10);
 		
-		$result = $mysqli->query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
+		$result = Connection::query("UPDATE $table SET $assignments_sql WHERE $id_column = $id");
 		
-		return !$mysqli->error ? $instance : static::set_error_description("$failure_message: " . $mysqli->error . ".");
+		return !($error = Connection::query_error_clear()) ? $instance : static::errors_push("$failure_message: $error.", ErrorReporter::ERRCODE_DATABASE);
 	}
 	
 	protected function get_owner()
@@ -269,7 +263,7 @@ class DatabaseRow extends ErrorReporter
 	{
 		if (!is_array($array))
 		{
-			return static::set_error_description("Back end expected associative array of DatabaseRow objects but received '$array'.");
+			return static::errors_push("Back end expected associative array of DatabaseRow objects but received '$array'.", ErrorReporter::ERRCODE_UNKNOWN);
 		}
 		
 		$assocs = array ();
@@ -277,7 +271,7 @@ class DatabaseRow extends ErrorReporter
 		{
 			if (!is_subclass_of($item, "DatabaseRow"))
 			{
-				return static::set_error_description("Back end expected associative array of DatabaseRow objects, but one such object was '$item'.");
+				return static::errors_push("Back end expected associative array of DatabaseRow objects, but one such object was '$item'.", ErrorReporter::ERRCODE_UNKNOWN);
 			}
 			array_push($assocs, $item->json_assoc());
 		}

@@ -176,27 +176,29 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 		$_SESSION["handle"] = $this->db->handles[0];
 		$_GET["list_ids"] = join(', ', $this->db->practice_list_ids);
+		$_GET["practice_from"] = "unknown_language";
+		$_GET["practice_to"] = "known_language";
 		$this->obj->practice();
 
-		$this->assertFalse(Session::get()->has_error());
+		$this->assertNull(Practice::errors_get());
 
 		$result_assoc = Session::get()->get_result_assoc();
 		$this->assertNotNull($result_assoc);
 
 		$result = $result_assoc["result"];
 		$this->assertNotNull($result);
-		$this->assertCount(count($this->db->practice_entry_ids), $result);
+		$this->assertCount(20, $result);
 
-		//  Removed 'owner' from Entry JSON because it's not used by front end
-		//      and incurs heavy queries on the database for no reason
-		$this->assertArrayHasKey('entryId', $result[0]);
-		$this->assertArrayHasKey('words', $result[0]);
-		$this->assertArrayHasKey('pronuncations', $result[0]);
+		$this->assertArrayHasKey("practiceEntryId", $result[0]);
+		$this->assertArrayHasKey("userEntryId", $result[0]);
+		$this->assertArrayHasKey("mode", $result[0]);
+		$this->assertArrayHasKey("interval", $result[0]);
+		$this->assertArrayHasKey("efactor", $result[0]);
 
-		$result_0_prefix = '11';
-		$this->assertEquals($result[0]["words"][TestDB::$lang_code_0], TestDB::$word_0.$result_0_prefix);
-		$this->assertEquals($result[0]["words"][TestDB::$lang_code_1], TestDB::$word_1.$result_0_prefix);
-		$this->assertEquals($result[0]["pronuncations"][TestDB::$lang_code_1], TestDB::$word_1_pronun.$result_0_prefix);
+		$this->assertContains($result[0]["practiceEntryId"], $this->db->practice_ids);
+		$this->assertContains($result[0]["userEntryId"], $this->db->practice_user_entry_ids);
+		$mode = Mode::select_by_direction("unknown language", "known language");
+		$this->assertEquals($result[0]["mode"], $mode->get_mode_id());
 	}
 
 	public function testPracticeWrongListIds()
@@ -225,6 +227,13 @@ class APIUserTest extends PHPUnit_Framework_TestCase
                 Session::get()->set_result_assoc(null);
 		$this->obj->practice();
 		$this->assertTrue(Session::get()->has_error());
+
+		$_GET["list_ids"] = join(', ', $this->db->practice_list_ids);
+                $_GET["practice_from"] = "unknown language1";
+                $_GET["practice_to"] = "known language1";
+                Session::get()->set_result_assoc(null);
+		$this->obj->practice();
+		$this->assertTrue(Session::get()->has_error());
 	}
 
 	public function testPracticeResponse()
@@ -232,39 +241,45 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
 		$_SESSION["handle"] = $this->db->handles[0];
 
-		$_POST["entry_id"] = $this->db->practice_entry_ids[0];
+		$_POST["practice_entry_id"] = $this->db->practice_ids[0];
 		$grade = Grade::select_by_point(4);
 		$_POST["grade_id"] = $grade->get_grade_id();
                 Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertFalse(Session::get()->has_error());
-		$entry = Session::get()->get_result_assoc();
-		$this->assertNotNull($entry["result"]);
+		$practice = Session::get()->get_result_assoc();
+		$this->assertNotNull($practice["result"]);
 
-		$this->assertNotNull($entry["result"]["words"]);
-		$this->assertCount(2, $entry["result"]["words"]);
-		$this->assertEquals($entry["result"]["entryId"], $this->db->practice_entry_ids[0]);
+		$this->assertEquals($practice["result"]["practiceEntryId"], $this->db->practice_ids[0]);
 	}
 
 	public function testPracticeResponseWrongEntryId()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-		$_GET["grade_id"] = 5;
+		$_GET["grade_id"] = $this->db->grade_ids[3];
 
 		$this->obj->practice_response();
 		$this->assertTrue(Session::get()->has_error());
 
-		$_GET["entry_id"] = '0';
+		$_GET["practice_entry_id"] = '0';
+                $this->obj->practice();
 		Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertTrue(Session::get()->has_error());
 
-		$_GET["entry_id"] = 'x';
+		$_GET["practice_entry_id"] = 'x';
 		Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertTrue(Session::get()->has_error());
 
-		$_GET["entry_id"] = -2;
+		$_GET["practice_entry_id"] = -2;
+		Session::get()->set_result_assoc(null);
+		$this->obj->practice_response();
+		$this->assertTrue(Session::get()->has_error());
+
+		$this->db->add_practice_data($this->db->user_ids[0], 2, 10);
+		$_GET["practice_entry_id"] = $this->db->practice_ids[0];
+                $_GET["grade_id"] = 100000;
 		Session::get()->set_result_assoc(null);
 		$this->obj->practice_response();
 		$this->assertTrue(Session::get()->has_error());
@@ -324,12 +339,48 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->find($this->db->emails[0], true);
 	}
 	
+	public function test_select()
+	{
+		//Session not set
+		$this->obj->select();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->select();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		$this->assertEquals($result["userId"], $this->db->user_ids[0]);
+	}
+	
+	public function test_languages()
+	{
+		//Session not set
+		$this->obj->languages();
+		$this->assertTrue(Session::get()->has_error());
+		
+		//Session set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		$this->assertCount(0, $result);
+	}
+	
 	public function testUpdate()
 	{
 		$_POST["email"] = "newemail1@domain.com";
 		$_POST["name_given"] = "NewGiven";
 		$_POST["name_family"] = "NewFamily";
 		$_POST["email"] = "newemail1@domain.com";
+		
+		$_POST["langs"] = implode(",", array("en 5", "cn 2"));
 
 		//Session not set
 		$this->obj->update();
@@ -351,6 +402,99 @@ class APIUserTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($result["email"], $_POST["email"]);
 		$this->assertEquals($result["nameGiven"], $_POST["name_given"]);
 		$this->assertEquals($result["nameFamily"], $_POST["name_family"]);
+		
+		$langYears = $result["languageYears"];
+		$this->assertCount(2, $langYears);
+		
+		$this->assertTrue(array_key_exists("en", $langYears[0]) || array_key_exists("en", $langYears[1]));
+		$this->assertTrue(array_key_exists("cn", $langYears[0]) || array_key_exists("cn", $langYears[1]));
+		
+		$langYearEN = $langYears[0];
+		$langYearCN = $langYears[1];
+
+		if (!array_key_exists("en", $langYearEN))
+		{
+			$langYearEN = $langYears[1];
+			$langYearCN = $langYears[0];
+		}
+
+		$this->assertEquals($langYearEN["en"], 5);
+		$this->assertEquals($langYearCN["cn"], 2);
+		
+		//print_r($result);
+	}
+	
+	public function test_languages_add()
+	{
+		//No handle set
+		$_POST["langs"] = implode(",", array(TestDB::$lang_code_0, TestDB::$lang_code_1));
+		$this->obj->languages_add();
+		$this->assertTrue(Session::get()->has_error());
+
+		//handle set, correct langs
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages_add();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		
+		$langYears = $result["languageYears"];
+		$this->assertCount(2, $langYears);
+		$this->assertTrue(array_key_exists(TestDB::$lang_code_0, $langYears[0]) || array_key_exists(TestDB::$lang_code_0, $langYears[1]));
+		$this->assertTrue(array_key_exists(TestDB::$lang_code_1, $langYears[0]) || array_key_exists(TestDB::$lang_code_1, $langYears[1]));
+	}
+	
+	public function test_languages_remove()
+	{
+		//No handle set
+		$_POST["langs"] = implode(",", array(TestDB::$lang_code_0, TestDB::$lang_code_1));
+		$this->obj->languages_remove();
+		$this->assertTrue(Session::get()->has_error());
+
+		//handle set
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->languages_remove();
+		$this->assertFalse(Session::get()->has_error());
+		
+		$result_assoc = Session::get()->get_result_assoc();		
+		$this->assertNotNull($result_assoc);
+		$result = $result_assoc["result"];
+		
+		//$langYears = $result["languageYears"];
+		//$this->assertCount(1, $langYears);
+		//$this->assertTrue(array_key_exists(TestDB::$lang_code_0, $langYears[0]));
+	}
+	
+	public function test_courses()
+	{
+		$this->obj->courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->courses();
+		$this->assertFalse(Session::get()->has_error());
+	}
+	
+	public function test_student_courses()
+	{
+		$this->obj->student_courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->student_courses();
+		$this->assertFalse(Session::get()->has_error());
+	}
+
+	public function test_instructor_courses()
+	{
+		$this->obj->instructor_courses();
+		$this->assertTrue(Session::get()->has_error());
+
+		$_SESSION["handle"] = $this->db->handles[0];
+		$this->obj->instructor_courses();
+		$this->assertFalse(Session::get()->has_error());
 	}
 }
 

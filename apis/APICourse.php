@@ -5,11 +5,6 @@ require_once "./backend/classes.php";
 
 class APICourse extends APIBase
 {
-	public function __construct($user, $mysqli)
-	{	
-		parent::__construct($user, $mysqli);
-	}
-	
 	public function insert()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -26,10 +21,11 @@ class APICourse extends APIBase
 				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 				$public = isset($_POST["public"]) ? !!intval($_POST["public"], 10) : false;
+				$password = isset($_POST["password"]) && strlen($_POST["password"]) > 0 ? $_POST["password"] : null;
 				
-				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["name"]) ? $_POST["name"] : null, $timeframe, $message, $public)))
+				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["name"]) ? $_POST["name"] : null, $timeframe, $message, $public, $password)))
 				{
-					Session::get()->set_error_assoc("Course Insertion", Course::unset_error_description());
+					Session::get()->set_error_assoc("Course Insertion", Course::errors_unset());
 				}
 				else
 				{
@@ -60,40 +56,81 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
 		{
-			$updates = 0;
-				
-			if (isset($_POST["name"]))
-			{
-				$updates += !!$course->set_course_name($_POST["name"]);
-			}
-			
-			if (isset($_POST["message"]))
-			{
-				$updates += !!$course->set_message($_POST["message"]);
-			}
-			
-			if (isset($_POST["public"]))
-			{
-				$updates += !!$course->set_public(intval($_POST["public"], 10));
-			}
-			
-			if (isset($_POST["open"]) && isset($_POST["close"]))
-			{
-				$updates += !!$course->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
-			}
-			else
-			{
-				if (isset($_POST["open"]))
+			if (Connection::transact(
+				function () use ($course)
 				{
-					$updates += !!$course->set_open($_POST["open"]);
+					$errors = 0;
+					
+					if (isset($_POST["name"]))
+					{
+						$errors += !$course->set_course_name($_POST["name"]);
+					}
+					
+					if (isset($_POST["message"]))
+					{
+						$errors += !$course->set_message($_POST["message"]);
+					}
+					
+					if (isset($_POST["public"]))
+					{
+						$errors += !$course->set_public(intval($_POST["public"], 10));
+					}
+					
+					if (isset($_POST["password"]))
+					{
+						$errors += !$course->set_password($_POST["password"]);
+					}
+					
+					if (isset($_POST["open"]) && isset($_POST["close"]))
+					{
+						$errors += !$course->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
+					}
+					else
+					{
+						if (isset($_POST["open"]))
+						{
+							$errors += !$course->set_open($_POST["open"]);
+						}
+						if (isset($_POST["close"]))
+						{
+							$errors += !$course->set_close($_POST["close"]);
+						}
+					}
+					
+					if ($errors) return null;
+					
+					return $course;
 				}
-				if (isset($_POST["close"]))
-				{
-					$updates += !!$course->set_close($_POST["close"]);
-				}
+			)) Session::get()->set_result_assoc($course->json_assoc());
+			else Session::get()->set_error_assoc("Course Modification", Course::errors_unset());
+		}
+	}
+	
+	public function enroll()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if ($course->enroll(isset($_POST["password"]) ? $_POST["password"] : null))
+			{
+				Session::get()->set_result_assoc($course->json_assoc());
 			}
-			
-			self::return_updates_as_json("Course", Course::unset_error_description(), $updates ? $course->json_assoc() : null);
+			else Session::get()->set_error_assoc("Course Enrollment", "Session user cannot enroll in course: " . Course::errors_unset());
+		}
+	}
+	
+	public function unenroll()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if ($course->unenroll())
+			{
+				Session::get()->set_result_assoc($course->json_assoc());
+			}
+			else Session::get()->set_error_assoc("Course Enrollment", "Session user cannot unenroll from course.");
 		}
 	}
 	
@@ -122,7 +159,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				Session::get()->set_error_assoc("Course Find", Course::errors_unset());
 				return;
 			}
 		}
@@ -135,7 +172,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				Session::get()->set_error_assoc("Course Find", Course::errors_unset());
 				return;
 			}
 		}
@@ -148,7 +185,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				Session::get()->set_error_assoc("Course Find", Course::errors_unset());
 				return;
 			}
 		}
@@ -163,7 +200,7 @@ class APICourse extends APIBase
 				}
 				else
 				{
-					Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+					Session::get()->set_error_assoc("Course Find", Course::errors_unset());
 					return;
 				}
 			}
@@ -174,7 +211,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course Find", Course::unset_error_description());
+				Session::get()->set_error_assoc("Course Find", Course::errors_unset());
 				return;
 			}
 		}
@@ -216,7 +253,7 @@ class APICourse extends APIBase
 		{
 			if (!$course->delete())
 			{
-				Session::get()->set_error_assoc("Course Deletion", Course::unset_error_description());
+				Session::get()->set_error_assoc("Course Deletion", Course::errors_unset());
 			}
 			else
 			{
@@ -232,7 +269,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->lists());
+			self::return_array_as_json($course->lists(!$course->session_user_can_write()));
 		}
 	}
 	
@@ -243,7 +280,7 @@ class APICourse extends APIBase
 		//  session_user_can_read() here?
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->tests());
+			self::return_array_as_json($course->tests(!$course->session_user_can_write()));
 		}
 	}
 	
@@ -275,17 +312,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->students_add(($student = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Students Addition", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->students_add(($student = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->students());
+				)) self::return_array_as_json($course->students());
+				else Session::get()->set_error_assoc("Course-Students Addition", Course::errors_unset());
 			}
 		}
 	}
@@ -308,17 +354,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->instructors_add(($instructor = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Instructors Addition", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->instructors_add(($instructor = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->instructors());
+				)) self::return_array_as_json($course->instructors());
+				else Session::get()->set_error_assoc("Course-Instructors Addition", Course::errors_unset());
 			}
 		}
 	}
@@ -331,17 +386,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->students_remove(($instructor = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Students Removal", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->students_remove(($student = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->students());
+				)) self::return_array_as_json($course->students());
+				else Session::get()->set_error_assoc("Course-Students Removal", Course::errors_unset());
 			}
 		}
 	}
@@ -354,17 +418,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->instructors_remove(($student = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Instructors Removal", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->instructors_remove(($instructor = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->instructors());
+				)) self::return_array_as_json($course->instructors());
+				else Session::get()->set_error_assoc("Course-Instructors Removal", Course::errors_unset());
 			}
 		}
 	}
@@ -388,17 +461,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->researchers_add(($researcher = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Researchers Addition", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->researchers_add(($researcher = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->researchers());
+				)) self::return_array_as_json($course->researchers());
+				else Session::get()->set_error_assoc("Course-Researchers Addition", Course::errors_unset());
 			}
 		}
 	}
@@ -411,18 +493,26 @@ class APICourse extends APIBase
 		{
 			if (self::validate_request($_POST, "user_ids"))
 			{
-				foreach (explode(",", $_POST["user_ids"]) as $user_id)
-				{
-					if (!$course->researchers_remove(($researcher = User::select_by_id($user_id))))
+				if (Connection::transact(
+					function () use ($course)
 					{
-						Session::get()->set_error_assoc("Course-Researchers Removal", Course::unset_error_description());
-						return;
+						$errors = 0;
+						
+						foreach (explode(",", $_POST["user_ids"]) as $user_id)
+						{
+							if (!$course->researchers_remove(($researcher = User::select_by_id($user_id))))
+							{
+								$errors ++;
+							}
+							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+						}
+						
+						if ($errors) return null;
+						
+						return $course;
 					}
-					
-					Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
-				}
-				
-				self::return_array_as_json($course->researchers());
+				)) self::return_array_as_json($course->researchers());
+				else Session::get()->set_error_assoc("Course-Researchers Removal", Course::errors_unset());
 			}
 		}
 	}
@@ -441,7 +531,7 @@ class APICourse extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
+				Session::get()->set_error_assoc("Course-Practice Report", Report::errors_unset());
 			}
 		}
 	}
@@ -467,7 +557,7 @@ class APICourse extends APIBase
 		}
 		else
 		{
-			Session::get()->set_error_assoc("Course-practice-report", Report::unset_error_description());
+			Session::get()->set_error_assoc("Course-Practice Report", Report::errors_unset());
 		}
 	}
 }

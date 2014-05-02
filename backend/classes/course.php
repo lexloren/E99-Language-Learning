@@ -6,60 +6,74 @@ require_once "./backend/classes.php";
 class Course extends DatabaseRow
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false, $password = null)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.", ErrorReporter::ERRCODE_AUTHENTICATION);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
+		$error_message;
 		
-		$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
-		
-		$language_0_matches = sprintf("languages_0.lang_code = '%s'",
-			$mysqli->escape_string($lang_code_0)
-		);
-		$language_1_matches = sprintf("languages_1.lang_code = '%s'",
-			$mysqli->escape_string($lang_code_1)
-		);
-		$language_codes_match = "$language_0_matches AND $language_1_matches";
-		
-		$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
-		
-		$name = ($name !== null && strlen($name) > 0)
-			? "'".$mysqli->escape_string($name)."'"
-			: "NULL";
-		$open = !!$timeframe ? $timeframe->get_open() : "NULL";
-		$close = !!$timeframe ? $timeframe->get_close() : "NULL";
-		$message = $message !== null ? "'" . $mysqli->escape_string($message) . "'" : "NULL";
-		$public = $public ? 1 : 0;
-		
-		$mysqli->query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
-			"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
-		));
-		
-		if (!!$mysqli->error)
-		{
-			return static::set_error_description("Failed to insert course: " . $mysqli->error . ".");
-		}
-		
-		if (!($course = self::select_by_id($mysqli->insert_id)))
-		{
-			return null;
-		}
-		
-		$mysqli->query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
-			$course->get_course_id(),
-			Session::get()->get_user()->get_user_id()
-		));
-		
-		Session::get()->get_user()->uncache_all();
-		
-		return $course;
+		return ($result = Connection::transact(
+			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public, $password, &$error_message)
+			{
+				$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
+				
+				$language_0_matches = sprintf("languages_0.lang_code = '%s'",
+					Connection::escape($lang_code_0)
+				);
+				$language_1_matches = sprintf("languages_1.lang_code = '%s'",
+					Connection::escape($lang_code_1)
+				);
+				$language_codes_match = "$language_0_matches AND $language_1_matches";
+				
+				$language_ids = "languages_0.lang_id AS lang_id_0, languages_1.lang_id AS lang_id_1";
+				
+				$name = ($name !== null && strlen($name) > 0)
+					? "'".Connection::escape($name)."'"
+					: "NULL";
+				$open = !!$timeframe ? $timeframe->get_open() : "NULL";
+				$close = !!$timeframe ? $timeframe->get_close() : "NULL";
+				$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
+				$public = $public ? 1 : 0;
+				$password = !!$password ? "'" . Connection::escape($password) . "'" : "NULL";
+				
+				Connection::query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public, password) %s",
+					"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public, $password FROM $languages_join ON $language_codes_match"
+				));
+				
+				if (!!($error = Connection::query_error_clear()))
+				{
+					$error_message = "Failed to insert course: $error.";
+					return null;
+				}
+				
+				if (!($course = Course::select_by_id(Connection::query_insert_id())))
+				{
+					$error_message = "Failed to select inserted course.";
+					return null;
+				}
+				
+				Connection::query(sprintf("INSERT INTO course_instructors (course_id, user_id) VALUES (%d, %d)",
+					$course->get_course_id(),
+					Session::get()->get_user()->get_user_id()
+				));
+				
+				if (!!($error = Connection::query_error_clear()))
+				{
+					$error_message = "Failed to insert course instructor: $error.";
+					return null;
+				}
+				
+				Session::get()->get_user()->uncache_all();
+				
+				return $course;
+			}
+		)) ? $result : static::errors_push($error_message, ErrorReporter::ERRCODE_DATABASE);
 	}
 	
 	public static function select_by_id($course_id)
@@ -91,20 +105,18 @@ class Course extends DatabaseRow
 			$entry_id = intval($entry_id, 10);
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		$course_units = "(courses CROSS JOIN course_units USING (course_id))";
 		$unit_lists = "($course_units CROSS JOIN course_unit_lists USING (unit_id))";
 		$course_lists = "($unit_lists CROSS JOIN lists ON course_unit_lists.list_id = lists.list_id AND (lists.user_id = courses.user_id OR lists.public))";
 		$course_user_entries = "($course_lists CROSS JOIN user_entries USING (user_entry_id))";
 		
-		$result = $mysqli->query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) GROUP BY course_id",
+		$result = Connection::query(sprintf("SELECT courses.* FROM $course_user_entries WHERE entry_id IN (%s) GROUP BY course_id",
 			implode(",", $entry_ids)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to find course(s) by entry_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by entry_ids: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -119,7 +131,7 @@ class Course extends DatabaseRow
 			return self::find_by_entry_ids($entry_ids);
 		}
 		
-		return static::set_error_description("Failed to find course(s) by entry ids: " . Dictionary::unset_error_description());
+		return static::errors_push("Failed to find course(s) by entry ids: " . Dictionary::errors_unset());
 	}
 	
 	public static function find_by_user_query($query)
@@ -131,7 +143,7 @@ class Course extends DatabaseRow
 			return self::find_by_user_ids($user_ids);
 		}
 		
-		return static::set_error_description("Failed to find course(s) by user handles: " . User::unset_error_description());
+		return static::errors_push("Failed to find course(s) by user handles: " . User::errors_unset());
 	}
 
 	public static function find_by_user_ids($user_ids)
@@ -143,18 +155,16 @@ class Course extends DatabaseRow
 		
 		$user_ids_string = implode(",", $user_ids);
 		
-		$mysqli = Connection::get_shared_instance();
-		
 		//  Don't include this information because student identities should be private
 		//  $courses_studied = "(SELECT course_id FROM courses CROSS JOIN course_students USING (course_id) WHERE students.user_id IN ($user_ids_string)) AS courses_studied";
 		
 		$course_ids_instructed = "SELECT course_id FROM courses CROSS JOIN course_instructors USING (course_id) WHERE course_instructors.user_id IN ($user_ids_string)";
 		
-		$result = $mysqli->query("SELECT * FROM courses WHERE (user_id IN ($user_ids_string) OR course_id IN ($course_ids_instructed)) AND courses.public GROUP BY course_id");
+		$result = Connection::query("SELECT * FROM courses WHERE (user_id IN ($user_ids_string) OR course_id IN ($course_ids_instructed)) AND courses.public GROUP BY course_id");
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to find course(s) by user_ids: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by user_ids: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -162,8 +172,6 @@ class Course extends DatabaseRow
 
 	public static function find_by_languages($lang_codes)
 	{
-		$mysqli = Connection::get_shared_instance();
-
 		$lang_ids = array ();
 		foreach ($lang_codes as $lang_code)
 		{
@@ -175,11 +183,11 @@ class Course extends DatabaseRow
 		
 		$lang_ids_string = implode(",", $lang_ids);
 		
-		$result = $mysqli->query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) GROUP BY course_id");
+		$result = Connection::query("SELECT * FROM courses WHERE (lang_id_0 IN ($lang_ids_string) AND lang_id_1 IN ($lang_ids_string)) GROUP BY course_id");
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to find course(s) by languages: " . $mysqli->error . ".");
+			return static::errors_push("Failed to find course(s) by languages: $error.");
 		}
 		
 		return self::courses_from_mysql_result($result);
@@ -283,6 +291,27 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
+	private $password = null;
+	public function get_password()
+	{
+		return $this->password;
+	}
+	public function set_password($password)
+	{
+		if (strlen($password) == 0) $password = null;
+		
+		if (!self::update_this($this, "courses", array ("password" => $password), "course_id", $this->get_course_id()))
+		{
+			return null;
+		}
+		$this->password = $password;
+		return $this;
+	}
+	public function check_password($password)
+	{
+		return !!$password && $password === $this->get_password();
+	}
+	
 	private $timeframe;
 	public function get_timeframe()
 	{
@@ -295,10 +324,9 @@ class Course extends DatabaseRow
 			"courses",
 			!!$timeframe
 				? $timeframe->mysql_assignments()
-				: array ("open" => "NULL", "close" => "NULL"),
+				: array ("open" => null, "close" => null),
 			"course_id",
-			$this->get_course_id(),
-			true
+			$this->get_course_id()
 		)) return null;
 		
 		$this->timeframe = $timeframe;
@@ -307,11 +335,11 @@ class Course extends DatabaseRow
 	}
 	public function set_open($open)
 	{
-		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+		return $this->set_timeframe(new Timeframe($open, !!$this->get_timeframe() ? $this->get_timeframe()->get_close() : null));
 	}
 	public function set_close($close)
 	{
-		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+		return $this->set_timeframe(new Timeframe(!!$this->get_timeframe() ? $this->get_timeframe()->get_open() : null, $close));
 	}
 	public function is_current()
 	{
@@ -325,6 +353,7 @@ class Course extends DatabaseRow
 	}
 	public function set_message($message)
 	{
+		if (strlen($message) === 0) $message = null;
 		if (!self::update_this($this, "courses", array ("message" => $message), "course_id", $this->get_course_id()))
 		{
 			return null;
@@ -384,35 +413,43 @@ class Course extends DatabaseRow
 		$table = "course_students LEFT JOIN users USING (user_id)";
 		return self::cache($this->units, "Unit", "course_units", "course_id", $this->get_course_id(), "*", "ORDER BY num");
 	}
-	public function lists()
+	public function lists($limit_to_open_units = true)
 	{
 		$lists = array ();
 		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->lists() as $list)
+			if (!$limit_to_open_units
+				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
 			{
-				if (!in_array($list, $lists))
+				foreach ($unit->lists() as $list)
 				{
-					array_push($lists, $list);
+					if (!in_array($list, $lists))
+					{
+						array_push($lists, $list);
+					}
 				}
 			}
 		}
 		return $lists;
 	}
-	public function tests()
+	public function tests($limit_to_open_units = true)
 	{
 		$tests = array ();
 		foreach ($this->units() as $unit)
 		{
-			foreach ($unit->tests() as $test)
+			if (!$limit_to_open_units
+				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
 			{
-				array_push($tests, $test);
+				foreach ($unit->tests() as $test)
+				{
+					array_push($tests, $test);
+				}
 			}
 		}
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $open = null, $close = null, $message = null)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $password = null, $open = null, $close = null, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
@@ -422,6 +459,7 @@ class Course extends DatabaseRow
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		$this->public = !!$public;
+		$this->password = !!$password && strlen($password) > 0 ? $password : null;
 		
 		self::register($this->course_id, $this);
 	}
@@ -435,6 +473,7 @@ class Course extends DatabaseRow
 			"lang_id_1",
 			"name",
 			"public",
+			"password",
 			"open",
 			"close",
 			"message"
@@ -448,6 +487,7 @@ class Course extends DatabaseRow
 				$result_assoc["lang_id_1"],
 				$result_assoc["name"],
 				$result_assoc["public"],
+				$result_assoc["password"],
 				$result_assoc["open"],
 				$result_assoc["close"],
 				$result_assoc["message"]
@@ -481,26 +521,26 @@ class Course extends DatabaseRow
 		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
 	
-	private function users_add(&$array, $table, $user)
+	private function users_add(&$array, $table, $user, $password = null)
 	{
-		if (!$this->session_user_can_write())
+		if (!$this->session_user_can_write()
+			&& !$this->check_password($password)
+			&& !$this->get_public())
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
+		Connection::query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_id = user_id",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to add course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to add course user: $error.");
 		}
 		
-		if (isset($array)) array_push($array, $user);
+		if (isset($array) && !in_array($user, $array)) array_push($array, $user);
 		
 		$user->uncache_all_courses();
 		
@@ -511,10 +551,19 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		
 		return $this->users_add($this->instructors, "course_instructors", $user);
+	}
+	
+	public function enroll($password = null)
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return static::errors_push("Session user has not reauthenticated.");
+		}
+		return $this->users_add($this->students, "course_students", $session_user, $password);
 	}
 	
 	public function students_add($user)
@@ -526,29 +575,27 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		
 		return $this->users_add($this->researchers, "course_researchers", $user);
 	}
 	
-	private function users_remove(&$array, $table, $user)
+	private function users_remove(&$array, $table, $user, $override_permissions = false)
 	{
-		if (!$this->session_user_can_write())
+		if (!$this->session_user_can_write() && !$override_permissions)
 		{
-			return static::set_error_description("Session user cannot edit course.");
+			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM $table WHERE course_id = %d AND user_id = %d",
+		Connection::query(sprintf("DELETE FROM $table WHERE course_id = %d AND user_id = %d",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to remove course user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to remove course user: $error.");
 		}
 		
 		if (isset($array)) array_drop($array, $user);
@@ -562,7 +609,7 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		return $this->users_remove($this->instructors, "course_instructors", $user);
 	}
@@ -571,9 +618,18 @@ class Course extends DatabaseRow
 	{
 		if (!$this->session_user_is_owner())
 		{
-			return static::set_error_description("Session user is not course owner.");
+			return static::errors_push("Session user is not course owner.");
 		}
 		return $this->users_remove($this->researchers, "course_researchers", $user);
+	}
+	
+	public function unenroll()
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return static::errors_push("Session user has not reauthenticated.");
+		}
+		return $this->users_remove($this->students, "course_students", $session_user, true);
 	}
 	
 	public function students_remove($user)
@@ -633,6 +689,7 @@ class Course extends DatabaseRow
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
+			"password" => $this->session_user_can_write() ? $this->get_password() : null,
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),

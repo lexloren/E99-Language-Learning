@@ -6,48 +6,51 @@ require_once "./backend/classes.php";
 class Pattern extends CourseComponent
 {
 	/***    STATIC/CLASS    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null)
+	public static function insert($test_id, $entry_id, $contents, $prompt = false, $score = null, $mode = null, $default = false)
 	{
 		if (!Session::get()->get_user())
 		{
-			return static::set_error_description("Session user has not reauthenticated.");
+			return static::errors_push("Session user has not reauthenticated.");
 		}
 		
 		$failure_message = "Failed to insert test entry pattern";
 		
 		if (!($test = Test::select_by_id(($test_id = intval($test_id, 10)))))
 		{
-			return static::set_error_description("$failure_message: " . Test::unset_error_description());
+			return static::errors_push("$failure_message: " . Test::errors_unset());
 		}
 		
 		if (!$test->session_user_can_write() && !($test->session_user_can_execute() && !$prompt && $score === null))
 		{
-			return static::set_error_description("$failure_message: Session user cannot edit test.");
+			return static::errors_push("$failure_message: Session user cannot edit test.");
 		}
 		
 		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), ($entry_id = intval($entry_id, 10)))))
 		{
-			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
+			return static::errors_push("$failure_message: " . Entry::errors_unset());
 		}
 		
 		$score = $score !== null ? intval($score, 10) : "NULL";
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$contents = $mysqli->escape_string($contents);
+		$contents = Connection::escape($contents);
 		$prompt = !!$prompt ? 1 : 0;
+		$default = !!$default ? 1 : 0;
 		
-		$mysqli->query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d", $test->get_test_id(), $entry->get_user_entry_id()));
+		$mode = $mode === null ? "mode" : intval($mode, 10);
 		
-		if (!!$mysqli->error)
+		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE pattern_id = LAST_INSERT_ID(pattern_id)", $test->get_test_id(), $entry->get_user_entry_id()));
+		
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			return static::errors_push("$failure_message: $error.");
 		}
 		
-		return self::select_by_id($mysqli->insert_id);
+		return Connection::query_insert_id()
+			? self::select_by_id(Connection::query_insert_id())
+			: self::select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, is_string($mode) ? null : $mode);
 	}
 	
 	public static function select_all_for_test_entry_id($test_entry_id, $prompts_only = true)
@@ -55,13 +58,11 @@ class Pattern extends CourseComponent
 		$test_entry_id = intval($test_entry_id, 10);
 		$prompts_only = $prompts_only ? 1 : 0;
 		
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = $test_entry_id AND prompt >= $prompts_only");
 		
-		$result = $mysqli->query("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = $test_entry_id AND prompt >= $prompts_only");
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to select all test entry patterns for test_entry_id = $test_entry_id:" . $mysqli->error . ".");
+			return static::errors_push("Failed to select all test entry patterns for test_entry_id = $test_entry_id:$error.");
 		}
 		
 		$patterns = array ();
@@ -79,35 +80,42 @@ class Pattern extends CourseComponent
 		return parent::select("course_unit_test_entry_patterns", "pattern_id", $pattern_id);
 	}
 	
-	public static function select_by_test_id_entry_id_contents($test_id, $entry_id, $contents, $insert_if_necessary = true)
+	public static function select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, $mode = null)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		$test_id = intval($test_id, 10);
 		
-		$failure_message = "Failed to select test entry pattern by test_id, entry_id, contents";
+		$failure_message = "Failed to select test entry pattern by test_id, entry_id, contents, mode";
 		
 		if (!($test = Test::select_by_id($test_id)))
 		{
-			return static::set_error_description("$failure_message: " . Test::unset_error_description());
+			return static::errors_push("$failure_message: " . Test::errors_unset());
 		}
 		
 		$entry_id = intval($entry_id, 10);
 		
 		if (!($entry = UserEntry::select_by_user_id_entry_id($test->get_owner()->get_user_id(), $entry_id, false)))
 		{
-			return static::set_error_description("$failure_message: " . Entry::unset_error_description());
+			return static::errors_push("$failure_message: " . Entry::errors_unset());
 		}
 		
 		$user_entry_id = $entry->get_user_entry_id();
 		
-		$contents = $mysqli->escape_string($contents);
+		$contents = Connection::escape($contents);
 		
-		$result = $mysqli->query("SELECT * FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND contents = '$contents'");
-		
-		if (!!$mysqli->error)
+		if ($mode === null)
 		{
-			return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+			$result = Connection::query("SELECT * FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND contents = '$contents'");
+		}
+		else
+		{
+			$mode = intval($mode, 10);
+			
+			$result = Connection::query("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id) WHERE test_id = $test_id AND user_entry_id = $user_entry_id AND course_unit_test_entry_patterns.mode = $mode AND contents = '$contents'");
+		}
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("$failure_message: $error.");
 		}
 		
 		if ($result->num_rows > 0 && ($result_assoc = $result->fetch_assoc()))
@@ -115,12 +123,7 @@ class Pattern extends CourseComponent
 			return self::from_mysql_result_assoc($result_assoc);
 		}
 		
-		if (!$insert_if_necessary)
-		{
-			return static::set_error_description("$failure_message: No pattern found!");
-		}
-		
-		return static::insert($test_id, $entry_id, $contents);
+		return static::errors_push("$failure_message: No pattern found!");
 	}
 	
 	/***    INSTANCE    ***/
@@ -142,20 +145,19 @@ class Pattern extends CourseComponent
 	{
 		if (!isset($this->test))
 		{
-			$mysqli = Connection::get_shared_instance();
-			$result = $mysqli->query(sprintf("SELECT course_unit_tests.* FROM course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id) WHERE test_entry_id = %d GROUP BY test_id", $this->get_test_entry_id()));
+			$result = Connection::query(sprintf("SELECT course_unit_tests.* FROM course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id) WHERE test_entry_id = %d GROUP BY test_id", $this->get_test_entry_id()));
 			
 			$failure_message = "Test entry pattern failed to get test";
 			
-			if ($mysqli->error)
+			if (!!($error = Connection::query_error_clear()))
 			{
-				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+				return static::errors_push("$failure_message: $error.");
 			}
 			
 			if (!($this->test = Test::from_mysql_result_assoc($result->fetch_assoc())))
 			{
 				unset($this->test);
-				return static::set_error_description("$failure_message: " . Test::unset_error_description());
+				return static::errors_push("$failure_message: " . Test::errors_unset());
 			}
 		}
 		
@@ -187,19 +189,18 @@ class Pattern extends CourseComponent
 	{
 		if (!isset($this->user_entry))
 		{
-			$mysqli = Connection::get_shared_instance();
-			$result = $mysqli->query(sprintf("SELECT user_entry_id FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = %d GROUP BY user_entry_id", $this->get_test_entry_id()));
+			$result = Connection::query(sprintf("SELECT user_entry_id FROM course_unit_test_entries CROSS JOIN user_entries USING (user_entry_id) WHERE test_entry_id = %d GROUP BY user_entry_id", $this->get_test_entry_id()));
 			
 			$failure_message = "Test entry pattern failed to get test entry";
 			
-			if ($mysqli->error)
+			if (!!($error = Connection::query_error_clear()))
 			{
-				return static::set_error_description("$failure_message: " . $mysqli->error . ".");
+				return static::errors_push("$failure_message: $error.");
 			}
 			
 			if (!($result_assoc = $result->fetch_assoc()))
 			{
-				return static::set_error_description("$failure_message: Failed to select user entry where test_entry_id = " . $this->get_test_entry_id() . ".");
+				return static::errors_push("$failure_message: Failed to select user entry where test_entry_id = " . $this->get_test_entry_id() . ".");
 			}
 			
 			$this->user_entry = UserEntry::select_by_user_entry_id($result_assoc["user_entry_id"]);
@@ -273,7 +274,7 @@ class Pattern extends CourseComponent
 		
 		if (!($course = Course::select($unit_courses, "test_entry_id", $this->get_test_entry_id())))
 		{
-			return static::set_error_description("Failed to get course for test entry pattern: " . Course::unset_error_description());
+			return static::errors_push("Failed to get course for test entry pattern: " . Course::errors_unset());
 		}
 		
 		return $course;

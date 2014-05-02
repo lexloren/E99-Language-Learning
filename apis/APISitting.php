@@ -5,11 +5,6 @@ require_once "./backend/classes.php";
 
 class APISitting extends APIBase
 {
-	public function __construct($user, $mysqli)
-	{	
-		parent::__construct($user, $mysqli);
-	}
-	
 	public function select()
 	{
 		if (!Session::get()->reauthenticate()) return;
@@ -30,7 +25,7 @@ class APISitting extends APIBase
 			
 			if (!$sitting->delete())
 			{
-				Session::get()->set_error_assoc("Sitting Deletion", Sitting::unset_error_description());
+				Session::get()->set_error_assoc("Sitting Deletion", Sitting::errors_unset());
 			}
 			else
 			{
@@ -52,7 +47,7 @@ class APISitting extends APIBase
 				$updates += !!$sitting->set_message($_POST["message"]);
 			}
 			
-			self::return_updates_as_json("Sitting", Sitting::unset_error_description(), $updates ? $sitting->json_assoc() : null);
+			self::return_updates_as_json("Sitting", Sitting::errors_unset(), $updates ? $sitting->json_assoc() : null);
 		}
 	}
 }

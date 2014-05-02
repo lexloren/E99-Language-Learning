@@ -6,7 +6,7 @@ require_once "./backend/classes.php";
 class User extends DatabaseRow
 {
 	/***    CLASS/STATIC    ***/
-	protected static $error_description = null;
+	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
 	private static function random_alphanumeric($length)
@@ -60,21 +60,24 @@ class User extends DatabaseRow
 	
 	public static function find($query)
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		if (is_array($query) && !is_string($query))
 		{
 			foreach ($query as &$q)
 			{
-				$q = self::validate_email($q) || self::validate_handle($q) ? $mysqli->escape_string($q) : "";
+				$q = self::validate_email($q) || self::validate_handle($q) ? Connection::escape($q) : "";
 			}
 			
 			$query = implode("','", $query);
 		}
 		else $query = self::validate_email($query) || self::validate_handle($query)
-			? $mysqli->escape_string($query) : "";
+			? Connection::escape($query) : "";
 		
-		$result = $mysqli->query("SELECT * FROM users WHERE email IN ('$query') OR handle IN ('$query')");
+		$result = Connection::query("SELECT * FROM users WHERE email IN ('$query') OR handle IN ('$query')");
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to find user: $error.", ErrorReporter::ERRCODE_DATABASE);
+		}
 		
 		$users = array ();
 		while (($result_assoc = $result->fetch_assoc()))
@@ -87,52 +90,50 @@ class User extends DatabaseRow
 	//  Inserts a row into users table and returns corresponding User object
 	public static function insert($email, $handle, $password, $name_family = "", $name_given = "")
 	{
-		$mysqli = Connection::get_shared_instance();
-		
 		if (!self::validate_email($email))
 		{
-			return static::set_error_description("Email must conform to the standard pattern.");
+			return static::errors_push("Email must conform to the standard pattern.");
 		}
 		
 		if (!self::validate_password($password))
 		{
-			return static::set_error_description("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
+			return static::errors_push("Password must consist of between 6 and 31 (inclusive) characters containing at least one letter, at least one number, and at least one non-alphanumeric character.");
 		}
 		
 		if (!self::validate_handle($handle))
 		{
-			return static::set_error_description("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
+			return static::errors_push("Handle must consist of between 4 and 63 (inclusive) alphanumeric characters beginning with a letter.");
 		}
 
 		//  Check whether requested handle conflicts with any existing handle
 		$existing_users = self::find($handle);
 		if (count($existing_users) > 0)
 		{
-			return static::set_error_description("The requested handle is already in use.");
+			return static::errors_push("The requested handle is already in use.");
 		}
 
 		//  Check whether requested email conflicts with any existing email
 		$existing_users = self::find($email);
 		if (count($existing_users) > 0)
 		{
-			return static::set_error_description("The requested email is already in use.");
+			return static::errors_push("The requested email is already in use.");
 		}
 		
 		//  Good to go, so insert the new user
-		$mysqli->query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
-			$mysqli->escape_string($handle),
-			$mysqli->escape_string($email),
-			$mysqli->escape_string($password),
-			$mysqli->escape_string($name_given),
-			$mysqli->escape_string($name_family)
+		Connection::query(sprintf("INSERT INTO users (handle, email, pswd_hash, name_given, name_family) VALUES ('%s', '%s', PASSWORD('%s'), '%s', '%s')",
+			Connection::escape($handle),
+			Connection::escape($email),
+			Connection::escape($password),
+			Connection::escape($name_given),
+			Connection::escape($name_family)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to insert user: " . $mysqli->error . ".");
+			return static::errors_push("Failed to insert user: $error.");
 		}
 		
-		return self::select_by_id($mysqli->insert_id);
+		return self::select_by_id(Connection::query_insert_id());
 	}
 	
 	/***    INSTANCE    ***/
@@ -155,18 +156,16 @@ class User extends DatabaseRow
 	
 	public function set_password($password)
 	{
-		$mysqli = Connection::get_shared_instance();
-			
 		//  See whether we can authenticate with the handle and password posted
-		$mysqli->query(sprintf("UPDATE users SET pswd_hash = PASSWORD('%s') WHERE handle = '%s' AND email = '%s' LIMIT 1",
-			$mysqli->escape_string($password),
-			$mysqli->escape_string($this->get_handle()),
-			$mysqli->escape_string($this->get_email(false))
+		Connection::query(sprintf("UPDATE users SET pswd_hash = PASSWORD('%s') WHERE handle = '%s' AND email = '%s' LIMIT 1",
+			Connection::escape($password),
+			Connection::escape($this->get_handle()),
+			Connection::escape($this->get_email(false))
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("User failed to set password: " . $mysqli->error . ".");
+			return static::errors_push("User failed to set password: $error.");
 		}
 		
 		return $this;
@@ -175,21 +174,21 @@ class User extends DatabaseRow
 	private $status_id = null;
 	public function get_status_id()
 	{
-		$this->status_id;
+		return $this->status_id;
 	}
-	public function get_status($status)
+	public function get_status()
 	{
-		if (!$this->get_status_id()) return null;
+		if (!($status_id = $this->get_status_id())) return null;
 		
-		if (($status = Status::select_by_id($this->get_status_id())))
+		if (($status = Status::select_by_id($status_id)))
 		{
 			return $status;
 		}
-		else return static::set_error_description("Failed to get user status: " . Status::unset_error_description());
+		else return static::errors_push("Failed to get user status: " . Status::errors_unset());
 	}
 	public function set_status($status)
 	{
-		if (!self::update_this($this, "users", array ("status_id" => ($status_id = $status->get_status_id())), "user_id", $this->get_user_id()))
+		if (!self::update_this($this, "users", array ("status_id" => ($status_id = !!$status ? $status->get_status_id() : null)), "user_id", $this->get_user_id()))
 		{
 			return null;
 		}
@@ -199,18 +198,16 @@ class User extends DatabaseRow
 	
 	public function check_password($password)
 	{
-		$mysqli = Connection::get_shared_instance();
-			
 		//  See whether we can authenticate with the handle and password posted
-		$result = $mysqli->query(sprintf("SELECT * FROM users WHERE (handle = '%s' AND email = '%s') AND pswd_hash = PASSWORD('%s')",
-			$mysqli->escape_string($this->get_handle()),
-			$mysqli->escape_string($this->get_email(false)),
-			$mysqli->escape_string($password)
+		$result = Connection::query(sprintf("SELECT * FROM users WHERE (handle = '%s' AND email = '%s') AND pswd_hash = PASSWORD('%s')",
+			Connection::escape($this->get_handle()),
+			Connection::escape($this->get_email(false)),
+			Connection::escape($password)
 		));
 		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("User failed to check password: " . $mysqli->error . ".");
+			return static::errors_push("User failed to check password: $error.");
 		}
 		
 		return $result->num_rows === 1;
@@ -227,7 +224,7 @@ class User extends DatabaseRow
 		
 		if (!self::validate_email($email))
 		{
-			return static::set_error_description("Email failed to conform to standard pattern.");
+			return static::errors_push("Email failed to conform to standard pattern.");
 		}
 		
 		if (!self::update_this($this, "users", array ("email" => $email), "user_id", $this->get_user_id()))
@@ -245,6 +242,7 @@ class User extends DatabaseRow
 	}
 	public function set_name_family($name_family)
 	{
+		if (strlen($name_family) === 0) $name_family = null;
 		if (!self::update_this($this, "users", array ("name_family" => $name_family), "user_id", $this->get_user_id()))
 		{
 			return null;
@@ -260,6 +258,7 @@ class User extends DatabaseRow
 	}
 	public function set_name_given($name_given)
 	{
+		if (strlen($name_given) === 0) $name_given = null;
 		if (!self::update_this($this, "users", array ("name_given" => $name_given), "user_id", $this->get_user_id()))
 		{
 			return null;
@@ -318,7 +317,7 @@ class User extends DatabaseRow
 	
 	public function delete()
 	{
-		return static::set_error_description("Failed to delete user.");
+		return static::errors_push("Failed to delete user.");
 	}
 	
 	public function uncache_lists()
@@ -370,16 +369,14 @@ class User extends DatabaseRow
 			
 			$course_ids_string = implode(",", $course_ids);
 			
-			$mysqli = Connection::get_shared_instance();
-			
 			$course_units = "(courses CROSS JOIN course_units USING (course_id))";
 			$unit_lists = "($course_units CROSS JOIN course_unit_lists USING (unit_id))";
 			
-			$result = $mysqli->query("SELECT lists.* FROM lists CROSS JOIN $unit_lists USING (list_id) WHERE lists.user_id = %d AND course_id IN ($course_ids_string)");
+			$result = Connection::query("SELECT lists.* FROM lists CROSS JOIN $unit_lists USING (list_id) WHERE lists.user_id = %d AND course_id IN ($course_ids_string)");
 			
-			if (!!$mysqli->error)
+			if (!!($error = Connection::query_error_clear()))
 			{
-				return static::set_error_description("User failed to get lists by course id: " . $mysqli->error . ".");
+				return static::errors_push("User failed to get lists by course id: $error.");
 			}
 			
 			$lists = array ();
@@ -414,12 +411,12 @@ class User extends DatabaseRow
 	{
 		if (!$language)
 		{
-			return static::set_error_description("Failed to add null user language.");
+			return static::errors_push("Failed to add null user language.");
 		}
 		
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if ($years === null)
@@ -428,20 +425,18 @@ class User extends DatabaseRow
 		}
 		else if (($years = intval($years, 10)) < 0)
 		{
-			return static::set_error_description("User cannot add language with negative years.");
+			return static::errors_push("User cannot add language with negative years.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("INSERT INTO user_languages " .
+		Connection::query(sprintf("INSERT INTO user_languages " .
 							   "(user_id, lang_id, years) VALUES (%d, %d, $years)",
 			$this->get_user_id(),
 			$language->get_lang_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to add user language: " . $mysqli->error . ".");
+			return static::errors_push("Failed to add user language: $error.");
 		}
 		
 		if (isset($this->languages)) array_push($this->languages, $language);
@@ -452,25 +447,23 @@ class User extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if (!$language)
 		{
-			return static::set_error_description("User cannot remove null user language.");
+			return static::errors_push("User cannot remove null user language.");
 		}
 		
-		$mysqli = Connection::get_shared_instance();
-		
-		$mysqli->query(sprintf("DELETE FROM user_languages " .
+		Connection::query(sprintf("DELETE FROM user_languages " .
 							   "WHERE user_id = %d AND lang_id = %d",
 			$this->get_user_id(),
 			$language->get_lang_id()
 		));
 		
-		if ($mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to remove user language: " . $mysqli->error . ".");
+			return static::errors_push("Failed to remove user language: $error.");
 		}
 		
 		if (isset($this->languages)) array_drop($this->languages, $language);
@@ -481,12 +474,12 @@ class User extends DatabaseRow
 	{
 		if (!$this->session_user_can_write())
 		{
-			return static::set_error_description("Session user cannot edit user.");
+			return static::errors_push("Session user cannot edit user.");
 		}
 		
 		if (!$language)
 		{
-			return static::set_error_description("User cannot update null user language.");
+			return static::errors_push("User cannot update null user language.");
 		}
 		
 		if ($years === null)
@@ -495,32 +488,31 @@ class User extends DatabaseRow
 		}
 		else if (($years = intval($years, 10)) < 0)
 		{
-			return static::set_error_description("User cannot set language years to negative integer.");
+			return static::errors_push("User cannot set language years to negative integer.");
 		}
 		
 		if (!in_array($language, $this->languages()))
 		{
-			return static::set_error_description("User cannot set language years for language not already associated with user.");
+			return static::errors_push("User cannot set language years for language not already associated with user.");
 		}
 			
-		$mysqli = Connection::get_shared_instance();
+		Connection::query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_lang_id()));
 		
-		$mysqli->query(sprintf("UPDATE user_languages SET years = $years WHERE user_id = %d AND language_id = %d", $this->get_user_id(), $language->get_language_id()));
-		
-		if ($mysqli->error) return static::set_error_description("User Modification", "User failed to set language years: " . $mysqli->error . ".");
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("User Modification", "User failed to set language years: $error.");
+		}
 		
 		return $this;
 	}
 	
 	public function get_language_years_json_assoc()
 	{
-		$mysqli = Connection::get_shared_instance();
+		$result = Connection::query(sprintf("SELECT lang_code, years FROM user_languages LEFT JOIN languages USING (lang_id) WHERE user_id = %d", $this->get_user_id()));
 		
-		$result = $mysqli->query(sprintf("SELECT lang_code, years FROM user_languages LEFT JOIN languages USING (lang_id) WHERE user_id = %d", $this->get_user_id()));
-		
-		if (!!$mysqli->error)
+		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::set_error_description("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": " . $mysqli->error . ".");
+			return static::errors_push("Failed to select from user_languages LEFT JOIN languages where user_id = " . $this->get_user_id() . ": $error.");
 		}
 		
 		$language_years_assoc = array ();
@@ -634,6 +626,7 @@ class User extends DatabaseRow
 		$assoc["languageYears"] = $this->get_language_years_json_assoc();
 		$assoc["nameGiven"] = $this->get_name_given($privacy);
 		$assoc["nameFamily"] = $this->get_name_family($privacy);
+		$assoc["status"] = !!$this->get_status() ? $this->get_status()->json_assoc() : null;
 		$assoc["coursesOwnedCount"] = $this->courses_owned_count();
 		$assoc["coursesInstructedCount"] = $this->courses_instructed_count();
 		$assoc["coursesStudiedCount"] = $this->courses_studied_count();

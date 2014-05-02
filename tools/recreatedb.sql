@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 28 april 2014 kl 05:53
+-- Skapad: 01 maj 2014 kl 22:01
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `lang_id_0` bigint(20) unsigned NOT NULL,
   `lang_id_1` bigint(20) unsigned NOT NULL,
   `public` tinyint(1) NOT NULL default '0',
+  `password` char(127) default NULL,
   `open` bigint(20) unsigned default NULL,
   `close` bigint(20) unsigned default NULL,
   `message` text,
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS `courses` (
   KEY `close` (`close`),
   KEY `user_id` (`user_id`),
   KEY `name` (`name`),
-  KEY `public` (`public`)
+  KEY `public` (`public`),
+  KEY `pswd_hash` (`password`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=39 ;
 
 -- --------------------------------------------------------
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=81 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=84 ;
 
 -- --------------------------------------------------------
 
@@ -109,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `course_units` (
   KEY `close` (`close`),
   KEY `num` (`num`),
   KEY `name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=43 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=44 ;
 
 -- --------------------------------------------------------
 
@@ -121,11 +123,9 @@ DROP TABLE IF EXISTS `course_unit_lists`;
 CREATE TABLE IF NOT EXISTS `course_unit_lists` (
   `unit_id` bigint(20) unsigned NOT NULL,
   `list_id` bigint(20) unsigned NOT NULL,
-  `shared` tinyint(1) NOT NULL,
   `message` text,
   PRIMARY KEY  (`unit_id`,`list_id`),
-  KEY `list_id` (`list_id`),
-  KEY `share_class` (`shared`)
+  KEY `list_id` (`list_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   `name` char(255) default NULL,
   `open` bigint(20) unsigned default NULL,
   `close` bigint(20) unsigned default NULL,
+  `timer` int(10) unsigned default NULL,
   `graded` tinyint(1) NOT NULL default '1',
   `disclosed` tinyint(1) NOT NULL default '0',
   `message` text,
@@ -150,8 +151,9 @@ CREATE TABLE IF NOT EXISTS `course_unit_tests` (
   KEY `close` (`close`),
   KEY `name` (`name`),
   KEY `graded` (`graded`),
-  KEY `disclosed` (`disclosed`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=48 ;
+  KEY `disclosed` (`disclosed`),
+  KEY `timer` (`timer`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=56 ;
 
 -- --------------------------------------------------------
 
@@ -165,14 +167,14 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   `test_id` bigint(20) unsigned NOT NULL,
   `user_entry_id` bigint(20) unsigned NOT NULL,
   `num` smallint(5) unsigned NOT NULL,
-  `mode` tinyint(1) unsigned NOT NULL default '1',
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   PRIMARY KEY  (`test_entry_id`),
   UNIQUE KEY `test_id` (`test_id`,`num`),
   UNIQUE KEY `test_id_2` (`test_id`,`user_entry_id`),
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=67 ;
 
 -- --------------------------------------------------------
 
@@ -195,7 +197,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `prompt` (`prompt`),
   KEY `mode` (`mode`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=13 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=137 ;
 
 -- --------------------------------------------------------
 
@@ -210,13 +212,13 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   `student_id` bigint(20) unsigned NOT NULL,
   `start` bigint(20) unsigned NOT NULL,
   `stop` bigint(20) unsigned default NULL,
-  `message` text NOT NULL,
+  `message` text,
   PRIMARY KEY  (`sitting_id`),
   UNIQUE KEY `test_id` (`test_id`,`student_id`),
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -234,7 +236,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sitting_responses` (
   UNIQUE KEY `sitting_id` (`sitting_id`,`pattern_id`),
   KEY `timestamp` (`timestamp`),
   KEY `pattern_id` (`pattern_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=45 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=56 ;
 
 -- --------------------------------------------------------
 
@@ -323,7 +325,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
   KEY `user_id` (`user_id`),
   KEY `list_name` (`name`),
   KEY `share_public` (`public`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=21 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=23 ;
 
 -- --------------------------------------------------------
 
@@ -339,7 +341,7 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
   PRIMARY KEY  (`list_entry_id`),
   UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=46 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=50 ;
 
 -- --------------------------------------------------------
 
@@ -350,11 +352,11 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
 DROP TABLE IF EXISTS `modes`;
 CREATE TABLE IF NOT EXISTS `modes` (
   `mode_id` tinyint(3) unsigned NOT NULL,
-  `source` char(255) default NULL,
-  `dest` char(255) default NULL,
+  `from` char(255) default NULL,
+  `to` char(255) default NULL,
   PRIMARY KEY  (`mode_id`),
-  KEY `source` (`source`),
-  KEY `dest` (`dest`)
+  UNIQUE KEY `from_to` (`from`,`to`),
+  KEY `to` (`to`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -374,7 +376,7 @@ CREATE TABLE IF NOT EXISTS `outbox` (
   PRIMARY KEY  (`message_id`),
   KEY `user_id` (`user_id`),
   KEY `course_id` (`course_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
 
 -- --------------------------------------------------------
 
@@ -418,15 +420,13 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   `word_0` char(255) default NULL,
   `word_1` char(255) default NULL,
   `word_1_pronun` char(255) default NULL,
-  `interval` int(11) NOT NULL default '0',
-  `efactor` decimal(3,2) NOT NULL default '2.50',
   PRIMARY KEY  (`user_entry_id`),
   UNIQUE KEY `entry_id` (`entry_id`,`user_id`),
   KEY `user_id` (`user_id`),
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=86 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=102 ;
 
 -- --------------------------------------------------------
 
@@ -462,7 +462,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_results` (
   KEY `grade_id` (`grade_id`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -490,17 +490,17 @@ CREATE TABLE IF NOT EXISTS `user_languages` (
 
 DROP TABLE IF EXISTS `user_practice`;
 CREATE TABLE IF NOT EXISTS `user_practice` (
-  `practice_id` bigint(20) unsigned NOT NULL auto_increment,
+  `practice_entry_id` bigint(20) unsigned NOT NULL auto_increment,
   `user_entry_id` bigint(20) unsigned NOT NULL,
-  `mode` tinyint(3) unsigned NOT NULL,
+  `mode` tinyint(3) unsigned NOT NULL default '1',
   `interval` int(11) NOT NULL default '0',
   `efactor` decimal(3,2) NOT NULL default '2.50',
-  PRIMARY KEY  (`practice_id`),
+  PRIMARY KEY  (`practice_entry_id`),
   UNIQUE KEY `user_entry_id` (`user_entry_id`,`mode`),
   KEY `mode` (`mode`),
   KEY `interval` (`interval`),
   KEY `efactor` (`efactor`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=694 ;
 
 -- --------------------------------------------------------
 
@@ -571,6 +571,7 @@ ALTER TABLE `course_unit_tests`
 -- Restriktioner för tabell `course_unit_test_entries`
 --
 ALTER TABLE `course_unit_test_entries`
+  ADD CONSTRAINT `course_unit_test_entries_ibfk_6` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entries_ibfk_4` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entries_ibfk_5` FOREIGN KEY (`test_id`) REFERENCES `course_unit_tests` (`test_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -578,6 +579,7 @@ ALTER TABLE `course_unit_test_entries`
 -- Restriktioner för tabell `course_unit_test_entry_patterns`
 --
 ALTER TABLE `course_unit_test_entry_patterns`
+  ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `course_unit_test_entry_patterns_ibfk_1` FOREIGN KEY (`test_entry_id`) REFERENCES `course_unit_test_entries` (`test_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -643,7 +645,7 @@ ALTER TABLE `user_entry_annotations`
 -- Restriktioner för tabell `user_entry_results`
 --
 ALTER TABLE `user_entry_results`
-  ADD CONSTRAINT `user_entry_results_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_entry_results_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `grade_id` FOREIGN KEY (`grade_id`) REFERENCES `grades` (`grade_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_entry_results_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -658,5 +660,5 @@ ALTER TABLE `user_languages`
 -- Restriktioner för tabell `user_practice`
 --
 ALTER TABLE `user_practice`
-  ADD CONSTRAINT `user_practice_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_practice_ibfk_2` FOREIGN KEY (`mode`) REFERENCES `modes` (`mode_id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `user_practice_ibfk_1` FOREIGN KEY (`user_entry_id`) REFERENCES `user_entries` (`user_entry_id`) ON DELETE CASCADE ON UPDATE CASCADE;

@@ -17,10 +17,9 @@ class ConnectionTest extends PHPUnit_Framework_TestCase
 
         public function test_connection()
         {
-                Connection::set_shared_instance(null);
-                $test_link = Connection::get_shared_instance();
-                $this->assertNotNull($test_link);
-		$this->db = TestDB::create();
+                Connection::set_mysqli(null);
+                $this->assertEquals(true, Connection::mysqli_test());
+				$this->db = TestDB::create();
                 $this->assertNotNull($this->db->link);
         }
 }

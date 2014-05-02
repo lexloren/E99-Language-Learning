@@ -33,6 +33,7 @@ function showForm(frm,tohide){
 function showSearch(search){
     $('#word-search').hide();
     $('#owner-search').hide();
+    $('#searchHeader').html('');
     $('#searchResults').html('');
     $('#searchListForm')[0].reset();
     $(search).show();
@@ -60,6 +61,7 @@ function getLangs(){
 function cancelUpdate(frm,tohide){
     if(frm != '#updateUnitForm'){ // but maybe add something to restore original values for updateUnitForm?
         $(frm)[0].reset(); 
+        $('#searchHeader').html('');
         $('#searchResults').html('');
         $('#word-search').hide();
         $('#owner-search').hide();
@@ -117,7 +119,7 @@ function getUnitInfo(){
                     $('#lists').html("<em>This unit currently has no decks.</em>");
                 }
                 else{
-                    $('#lists').append('<tr><th>Name</th><th>Card Count</th><th>Owner</th><th></th></tr>');
+                    $('#lists').append('<tr><th>Name</th><th>Card Count</th><th></th></tr>');
                     $.each(data.result.lists, function(i, item){
                         if(data.result.sessionUserPermissions.write == true){
                             listremovetd = '<td><label class="select-entry-ids"><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'>&nbsp; Remove</label></td></tr>';
@@ -130,11 +132,11 @@ function getUnitInfo(){
                         else
                             lname = '<em>unnamed</em>';           
                         listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' +
-                                  '<td>' + item.entriesCount + '</td><td>'+item.owner.handle+'</td>'+listremovetd;
+                                  '<td>' + item.entriesCount + '</td>'+listremovetd;
                         $('#lists').append(listrow);
                     });
                     if(data.result.sessionUserPermissions.write == true){
-                        $('#lists').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="removeLists();">[Remove Selected Decks]</span></td></tr></tbody>');
+                        $('#lists').append('<tr><td></td><td></td><td><span class="span-action" onclick="removeLists();">[Remove Selected Decks]</span></td></tr></tbody>');
                     }
                 }
 
@@ -149,11 +151,11 @@ function getUnitInfo(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open*1000);
+                                topen = prettyDate(new Date(item.timeframe.open*1000));
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close*1000);
+                                tclose = prettyDate(new Date(item.timeframe.close*1000));
                             else
                                 tclose = "";
                         }
@@ -350,11 +352,11 @@ function refreshTests(){
                         }
                         else{
                             if(item.timeframe.open != null)
-                                topen = new Date(item.timeframe.open*1000);
+                                topen = prettyDate(new Date(item.timeframe.open*1000));
                             else
                                 topen = "";
                             if(item.timeframe.close != null)
-                                tclose = new Date(item.timeframe.close*1000);
+                                tclose = prettyDate(new Date(item.timeframe.close*1000));
                             else
                                 tclose = "";
                         }
@@ -381,6 +383,7 @@ function myDecks() {
     $('#word-search').hide();
     $('#owner-search').hide();
 	  $("#deck-loader").show();
+    $('#searchHeader').html('');
 	  $('#searchResults').html('');
 	  var user_ids = owner;
 	  $.getJSON( '../../list_find.php', 
@@ -391,7 +394,8 @@ function myDecks() {
                     $('#searchResults').html('<br />You do not have any decks.</br>');
 		              } 
                   else {
-			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td>Owner</td><td></td></tr></thead>');
+                      $('#searchHeader').html('<h5>Your Decks</h5>');
+			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td></td></tr></thead>');
 			                $('#searchResults').append('<tbody>');
 			                $.each( data.result, function(i,item) {
                           if($(".rem_list_ids:checkbox[value="+item.listId+"]").length > 0){
@@ -406,10 +410,9 @@ function myDecks() {
                               lname = '<em>unnamed</em>';
 				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
-                                                     '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
                       });
-			                $('#searchResults').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
+			                $('#searchResults').append('<tr><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
                   //$('html, body').animate({scrollTop: $("#searchResults")}, "slow");
@@ -425,6 +428,7 @@ function searchOwner() {
 	  $('#failure').hide();
 	  $('#success').hide();
 	  $("#deck-loader").show();
+    $('#searchHeader').html('');
 	  $('#searchResults').html('');
 	  var criteria = $('#ownerCriteria').val().trim();
 	  $.getJSON( '../../list_find.php', 
@@ -435,7 +439,8 @@ function searchOwner() {
                     $('#searchResults').html('Matching entries could not be found.</br>');
 		              } 
                   else {
-			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td>Owner</td><td></td></tr></thead>');
+                      $('#searchHeader').html('<h5>Search Results</h5>');
+			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td></td></tr></thead>');
 			                $('#searchResults').append('<tbody>');
 			                $.each( data.result, function(i,item) {
                           if($(".rem_list_ids:checkbox[value="+item.listId+"]").length > 0){
@@ -450,10 +455,9 @@ function searchOwner() {
                               lname = '<em>unnamed</em>';
 				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
-                                                     '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
                       });
-			                $('#searchResults').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
+			                $('#searchResults').append('<tr><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
                   //$('html, body').animate({scrollTop: $("#searchResults")}, "slow");
@@ -472,6 +476,7 @@ function searchWord() {
       return this.value;
     }).get().join(",");
 	  $("#deck-loader").show();
+    $('#searchHeader').html('');
 	  $('#searchResults').html('');
 	  $.getJSON( '../../list_find.php', 
                { entry_ids : entriesAdd }, 
@@ -481,7 +486,8 @@ function searchWord() {
                     $('#searchResults').html('Matching lists could not be found.</br>');
 		              } 
                   else {
-			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td>Owner</td><td></td></tr></thead>');
+                      $('#searchHeader').html('<h5>Search Results</h5>');
+			                $('#searchResults').append('<thead><tr><td>Name</td><td>Card Count</td><td></td></tr></thead>');
 			                $('#searchResults').append('<tbody>');
 			                $.each( data.result, function(i,item) {
                           if($(".rem_list_ids:checkbox[value="+item.listId+"]").length > 0){
@@ -496,10 +502,9 @@ function searchWord() {
                               lname = '<em>unnamed</em>';
 				                  $('#searchResults').append('<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' + 
                                                      '<td>'+item.entriesCount+'</td>' +
-                                                     '<td>'+item.owner.handle+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+disabled+'>&nbsp; Add</label></td></tr>');
                       });
-			                $('#searchResults').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
+			                $('#searchResults').append('<tr><td></td><td></td><td><span class="span-action" onclick="addLists();">[Add Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
                   //$('html, body').animate({scrollTop: $("#searchResults").offset().top}, "slow");
@@ -655,7 +660,7 @@ function refreshLists(){
                     $('#lists').html("<em>This unit currently has no decks.</em>");
                 }
                 else{
-                    $('#lists').append('<thead><tr><td>Name</td><td>Card Count</td><td>Owner</td><td></td></tr></thead><tbody>');
+                    $('#lists').append('<thead><tr><td>Name</td><td>Card Count</td><td></td></tr></thead><tbody>');
                     $.each(data.result, function(i, item){
                         if(item.name != null)
                             lname = item.name;
@@ -663,11 +668,10 @@ function refreshLists(){
                             lname = '<em>unnamed</em>';
                         listrow = '<tr><td><a href="list.html?listid='+item.listId+'">'+lname+'</a></td>' +
                                   '<td>'+item.entriesCount+'</td>' +
-                                  '<td>'+item.owner.handle+'</td>' +
                                   '<td><label class="select-entry-ids"><input type="checkbox" class="rem_list_ids" name="rem_list_ids" value='+item.listId+'>&nbsp; Remove</label></td></tr>';
                         $('#lists').append(listrow);
                     });
-                    $('#lists').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="removeLists();">[Remove Selected Decks]</span></td></tr></tbody>');
+                    $('#lists').append('<tr><td></td><td></td><td><span class="span-action" onclick="removeLists();">[Remove Selected Decks]</span></td></tr></tbody>');
                 }
             }
             if(!$("#searchResults").is(":visible")){
