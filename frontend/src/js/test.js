@@ -541,11 +541,19 @@ function randOrder(){
 function updateScore(pattern, entry){
 	  $('#failure').hide();
 	  $('#success').hide();
+
+    var newscore = $("#newscore").val();
+	  if(isNaN(newscore)){
+		    failureMessage("Please provide a valid score.");	
+        $("html, body").animate({scrollTop:0}, "slow"); 
+        return;
+    }
+
     $("#choice-loader").show();
     $('#multi-choice').hide();
 
     $.post('../../test_entry_pattern_update.php', 
-        { pattern_id: pattern })
+        { pattern_id: pattern, score: newscore })
         .done(function(data){
           	authorize(data);
             if(data.isError){
@@ -641,18 +649,18 @@ function showOptions(id){
                       $("html, body").animate({scrollTop:0}, "slow"); 
                                   } 
                   else {
-                      if(data.result.length == 1)
+                      if(data.result.length == 0)
                           $('#choice-note').html('This is not currently a multiple-choice question. Add additional choices to make the question multiple-choice.<br />');
 			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Score</td><td></td></tr></thead><tbody>');
 			                $.each( data.result, function(i,item) {
 				                  $('#choice-list').append('<tr><td>'+item.contents+'</td>' + 
-                                                   '<td><input type="text" value="'+item.score+'"</input> &nbsp; <span class="span-action" onclick="updateScore('+item.patternId+','+id+');">[Update]</span></td>' +
+                                                   '<td><input id="newscore" type="text" value="'+item.score+'"</input> &nbsp; <span class="span-action" onclick="updateScore('+item.patternId+','+id+');">[Update]</span></td>' +
                                                    '<td><span class="glyphicon glyphicon-trash span-action" onclick="deletePattern('+item.patternId+','+id+');" title="Delete this choice"></span></td></tr>');
                       });
 			                $('#choice-list').append('<tr><td></td><td></td><td></td></tr>');
 			                $('#choice-list').append('</tbody>');
                       $('#choiceform').append('<div class="form-group"><input type="text" class="form-control" id="newchoice" placeholder="Enter new choice"></div>');
-                      $('#choiceform').append('<div class="form-group"><button class="btn btn-primary" type="button" onclick="addPattern('+id+');">Add</button></div>');
+                      $('#choiceform').append('&nbsp; <button class="btn btn-primary" type="button" onclick="addPattern('+id+');">Add</button><br />');
 		              }
                   //$('html, body').animate({scrollTop: $("#searchResults")}, "slow");
 	                $("#multi-choice").show();
