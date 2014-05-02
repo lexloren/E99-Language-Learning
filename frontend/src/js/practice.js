@@ -109,8 +109,6 @@ function shiftCards() {
 /* request a list of the user's decks from the backend and populate the "select
 your decks" form */
 function getLists() {
-
-	
 	$("#loader-show-lists").show();
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
@@ -120,10 +118,24 @@ function getLists() {
 		} else if (data.result.length === 0) {
 			failureMessage("You don't have any lists to practice with.");
 		} else {
-			$('#deck-selection-form').html('');
+			var i = 1;
+			var colId;
+			/*$('#deck-selection-form').html('');*/
 			$.each( data.result, function( ) {
-				$('#deck-selection-form').append('<div class="checkbox"><label>' + 
+				if (i == 1) {
+					colId = "plist1";
+				} else if (i == 2) {
+					colId = "plist2";
+				} else if (i == 3) {
+					colId = "plist3";
+				} else {
+					colId = "plist4";
+					i = 0;
+				}
+				i++;
+				$(document.getElementById(colId)).append('<div class="checkbox"><label>' + 
 				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');
+				
 			});
 			$('#deck-selection-container').show();
 			$("#loader-show-lists").hide();
@@ -145,7 +157,7 @@ function get_dictionary(word, page) {
 	$.getJSON( currentURL, {
 		query : word,
 		langs : langcodes,
-		page_size : 5,
+		page_size : 15,
 		page_num : page
 	}, function( data ) {
 		authorize(data);
