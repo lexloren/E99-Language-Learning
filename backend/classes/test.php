@@ -388,7 +388,8 @@ class Test extends CourseComponent
 					array_push($modes, intval($result_assoc["mode"], 10));
 				}
 				
-				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($entry->pronunciations()));
+				$pronoun = $entry->pronunciations();
+				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($pronoun));
 				
 				foreach ($modes as $mode)
 				{
