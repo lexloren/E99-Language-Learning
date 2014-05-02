@@ -337,11 +337,15 @@ class APITest extends APIBase
 	
 	public function entry_options()
 	{
+		if (!Session::get()->reauthenticate()) return;
+		
 		return $this->entry_patterns(true);
 	}
 	
 	public function entry_options_add()
 	{
+		if (!Session::get()->reauthenticate()) return;
+		
 		if (($pattern = self::validate_selection_id($_POST, "pattern_id", "Pattern"))
 			|| (($test = self::validate_selection_id($_POST, "test_id", "Test"))
 				&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry"))
@@ -363,6 +367,8 @@ class APITest extends APIBase
 	
 	public function entry_options_remove()
 	{
+		if (!Session::get()->reauthenticate()) return;
+		
 		if (($pattern = self::validate_selection_id($_POST, "pattern_id", "Pattern"))
 			|| (($test = self::validate_selection_id($_POST, "test_id", "Test"))
 				&& ($entry = self::validate_selection_id($_POST, "entry_id", "Entry"))
