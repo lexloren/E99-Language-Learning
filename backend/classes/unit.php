@@ -90,43 +90,53 @@ class Unit extends CourseComponent
 		$unit = $this;
 		$error_message;
 		
-		return ($result = Connection::transact(
-			function () use ($unit, $number, $units_count, &$error_message)
-			{
-				Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $unit->get_unit_id()));
+		//  return ($result = Connection::transact(
+		//  	function () use ($unit, $number, $units_count, &$error_message)
+		//  	{
+
+		Connection::query("START TRANSACTION");
+		Connection::query_error_clear();
+
+		Connection::query(sprintf("UPDATE course_units SET num = $units_count + 1 WHERE unit_id = %d", $unit->get_unit_id()));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			Connection::query("ROLLBACK");
+			Connection::query_error_clear();
+			return static::errors_push("Failed to reorder course units: $error.");
+		}
+		
+		Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			Connection::query("ROLLBACK");
+			Connection::query_error_clear();
+			return static::errors_push("Failed to reorder course units: $error.");
+		}
+		
+		Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $unit->get_course_id(), $number));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			Connection::query("ROLLBACK");
+			Connection::query_error_clear();
+			return static::errors_push("Failed to reorder course units: $error.");
+		}
+		
+		if (!self::update_this($unit, "course_units", array ("num" => $number), "unit_id", $unit->get_unit_id()))
+		{
+			Connection::query("ROLLBACK");
+			Connection::query_error_clear();
+			return null;
+		}
+		
+		Connection::query("COMMIT");
+		Connection::query_error_clear();
+		
+		$unit->number = $number;
 				
-				if (!!($error = Connection::query_error_clear()))
-				{
-					$error_message = "Failed to reorder course units: $error.";
-					return null;
-				}
-				
-				Connection::query(sprintf("UPDATE course_units SET num = num - 1 WHERE course_id = %d AND num > %d ORDER BY num", $unit->get_course_id(), $unit->get_number()));
-				
-				if (!!($error = Connection::query_error_clear()))
-				{
-					$error_message = "Failed to reorder course units: $error.";
-					return null;
-				}
-				
-				Connection::query(sprintf("UPDATE course_units SET num = num + 1 WHERE course_id = %d AND num >= %d ORDER BY num DESC", $unit->get_course_id(), $number));
-				
-				if (!!($error = Connection::query_error_clear()))
-				{
-					$error_message = "Failed to reorder course units: $error.";
-					return null;
-				}
-				
-				if (!self::update_this($unit, "course_units", array ("num" => $number), "unit_id", $unit->get_unit_id()))
-				{
-					return null;
-				}
-				
-				$unit->number = $number;
-				
-				return $unit;
-			}
-		)) ? $result : static::errors_push($error_message);
+		return $unit;
 	}
 	
 	private $name = null;
