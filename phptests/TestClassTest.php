@@ -128,6 +128,10 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 			$this->assertTrue(in_array($test_entry, $list_entries));
 			$this->assertEquals($mode, $test->get_entry_mode($test_entry));
 		}
+		foreach ($list_entries as $list_entry)
+		{
+			$this->assertTrue(in_array($list_entry, $test_entries));
+		}
 	}
 }
 
