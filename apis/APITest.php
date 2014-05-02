@@ -351,8 +351,11 @@ class APITest extends APIBase
 			
 			if ($pattern || ($pattern = Pattern::insert($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"], true)))
 			{
-				$pattern->set_prompt(true);
-				Session::get()->set_result_assoc($pattern->json_assoc());
+				if ($pattern->set_prompt(true))
+				{
+					Session::get()->set_result_assoc($pattern->json_assoc());
+				}
+				else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 			}
 			else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 		}
@@ -369,8 +372,11 @@ class APITest extends APIBase
 			
 			if ($pattern || ($pattern = Pattern::select_by_test_id_entry_id_contents_mode($test->get_test_id(), $entry->get_entry_id(), $_POST["contents"])))
 			{
-				$pattern->set_prompt(false);
-				Session::get()->set_result_assoc($pattern->json_assoc());
+				if ($pattern->set_prompt(false))
+				{
+					Session::get()->set_result_assoc($pattern->json_assoc());
+				}
+				else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 			}
 			else Session::get()->set_error_assoc("Test-Entry Pattern Modification", Pattern::errors_unset());
 		}
