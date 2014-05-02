@@ -214,7 +214,7 @@ class Practice extends DatabaseRow
 			"mode" => $this->get_mode(),
 			"interval" => $this->get_interval(),
 			"efactor" => $this->get_efactor(),
-			"entryId" => $this->get_entry()->get_entry_id()
+			"entry" => $this->get_entry()->json_assoc()
 		), array (0 => "practiceEntryId"), $privacy);
 	}
 }
