@@ -689,7 +689,7 @@ class Course extends DatabaseRow
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
-			"password" => $this->session_user_can_write() ? $this->get_password : null,
+			"password" => $this->session_user_can_write() ? $this->get_password() : null,
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
