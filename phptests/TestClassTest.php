@@ -129,8 +129,6 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 			$this->assertEquals($mode, $test->get_entry_mode($test_entry));
 		}
 	}
-	
-	public function 
 }
 
 ?>
