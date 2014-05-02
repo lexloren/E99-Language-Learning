@@ -1,4 +1,4 @@
-var URL = "http://cscie99.fictio.us/";
+var URL = window.location.origin + "/";
 var listnum;
 
 $(document).ready(function(){
