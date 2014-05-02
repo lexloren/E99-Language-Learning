@@ -69,6 +69,7 @@ class AnnotationTest extends PHPUnit_Framework_TestCase
 		
 		//  Right session user
 		Session::get()->set_user($user0);
+		$this->assertEquals($annotation->get_owner(), Session::get()->get_user());
 		$this->assertEquals(1, $user_entry->annotations_count());
 		$this->assertCount(1, $user_entry->annotations());
 		$this->assertEquals($annotation, $annotation->delete());

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 01 maj 2014 kl 09:02
+-- Skapad: 01 maj 2014 kl 17:30
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -210,13 +210,13 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_sittings` (
   `student_id` bigint(20) unsigned NOT NULL,
   `start` bigint(20) unsigned NOT NULL,
   `stop` bigint(20) unsigned default NULL,
-  `message` text NOT NULL,
+  `message` text,
   PRIMARY KEY  (`sitting_id`),
   UNIQUE KEY `test_id` (`test_id`,`student_id`),
   KEY `student_id` (`student_id`),
   KEY `start` (`start`),
   KEY `stop` (`stop`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -349,13 +349,13 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
 
 DROP TABLE IF EXISTS `modes`;
 CREATE TABLE IF NOT EXISTS `modes` (
-  `mode_id` tinyint(3) unsigned NOT NULL auto_increment,
+  `mode_id` tinyint(3) unsigned NOT NULL,
   `from` char(255) default NULL,
   `to` char(255) default NULL,
   PRIMARY KEY  (`mode_id`),
   UNIQUE KEY `from_to` (`from`,`to`),
   KEY `to` (`to`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -460,7 +460,7 @@ CREATE TABLE IF NOT EXISTS `user_entry_results` (
   KEY `grade_id` (`grade_id`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
 
 -- --------------------------------------------------------
 
@@ -498,7 +498,7 @@ CREATE TABLE IF NOT EXISTS `user_practice` (
   KEY `mode` (`mode`),
   KEY `interval` (`interval`),
   KEY `efactor` (`efactor`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=694 ;
 
 -- --------------------------------------------------------
 

@@ -503,37 +503,41 @@ class TestDB
 	{
 		$link = $this->link;
 		$mode_entries = array ();
-                $mode_entries[] = array(
-                                                                 "from" => 'Unknown Language',
-                                                                 "to" => 'Known Language'
-                                                                 );
-                $mode_entries[] = array(
-                                                                 "from" => 'Known Language',
-                                                                 "to" => 'Unknown Language'
-                                                                 );
-                $mode_entries[] = array(
-                                                                 "from" => 'Unknown Language',
-                                                                 "to" => 'Unknown Pronunciation'
-                                                                 );
-                $mode_entries[] = array(
-                                                                 "from" => 'Unknown Pronunciation',
-                                                                 "to" => 'Known Language'
-                                                                 );
-                $mode_entries[] = array(
-                                                                 "from" => 'Unknown Pronunciation',
-                                                                 "to" => 'Unknown Language'
-                                                                 );
-                $mode_entries[] = array(
-                                                                 "from" => 'Known Language',
-                                                                 "to" => 'Unknown Pronunciation'
-                                                                 );
-                foreach ($mode_entries as $mode)
-                {
-			$link->query(sprintf("INSERT into modes (`from`, `to`) values ('%s', '%s')",
-                                             $mode["from"], $mode["to"]));
-                        if(!$link->insert_id)
-                                exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
-                        array_push($this->mode_ids, $link->insert_id);
+		$mode_entries[] = array(
+								"from" => 'Unknown Language',
+								"to" => 'Known Language'
+								);
+		$mode_entries[] = array(
+								"from" => 'Known Language',
+								"to" => 'Unknown Language'
+								);
+		$mode_entries[] = array(
+								"from" => 'Unknown Language',
+								"to" => 'Unknown Pronunciation'
+								);
+		$mode_entries[] = array(
+								"from" => 'Unknown Pronunciation',
+								"to" => 'Known Language'
+								);
+		$mode_entries[] = array(
+								"from" => 'Unknown Pronunciation',
+								"to" => 'Unknown Language'
+								);
+		$mode_entries[] = array(
+								"from" => 'Known Language',
+								"to" => 'Unknown Pronunciation'
+								);
+		$mode_entries[] = array(
+								"from" => 'Unknown Language & Unknown Pronunciation',
+								"to" => 'Known Language'
+								);
+		for ($i = 0; $i < count($mode_entries); $i ++)
+		{
+			$mode = $mode_entries[$i];
+			$link->query(sprintf("INSERT INTO modes (mode_id, `from`, `to`) values ($i, '%s', '%s')",
+								 $mode["from"], $mode["to"]));
+			if ($link->error) exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.": ".$link->error);
+			array_push($this->mode_ids, $i);
 		}
 	}
 }

@@ -433,7 +433,7 @@ class EntryList extends DatabaseRow
 					return null;
 				}
 
-				if (!($list_copy = self::select_by_id(($list_copy_id = Connection::query_insert_id())))
+				if (!($list_copy = EntryList::select_by_id(($list_copy_id = Connection::query_insert_id())))
 					|| !$list_copy->entries_add_from_list($list, true))
 				{
 					$error_message = "List failed to copy for user: $error.";

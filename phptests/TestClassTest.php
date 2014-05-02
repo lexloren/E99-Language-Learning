@@ -68,20 +68,19 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		
 		//  wrong user
 		Session::get()->set_user($user1);
-		$entry = Entry::select_by_id($this->db->entry_ids[0]);
+		$entry = Entry::select_by_id($this->db->entry_ids[0])->copy_for_user($test->get_owner());
 		$this->assertNull($test->entries_add($entry));
 		
 		//  right user
-		Session::get()->set_user($user0);
+		Session::get()->set_user($test->get_owner());
 		$this->assertCount(0, $test->entries());
 		$this->assertTrue($test->session_user_can_write());
 		$this->assertNotNull($test->entries_add($entry, ($mode = 4)));
 		$this->assertCount(1, $test->entries());
 		$this->assertEquals($mode, $test->get_entry_mode($entry));
 		$test_entries = $test->entries();
-		$entry = Entry::select_by_id($this->db->entry_ids[0]);
-		$this->assertEquals($entry->copy_for_user($test->get_owner()), $test_entries[0]);
-		$this->assertCount(7, $test->entry_options($entry));
+		$this->assertEquals($entry, array_shift($test_entries));
+		$this->assertCount(1, $test->entry_options($entry));
 	}
 	
 	public function test_entries_add_from_list()
@@ -97,24 +96,41 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		
 		$name = "test_setup";
 		$test = Test::insert($this->unit->get_unit_id(), $name);
+		$this->assertEquals($list->get_owner(), $test->get_owner());
+		$entry = Entry::select_by_id($this->db->entry_ids[0])->copy_for_user($test->get_owner());
+		$this->assertNotNull($test->entries_add($entry, ($mode = 4)));
 		
 		//  wrong user
 		Session::get()->set_user($user1);
 		$this->assertNull($test->entries_add_from_list($list));
 		
-		//  right user
+		//  right user, but test has already started execution
 		Session::get()->set_user($user0);
-		$this->assertCount(0, $test->entries());
+		$course = $test->get_course();
+		$this->assertNotNull($course->students_add($user1));
+		$this->assertFalse($test->executed());
+		Session::get()->set_user($user1);
+		$this->assertNotNull($test->execute_for_session_user());
+		$this->assertNull($test->entries_add_from_list($list));
+		Session::get()->set_user($test->get_owner());
+		$test->unexecute();
+		$this->assertFalse($test->executed());
+		
+		//  right user, and test has not already started
+		$this->assertCount(1, $test->entries());
 		$this->assertNotNull($test->entries_add_from_list($list, ($mode = 4)));
 		$list_entries = $list->entries();
+		$this->assertTrue(in_array($entry, $list_entries));
 		$test_entries = $test->entries();
 		$this->assertCount(count($list_entries), $test_entries);
-		for ($i = 0; $i < count($list_entries); $i ++)
+		foreach ($test_entries as $test_entry)
 		{
-			$this->assertEquals($test_entries[$i], $list_entries[$i]);
-			$this->assertEquals($mode, $test_entries[$i]->get_mode());
+			$this->assertTrue(in_array($test_entry, $list_entries));
+			$this->assertEquals($mode, $test->get_entry_mode($test_entry));
 		}
 	}
+	
+	public function 
 }
 
 ?>
