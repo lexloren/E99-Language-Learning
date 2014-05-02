@@ -301,7 +301,7 @@ class Unit extends CourseComponent
 			return static::errors_push("Unit failed to add list: $error.", ErrorReporter::ERRCODE_DATABASE);
 		}
 		
-		if (isset($this->lists)) array_push($this->lists, $list);
+		if (isset($this->lists) && !in_array($list, $this->lists)) array_push($this->lists, $list);
 		
 		$list->uncache_courses();
 		
