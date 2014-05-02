@@ -21,8 +21,9 @@ class APICourse extends APIBase
 				$timeframe = isset($_POST["open"]) && isset($_POST["close"]) ? new Timeframe($_POST["open"], $_POST["close"]) : null;
 				$message = isset($_POST["message"]) && strlen($_POST["message"]) > 0 ? $_POST["message"] : null;
 				$public = isset($_POST["public"]) ? !!intval($_POST["public"], 10) : false;
+				$password = isset($_POST["password"]) && strlen($_POST["password"]) > 0 ? $_POST["password"] : null;
 				
-				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["name"]) ? $_POST["name"] : null, $timeframe, $message, $public)))
+				if (!($course = Course::insert($_POST["lang_known"], $_POST["lang_unknw"], isset($_POST["name"]) ? $_POST["name"] : null, $timeframe, $message, $public, $password)))
 				{
 					Session::get()->set_error_assoc("Course Insertion", Course::errors_unset());
 				}
@@ -75,6 +76,11 @@ class APICourse extends APIBase
 						$errors += !$course->set_public(intval($_POST["public"], 10));
 					}
 					
+					if (isset($_POST["password"]))
+					{
+						$errors += !$course->set_password($_POST["password"]);
+					}
+					
 					if (isset($_POST["open"]) && isset($_POST["close"]))
 					{
 						$errors += !$course->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
@@ -97,6 +103,34 @@ class APICourse extends APIBase
 				}
 			)) Session::get()->set_result_assoc($course->json_assoc());
 			else Session::get()->set_error_assoc("Course Modification", Course::errors_unset());
+		}
+	}
+	
+	public function enroll()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if ($course->enroll(isset($_POST["password"]) ? $_POST["password"] : null))
+			{
+				Session::get()->set_result_assoc($course->json_assoc());
+			}
+			else Session::get()->set_error_assoc("Course Enrollment", "Session user cannot enroll in course: " . Course::errors_unset());
+		}
+	}
+	
+	public function unenroll()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($course = self::validate_selection_id($_POST, "course_id", "Course")))
+		{
+			if ($course->unenroll())
+			{
+				Session::get()->set_result_assoc($course->json_assoc());
+			}
+			else Session::get()->set_error_assoc("Course Enrollment", "Session user cannot unenroll from course.");
 		}
 	}
 	

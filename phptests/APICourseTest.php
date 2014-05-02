@@ -191,8 +191,7 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		
 		$_POST["open"] = 1397260800;
 		
-		//Hans, please fix this
-		//$this->obj->update();
+		$this->obj->update();
 	}
 	
 	public function test_delete()
@@ -261,6 +260,102 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(1, $result);
 		$unit = $result[0];
 		$this->assertEquals($unit["unitId"], $course_unit_id);
+	}
+	
+	public function test_enrollment()
+	{
+		$password = "password";
+		$course_id = $this->db->add_course($this->db->user_ids[1]);
+		$course = Course::select_by_id($course_id);
+		$this->assertNotNull($course);
+		
+		//  Set up private course with password
+		Session::get()->set_user($course->get_owner());
+		$this->assertNotNull($course->set_password($password));
+		$this->assertTrue($course->check_password($password));
+		$this->assertNotNull($course->set_public(false));
+		Session::get()->set_user(null);
+		
+		$student = User::select_by_id($this->db->user_ids[0]);
+		$this->assertNotNull($student);
+		
+		$_POST["course_id"] = $course_id;
+		$_POST["password"] = $password;
+		$_SESSION["handle"] = $student->get_handle();
+		
+		//  Check for private courses with password
+		$this->assertFalse($course->user_is_student($student));
+		$this->obj->enroll();
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		
+			//  Unenroll again...
+		$this->assertTrue($course->user_is_student($student));
+		
+		$course = Course::select_by_id($course_id);
+		$this->assertNotNull($course);
+		
+		Session::get()->set_user(null);
+		
+		$this->obj->unenroll();
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		$course = Course::select_by_id($course_id);
+		$this->assertFalse($course->user_is_student($student));
+		
+		//  Check for public courses
+		unset($_POST["password"]);
+		$course = Course::select_by_id($course_id);
+		$this->assertNotNull($course);
+		
+		Session::get()->set_user($course->get_owner());
+		$this->assertNotNull($course->set_public(true));
+		
+		Session::get()->set_user(null);
+		
+		$this->assertFalse($course->user_is_student($student));
+		$this->obj->enroll();
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		
+		$this->assertTrue($course->user_is_student($student));
+			
+			//  Unenroll again...
+		$course = Course::select_by_id($course_id);
+		$this->assertNotNull($course);
+		
+		Session::get()->set_user(null);
+		
+		$this->obj->unenroll();
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNotNull($result);
+		$course = Course::select_by_id($course_id);
+		$this->assertFalse($course->user_is_student($student));
+		
+		//  Check for failure on nonpublic courses
+		$course = Course::select_by_id($course_id);
+		$this->assertNotNull($course);
+		
+		Session::get()->set_user($course->get_owner());
+		$this->assertNotNull($course->set_public(false));
+		
+		$course = Course::select_by_id($course_id);
+		$this->assertFalse($course->get_public());
+		
+		Session::get()->set_user(null);
+		
+		$this->assertFalse($course->user_is_student($student));
+		$this->obj->enroll();
+		$course = Course::select_by_id($course_id);
+		$this->assertFalse($course->user_is_student($student));
+		
+		$result_assoc = Session::get()->get_result_assoc();
+		$result = $result_assoc["result"];
+		$this->assertNull($result);
 	}
 	
 	public function test_students()

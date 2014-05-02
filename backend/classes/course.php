@@ -9,7 +9,7 @@ class Course extends DatabaseRow
 	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
-	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false)
+	public static function insert($lang_code_0, $lang_code_1, $name = null, $timeframe = null, $message = null, $public = false, $password = null)
 	{
 		if (!Session::get()->get_user())
 		{
@@ -19,7 +19,7 @@ class Course extends DatabaseRow
 		$error_message;
 		
 		return ($result = Connection::transact(
-			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public, &$error_message)
+			function () use ($lang_code_0, $lang_code_1, $name, $timeframe, $message, $public, $password, &$error_message)
 			{
 				$languages_join = "languages AS languages_0 CROSS JOIN languages AS languages_1";
 				
@@ -40,9 +40,10 @@ class Course extends DatabaseRow
 				$close = !!$timeframe ? $timeframe->get_close() : "NULL";
 				$message = $message !== null ? "'" . Connection::escape($message) . "'" : "NULL";
 				$public = $public ? 1 : 0;
+				$password = !!$password ? "'" . Connection::escape($password) . "'" : "NULL";
 				
-				Connection::query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public) %s",
-					"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public FROM $languages_join ON $language_codes_match"
+				Connection::query(sprintf("INSERT INTO courses (user_id, lang_id_0, lang_id_1, name, open, close, message, public, password) %s",
+					"SELECT " . Session::get()->get_user()->get_user_id() . ", $language_ids, $name, $open, $close, $message, $public, $password FROM $languages_join ON $language_codes_match"
 				));
 				
 				if (!!($error = Connection::query_error_clear()))
@@ -290,6 +291,27 @@ class Course extends DatabaseRow
 		return $this;
 	}
 	
+	private $password = null;
+	public function get_password()
+	{
+		return $this->password;
+	}
+	public function set_password($password)
+	{
+		if (strlen($password) == 0) $password = null;
+		
+		if (!self::update_this($this, "courses", array ("password" => $password), "course_id", $this->get_course_id()))
+		{
+			return null;
+		}
+		$this->password = $password;
+		return $this;
+	}
+	public function check_password($password)
+	{
+		return !!$password && $password === $this->get_password();
+	}
+	
 	private $timeframe;
 	public function get_timeframe()
 	{
@@ -313,11 +335,11 @@ class Course extends DatabaseRow
 	}
 	public function set_open($open)
 	{
-		return $this->set_timeframe(new Timeframe($open, $this->get_timeframe()->get_close()));
+		return $this->set_timeframe(new Timeframe($open, !!$this->get_timeframe() ? $this->get_timeframe()->get_close() : null));
 	}
 	public function set_close($close)
 	{
-		return $this->set_timeframe(new Timeframe($this->get_timeframe()->get_open(), $close));
+		return $this->set_timeframe(new Timeframe(!!$this->get_timeframe() ? $this->get_timeframe()->get_open() : null, $close));
 	}
 	public function is_current()
 	{
@@ -427,7 +449,7 @@ class Course extends DatabaseRow
 		return $tests;
 	}
 	
-	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $open = null, $close = null, $message = null)
+	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $password = null, $open = null, $close = null, $message = null)
 	{
 		$this->course_id = intval($course_id, 10);
 		$this->user_id = intval($user_id, 10);
@@ -437,6 +459,7 @@ class Course extends DatabaseRow
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		$this->public = !!$public;
+		$this->password = !!$password && strlen($password) > 0 ? $password : null;
 		
 		self::register($this->course_id, $this);
 	}
@@ -450,6 +473,7 @@ class Course extends DatabaseRow
 			"lang_id_1",
 			"name",
 			"public",
+			"password",
 			"open",
 			"close",
 			"message"
@@ -463,6 +487,7 @@ class Course extends DatabaseRow
 				$result_assoc["lang_id_1"],
 				$result_assoc["name"],
 				$result_assoc["public"],
+				$result_assoc["password"],
 				$result_assoc["open"],
 				$result_assoc["close"],
 				$result_assoc["message"]
@@ -496,14 +521,16 @@ class Course extends DatabaseRow
 		return self::delete_this($this, "courses", "course_id", $this->get_course_id());
 	}
 	
-	private function users_add(&$array, $table, $user)
+	private function users_add(&$array, $table, $user, $password = null)
 	{
-		if (!$this->session_user_can_write())
+		if (!$this->session_user_can_write()
+			&& !$this->check_password($password)
+			&& !$this->get_public())
 		{
 			return static::errors_push("Session user cannot edit course.");
 		}
 		
-		Connection::query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d)",
+		Connection::query(sprintf("INSERT INTO $table (course_id, user_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_id = user_id",
 			$this->get_course_id(),
 			$user->get_user_id()
 		));
@@ -513,7 +540,7 @@ class Course extends DatabaseRow
 			return static::errors_push("Failed to add course user: $error.");
 		}
 		
-		if (isset($array)) array_push($array, $user);
+		if (isset($array) && !in_array($user, $array)) array_push($array, $user);
 		
 		$user->uncache_all_courses();
 		
@@ -528,6 +555,15 @@ class Course extends DatabaseRow
 		}
 		
 		return $this->users_add($this->instructors, "course_instructors", $user);
+	}
+	
+	public function enroll($password = null)
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return static::errors_push("Session user has not reauthenticated.");
+		}
+		return $this->users_add($this->students, "course_students", $session_user, $password);
 	}
 	
 	public function students_add($user)
@@ -545,9 +581,9 @@ class Course extends DatabaseRow
 		return $this->users_add($this->researchers, "course_researchers", $user);
 	}
 	
-	private function users_remove(&$array, $table, $user)
+	private function users_remove(&$array, $table, $user, $override_permissions = false)
 	{
-		if (!$this->session_user_can_write())
+		if (!$this->session_user_can_write() && !$override_permissions)
 		{
 			return static::errors_push("Session user cannot edit course.");
 		}
@@ -585,6 +621,15 @@ class Course extends DatabaseRow
 			return static::errors_push("Session user is not course owner.");
 		}
 		return $this->users_remove($this->researchers, "course_researchers", $user);
+	}
+	
+	public function unenroll()
+	{
+		if (!Session::get() || !($session_user = Session::get()->get_user()))
+		{
+			return static::errors_push("Session user has not reauthenticated.");
+		}
+		return $this->users_remove($this->students, "course_students", $session_user, true);
 	}
 	
 	public function students_remove($user)
@@ -644,6 +689,7 @@ class Course extends DatabaseRow
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_course_name(),
+			"password" => $this->session_user_can_write() ? $this->get_password : null,
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),

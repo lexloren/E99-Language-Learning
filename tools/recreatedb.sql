@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 68.178.216.146
--- Skapad: 01 maj 2014 kl 17:30
+-- Skapad: 01 maj 2014 kl 22:01
 -- Serverversion: 5.0.96
 -- PHP-version: 5.1.6
 
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `lang_id_0` bigint(20) unsigned NOT NULL,
   `lang_id_1` bigint(20) unsigned NOT NULL,
   `public` tinyint(1) NOT NULL default '0',
+  `password` char(127) default NULL,
   `open` bigint(20) unsigned default NULL,
   `close` bigint(20) unsigned default NULL,
   `message` text,
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS `courses` (
   KEY `close` (`close`),
   KEY `user_id` (`user_id`),
   KEY `name` (`name`),
-  KEY `public` (`public`)
+  KEY `public` (`public`),
+  KEY `pswd_hash` (`password`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=39 ;
 
 -- --------------------------------------------------------
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `course_students` (
   PRIMARY KEY  (`student_id`),
   UNIQUE KEY `course_id` (`course_id`,`user_id`),
   KEY `user_id` (`user_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=83 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=84 ;
 
 -- --------------------------------------------------------
 
@@ -172,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entries` (
   KEY `number` (`num`),
   KEY `user_entry_id` (`user_entry_id`),
   KEY `mode` (`mode`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=66 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=67 ;
 
 -- --------------------------------------------------------
 
@@ -195,7 +197,7 @@ CREATE TABLE IF NOT EXISTS `course_unit_test_entry_patterns` (
   KEY `prompt` (`prompt`),
   KEY `mode` (`mode`),
   KEY `contents` (`contents`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=130 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=137 ;
 
 -- --------------------------------------------------------
 
@@ -323,7 +325,7 @@ CREATE TABLE IF NOT EXISTS `lists` (
   KEY `user_id` (`user_id`),
   KEY `list_name` (`name`),
   KEY `share_public` (`public`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=22 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=23 ;
 
 -- --------------------------------------------------------
 
@@ -339,7 +341,7 @@ CREATE TABLE IF NOT EXISTS `list_entries` (
   PRIMARY KEY  (`list_entry_id`),
   UNIQUE KEY `list_id` (`list_id`,`user_entry_id`),
   KEY `user_entry_id` (`user_entry_id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=49 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=50 ;
 
 -- --------------------------------------------------------
 
@@ -424,7 +426,7 @@ CREATE TABLE IF NOT EXISTS `user_entries` (
   KEY `word_0` (`word_0`),
   KEY `word_1` (`word_1`),
   KEY `word_1_pronun` (`word_1_pronun`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=100 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=102 ;
 
 -- --------------------------------------------------------
 
