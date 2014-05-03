@@ -36,7 +36,10 @@ class APITest extends APIBase
 								{
 									$errors += !$test->entries_add_from_list($list, $mode);
 								}
-								else $errors ++;
+								else 
+								{
+									$errors ++;
+								}
 							}
 						}
 						
@@ -49,6 +52,10 @@ class APITest extends APIBase
 								if (($entry = Entry::select_by_id($entry_id)))
 								{
 									$errors += !$test->entries_add($entry, $mode);
+								}
+								else 
+								{
+									$errors ++;
 								}
 							}
 						}

@@ -394,8 +394,9 @@ class TestDB
 	
 	public function add_unit_test($unit_id)
 	{
-		$test_name = "course test ".count($course_tests);
-		$this->link->query(sprintf("INSERT IGNORE INTO course_unit_tests (unit_id, test_name) VALUES (%d, %d)",
+		$test_name = "course test ".count($this->course_tests);
+		$link = $this->link;
+		$link->query(sprintf("INSERT IGNORE INTO course_unit_tests (unit_id, test_name) VALUES (%d, %d)",
 			$unit_id,
 			$test_name
 		));
@@ -403,7 +404,7 @@ class TestDB
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
 			
-		array_push($course_tests, $link->insert_id);
+		array_push($this->course_tests, $link->insert_id);
 		return $link->insert_id;
 	}
 	
