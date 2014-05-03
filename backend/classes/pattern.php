@@ -139,6 +139,10 @@ class Pattern extends CourseComponent
 	{
 		return $this->test_entry_id;
 	}
+	public function get_entry_id()
+	{
+		return $this->get_test()->get_entry_by_test_entry_id($this->get_test_entry_id())->get_entry_id();
+	}
 	
 	private $test;
 	public function get_test()
@@ -326,7 +330,9 @@ class Pattern extends CourseComponent
 	{
 		return $this->privacy_mask(array (
 			"patternId" => $this->get_pattern_id(),
-			"entry" => $this->get_test()->entry_json_assoc($this->get_user_entry()),
+			"testId" => $this->get_test()->get_test_id(),
+			"entryId" => $this->get_entry_id(),
+			"testEntryId" => $this->get_test_entry_id(),
 			"contents" => $this->get_contents(),
 			"score" => $this->get_score(),
 			"message" => $this->get_message()

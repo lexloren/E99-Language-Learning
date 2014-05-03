@@ -100,13 +100,9 @@ require_once "./backend/classes.php";
 		
 		public function json_assoc($privacy = null)
 		{
-			$assoc = array (
-							"modeId" => $this->get_mode_id(),
+			return array ("modeId" => $this->get_mode_id(),
 							"directionFrom" => $this->get_direction_from(),
-							"directionTo" => $this->get_direction_to(),
-							);
-			
-			return $this->privacy_mask($assoc, array_keys($assoc), false);
+							"directionTo" => $this->get_direction_to());
 		}
 	}
 

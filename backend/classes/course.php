@@ -691,8 +691,10 @@ class Course extends DatabaseRow
 	
 	public function sittings_count()
 	{
-		//  Placeholder
-		return null;
+		$course_units = "courses CROSS JOIN course_units USING (course_id)";
+		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
+		$test_sittings = "($unit_tests) CROSS JOIN course_unit_test_sittings USING (test_id)";
+		return self::count($test_sittings, "course_id", $this->get_course_id());
 	}
 	
 	public function researchers_count()
@@ -713,10 +715,11 @@ class Course extends DatabaseRow
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"instructorsCount" => $this->instructors_count(),
 			"studentsCount" => $this->students_count(),
-			"researchersCount" => $this->researchers_count(),
+			"researchersCount" => $this->session_user_can_write() ? $this->researchers_count() : null,
 			"unitsCount" => $this->units_count(),
 			"listsCount" => $this->lists_count(),
 			"testsCount" => $this->tests_count(),
+			"sittingsCount" => $this->session_user_can_write() ? $this->sittings_count() : null,
 			"message" => $this->get_message()
 		), array (0 => "courseId"), $privacy);
 	}
@@ -729,10 +732,10 @@ class Course extends DatabaseRow
 		
 		$assoc["instructors"] = self::json_array($this->instructors());
 		$assoc["students"] = self::json_array($this->students());
-		$assoc["researchers"] = self::json_array($this->researchers());
+		$assoc["researchers"] = $this->session_user_can_write() ? self::json_array($this->researchers()) : null;
 		$assoc["units"] = self::json_array($this->units());
-		$assoc["lists"] = self::json_array($this->lists());
-		$assoc["tests"] = self::json_array($this->tests());
+		$assoc["lists"] = self::json_array($this->lists(!$this->session_user_can_write()));
+		$assoc["tests"] = self::json_array($this->tests(!$this->session_user_can_write()));
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

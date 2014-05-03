@@ -69,7 +69,11 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
 		{
-			Session::get()->set_result_assoc($test->json_assoc_detailed(false));
+			if ($test->session_user_can_read())
+			{
+				Session::get()->set_result_assoc($test->json_assoc_detailed(false));
+			}
+			else Session::get()->set_error_assoc("Test Selection", "Session user cannot read test.");
 		}
 	}
 	

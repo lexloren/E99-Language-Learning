@@ -322,6 +322,17 @@ class Test extends CourseComponent
 		)) ? $result : static::errors_push($error_message);
 	}
 	
+	public function get_entry_by_test_entry_id($test_entry_id)
+	{
+		$entries = $this->entries();
+		return $entries[$test_entry_id];
+	}
+	
+	public function get_test_entry_id($entry)
+	{
+		return array_search($entry, $this->entries());
+	}
+	
 	public function entries_add($entry, $mode = null)
 	{
 		if (!$entry)
@@ -731,13 +742,12 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner());
-		
 		if (!$entry)
 		{
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		$test_entry_id = array_search($entry, $this->entries());
 		
 		if ($test_entry_id < 0)
@@ -763,17 +773,17 @@ class Test extends CourseComponent
 	
 	public function entries_json_array()
 	{
-		$json_array = array ();
-		
 		if (!($entries_by_number = $this->entries_by_number()))
 		{
 			echo static::errors_unset();
 			return null;
 		}
 		
+		$json_array = array ();
 		foreach ($entries_by_number as $entry)
 		{
-			array_push($json_array, $this->entry_json_assoc($entry));
+			$entry_assoc = $this->entry_json_assoc($entry);
+			array_push($json_array, $entry_assoc);
 		}
 		
 		return $json_array;
@@ -804,7 +814,7 @@ class Test extends CourseComponent
 			"timer" => $this->get_timer(),
 			"entriesCount" => $this->entries_count(),
 			"sittingsCount" => $this->sittings_count(),
-			//  "patternsCount" => $this->patterns_count(),
+			"patternsCount" => $this->patterns_count(),
 			"message" => $this->get_message()
 		), array ("testId", "timeframe"), $privacy);
 	}
@@ -815,11 +825,9 @@ class Test extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["course"] = $this->get_course()->json_assoc($privacy !== null ? $privacy : null);
-		$assoc["unit"] = $this->get_unit()->json_assoc($privacy !== null ? $privacy : null);
 		$assoc["entries"] = $this->session_user_can_write() ? $this->entries_json_array() : null;
 		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
-		//  $assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
+		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
