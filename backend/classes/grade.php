@@ -11,7 +11,7 @@ class Grade extends DatabaseRow
 	
 	public static function insert($point, $desc_short = null, $desc_long = null)
 	{
-		return null;
+		return static::errors_push("Grade insertion forbidden.");
 	}
 
 	public static function select_by_id($grade_id)

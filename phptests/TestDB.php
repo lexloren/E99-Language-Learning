@@ -486,16 +486,17 @@ class TestDB
 								 "desc_short" => 'Nailed-it',
 								 "desc_long" => 'Correct answer; student answered it right away without any hesitation'
 								 );
-		foreach ($grade_entries as $grade)
+                for ($i = 0; $i < count($grade_entries); $i ++)
 		{
+			$grade = $grade_entries[$i];
 			$link->query(sprintf(
-								 "INSERT into grades (point, desc_short, desc_long) values (%d, '%s', '%s')",
-								 $grade["point"], $grade["desc_short"], $grade["desc_long"])
+						"INSERT into grades values (%d, %d, '%s', '%s')",
+						$i+1, $grade["point"], $grade["desc_short"], $grade["desc_long"])
 						 );
 			if (!$link->insert_id)
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__);
 			
-			array_push($this->grade_ids, $link->insert_id);			
+			array_push($this->grade_ids, $i+1);			
 		}
 	}
 

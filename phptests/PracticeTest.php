@@ -1,6 +1,5 @@
 <?php
 
-//Tests class User
 require_once './backend/classes/session.php';
 require_once './backend/classes/practice.php';
 require_once './phptests/TestDB.php';
