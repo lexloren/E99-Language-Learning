@@ -162,6 +162,18 @@ class APITest extends APIBase
 		}
 	}
 	
+	public function sittings()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		//  session_user_can_read() here?
+		if (($test = self::validate_selection_id($_GET, "test_id", "Test"))
+				&& $test->session_user_can_read())
+		{
+			self::return_array_as_json($test->sittings());
+		}
+	}
+	
 	public function entries()
 	{
 		if (!Session::get()->reauthenticate()) return;

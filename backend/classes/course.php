@@ -448,6 +448,16 @@ class Course extends DatabaseRow
 		}
 		return $tests;
 	}
+	public function sittings()
+	{
+		$sittings = array ();
+		foreach ($this->tests() as $test)
+		{
+			$more = $test->sittings();
+			array_merge($sittings, $more);
+		}
+		return $sittings;
+	}
 	
 	private function __construct($course_id, $user_id, $lang_id_0, $lang_id_1, $name = null, $public = false, $password = null, $open = null, $close = null, $message = null)
 	{
@@ -677,6 +687,12 @@ class Course extends DatabaseRow
 		$course_units = "courses CROSS JOIN course_units USING (course_id)";
 		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
 		return self::count($unit_tests, "course_id", $this->get_course_id());
+	}
+	
+	public function sittings_count()
+	{
+		//  Placeholder
+		return null;
 	}
 	
 	public function researchers_count()

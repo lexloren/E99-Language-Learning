@@ -284,6 +284,17 @@ class APICourse extends APIBase
 		}
 	}
 	
+	public function sittings()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		//  session_user_can_read() here?
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_write())
+		{
+			self::return_array_as_json($course->sittings());
+		}
+	}
+	
 	public function units()
 	{
 		if (!Session::get()->reauthenticate()) return;
