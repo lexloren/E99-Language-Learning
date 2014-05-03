@@ -508,23 +508,12 @@ class Test extends CourseComponent
 	
 	public function entry_options($entry)
 	{
-		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
+		if (($test_entry_id = $this->get_test_entry_id($entry)) < 0)
 		{
 			return static::errors_push("Test cannot get options for entry not already in test.");
 		}
 		
-		$patterns = $this->patterns();
-		$patterns_returnable = array ();
-		
-		foreach ($patterns as $pattern)
-		{
-			if ($pattern->get_test_entry_id() === $test_entry_id)
-			{
-				array_push($patterns_returnable, $pattern);
-			}
-		}
-		
-		return $patterns_returnable;
+		return Pattern::select_all_for_test_entry_id($test_entry_id);
 	}
 	
 	private $sittings;
