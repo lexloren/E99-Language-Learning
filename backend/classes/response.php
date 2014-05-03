@@ -143,6 +143,26 @@ class Response extends CourseComponent
 			? Pattern::select_by_id($this->pattern_id)
 			: null;
 	}
+	public function get_score()
+	{
+		return $this->get_pattern()
+			? $this->get_pattern()->get_score()
+			: null;
+	}
+	public function set_score($score)
+	{
+		if (!$this->get_pattern())
+		{
+			return static::errors_push("Response failed to set score because response failed to get pattern!");
+		}
+		
+		if (!$this->get_pattern()->set_score($score))
+		{
+			return static::errors_push("Response failed to set score: " . Pattern::errors_unset());
+		}
+		
+		return $this;
+	}
 	
 	public function get_message()
 	{
