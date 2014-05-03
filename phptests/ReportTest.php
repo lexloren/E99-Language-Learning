@@ -23,9 +23,9 @@ class ReportTest extends PHPUnit_Framework_TestCase
 
 		
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
-		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[1], 3);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[1], 3, $this->db->mode_ids[1]);
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
-		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[2], 2);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[2], 2, $this->db->mode_ids[1]);
 
 		//list not practiced
 		$new_entries = $this->db->add_dictionary_entries(10);
@@ -44,13 +44,13 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		
 		//set researcher as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[1]);
+		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[1], $this->db->mode_ids[1]);
 		$this->assertNull($report);
 
 		//set student as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
 		$this->verify_course_student_practice_report(1);
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[2]);
+		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[2], $this->db->mode_ids[1]);
 		$this->assertNull($report);
 	}
 
@@ -58,29 +58,35 @@ class ReportTest extends PHPUnit_Framework_TestCase
 	{
 		//set instructor as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
-		$this->verify_course_practice_report($report);
+		$this->verify_course_practice_report();
 
 		//set researcher as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
-		$this->verify_course_practice_report($report);
+		$this->verify_course_practice_report();
 
 		//set student as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
 		$this->assertNull($report);
 		$this->assertTrue(Session::get()->has_error());
 
 		//set outsider as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[4]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
 		$this->assertNull($report);
 		$this->assertTrue(Session::get()->has_error());
 	}
 
-	public function verify_course_practice_report($report)
+	private function verify_course_practice_report()
 	{
+		//use a different mode
+		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[0]);		
+		$this->assertNotNull($report);
+		$this->assertNotNull($report["studentPracticeReports"]);
+		$this->assertCount(2, $report["studentPracticeReports"]);
+
+		//use correct mode
+		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
 		//print json_encode($report);
 		
 		$this->assertNotNull($report);
@@ -114,7 +120,13 @@ class ReportTest extends PHPUnit_Framework_TestCase
 	
 	public function verify_course_student_practice_report($index)
 	{
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[$index]);
+		//use a different mode
+		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[$index], $this->db->mode_ids[0]);
+		$this->assertNotNull($report, "failed for student ".$index);
+		$this->assertCount(0, $report["entryReports"]);
+
+		//Use the correct mode
+		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[$index], $this->db->mode_ids[1]);
 
 		$this->assertNotNull($report, "failed for student ".$index);
 		$this->assertEquals($report["name"], $this->db->names_given[$index].' '.$this->db->names_family[$index]);

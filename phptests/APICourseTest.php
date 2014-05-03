@@ -568,13 +568,14 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_unit_list($course_unit_id, $list_id);
 		
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
-		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[2], 3);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[2], 3, $this->db->mode_ids[0]);
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[3]);
-		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[3], 2);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[3], 2, $this->db->mode_ids[0]);
 
 		$this->db->add_course_researcher($this->db->course_ids[0], $this->db->user_ids[0]);
 		
 		$_GET["course_id"] =  $course_id;
+		$_GET["mode_id"] =  $this->db->mode_ids[0];
 		$_SESSION["handle"] = $this->db->handles[0];
 		
 		$this->obj->practice_report();
@@ -600,9 +601,10 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_unit_list($course_unit_id, $list_id);
 		
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[0]);
-		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[0], 3);
+		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[0], 3, $this->db->mode_ids[0]);
 		
 		$_GET["course_id"] =  $course_id;
+		$_GET["mode_id"] =  $this->db->mode_ids[0];
 		$_SESSION["handle"] = $this->db->handles[0];
 		
 		$this->obj->student_practice_report();

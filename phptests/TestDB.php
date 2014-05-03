@@ -294,7 +294,7 @@ class TestDB
 		));
 	}
 	
-	private function add_practice_data_for_list_one_time($user_id, $list_id)
+	private function add_practice_data_for_list_one_time($user_id, $list_id, $mode_id)
 	{
 		$result = $this->link->query("SELECT user_entry_id FROM list_entries WHERE list_id = ".$list_id);
 		
@@ -338,12 +338,11 @@ class TestDB
 				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': ');
 			
 			$grade_indx = rand(0, count($this->grade_ids) - 1);
-			$mode_indx = rand(0, count($this->mode_ids) - 1);
 			
 			$this->link->query(sprintf("INSERT INTO user_entry_results (user_entry_id, grade_id, mode) VALUES (%d, %d, %d)",
 				$user_entry_id,
 				$this->grade_ids[$grade_indx],
-				$this->mode_ids[$mode_indx]
+				$mode_id
 			));
 
 			if (!$this->link->insert_id)
@@ -374,11 +373,11 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 
-	public function add_practice_data_for_list($list_id, $user_id, $count)
+	public function add_practice_data_for_list($list_id, $user_id, $count, $mode_id)
 	{
 		for($j=0; $j<$count; $j++)
 		{
-			$this->add_practice_data_for_list_one_time($user_id, $list_id);
+			$this->add_practice_data_for_list_one_time($user_id, $list_id, $mode_id);
 		}
 	}
 	

@@ -521,9 +521,9 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (self::validate_request($_GET, "course_id"))
+		if (self::validate_request($_GET, "course_id") && self::validate_request($_GET, "mode_id"))
 		{
-			$report = Report::get_course_practice_report($_GET["course_id"]);
+			$report = Report::get_course_practice_report($_GET["course_id"], $_GET["mode_id"]);
 			if (!!$report)
 			{
 				$output = json_encode(array ("practiceReport" => $report));
@@ -540,7 +540,7 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!self::validate_request($_GET, "course_id"))
+		if (!self::validate_request($_GET, "course_id") || !self::validate_request($_GET, "mode_id"))
 			return;
 		
 		$user_id = 0;
@@ -549,7 +549,7 @@ class APICourse extends APIBase
 		else
 			$user_id = Session::get()->get_user()->get_user_id();
 			
-		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id);
+		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id, $_GET["mode_id"]);
 		if (!!$report)
 		{
 			$output = json_encode(array ("studentPracticeReport" => $report));
