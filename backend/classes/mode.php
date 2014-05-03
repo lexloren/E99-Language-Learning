@@ -11,7 +11,7 @@ class Mode extends DatabaseRow
 	
 	public static function insert($direction_from, $direction_to)
 	{
-		return null;
+		return static::errors_push("Failed to insert mode.");
 	}
 
 	public static function select_by_id($mode_id)
