@@ -3,7 +3,7 @@
  * 
  */
 
-var URL = window.location.origin + "/";
+var URL = "../../";
 var wordList = [];
 var qword = false;
 var qpronun = false;
@@ -14,10 +14,8 @@ var atrans = false;
 var iword = false;
 var ipronun = false;
 var itrans = false;
-
-var listsURL = URL + 'user_lists.php';
-var practiceURL = URL + 'user_practice.php';
-var dictionaryURL = URL + 'entry_find.php';
+var practice_from = "";
+var practice_to = "";
 
 /* prepare */
 
@@ -110,17 +108,18 @@ function shiftCards() {
 your decks" form */
 function getLists() {
 	$("#loader-show-lists").show();
+	var lists = [];
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
-		} else if (data.result.length === 0) {
+			return;
+		} else 	if (data.result === 0) {
 			failureMessage("You don't have any lists to practice with.");
 		} else {
 			var i = 1;
 			var colId;
-			/*$('#deck-selection-form').html('');*/
 			$.each( data.result, function( ) {
 				if (i == 1) {
 					colId = "plist1";
@@ -134,15 +133,15 @@ function getLists() {
 				}
 				i++;
 				$(document.getElementById(colId)).append('<div class="checkbox"><label>' + 
-				'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');
-				
+					'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');	
 			});
-			$('#deck-selection-container').show();
-			$("#loader-show-lists").hide();
 		}
+		$('#deck-selection-container').show();
+		$("#loader-show-lists").hide();
 	})
 	.fail(function(error) {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+		return;
 	});
 }
 
@@ -153,7 +152,8 @@ function get_dictionary(word, page) {
 	$('#translation-panel').show();
 	
 	var currentURL = URL + 'entry_find.php';
-	var langcodes = wordList[0].languages[0] + ',' + wordList[0].languages[1];
+	var langs = wordList[0].entry.languages;
+	var langcodes = langs[0] + ',' + langs[1];
 	$.getJSON( currentURL, {
 		query : word,
 		langs : langcodes,
@@ -198,23 +198,29 @@ function readOptions() {
 	if ($('#side1-word').prop('checked') === true) {
 		$('#side2-word').removeAttr('checked');
 		qword = true;
+		practice_from = 'unknown_language';
 	}
 	else if ($('#side1-pronounce').prop('checked') === true) {
 		$('#side2-pronounce').removeAttr('checked');
 		qpronun = true;
+		practice_from = 'unknown_pronunciation';
 	}
 	else if ($('#side1-trans').prop('checked') === true) {
 		$('#side2-trans').removeAttr('checked');
 		qtrans = true;
+		practice_from = 'known_language';
 	}	
 	if ($('#side2-word').prop('checked') === true) {
 		aword = true;
+		practice_to = 'unknown_language';
 	}
 	else if ($('#side2-pronounce').prop('checked') === true) {
 		apronun = true;
+		practice_to = 'unknown_pronunciation';
 	}	
 	else if (($('#side2-trans').prop('checked') === true)) {
 		atrans = true;
+		practice_to = 'known_language';
 	}
 	
 	/* get mode from selection */
@@ -294,6 +300,8 @@ function getCards() {
 	var currentURL = URL + 'user_practice.php';
 	$.getJSON( currentURL, {
 		list_ids: decks,
+		practice_from: practice_from, 
+		practice_to: practice_to, 
 		entries_count: cardsReturned
 		}, function( data ) {
 		authorize(data);
@@ -318,9 +326,10 @@ function nextCard() {
 	if (wordList.length === 0) {
 		practice_complete();
 	} else {
-		var word = getWord(wordList[0].words[wordList[0].languages[1]]);
-		var pronun = getWord(wordList[0].pronuncations[wordList[0].languages[1]]);
-		var trans = getWord(wordList[0].words[wordList[0].languages[0]]);
+		var entry = wordList[0].entry;
+		var word = getWord(entry.words[entry.languages[1]]);
+		var pronun = entry.pronuncations[entry.languages[1]];
+		var trans = entry.words[entry.languages[0]];
 		
 		/* populate side 1 */
 		if (qword) {
@@ -376,7 +385,6 @@ function flip_card() {
 function practice_complete() {
 	$("#success").html('Practice complete!');
 	$("#success").show();
-	getLists();
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
 	$('#card-followup-container').hide();
@@ -388,7 +396,8 @@ function send_rating(value) {
 	nextCard();
 	var currentURL = URL + 'user_practice_response.php';
 	$.post(currentURL, 
-        { 'entry_id' : wordList[0].entryId, 'correctness' : value }, function(data) {
+        { 'practice_entry_id' : wordList[0].practiceEntryId, 
+			'grade_id' : value }, function(data) {
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);

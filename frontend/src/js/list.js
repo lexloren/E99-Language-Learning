@@ -1,4 +1,4 @@
-var URL = window.location.origin + "/";
+var URL = "../../";
 var listnum;
 
 $(document).ready(function(){

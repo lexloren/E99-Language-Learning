@@ -1,6 +1,5 @@
 /* mockjax for testing */
 
-var URL = "http://cscie99.fictio.us/";
 var listsURL = URL + 'user_lists.php';
 var practiceURL = URL + 'user_practice.php';
 var dictionaryURL = URL + 'entry_find.php';
@@ -21,125 +20,12 @@ $.mockjax({
 
 $.mockjax({
   url: practiceURL,
-  responseText: {
-	"isError":false, 
-	"errorTitle":null,
-	"errorDescription":null,
-	"result":[
-	{
-		"entryId":12003,
-		"languages":["en","jp"],
-		"owner":{
-			"userId":6,
-			"isSessionUser":true,
-			"handle":"practitioner",
-			"email":"lloren@gmail.com",
-			"nameGiven":"","nameFamily":""
-		},
-		"words":{
-			"en":"(n) toughness (of a material)",
-			"jp":"\u3058\u3093\u6027"
-		},
-		"pronuncations":{
-			"jp":"\u3058\u3093\u305b\u3044"
-		}
-	},
-	{
-		"entryId":28,
-		"languages":["en","jp"],
-		"owner":{
-			"userId":6,
-			"isSessionUser":true,
-			"handle":"practitioner",
-			"email":"lloren@gmail.com",
-			"nameGiven":"","nameFamily":""
-		},
-		"words":{
-			"en":"fastening",
-			"jp":"\u3006"
-		},
-		"pronuncations":{
-			"jp":"\u3057\u3081"
-		}
-	},
-	{
-		"entryId":50234,
-		"languages":["en","jp"],
-		"owner":{
-			"userId":6,
-			"isSessionUser":true,
-			"handle":"practitioner",
-			"email":"lloren@gmail.com",
-			"nameGiven":"","nameFamily":""
-		},
-		"words":{
-			"en":"(n) (comp) Gopher",
-			"jp":"\u30b4\u30fc\u30d5\u30a1\u30fc"
-		},
-		"pronuncations":{
-			"jp":null
-		}
-	}],"resultInformation":null}
+  responseText: {"isError":false,"errorTitle":null,"errorDescription":null,"result":[{"practiceEntryId":12,"userEntryId":12,"mode":0,"interval":0,"efactor":2.5,"entry":{"entryId":611497,"languages":["en","cn"],"words":{"en":"puppy","cn":"\u5c0f\u72ac"},"pronuncations":{"cn":"xiao3 quan3"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},{"practiceEntryId":15,"userEntryId":15,"mode":0,"interval":0,"efactor":2.5,"entry":{"entryId":820825,"languages":["en","cn"],"words":{"en":"horse","cn":"\u99ac\u5339"},"pronuncations":{"cn":"ma3 pi3"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},{"practiceEntryId":20,"userEntryId":20,"mode":0,"interval":0,"efactor":2.5,"entry":{"entryId":699322,"languages":["en","cn"],"words":{"en":"dog","cn":"\u72ac"},"pronuncations":{"cn":"quan3"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},{"practiceEntryId":16,"userEntryId":16,"mode":0,"interval":12,"efactor":2.08,"entry":{"entryId":826644,"languages":["en","cn"],"words":{"en":"bird","cn":"\u9ce5\u96c0"},"pronuncations":{"cn":"niao3 que4"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},{"practiceEntryId":10,"userEntryId":10,"mode":0,"interval":31,"efactor":2.22,"entry":{"entryId":774042,"languages":["en","cn"],"words":{"en":"cat","cn":"\u8c93"},"pronuncations":{"cn":"mao1"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}},"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":true,"execute":false}}],"resultInformation":null}
 });
 
 $.mockjax({
   url: dictionaryURL,
-  responseText: {
-	"isError":false,
-	"errorTitle":null,
-	"errorDescription":null,
-	"result":[{
-		"entryId":"5",
-		"word":"Word 5",
-		"translation":"Translation 5",
-		"pronunciation":"Pronunciation 5"},
-		{"entryId":"6",
-		"word":"Word 6",
-		"translation":"Translation 6",
-		"pronunciation":"Pronunciation 6"},
-		{"entryId":"7",
-		"word":"Word 7",
-		"translation":"Translation 7",
-		"pronunciation":"Pronunciation 7"}],
-	"resultInformation":{"entriesCount":3,"pageSize":1,"pageNum":1}} 
+  responseText: {"isError":false,"errorTitle":null,"errorDescription":null,"result":[{"entryId":840521,"languages":["en","jp"],"words":{"en":"melt","jp":"\u878d"},"pronuncations":{"jp":"rong2 \/ \u30e6\u30a6 \/ \u3068.\u3051\u308b \/ \u3068.\u304b\u3059"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":840520,"languages":["en","jp"],"words":{"en":"dissolve","jp":"\u878d"},"pronuncations":{"jp":"rong2 \/ \u30e6\u30a6 \/ \u3068.\u3051\u308b \/ \u3068.\u304b\u3059"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":421001,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u901a"},"pronuncations":{"jp":"\u3086\u3046\u305a\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420978,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u5408"},"pronuncations":{"jp":"\u3086\u3046\u3054\u3046"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}},{"entryId":420983,"languages":["en","jp"],"words":{"en":"(P)","jp":"\u878d\u8cc7"},"pronuncations":{"jp":"\u3086\u3046\u3057"},"annotationsCount":0,"hiddenFromSessionUser":false,"sessionUserPermissions":{"read":true,"write":false,"execute":false}}],"resultInformation":{"pageSize":5,"pageNumber":1,"pagesCount":51,"entriesFoundCount":255}} 
 });
 
 /* end mockjax */
-
-test( "getWord(word), splitting word into span-wrapped letters", function() {
-  var word = 'hello';
-  var expected = '<span class="char-of-word">h</span>' + 
-  '<span class="char-of-word">e</span>' +
-  '<span class="char-of-word">l</span>' +
-  '<span class="char-of-word">l</span>' +
-  '<span class="char-of-word">o</span>';
-  var result = getWord(word);
-  equal( expected, result, 'Word is split appropriately');
-});
-
-test( "shiftCards(), shift appropriately when list has 3 items", function() {
-  wordList = [{a : 'b'}, {b : 'c'}, {c : 'd'}];
-  var expected = [{b : 'c'}, {c : 'd'}, {a : 'b'}];
-  shiftCards();
-  for (var i = 0; i < wordList.length; i++ ){
-	equal( expected[i].a, wordList[i].a, 'test a');
-	equal( expected[i].b, wordList[i].b, 'test b');
-	equal( expected[i].c, wordList[i].c, 'test c');
-	}
-});
-
-test( "shiftCards(), 1 item", function() {
-  wordList = [{a : 'b'}];
-  var expected = [{a : 'b'}];
-  shiftCards();
-  equal( expected[0].a, wordList[0].a, 'test a');
-
-});
-
-test( "shiftCards(), 0 items", function() {
-  wordList = [];
-  var expected = [];
-  shiftCards();
-  equal(0, 0, 'code functions');
-
-});

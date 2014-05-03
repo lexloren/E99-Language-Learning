@@ -16,6 +16,9 @@
 			font-size: 24px;
 			text-align: center;
 		}
+		.char-of-word {
+			cursor: pointer;
+		}
 	</style>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -121,36 +124,39 @@
 			<p>Question:</p>
 			<div class="panel panel-default flashcard">
 			<div class="panel-body">
-				<div id="flashcard-side1">Word</div>
+				<div id="flashcard-side1"></div>
 			</div>
 			</div>
 			<p>Answer:</p>
 			<div class="panel panel-default flashcard" id="flashcard-word">
 			<div class="panel-body">
-				<div id="flashcard-2a">Translation</div>
+				<div id="flashcard-2a"></div>
 				<div><button type="button" class="btn btn-lg btn-primary" id="flashcard-flip">?</button></div>
 			</div>
 			</div>
 			<!-- this div appears after the student has viewed all answers to the current card. The rating buttons (with glyphicon-star) are obviously incomplete. -->
 		<div id="card-followup-container">
 		<p>Click a star or enter a number 1-5 to rate your knowledge and continue:</p>
+		<div  class="text-center">
 		<div class="btn-group">
 			<button type="button" class="btn btn-default rating-button" value="1" id="rating-1"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="2" id="rating-2"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="3" id="rating-3"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="4" id="rating-4"><span class="glyphicon glyphicon-star"></span></button>
 			<button type="button" class="btn btn-default rating-button" value="5" id="rating-5"><span class="glyphicon glyphicon-star"></span></button>
-		</div>
-		</div>
 			</div>
-			<div id="flashcard-3" class="col-md-5">
+		</div>
+		</div>
+			<div id="flashcard-3">
 			<p>Additional Info: </p>
 			<div class="alert alert-info flashcard">
-			<div id="flashcard-2b">Pronounciation</div>
+			<div id="flashcard-2b"></div>
 			</div>
 			</div>
+			</div>
+
 			<div class="col-md-7">
-			<hr/>
+			<br/>
 			<div class="alert alert-info translation" id="translation-panel" >
 				<span id="translation-panel-inner">Want to know more? Click on a character to find related words.</span>
 			</div>
