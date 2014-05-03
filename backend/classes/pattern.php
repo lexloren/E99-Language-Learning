@@ -218,7 +218,7 @@ class Pattern extends CourseComponent
 		if (!($user_entry = $this->get_user_entry())) return null;
 		
 		$from = array ();
-		switch ($this->get_mode())
+		switch ($this->get_mode_id())
 		{
 			case 0:
 			case 2:
@@ -251,10 +251,14 @@ class Pattern extends CourseComponent
 		);
 	}
 	
-	private $mode = null;
+	private $mode_id = null;
+	public function get_mode_id()
+	{
+		return $this->mode_id;
+	}
 	public function get_mode()
 	{
-		return $this->mode;
+		return Mode::select_by_id($this->get_mode_id());
 	}
 	
 	private $score = null;
@@ -289,11 +293,11 @@ class Pattern extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_test_entry_patterns", "pattern_id", $this->get_pattern_id());
 	}
 	
-	private function __construct($pattern_id, $test_entry_id, $mode, $prompt, $contents, $score)
+	private function __construct($pattern_id, $test_entry_id, $mode_id, $prompt, $contents, $score)
 	{
 		$this->pattern_id = intval($pattern_id, 10);
 		$this->test_entry_id = intval($test_entry_id, 10);
-		$this->mode = intval($mode, 10);
+		$this->mode_id = intval($mode, 10);
 		$this->prompt = !!$prompt;
 		$this->contents = !!$contents && strlen($contents) > 0 ? $contents : null;
 		$this->score = intval($score, 10);
