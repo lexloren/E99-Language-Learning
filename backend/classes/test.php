@@ -242,7 +242,7 @@ class Test extends CourseComponent
 			
 			while (($result_assoc = $result->fetch_assoc()))
 			{
-				$this->modes[intval($result_assoc["test_entry_id"], 10)] = intval($result_assoc["mode"], 10);
+				$this->modes[intval($result_assoc["test_entry_id"], 10)] = Mode::select_by_id(intval($result_assoc["mode"], 10));
 			}
 		}
 		
@@ -749,7 +749,7 @@ class Test extends CourseComponent
 		unset($entry_assoc["hiddenFromSessionUser"]);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
-		$entry_assoc["mode"] = $this->get_entry_mode($entry);
+		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
 		foreach ($entry_assoc["options"] as &$option)

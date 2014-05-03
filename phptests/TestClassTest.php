@@ -77,7 +77,7 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue($test->session_user_can_write());
 		$this->assertNotNull($test->entries_add($entry, ($mode = 4)));
 		$this->assertCount(1, $test->entries());
-		$this->assertEquals($mode, $test->get_entry_mode($entry));
+		$this->assertEquals($mode, $test->get_entry_mode($entry)->get_mode_id());
 		$test_entries = $test->entries();
 		$this->assertEquals($entry, array_shift($test_entries));
 		$this->assertCount(1, $test->entry_options($entry));
@@ -126,7 +126,7 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		foreach ($test_entries as $test_entry)
 		{
 			$this->assertTrue(in_array($test_entry, $list_entries));
-			$this->assertEquals($mode, $test->get_entry_mode($test_entry));
+			$this->assertEquals($mode, $test->get_entry_mode($test_entry)->get_mode_id());
 		}
 		foreach ($list_entries as $list_entry)
 		{
