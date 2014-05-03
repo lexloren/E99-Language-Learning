@@ -297,7 +297,7 @@ class Pattern extends CourseComponent
 	{
 		$this->pattern_id = intval($pattern_id, 10);
 		$this->test_entry_id = intval($test_entry_id, 10);
-		$this->mode_id = intval($mode, 10);
+		$this->mode_id = intval($mode_id, 10);
 		$this->prompt = !!$prompt;
 		$this->contents = !!$contents && strlen($contents) > 0 ? $contents : null;
 		$this->score = intval($score, 10);
