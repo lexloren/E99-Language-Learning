@@ -326,7 +326,7 @@ class Pattern extends CourseComponent
 	{
 		return $this->privacy_mask(array (
 			"patternId" => $this->get_pattern_id(),
-			//  "prompt" => !!$this->get_prompt(),
+			"entry" => $this->get_test()->entry_json_assoc($this->get_user_entry()),
 			"contents" => $this->get_contents(),
 			"score" => $this->get_score(),
 			"message" => $this->get_message()

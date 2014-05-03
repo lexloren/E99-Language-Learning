@@ -724,6 +724,43 @@ class Test extends CourseComponent
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
+	public function entry_json_assoc($entry)
+	{
+		if (!$entry)
+		{
+			return static::errors_push("Test cannot get entry JSON for null entry.");
+		}
+		
+		$entry = $entry->copy_for_user($this->get_owner());
+		
+		if (!$entry)
+		{
+			return static::errors_push("Test cannot get entry JSON for null entry.");
+		}
+		
+		$test_entry_id = array_search($entry, $this->entries());
+		
+		if ($test_entry_id < 0)
+		{
+			return static::errors_push("Test cannot get entry JSON for entry not already in test.");
+		}
+		
+		$entry_assoc = $entry->json_assoc();
+		unset($entry_assoc["hiddenFromSessionUser"]);
+		unset($entry_assoc["sessionUserPermissions"]);
+		$entry_assoc["testEntryId"] = $test_entry_id;
+		$entry_assoc["mode"] = $this->get_entry_mode($entry);
+		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
+		
+		foreach ($entry_assoc["options"] as &$option)
+		{
+			unset($option["hiddenFromSessionUser"]);
+			unset($option["sessionUserPermissions"]);
+		}
+		
+		return $entry_assoc;
+	}
+	
 	public function entries_json_array()
 	{
 		$json_array = array ();
@@ -736,18 +773,7 @@ class Test extends CourseComponent
 		
 		foreach ($entries_by_number as $entry)
 		{
-			$entry_assoc = $entry->json_assoc();
-			$entry_assoc["testEntryId"] = array_search($entry, $this->entries());
-			$entry_assoc["mode"] = $this->get_entry_mode($entry);
-			$entry_assoc["options"] = self::json_array($this->entry_options($entry));
-			
-			foreach ($entry_assoc["options"] as &$option)
-			{
-				unset($option["hiddenFromSessionUser"]);
-				unset($option["sessionUserPermissions"]);
-			}
-			
-			array_push($json_array, $entry_assoc);
+			array_push($json_array, $this->entry_json_assoc($entry));
 		}
 		
 		return $json_array;
