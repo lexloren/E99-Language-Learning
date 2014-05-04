@@ -1057,10 +1057,10 @@ function startTest(){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                if(data.errorDescription == "Session user has already responded to all test entries."){
+                if(data.errorDescription == "Test Errors:  Response Errors:  Sitting Errors: Error 0: Session user has already responded to all test entries."){
                   var errorMsg = "You have already taken this test!";                    
                 }
-                else if(data.errorDescription == "Session user cannot execute test because test timeframe is not current."){
+                else if(data.errorDescription == "Test Errors: Error 0: Session user cannot execute test because test timeframe is not current. Response Errors:  Sitting Errors: "){
                   var errorMsg = "This test cannot be taken because its timeframe is not current.";                    
                 }
                 else{
