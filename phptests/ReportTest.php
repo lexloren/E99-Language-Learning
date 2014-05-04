@@ -158,7 +158,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		//$this->db->add_unit_test_sitting_responses($sitting_id);
 		$report = Report::get_course_test_report($this->db->course_ids[0]);	
 		$this->assertNotNull($report);
-		print_r($report);
+		//print_r($report);
 	}
 }
 ?>
