@@ -430,8 +430,11 @@ class TestDB
 			$user_entry_id = $link->insert_id;
 			array_push($this->test_user_entry_ids, $user_entry_id);
 
-			$link->query("INSERT INTO course_unit_test_entries (test_id, user_entry_id) VALUES ($test_id, $user_entry_id)");
+			$link->query("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num) VALUES ($test_id, $user_entry_id, $j)");
 			$test_entry_id = $link->insert_id;
+			if (!$test_entry_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				
 			array_push($this->test_entry_ids, $test_entry_id);
 		}
 		return $this->test_entry_ids;

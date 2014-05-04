@@ -172,6 +172,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$_POST["test_id"] = $test_id; $_POST["name"] = $new_name;
 		$_POST["open"] = $new_open; $_POST["close"] = $new_close;
 		$_POST["timer"] = $new_timer; $_POST["message"] = $new_msg;
+		$_POST["disclosed"] = 1;
 		$this->obj->update();
 		$test_assoc = Session::get()->get_result_assoc();
 		$this->assertFalse(Session::get()->has_error());
@@ -242,6 +243,22 @@ class APITestTest extends PHPUnit_Framework_TestCase
                 $result = Session::get()->get_result_assoc();
 		$result_assoc = $result["result"][0];
                 $this->assertEquals($sitting_id, $result_assoc["sittingId"]);
+	}
+
+	public function test_entries()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+                $unit_id = $this->db->course_unit_ids[0];
+                $test_id = $this->db->add_unit_test($unit_id);
+		$this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 5);
+                $_GET["test_id"] = $test_id;
+
+		$this->obj->entries();
+		$result = Session::get()->get_result_assoc();
+		$result_assoc = $result["result"];
+		$this->assertCount(5, $result_assoc);
+		$this->assertArrayHasKey("entryId", $result_assoc[0]);
+		$this->assertArrayHasKey("languages", $result_assoc[0]);
 	}
 }
 
