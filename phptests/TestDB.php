@@ -54,7 +54,10 @@ class TestDB
 	public $practice_user_entry_ids = array ();
 	public $practice_entry_ids = array();
 	public $practice_ids = array();
-		
+
+	public $test_entry_ids = array();
+	public $test_user_entry_ids = array();
+
 	public $grade_ids = array ();
 	public $mode_ids = array ();
 
@@ -360,6 +363,7 @@ class TestDB
 		
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+		return $this->link->insert_id;
 	}
 	
 	public function add_course_researcher($course_id, $user_id)
@@ -371,6 +375,7 @@ class TestDB
 		
 		if (!$this->link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+		return $this->link->insert_id;
 	}
 
 	public function add_practice_data_for_list($list_id, $user_id, $count, $mode_id)
@@ -396,7 +401,7 @@ class TestDB
 	{
 		$test_name = "course test ".count($this->course_tests);
 		$link = $this->link;
-		$link->query(sprintf("INSERT IGNORE INTO course_unit_tests (unit_id, test_name) VALUES (%d, %d)",
+		$link->query(sprintf("INSERT INTO course_unit_tests (unit_id, name) VALUES (%d, %d)",
 			$unit_id,
 			$test_name
 		));
@@ -406,6 +411,71 @@ class TestDB
 			
 		array_push($this->course_tests, $link->insert_id);
 		return $link->insert_id;
+	}
+
+	public function add_unit_test_entries($test_id, $user_id, $num_entries)
+	{
+		$link = $this->link;
+		for ($j = 1; $j <= $num_entries; $j++)
+		{
+			$link->query(sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+				self::$lang_id_0, self::$lang_id_1, self::$word_0."-test-".$j, self::$word_1."-test-".$j, self::$word_1_pronun."-test-".$j));
+
+			$entry_id = $link->insert_id;
+
+			$link->query(sprintf("INSERT INTO user_entries (entry_id, user_id, word_0, word_1, word_1_pronun) VALUES (%d, %d, '%s', '%s', '%s')",
+						$entry_id, $user_id, self::$word_0."-test-".$j, self::$word_1."-test-".$j, self::$word_1_pronun."-test-".$j
+					));
+
+			$user_entry_id = $link->insert_id;
+			array_push($this->test_user_entry_ids, $user_entry_id);
+
+			$link->query("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num) VALUES ($test_id, $user_entry_id, $j)");
+			$test_entry_id = $link->insert_id;
+			if (!$test_entry_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				
+			array_push($this->test_entry_ids, $test_entry_id);
+		}
+		return $this->test_entry_ids;
+	}
+
+	public function add_unit_test_sittings($test_id, $student_id)
+	{
+		$link = $this->link;
+		$start = time() - (60 * 60);
+		$stop = time();
+		
+		$link->query("INSERT INTO course_unit_test_sittings (test_id, start, stop, student_id) VALUES($test_id, $stop, $start, $student_id)");
+		$sitting_id = $link->insert_id;
+		if (!$sitting_id)
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
+		return $sitting_id;
+	}
+	
+	public function add_unit_test_sitting_responses($sitting_id, $student_id, $responses)
+	{
+		$result = $this->link->query("SELECT * FROM course_unit_test_sittings WHERE sitting_id = $sitting_id");
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			$test_id = $result_assoc["test_id"];
+			$user_id = $result_assoc["student_id"];
+			
+			$result = $this->link->query("SELECT * FROM course_unit_test_entries WHERE test_id = $test_id");
+		
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+				$test_entry_id = $result_assoc["test_entry_id"];
+				$response = $responses[$user_entry_id];
+				
+				//TODO: Add response
+			}
+		}
+		else
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 	
 	public function add_practice_data($user_id, $num_lists, $num_entries)

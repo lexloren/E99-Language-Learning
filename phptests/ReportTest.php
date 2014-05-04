@@ -7,6 +7,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 {
 	private $db;
 
+	private $student1;
 	public function setup()
 	{
 		Session::set(null);
@@ -22,9 +23,9 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->db->add_unit_list($course_unit_id, $list_id);
 
 		
-		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
+		$this->student1 = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
 		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[1], 3, $this->db->mode_ids[1]);
-		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
+		$this->student2 = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
 		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[2], 2, $this->db->mode_ids[1]);
 
 		//list not practiced
@@ -147,6 +148,16 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		}
 		
 		//if ($s == 1) print json_encode($report);
+		//print_r($report);
+	}
+	
+	public function test_get_course_test_report()
+	{
+		$test_id = $this->db->add_unit_test($this->db->course_unit_ids[0]);
+		$sitting_id = $this->db->add_unit_test_sittings($test_id, $this->student1);
+		//$this->db->add_unit_test_sitting_responses($sitting_id);
+		$report = Report::get_course_test_report($this->db->course_ids[0]);	
+		$this->assertNotNull($report);
 		//print_r($report);
 	}
 }

@@ -647,7 +647,12 @@ class Test extends CourseComponent
 		
 		$timer = intval($timer, 10) > 0 ? intval($timer, 10) : null;
 		
-		return parent::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id());
+		if (!self::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id()))
+                {
+                        return null;
+                }
+                $this->timer = $timer;
+                return $this;
 	}
 	
 	//  inherits: protected $message;
@@ -767,7 +772,7 @@ class Test extends CourseComponent
 		unset($entry_assoc["hiddenFromSessionUser"]);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
-		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
+		//$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
 		$entry_assoc["scoreMean"] = 0.0;
