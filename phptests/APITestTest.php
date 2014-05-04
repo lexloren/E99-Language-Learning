@@ -178,7 +178,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
                 $this->assertNotNull($test_assoc["result"]);
 		$updated_test = Test::select_by_id($test_id);
 		$this->assertEquals($updated_test->get_test_id(), $test_id);
-		$this->assertEquals($updated_test->get_test_name(), $new_name);
+		$this->assertEquals($updated_test->get_name(), $new_name);
 		$this->assertEquals($updated_test->get_message(), $new_msg);
 		$this->assertEquals($updated_test->get_timer(), $new_timer);
 		$this->assertEquals($updated_test->get_timeframe()->get_open(), $new_open);
