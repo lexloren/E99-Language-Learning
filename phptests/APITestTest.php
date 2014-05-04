@@ -40,7 +40,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$this->assertNotNull($this->obj, "Null APITest");
 	}
 
-	public function test_1insert()
+	public function test_insert()
 	{
 		//No handle
 		$_POST["unit_id"] = $this->db->course_unit_ids[0];
@@ -89,7 +89,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
                 $this->assertNotNull($test_assoc);
 	}
 
-	public function test_1select()
+	public function test_select()
 	{
 		//No handle
                 $unit_id = $this->db->course_unit_ids[0];
@@ -113,7 +113,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($test_assoc["result"]["testId"], $test_id);
 	}
 
-	public function test_1delete()
+	public function test_delete()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
 		$unit_id = $this->db->course_unit_ids[0];
@@ -133,7 +133,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$this->assertNull($test_obj);
 	}
 
-	public function test_1unexecute()
+	public function test_unexecute()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
 		$course_id = $this->db->course_ids[0];
@@ -155,7 +155,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue(Session::get()->has_error());
 	}
 
-	public function test_1update()
+	public function test_update()
 	{
                 $_SESSION["handle"] = $this->db->handles[0];
                 $course_id = $this->db->course_ids[0];
@@ -215,6 +215,33 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$_POST["timer"] = $new_timer;
 		$this->obj->update();
 		$this->assertTrue(Session::get()->has_error());
+	}
+
+	public function test_sittings_empty()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$unit_id = $this->db->course_unit_ids[0];
+                $test_id = $this->db->add_unit_test($unit_id);
+		$_GET["test_id"] = $test_id;
+
+		$this->obj->sittings();
+		$result = Session::get()->get_result_assoc();
+		$this->assertTrue(empty($result["result"]));
+	}
+
+	public function test_sittings()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+                $unit_id = $this->db->course_unit_ids[0];
+                $test_id = $this->db->add_unit_test($unit_id);
+                $_GET["test_id"] = $test_id;
+                $student_id = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
+                $sitting_id = $this->db->add_unit_test_sittings($test_id, $student_id);
+		$this->obj->sittings();
+
+                $result = Session::get()->get_result_assoc();
+		$result_assoc = $result["result"][0];
+                $this->assertEquals($sitting_id, $result_assoc["sittingId"]);
 	}
 }
 
