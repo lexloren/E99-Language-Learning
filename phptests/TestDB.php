@@ -430,8 +430,11 @@ class TestDB
 			$user_entry_id = $link->insert_id;
 			array_push($this->test_user_entry_ids, $user_entry_id);
 
-			$link->query("INSERT INTO course_unit_test_entries (test_id, user_entry_id) VALUES ($test_id, $user_entry_id)");
+			$link->query("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num) VALUES ($test_id, $user_entry_id, $j)");
 			$test_entry_id = $link->insert_id;
+			if (!$test_entry_id)
+				exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
+				
 			array_push($this->test_entry_ids, $test_entry_id);
 		}
 		return $this->test_entry_ids;
@@ -449,6 +452,30 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 
 		return $sitting_id;
+	}
+	
+	public function add_unit_test_sitting_responses($sitting_id, $student_id, $responses)
+	{
+		$result = $this->link->query("SELECT * FROM course_unit_test_sittings WHERE sitting_id = $sitting_id");
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			$test_id = $result_assoc["test_id"];
+			$user_id = $result_assoc["student_id"];
+			
+			$result = $this->link->query("SELECT * FROM course_unit_test_entries WHERE test_id = $test_id");
+		
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+				$test_entry_id = $result_assoc["test_entry_id"];
+				$response = $responses[$user_entry_id];
+				
+				//TODO: Add response
+			}
+		}
+		else
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 	
 	public function add_practice_data($user_id, $num_lists, $num_entries)

@@ -765,7 +765,7 @@ class Test extends CourseComponent
 		unset($entry_assoc["hiddenFromSessionUser"]);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
-		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
+		//$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
 		$entry_assoc["scoreMean"] = 0.0;

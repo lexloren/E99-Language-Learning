@@ -537,7 +537,7 @@ class APICourse extends APIBase
 			$report = Report::get_course_practice_report($_GET["course_id"], $_GET["mode_id"]);
 			if (!!$report)
 			{
-				$output = json_encode(array ("practiceReport" => $report));
+				$output = array ("practiceReport" => $report);
 				Session::get()->set_result_assoc($output);
 			}
 			else
@@ -563,7 +563,7 @@ class APICourse extends APIBase
 		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id, $_GET["mode_id"]);
 		if (!!$report)
 		{
-			$output = json_encode(array ("studentPracticeReport" => $report));
+			$output = array ("studentPracticeReport" => $report);
 			Session::get()->set_result_assoc($output);
 		}
 		else

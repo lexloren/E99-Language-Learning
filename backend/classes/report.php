@@ -349,6 +349,7 @@ class Report extends ErrorReporter
 			}
 		}*/
 		
+		$report = array();
 		$studentReports = array();
 		foreach($students as $student)
 		{
@@ -356,7 +357,7 @@ class Report extends ErrorReporter
 			foreach($tests as $test)
 			{
 				$time_frame = $test->get_timeframe();
-				if (!$time_frame->is_closed())
+				if (null != $time_frame && !$time_frame->is_closed())
 					continue;
 				
 				$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
@@ -380,6 +381,10 @@ class Report extends ErrorReporter
 			
 			array_push($studentReports, $studentReport);
 		}
+		
+		$report["studentReports"] = $studentReports;
+		
+		return $report;
 	}
 }
 

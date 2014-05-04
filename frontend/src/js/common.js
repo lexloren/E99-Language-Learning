@@ -102,3 +102,8 @@ function authorize(data) {
 function prettyDate(datetime){
   return datetime.toDateString() + ' ' + datetime.toLocaleTimeString();
 }
+
+function displayDate(input){
+	var datetime = new Date(input*1000);
+	return datetime.toDateString();
+}
