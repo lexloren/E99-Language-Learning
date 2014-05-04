@@ -333,14 +333,33 @@ class Unit extends CourseComponent
 	
 	public function lists_count()
 	{
+		if (isset($this->lists)) return count($this->lists);
 		$unit_lists = "course_units CROSS JOIN course_unit_lists USING (unit_id)";
 		return self::count($unit_lists, "unit_id", $this->get_unit_id());
 	}
 	
 	public function tests_count()
 	{
+		if (isset($this->tests)) return count($this->tests);
 		$unit_tests = "course_units CROSS JOIN course_unit_tests USING (unit_id)";
 		return self::count($unit_tests, "unit_id", $this->get_unit_id());
+	}
+	
+	public function sittings()
+	{
+		$sittings = array ();
+		foreach ($this->tests() as $test)
+		{
+			$test_sittings = $test->sittings();
+			array_merge($sittings, $test_sittings);
+		}
+		return $sittings;
+	}
+	
+	public function sittings_count()
+	{
+		if (isset($this->sittings)) return count($this->sittings);
+		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "unit_id", $this->get_unit_id());
 	}
 	
 	public function json_assoc($privacy = null)
@@ -369,6 +388,61 @@ class Unit extends CourseComponent
 		$assoc["tests"] = self::json_array($this->tests());
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
+	}
+	
+	public static function csv_columns_array()
+	{
+		return array (
+			"courseId",
+			"unitId",
+			"languageKnown",
+			"languageUnknown",
+			"instructorsCount",
+			"studentsCount",
+			"researchersCount",
+			"listsCount",
+			"testsCount",
+			"testsMeanSecondsPerEntry",
+			"sittingsMeanPerformance"
+		);
+	}
+	
+	public function csv_row_array()
+	{
+		$tests_mean_seconds_per_entry = 0.0;
+		$tests_total_entries_count = 0;
+		foreach ($this->tests() as $test)
+		{
+			$entries_count = $test->entries_count();
+			$tests_total_entries_count += $entries_count;
+			
+			$tests_mean_seconds_per_entry +=
+				floatval($entries_count) * $test->seconds_per_entry();
+		}
+		if (!$tests_total_entries_count) $tests_mean_seconds_per_entry = null;
+		else $tests_mean_seconds_per_entry /= floatval($tests_total_entries_count);
+		
+		$sittings_mean_performance = 0.0;
+		foreach ($this->sittings() as $sitting)
+		{
+			$score_json_assoc = $sitting->score_json_assoc();
+			$sittings_mean_performance += $score_json_assoc["scoreScaled"];
+		}
+		$sittings_mean_performance /= floatval($this->sittings_count());
+		
+		return array (
+			$this->get_course_id(),
+			$this->get_unit_id(),
+			Language::select_by_id($this->get_course()->get_lang_id_0())->get_lang_code(),
+			Language::select_by_id($this->get_course()->get_lang_id_1())->get_lang_code(),
+			$this->get_course()->instructors_count(),
+			$this->get_course()->students_count(),
+			$this->get_course()->researchers_count(),
+			$this->lists_count(),
+			$this->tests_count(),
+			$tests_mean_seconds_per_entry,
+			$sittings_mean_performance
+		);
 	}
 }
 

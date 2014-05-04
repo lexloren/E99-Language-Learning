@@ -371,6 +371,7 @@ class Sitting extends CourseComponent
 	
 	public function responses_count()
 	{
+		if (isset($this->responses)) return count($this->responses);
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	

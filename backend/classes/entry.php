@@ -608,6 +608,7 @@ class UserEntry extends Entry
 	
 	public function annotations_count()
 	{
+		if (isset($this->annotations)) return count($this->annotations);
 		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	

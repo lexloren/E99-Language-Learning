@@ -302,6 +302,7 @@ class EntryList extends DatabaseRow
 	
 	public function entries_count()
 	{
+		if (isset($this->entries)) return count($this->entries);
 		return self::count("list_entries", "list_id", $this->get_list_id());
 	}
 	

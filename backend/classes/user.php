@@ -584,26 +584,31 @@ class User extends DatabaseRow
 	
 	public function courses_owned_count()
 	{
+		if (isset($this->courses)) return count($this->courses);
 		return self::count("courses", "user_id", $this->get_user_id());
 	}
 	
 	public function courses_instructed_count()
 	{
+		if (isset($this->courses_instructed)) return count($this->courses_instructed);
 		return self::count("course_instructors", "user_id", $this->get_user_id());
 	}
 	
 	public function courses_studied_count()
 	{
+		if (isset($this->courses_studied)) return count($this->courses_studied);
 		return self::count("course_students", "user_id", $this->get_user_id());
 	}
 	
 	public function courses_researched_count()
 	{
+		if (isset($this->courses_researched)) return count($this->courses_researched);
 		return self::count("course_researchers", "user_id", $this->get_user_id());
 	}
 	
 	public function lists_count()
 	{
+		if (isset($this->lists)) return count($this->lists);
 		return self::count("lists", "user_id", $this->get_user_id());
 	}
 	
