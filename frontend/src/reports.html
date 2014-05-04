@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss: Welcome Page</title>
+    <!-- Bootstrap -->
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+    <script src="js/jquery-ui-timepicker-addon.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+	<script src="js/common.js"></script>
+	<script src="js/reports.js"></script>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	<script type="text/javascript">
+      $(document).ready(function(){
+		pageSetup();
+       	reportPageSetup();
+      });
+    </script>
+  </head>
+  <body role="document">
+
+     <!-- Fixed navbar -->
+    <div id="navbar"></div>
+	<br/>
+      
+
+    <div div id="doc-body" class="container theme-showcase" role="main">
+		<h1>Xenogloss Reporting</h1>
+		<div class="row">
+			<div class="col-md-12" id="progress">
+				<img src="/frontend/src/images/loader.gif"/> loading...
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-6" id="reportmodes">
+				
+			</div>
+			<div class="col-md-4">
+				<select class="form-control">
+					<option value="SP">Student Practice</option>
+					<option value="ST">Student Test</option>
+					<option value="CP">Course Practice</option>
+					<option value="CT">Course Test</option>
+				</select>
+			</div>
+			<div class="col-md-2">
+				<button class="btn btn-primary" type="button" onclick="runReport();">Run Report</button> 
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-md-12" id="courses">
+				
+			</div>
+		</div>
+		
+				
+	</div>
+
+  </body>
+</html>
