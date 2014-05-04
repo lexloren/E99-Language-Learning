@@ -454,6 +454,30 @@ class TestDB
 		return $sitting_id;
 	}
 	
+	public function add_unit_test_sitting_responses($sitting_id, $student_id, $responses)
+	{
+		$result = $this->link->query("SELECT * FROM course_unit_test_sittings WHERE sitting_id = $sitting_id");
+		
+		if (!!$result && $result->num_rows == 1 && !!($result_assoc = $result->fetch_assoc()))
+		{
+			$test_id = $result_assoc["test_id"];
+			$user_id = $result_assoc["student_id"];
+			
+			$result = $this->link->query("SELECT * FROM course_unit_test_entries WHERE test_id = $test_id");
+		
+			while (!!($result_assoc = $result->fetch_assoc()))
+			{
+				$user_entry_id = $result_assoc["user_entry_id"];
+				$test_entry_id = $result_assoc["test_entry_id"];
+				$response = $responses[$user_entry_id];
+				
+				//TODO: Add response
+			}
+		}
+		else
+			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+	}
+	
 	public function add_practice_data($user_id, $num_lists, $num_entries)
 	{
 		$link = $this->link;
