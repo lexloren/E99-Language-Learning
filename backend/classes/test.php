@@ -647,7 +647,12 @@ class Test extends CourseComponent
 		
 		$timer = intval($timer, 10) > 0 ? intval($timer, 10) : null;
 		
-		return parent::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id());
+		if (!self::update_this($this, "course_unit_tests", array ("timer" => $timer), "test_id", $this->get_test_id()))
+                {
+                        return null;
+                }
+                $this->timer = $timer;
+                return $this;
 	}
 	
 	//  inherits: protected $message;

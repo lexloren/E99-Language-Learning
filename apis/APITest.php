@@ -84,7 +84,8 @@ class APITest extends APIBase
 				}
 				else Session::get()->set_error_assoc("Test Selection", Test::errors_unset());
 			}
-			else Session::get()->set_error_assoc("Test Selection", "Session user cannot read test.");
+			else
+				 Session::get()->set_error_assoc("Test Selection", "Session user cannot read test.");
 		}
 	}
 	
@@ -95,9 +96,7 @@ class APITest extends APIBase
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
 			if (!$test->delete())
-			{
 				Session::get()->set_error_assoc("Test Deletion", Test::errors_unset());
-			}
 			else
 			{
 				Session::get()->set_result_assoc($test->json_assoc());
@@ -112,9 +111,7 @@ class APITest extends APIBase
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
 			if (!$test->unexecute())
-			{
 				Session::get()->set_error_assoc("Test Unexecution", Test::errors_unset());
-			}
 			else
 			{
 				Session::get()->set_result_assoc($test->json_assoc());
