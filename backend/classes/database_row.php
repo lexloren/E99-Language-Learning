@@ -195,9 +195,21 @@ class DatabaseRow extends ErrorReporter
 		return !!Session::get() && $this->user_is_owner(Session::get()->get_user());
 	}
 	
+	protected function get_container()
+	{
+		return null;
+	}
+	
+	public function user_can_see($user)
+	{
+		return $this->user_can_read($user);
+	}
 	public function user_can_read($user)
 	{
-		return $this->user_can_write($user);
+		return $this->user_can_write($user) ||
+			($this->get_container()
+				&& $this->get_container()->user_can_read($user)
+				&& $this->get_container()->user_can_execute($user));
 	}
 	public function user_can_write($user)
 	{
@@ -205,9 +217,13 @@ class DatabaseRow extends ErrorReporter
 	}
 	public function user_can_execute($user)
 	{
-		return null;
+		return false;
 	}
 	
+	public function session_user_can_see()
+	{
+		return !!Session::get() && $this->user_can_see(Session::get()->get_user());
+	}
 	public function session_user_can_read()
 	{
 		return !!Session::get() && $this->user_can_read(Session::get()->get_user());
@@ -233,7 +249,7 @@ class DatabaseRow extends ErrorReporter
 	
 	protected function privacy()
 	{
-		return $this->session_user_can_write() ? false : !$this->session_user_can_read();
+		return $this->session_user_can_see();
 	}
 	
 	protected function privacy_mask($array, $exceptions = array (), $privacy = null)

@@ -5,14 +5,14 @@ require_once "./backend/classes.php";
 
 class CourseComponent extends DatabaseRow
 {
-	public function get_course()
+	protected function get_container()
 	{
 		return null;
 	}
 	
 	public function get_owner()
 	{
-		return !!($course = $this->get_course()) ? $course->get_owner() : null;
+		return !!($container = $this->get_container()) ? $container->get_owner() : null;
 	}
 	
 	public function get_timeframe()
@@ -22,7 +22,15 @@ class CourseComponent extends DatabaseRow
 	
 	public function is_current()
 	{
-		return !$this->get_timeframe() || $this->get_timeframe()->is_current();
+		return (!$this->get_timeframe() || $this->get_timeframe()->is_current())
+			&& (!$this->get_container() || $this->get_container()->is_current());
+	}
+	
+	public function get_course()
+	{
+		return $this->get_container()
+			? $this->get_container()->get_course()
+			: null;
 	}
 	
 	public function get_course_id()
@@ -56,14 +64,40 @@ class CourseComponent extends DatabaseRow
 		return !!Session::get() && $this->user_is_student(Session::get()->get_user());
 	}
 	
-	public function user_can_write($user)
+	public function researchers()
 	{
-		return !!($course = $this->get_course()) ? $course->user_can_write($user) : false;
+		return !!($course = $this->get_course()) ? $course->researchers() : array ();
+	}
+	public function user_is_researcher($user)
+	{
+		return !!($course = $this->get_course()) ? $course->user_is_researcher($user) : false;
+	}
+	public function session_user_is_researcher()
+	{
+		return !!Session::get() && $this->user_is_researcher(Session::get()->get_user());
 	}
 	
-	public function user_can_read($user)
+	public function user_can_write($user)
 	{
-		return !!($course = $this->get_course()) ? $course->user_can_read($user) : false;
+		return !!($container = $this->get_container())
+			? $container->user_can_write($user)
+			: false;
+	}
+	
+	/*public function user_can_read($user)
+	{
+		return !!($container = $this->get_container())
+			? $container->user_can_read($user) && $container->user_can_execute($user)
+			: false;
+	}*/
+	
+	public function user_can_execute($user)
+	{
+		return !!($container = $this->get_container())
+			? ($container->user_can_read($user)
+				&& $container->user_can_execute($user)
+				&& $this->is_current())
+			: false;
 	}
 	
 	protected $message;
@@ -84,19 +118,6 @@ class CourseComponent extends DatabaseRow
 		}
 		$instance->message = $message;
 		return $instance;
-	}
-	
-	protected function privacy()
-	{
-		if (!$this->session_user_can_write()
-				&& ($this->session_user_can_read() && !$this->is_current()))
-		{
-			return true;
-		}
-		else
-		{
-			return parent::privacy();
-		}
 	}
 }
 

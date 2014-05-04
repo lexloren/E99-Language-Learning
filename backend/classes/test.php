@@ -103,6 +103,10 @@ class Test extends CourseComponent
 	{
 		return Unit::select_by_id($this->get_unit_id());
 	}
+	public function get_container()
+	{
+		return $this->get_unit();
+	}
 	
 	public function get_course()
 	{
@@ -701,18 +705,6 @@ class Test extends CourseComponent
 			: null;
 	}
 	
-	public function user_can_execute($user)
-	{
-		if (!($course = $this->get_course()))
-		{
-			return static::errors_push("Failed to get course for test where test_id = " . $this->get_test_id() . ".");
-		}
-		
-		return ($course->user_is_student($user)
-				&& (!$this->get_timeframe()
-					|| $this->get_timeframe()->is_current()));
-	}
-	
 	public function execute_for_session_user()
 	{
 		if ($this->session_user_can_execute())
@@ -834,6 +826,18 @@ class Test extends CourseComponent
 		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user);
+	}
+	
+	public function user_can_see($user)
+	{
+		return $this->user_can_read($user)
+			|| ($this->get_container()->user_can_execute($user)
+				&& $this->user_is_student($user));
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -849,8 +853,8 @@ class Test extends CourseComponent
 			"timer" => $this->get_timer(),
 			"gradesDisclosed" => !!$this->get_disclosed(),
 			"entriesCount" => $this->entries_count(),
-			"sittingsCount" => $this->sittings_count(),
-			"patternsCount" => $this->patterns_count(),
+			"sittingsCount" => $this->session_user_can_read() ? $this->sittings_count() : null,
+			"patternsCount" => $this->session_user_can_read() ? $this->patterns_count() : null,
 			"message" => $this->get_message()
 		), array ("testId", "timeframe"), $privacy);
 	}
@@ -861,9 +865,9 @@ class Test extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = $this->session_user_can_write() ? $this->entries_json_array() : null;
-		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
-		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
+		$assoc["entries"] = $this->session_user_can_read() ? $this->entries_json_array() : null;
+		$assoc["sittings"] = $this->session_user_can_read() ? self::json_array($this->sittings()) : null;
+		$assoc["patterns"] = $this->session_user_can_read() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

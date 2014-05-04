@@ -65,6 +65,10 @@ class Unit extends CourseComponent
 	{
 		return Course::select_by_id($this->get_course_id());
 	}
+	protected function get_container()
+	{
+		return $this->get_course();
+	}
 	
 	private $unit_id = null;
 	public function get_unit_id()

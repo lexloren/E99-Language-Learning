@@ -505,17 +505,23 @@ class Course extends DatabaseRow
 			: null;
 	}
 	
-	public function session_user_can_write()
+	public function user_can_write($user)
 	{
-		return $this->session_user_is_instructor()
-			|| $this->session_user_is_owner();
+		return $this->user_is_instructor($user)
+			|| $this->user_is_owner($user);
 	}
 	
-	public function session_user_can_read()
+	public function user_can_read($user)
 	{
-		return $this->session_user_can_write()
-			|| $this->session_user_is_student()
+		return $this->user_can_write($user)
+			|| $this->user_is_student($user)
 			|| $this->get_public();
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->user_can_write($user)
+			|| ($this->user_is_student($user) && $this->is_current());
 	}
 	
 	public function delete()
