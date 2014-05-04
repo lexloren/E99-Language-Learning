@@ -29,7 +29,7 @@ class Report extends ErrorReporter
 		if (!$progress_stat)
 			return null;
 
-		$report = self::create_course_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
+		$report = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
 		$report["name"] = $student_user->get_name_full();
 		
 		return $report;
@@ -62,7 +62,7 @@ class Report extends ErrorReporter
 		foreach($students as $student)
 		{
 			$user_id = $student->get_user_id();
-			$studentReport = self::create_course_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
+			$studentReport = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
 			$studentReport["name"] = 2 == $permissions? "Student X" : $student->get_name_full();
 			array_push($studentPracticeReports, $studentReport);
 		}
@@ -76,7 +76,7 @@ class Report extends ErrorReporter
 		return $course_report;
 	}
 	
-	private static function create_course_report_for_student($course_id, $user_id, $progress_stat, $mode_id)
+	private static function create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id)
 	{
 		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course_id);
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
@@ -297,6 +297,89 @@ class Report extends ErrorReporter
 		}
 		
 		return $difficult_entries;
+	}
+	
+	public static function get_course_student_test_report($course_id, $user_id)
+	{
+		$session_user = Session::get()->get_user();
+		if (!$session_user)
+			return static::errors_push("Session user has not reauthenticated.");
+	
+		$course = Course::select_by_id($course_id);
+		if (!$course)
+			return static::errors_push("Invalid course id.");
+
+		$student_user = User::select_by_id($user_id);
+		if (!$student_user)
+			return static::errors_push("Invalid student id.");
+
+		$permissions = self::check_permissions($course, $session_user, $student_user);
+		
+		if (1 != $permissions)
+			return static::errors_push("Do not have access to this information.");
+	}
+	
+	public static function get_course_test_report($course_id)
+	{
+		$course = Course::select_by_id($course_id);
+		if (!$course)
+			return static::errors_push("Invalid course id.");
+		
+		$tests = $course->tests();
+		
+		$students = $course->students();
+		
+		/*
+		$entries_and_modes = array();
+		
+		foreach($tests as $test)
+		{
+			$time_frame = $test->get_timeframe();
+			if (!$time_frame->is_closed())
+				continue;
+				
+			$entries = $test->entries();
+			foreach($entries as $entry)
+			{
+				$mode = $entry->get_entry_mode();
+				$entry_and_mode = array();
+				$entry_and_mode["entry"] = $entry;
+				$entry_and_mode["mode"] = $mode;
+				$array_push($entries_and_modes, $entry_and_mode);
+			}
+		}*/
+		
+		$studentReports = array();
+		foreach($students as $student)
+		{
+			$studentReport = array();
+			foreach($tests as $test)
+			{
+				$time_frame = $test->get_timeframe();
+				if (!$time_frame->is_closed())
+					continue;
+				
+				$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
+				if (null == $sitting)
+					continue;
+				
+				$responses = $sitting->responses();
+				foreach($responses as $resonse)
+				{
+					$entryReport = array();
+					$pattern = $resonse->get_pattern();
+					$user_entry_id = $pattern->get_entry_id();
+					$entry = UserEntry::select($user_entry_id);
+					$entryReport["entry"] = $entry;
+					$entryReport["score"] = $pattern->get_score();
+					$entryReport["mode"] = $pattern->get_mode();
+				}
+				
+				array_push($studentReport, $entryReport);
+			}
+			
+			array_push($studentReports, $studentReport);
+		}
 	}
 }
 
