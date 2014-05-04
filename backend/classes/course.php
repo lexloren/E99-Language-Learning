@@ -241,11 +241,11 @@ class Course extends DatabaseRow
 	}
 	
 	private $name = null;
-	public function get_course_name()
+	public function get_name()
 	{
 		return $this->name;
 	}
-	public function set_course_name($name)
+	public function set_name($name)
 	{
 		if (!self::update_this($this, "courses", array ("name" => $name), "course_id", $this->get_course_id()))
 		{
@@ -706,7 +706,7 @@ class Course extends DatabaseRow
 	{
 		return $this->privacy_mask(array (
 			"courseId" => $this->get_course_id(),
-			"name" => $this->get_course_name(),
+			"name" => $this->get_name(),
 			"password" => $this->session_user_can_write() ? $this->get_password() : null,
 			"languageKnown" => Language::select_by_id($this->get_lang_id_0())->json_assoc(),
 			"languageUnknown" => Language::select_by_id($this->get_lang_id_1())->json_assoc(),
@@ -738,6 +738,63 @@ class Course extends DatabaseRow
 		$assoc["tests"] = self::json_array($this->tests(!$this->session_user_can_write()));
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
+	}
+	
+	public static function csv_columns_array()
+	{
+		return array (
+			"courseId",
+			"name",
+			"languageKnown",
+			"languageUnknown",
+			"instructorsCount",
+			"studentsCount",
+			"researchersCount",
+			"unitsCount",
+			"listsCount",
+			"testsCount",
+			"testsMeanSecondsPerEntry",
+			"sittingsMeanPerformance"
+		);
+	}
+	
+	public function csv_row_array()
+	{
+		$tests_mean_seconds_per_entry = 0.0;
+		$tests_total_entries_count = 0;
+		foreach ($this->tests() as $test)
+		{
+			$entries_count = $test->entries_count();
+			$tests_total_entries_count += $entries_count;
+			
+			$tests_mean_seconds_per_entry +=
+				floatval($entries_count) * $test->seconds_per_entry();
+		}
+		if (!$tests_total_entries_count) $tests_mean_seconds_per_entry = null;
+		else $tests_mean_seconds_per_entry /= floatval($tests_total_entries_count);
+		
+		$sittings_mean_performance = 0.0;
+		foreach ($this->sittings() as $sitting)
+		{
+			$score_json_assoc = $sitting->score_json_assoc();
+			$sittings_mean_performance += $score_json_assoc["scoreScaled"];
+		}
+		$sittings_mean_performance /= floatval($this->sittings_count());
+		
+		return array (
+			$this->get_course_id(),
+			$this->get_name(),
+			Language::select_by_id($this->get_lang_id_0())->get_lang_code(),
+			Language::select_by_id($this->get_lang_id_1())->get_lang_code(),
+			$this->instructors_count(),
+			$this->students_count(),
+			$this->researchers_count(),
+			$this->units_count(),
+			$this->lists_count(),
+			$this->tests_count(),
+			$tests_mean_seconds_per_entry,
+			$sittings_mean_performance
+		);
 	}
 }
 

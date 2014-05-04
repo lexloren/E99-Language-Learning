@@ -69,7 +69,7 @@ class Report extends ErrorReporter
 		
 		$course = Course::select_by_id($course_id);
 		
-		$course_report["courseName"] = $course->get_course_name();
+		$course_report["courseName"] = $course->get_name();
 		$course_report["studentPracticeReports"] = $studentPracticeReports;
 		$course_report["difficultEntries"] = self::create_difficult_entries_report($progress_stat);
 		

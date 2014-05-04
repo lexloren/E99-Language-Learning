@@ -84,6 +84,12 @@ class Response extends CourseComponent
 						$now,
 						$sitting->get_sitting_id()
 					));
+					
+					if (!!($error = Connection::query_error_clear()))
+					{
+						$error_message = "Failed to close test sitting: $error.";
+						return null;
+					}
 				}
 				
 				return Response::select_by_id($response_id);
@@ -96,7 +102,55 @@ class Response extends CourseComponent
 		return parent::select("course_unit_test_sitting_responses", "response_id", $response_id);
 	}
 	
+	public static function select_all_for_test_id($test_id)
+	{
+		$test_id = intval($test_id, 10);
+		$table = "course_unit_test_sitting_responses CROSS JOIN course_unit_test_sittings USING (sitting_id)";
+		
+		$result = Connection::query("SELECT * FROM $table WHERE test_id = $test_id");
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select all responses for test: $error.");
+		}
+		
+		$responses = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($responses, self::from_mysql_result_assoc($result_assoc));
+		}
+		
+		return $responses;
+	}
+	
+	public static function select_all_for_test_entry_id($test_entry_id)
+	{
+		$test_entry_id = intval($test_entry_id, 10);
+		$table = "course_unit_test_sitting_responses CROSS JOIN course_unit_test_entry_patterns USING (pattern_id)";
+		
+		$result = Connection::query("SELECT * FROM $table WHERE test_entry_id = $test_entry_id");
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to select all responses for test entry: $error.");
+		}
+		
+		$responses = array ();
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($responses, self::from_mysql_result_assoc($result_assoc));
+		}
+		
+		return $responses;
+	}
+	
 	/***    INSTANCE    ***/
+	
+	private $response_id = null;
+	public function get_response_id()
+	{
+		return $this->response_id;
+	}
 
 	private $sitting_id = null;
 	public function get_sitting_id()
@@ -212,7 +266,7 @@ class Response extends CourseComponent
 	{
 		if (!$user) return false;
 		
-		return $this->user_can_write() || $user->equals($this->get_user());
+		return $this->user_can_write($user) || $user->equals($this->get_user());
 	}
 	
 	public function delete()

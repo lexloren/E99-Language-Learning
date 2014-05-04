@@ -31,7 +31,7 @@ class ListTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user_obj);
 		$list = EntryList::insert("test_list");
 		$this->assertNotNull($list);
-		$this->assertEquals($list->get_list_name(), $name);
+		$this->assertEquals($list->get_name(), $name);
 	}
 	
 	public function test_select()
@@ -99,18 +99,18 @@ class ListTest extends PHPUnit_Framework_TestCase
 	{
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		$this->assertNotNull($list);
-		$this->assertEquals($list->get_list_name(), $this->db->list_names[0]);
-		$ret = $list->set_list_name("list_new_name");
+		$this->assertEquals($list->get_name(), $this->db->list_names[0]);
+		$ret = $list->set_name("list_new_name");
 		$this->assertNull($ret);
-		$this->assertEquals($list->get_list_name(), $this->db->list_names[0]);
+		$this->assertEquals($list->get_name(), $this->db->list_names[0]);
 		
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		$list = EntryList::select_by_id($this->db->list_ids[0]);
 		
-		$ret = $list->set_list_name("list_new_name");
+		$ret = $list->set_name("list_new_name");
 		$this->assertNotNull($ret);
-		$this->assertEquals($list->get_list_name(), "list_new_name");
+		$this->assertEquals($list->get_name(), "list_new_name");
 	}
 	
 	public function test_entries_add()

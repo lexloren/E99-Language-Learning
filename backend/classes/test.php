@@ -63,11 +63,11 @@ class Test extends CourseComponent
 	}
 	
 	private $name = null;
-	public function get_test_name()
+	public function get_name()
 	{
 		return $this->name;
 	}
-	public function set_test_name($name)
+	public function set_name($name)
 	{
 		if (strlen($name) === 0) $name = null;
 		if (!self::update_this($this, "course_unit_tests", array ("name" => $name), "test_id", $this->get_test_id()))
@@ -75,6 +75,22 @@ class Test extends CourseComponent
 			return null;
 		}
 		$this->name = $name;
+		return $this;
+	}
+	
+	private $disclosed = null;
+	public function get_disclosed()
+	{
+		return $this->disclosed;
+	}
+	public function set_disclosed($disclosed)
+	{
+		$disclosed = !!$disclosed ? 1 : 0;
+		if (!self::update_this($this, "course_unit_tests", array ("disclosed" => $disclosed), "test_id", $this->get_test_id()))
+		{
+			return null;
+		}
+		$this->disclosed = !!$disclosed;
 		return $this;
 	}
 	
@@ -640,13 +656,14 @@ class Test extends CourseComponent
 		return parent::set_this_message($this, $message, "course_unit_tests", "test_id", $this->get_test_id());
 	}
 	
-	private function __construct($test_id, $unit_id, $name = null, $open = null, $close = null, $timer = null, $message = null)
+	private function __construct($test_id, $unit_id, $name = null, $open = null, $close = null, $timer = null, $disclosed = null, $message = null)
 	{
 		$this->test_id = intval($test_id, 10);
 		$this->unit_id = intval($unit_id, 10);
 		$this->name = !!$name ? $name : null;
 		$this->timeframe = !!$open && !!$close ? new Timeframe($open, $close) : null;
-		$this->timer = intval($timer, 10);
+		$this->timer = intval($timer, 10) > 0 ? intval($timer, 10) : null;
+		$this->disclosed = !!$disclosed;
 		$this->message = !!$message && strlen($message) > 0 ? $message : null;
 		
 		self::register($this->test_id, $this);
@@ -661,6 +678,7 @@ class Test extends CourseComponent
 			"open",
 			"close",
 			"timer",
+			"disclosed",
 			"message"
 		);
 		
@@ -672,6 +690,7 @@ class Test extends CourseComponent
 				$result_assoc["open"],
 				$result_assoc["close"],
 				$result_assoc["timer"],
+				$result_assoc["disclosed"],
 				$result_assoc["message"]
 			)
 			: null;
@@ -751,6 +770,25 @@ class Test extends CourseComponent
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
+		$entry_assoc["scoreMean"] = 0.0;
+		$responses = Response::select_all_for_test_entry_id($test_entry_id);
+		if ($responses === null)
+		{
+			return static::errors_push("Test failed to get entry responses: " . Response::errors_unset());
+		}
+		
+		foreach ($responses as $response)
+		{
+			$entry_assoc["scoreMean"] += floatval($response->get_score());
+		}
+		if (count($responses)) $entry_assoc["scoreMean"] /= floatval(count($responses));
+		else $entry_assoc["scoreMean"] = null;
+		
+		$entry_assoc["scoreMeanScaled"] =
+			!!$this->entry_score_max($entry)
+				? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+				: 0.0;
+		
 		foreach ($entry_assoc["options"] as &$option)
 		{
 			unset($option["hiddenFromSessionUser"]);
@@ -772,6 +810,7 @@ class Test extends CourseComponent
 		foreach ($entries_by_number as $entry)
 		{
 			$entry_assoc = $this->entry_json_assoc($entry);
+			if (!$entry_assoc) return null;
 			array_push($json_array, $entry_assoc);
 		}
 		
@@ -785,14 +824,14 @@ class Test extends CourseComponent
 	
 	public function patterns_count()
 	{
-		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
+		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
 			"testId" => $this->get_test_id(),
-			"name" => $this->get_test_name(),
+			"name" => $this->get_name(),
 			"unitId" => $this->get_unit_id(),
 			"courseId" => $this->get_course_id(),
 			"timeframe" => !!$this->get_timeframe()
@@ -801,6 +840,7 @@ class Test extends CourseComponent
 					: null)
 				: null,
 			"timer" => $this->get_timer(),
+			"gradesDisclosed" => !!$this->get_disclosed(),
 			"entriesCount" => $this->entries_count(),
 			"sittingsCount" => $this->sittings_count(),
 			"patternsCount" => $this->patterns_count(),
@@ -814,11 +854,45 @@ class Test extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = $this->session_user_can_write() ? $this->entries_json_array() : null;
+		$entries_json_array = $this->entries_json_array();
+		if (!$entries_json_array) return null;
+		$assoc["entries"] = $this->session_user_can_write() ? $entries_json_array : null;
 		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
 		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
+	}
+	
+	public function seconds_per_entry()
+	{
+		return $this->get_timer() && $this->count_entries()
+			? floatval($this->get_timer()) / floatval($this->count_entries())
+			: null;
+	}
+	
+	public function entry_score_max($entry)
+	{
+		$entry_score_max = 0;
+		foreach (Pattern::select_all_for_test_entry_id($this->get_test_entry_id($entry)) as $pattern)
+		{
+			if ($pattern->get_mode() == $this->get_entry_mode($entry)
+				&& $pattern->get_score() > $entry_score_max)
+			{
+				$entry_score_max = $pattern->get_score();
+			}
+		}
+		
+		return $entry_score_max;
+	}
+	
+	public function score_max()
+	{
+		$test_score_max = 0;
+		foreach ($this->entries() as $entry)
+		{
+			$test_score_max += $this->entry_score_max($entry);
+		}
+		return $test_score_max;
 	}
 }
 

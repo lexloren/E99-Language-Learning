@@ -71,7 +71,11 @@ class APITest extends APIBase
 		{
 			if ($test->session_user_can_read())
 			{
-				Session::get()->set_result_assoc($test->json_assoc_detailed(false));
+				if (($result_assoc = $test->json_assoc_detailed(false)))
+				{
+					Session::get()->set_result_assoc($result_assoc);
+				}
+				else Session::get()->set_error_assoc("Test Selection", Test::errors_unset());
 			}
 			else Session::get()->set_error_assoc("Test Selection", "Session user cannot read test.");
 		}
@@ -128,7 +132,7 @@ class APITest extends APIBase
 						
 					if (isset($_POST["name"]))
 					{
-						$errors += !$test->set_test_name($_POST["name"]);
+						$errors += !$test->set_name($_POST["name"]);
 					}
 					
 					if (isset($_POST["message"]))
@@ -139,6 +143,11 @@ class APITest extends APIBase
 					if (isset($_POST["timer"]))
 					{
 						$errors += !$test->set_timer($_POST["timer"]);
+					}
+					
+					if (isset($_POST["disclosed"]))
+					{
+						$errors += !$test->set_disclosed(intval($_POST["disclosed"], 10));
 					}
 					
 					if (isset($_POST["open"]) && isset($_POST["close"]))
@@ -477,15 +486,26 @@ class APITest extends APIBase
 					
 					if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
 					{
-						if (!Response::insert($_POST["test_entry_id"], $_POST["contents"])) return null;
+						if (!Response::insert($_POST["test_entry_id"], $_POST["contents"]))
+						{
+							return null;
+						}
+						else $did_respond = true;
 					}
 					
-					if (!($next_json_assoc = $sitting->next_json_assoc())) return null;
+					if (!($next_json_assoc = $sitting->next_json_assoc()))
+					{
+						if ($did_respond)
+						{
+							$next_json_assoc = "Session user has finished the test.";
+						}
+						else return null;
+					}
 					
 					return $next_json_assoc;
 				}
 			))) Session::get()->set_result_assoc($result);
-			else Session::get()->set_error_assoc("Test Execution", Test::errors_unset());
+			else Session::get()->set_error_assoc("Test Execution", "Test Errors: " . Test::errors_unset() . " Response Errors: " . Response::errors_unset() . " Sitting Errors: " . Sitting::errors_unset());
 		}
 	}
 }

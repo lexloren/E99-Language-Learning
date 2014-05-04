@@ -47,7 +47,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		
 		$unit = Unit::insert($this->db->course_ids[0], $name);
 		$this->assertNotNull($unit);
-		$this->assertEquals($unit->get_unit_name(), $name);
+		$this->assertEquals($unit->get_name(), $name);
 	}
 	
 	public function test_unit_select()
@@ -60,7 +60,7 @@ class UnitTest extends PHPUnit_Framework_TestCase
 		
 		$unit_actual = Unit::select_by_id($unit_expect->get_unit_id());
 		$this->assertNotNull($unit_actual);
-		$this->assertEquals($unit_expect->get_unit_name(), $unit_actual->get_unit_name());
+		$this->assertEquals($unit_expect->get_name(), $unit_actual->get_name());
 		$this->assertEquals($unit_expect->get_number(), $unit_actual->get_number());
 		$this->assertEquals($unit_expect->get_course_id(), $unit_actual->get_course_id());
 		$this->assertEquals($unit_expect->get_course(), $unit_actual->get_course());
@@ -70,8 +70,8 @@ class UnitTest extends PHPUnit_Framework_TestCase
 
 	public function test_unit_set_attributes()
 	{
-		$this->unit->set_unit_name("new_name");
-		$this->assertEquals($this->unit->get_unit_name(), "new_name");
+		$this->unit->set_name("new_name");
+		$this->assertEquals($this->unit->get_name(), "new_name");
 
 		$open = 1397260800;
 		$close = 1399852800;

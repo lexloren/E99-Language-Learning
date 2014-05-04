@@ -32,7 +32,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$course = Course::insert(TestDB::$lang_code_1, TestDB::$lang_code_0, 'New Course1');
 		$this->assertNotNull($course);
 		$this->assertEquals($course->get_user_id(), $this->db->user_ids[0]);
-		$this->assertEquals($course->get_course_name(), 'New Course1');
+		$this->assertEquals($course->get_name(), 'New Course1');
 		$this->assertEquals($course->get_lang_id_0(), TestDB::$lang_id_1);
 		$this->assertEquals($course->get_lang_id_1(), TestDB::$lang_id_0);
 		
@@ -50,7 +50,7 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		$this->assertNotNull($course);
 		$this->assertEquals($course->get_user_id(), $this->db->user_ids[0]);
-		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
+		$this->assertEquals($course->get_name(), $this->db->course_names[0]);
 		$this->assertEquals($course->get_lang_id_0(), TestDB::$lang_id_0);
 		$this->assertEquals($course->get_lang_id_1(), TestDB::$lang_id_1);
 		$this->assertEquals($course->get_lang_code_0(), TestDB::$lang_code_0);
@@ -114,31 +114,31 @@ class CourseTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($lists[0]->get_list_id(), $this->db->list_ids[0]);
 	}
 	
-	public function test_set_course_name()
+	public function test_set_name()
 	{
 		$course = Course::select_by_id($this->db->course_ids[0]);
 		$this->assertNotNull($course);
 
 		//session user not set, it should fail
-		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
-		$ret = $course->set_course_name("new name of old course");
+		$this->assertEquals($course->get_name(), $this->db->course_names[0]);
+		$ret = $course->set_name("new name of old course");
 		$this->assertNull($ret);
 
 		//set session user
 		$user_obj = User::select_by_id($this->db->user_ids[0]);
 		Session::get()->set_user($user_obj);
 		
-		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
-		$course->set_course_name("new name of old course");
+		$this->assertEquals($course->get_name(), $this->db->course_names[0]);
+		$course->set_name("new name of old course");
 		
-		$this->assertEquals($course->get_course_name(), "new name of old course");
+		$this->assertEquals($course->get_name(), "new name of old course");
 		
 		Course::reset();
 
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$this->assertEquals($course->get_course_name(), "new name of old course");
-		$course->set_course_name($this->db->course_names[0]);
-		$this->assertEquals($course->get_course_name(), $this->db->course_names[0]);
+		$this->assertEquals($course->get_name(), "new name of old course");
+		$course->set_name($this->db->course_names[0]);
+		$this->assertEquals($course->get_name(), $this->db->course_names[0]);
 		
 		Course::reset();
 	}

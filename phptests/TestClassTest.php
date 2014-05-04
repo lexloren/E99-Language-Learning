@@ -48,7 +48,7 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($user_obj, $test->get_owner());
 		$this->assertNotNull($test);
 		$this->assertNotNull($test->get_test_id());
-		$this->assertEquals($test->get_test_name(), $name);
+		$this->assertEquals($test->get_name(), $name);
 		$this->assertEquals($test->get_unit_id(), $this->unit->get_unit_id());
 		$this->assertEquals($test->get_unit(), $this->unit);
 		$this->assertEquals($test->get_course(), $this->unit->get_course());

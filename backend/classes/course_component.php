@@ -56,14 +56,14 @@ class CourseComponent extends DatabaseRow
 		return !!Session::get() && $this->user_is_student(Session::get()->get_user());
 	}
 	
-	public function session_user_can_write()
+	public function user_can_write($user)
 	{
-		return !!($course = $this->get_course()) ? $course->session_user_can_write() : false;
+		return !!($course = $this->get_course()) ? $course->user_can_write($user) : false;
 	}
 	
-	public function session_user_can_read()
+	public function user_can_read($user)
 	{
-		return !!($course = $this->get_course()) ? $course->session_user_can_read() : false;
+		return !!($course = $this->get_course()) ? $course->user_can_read($user) : false;
 	}
 	
 	protected $message;

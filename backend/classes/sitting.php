@@ -119,6 +119,11 @@ class Sitting extends CourseComponent
 			$value = intval($value, 10);
 		}
 		
+		$result_assoc["scoreScaled"] =
+			$this->get_test()->score_max() > 0
+			? 100.0 * floatval($result_assoc["scoredTotal"]) / floatval($this->get_test()->score_max())
+			: 0.0;
+		
 		return $result_assoc;
 	}
 	
@@ -257,15 +262,16 @@ class Sitting extends CourseComponent
 		return $this->get_test()->user_can_execute($user)
 			&& $this->get_user()->equals($user)
 			&& $this->entries_remaining() > 0
-			&& time() - $this->get_timeframe()->get_open() <= $this->get_test()->get_timer();
+			&& (!$this->get_test()->get_timer()
+				|| time() - $this->get_timeframe()->get_open() <= $this->get_test()->get_timer());
 	}
 	
-	public function user_cannot_execute_reasons()
+	public function user_cannot_execute_reasons($user)
 	{
 		$reasons = array ();
 		if (!$this->get_test()->user_can_execute($user))
 		{
-			array_push($reasons, "because user cannot execute test");
+			array_push($reasons, "because test refuses execution");
 		}
 		if (!$this->get_user()->equals($user))
 		{
@@ -275,7 +281,8 @@ class Sitting extends CourseComponent
 		{
 			array_push($reasons, "because user has already responded to all test entries");
 		}
-		if (time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer())
+		if (!!$this->get_test()->get_timer()
+			&& time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer())
 		{
 			array_push($reasons, "because test time limit has elapsed");
 		}
@@ -287,7 +294,7 @@ class Sitting extends CourseComponent
 	{
 		if (!$this->session_user_can_execute())
 		{
-			return static::errors_push("Session user cannot execute test " . implode(" and ", $this->user_cannot_execute_reasons()) . ".");
+			return static::errors_push("Session user cannot execute test " . implode(" and ", $this->user_cannot_execute_reasons(Session::get()->get_user())) . ".");
 		}
 		
 		if (!count($entries_remaining = $this->entries_remaining()))
@@ -346,8 +353,14 @@ class Sitting extends CourseComponent
 		if (!$user) return false;
 		
 		return $this->user_can_write($user)
-			|| ($user->equals($this->get_user())
-				&& !$this->user_can_execute($this->get_user()));
+			|| ($this->get_user()->equals($user)
+				&& $this->get_test()->get_disclosed());
+	}
+	
+	public function session_user_can_read()
+	{
+		return !!Session::get()
+			&& $this->user_can_read(Session::get()->get_user());
 	}
 	
 	public function delete()
@@ -359,6 +372,12 @@ class Sitting extends CourseComponent
 	public function responses_count()
 	{
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+	}
+	
+	protected function privacy()
+	{
+		return !$this->session_user_can_write()
+			&& !$this->session_user_can_read();
 	}
 	
 	public function json_assoc($privacy = null)

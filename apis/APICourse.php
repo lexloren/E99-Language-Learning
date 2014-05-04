@@ -63,7 +63,7 @@ class APICourse extends APIBase
 					
 					if (isset($_POST["name"]))
 					{
-						$errors += !$course->set_course_name($_POST["name"]);
+						$errors += !$course->set_name($_POST["name"]);
 					}
 					
 					if (isset($_POST["message"]))
@@ -334,7 +334,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has enrolled you in " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;
@@ -376,7 +376,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has designated you as an instructor in " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;
@@ -408,7 +408,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $student->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $student->get_handle() . ",\n\nAn instructor has removed you as a student from " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;
@@ -440,7 +440,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $instructor->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $instructor->get_handle() . ",\n\nThe course owner has undesignated you as an instructor in " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;
@@ -483,7 +483,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has designated you as a researcher in " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;
@@ -515,7 +515,7 @@ class APICourse extends APIBase
 							{
 								$errors ++;
 							}
-							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_course_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_course_name() . ".\n\nYours,\nThe Xenogloss Team");
+							else Outbox::send($course, $researcher->get_email(), "Xenogloss: " . $course->get_name(), "Dear " . $researcher->get_handle() . ",\n\nThe course owner has undesignated you as a researcher in " . $course->get_name() . ".\n\nYours,\nThe Xenogloss Team");
 						}
 						
 						if ($errors) return null;

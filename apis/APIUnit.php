@@ -85,7 +85,7 @@ class APIUnit extends APIBase
 					
 					if (isset($_POST["name"]))
 					{
-						$errors += !$unit->set_unit_name($_POST["name"]);
+						$errors += !$unit->set_name($_POST["name"]);
 					}
 					
 					if (isset($_POST["num"]))

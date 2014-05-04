@@ -42,7 +42,7 @@ class APIList extends APIBase
 				
 					if (isset($_POST["name"]))
 					{
-						$errors += !$list->set_list_name($_POST["name"]);
+						$errors += !$list->set_name($_POST["name"]);
 					}
 					
 					if ($errors) return null;
