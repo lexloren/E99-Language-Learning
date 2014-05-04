@@ -506,7 +506,6 @@ class APITest extends APIBase
 						{
 							$next_json_assoc = "Session user has finished the test.";
 						}
-						else return null;
 					}
 					
 					return $next_json_assoc;

@@ -800,9 +800,8 @@ class Test extends CourseComponent
 	
 	public function entries_json_array()
 	{
-		if (!($entries_by_number = $this->entries_by_number()))
+		if (($entries_by_number = $this->entries_by_number()) === null)
 		{
-			echo static::errors_unset();
 			return null;
 		}
 		
@@ -854,9 +853,7 @@ class Test extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$entries_json_array = $this->entries_json_array();
-		if (!$entries_json_array) return null;
-		$assoc["entries"] = $this->session_user_can_write() ? $entries_json_array : null;
+		$assoc["entries"] = $this->session_user_can_write() ? $this->entries_json_array() : null;
 		$assoc["sittings"] = $this->session_user_can_write() ? self::json_array($this->sittings()) : null;
 		$assoc["patterns"] = $this->session_user_can_write() ? self::json_array($this->patterns()) : null;
 		
