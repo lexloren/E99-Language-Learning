@@ -1,5 +1,5 @@
 var test;
-var owner;
+var modevalues = new Array();
 
 $(document).ready(function(){
 	pageSetup();
@@ -22,6 +22,7 @@ $(document).ready(function(){
     $("#word-search").hide();
     $("#owner-search").hide();
     $("#multi-choice").hide();
+    getModes();
     getTestInfo();
 	}
 });
@@ -82,6 +83,26 @@ function getLangs(){
     });    
 }
 
+function getModes(){
+    $.getJSON('../../mode_enumerate.php')
+        .done(function(data){
+            authorize(data);
+            if(data.isError){
+                failureMessage("Test display could not be initialized.");
+            }
+            else{
+                $.each(data.result, function(i, item){           
+                    modevalues[i] = new Array();
+                    modevalues[i][0] = item.modeId;
+                    modevalues[i][1] = item.directionFrom + '/' + item.directionTo;
+                });
+            }
+    })
+    .fail(function(error) {
+        failureMessage('Something has gone wrong. Please refresh the page and try again.');
+    });    
+}
+
 function cancelUpdate(frm,tohide){
     $(frm).hide();
     $(tohide).show();
@@ -95,10 +116,20 @@ function getTestInfo(){
         function(data){
 		        authorize(data);
             if(data.isError){
-                failureMessage("Information for this test could not be retrieved.");
+                // temporary workaround
+                if(data.errorDescription == "Session user cannot read test."){
+                    $("#test-update").hide();
+                    $("#search-list").hide();
+                    $("#student-sittings").hide();
+                    $("#test-entries").hide();
+                    $("#question-block").hide();                  
+                    $("#testData").show();
+                    $("#loader").hide();
+                }
+                else
+                    failureMessage("Information for this test could not be retrieved.");
             }
             else{
-                owner = data.result.course.owner.userId;
                 if(data.result.name != null)
                     tname = data.result.name;
                 else
@@ -110,13 +141,16 @@ function getTestInfo(){
                     if(data.result.message != null){
                         $("#testdesc").val(data.result.message);
                     }
+                    if(data.result.timer != null){
+                        $("#timer").val(data.result.timer/60);
+                    }
                     if(data.result.timeframe != null){
                         if(data.result.timeframe.open != null){
-                            opendate = new Date(data.result.timeframe.open*1000);
+                            opendate = prettyDate(new Date(data.result.timeframe.open*1000));
                             $("#testopendate").val(opendate);
                         }
                         if(data.result.timeframe.close != null){
-                            closedate = new Date(data.result.timeframe.close*1000);
+                            closedate = prettyDate(new Date(data.result.timeframe.close*1000));
                             $("#testclosedate").val(closedate);
                         }
                     }
@@ -124,7 +158,14 @@ function getTestInfo(){
                         $('#entry-list').html("<em>This test currently has no entries.</em>");
                     }
                     else{
-                        $('#entry-list').append('<tbody>');
+                        entryHeader = '<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td>';
+                        entryHeader += '<td>Mode &nbsp; <span id="mode\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="bottom" title="Mode refers to the Question/Answer type.<br/>';
+                        for(num=0;num<modevalues.length;num++){
+                            entryHeader += modevalues[num][0]+': '+modevalues[num][1]+'<br />';
+                        }
+                        entryHeader += '"></span></td><td>Multiple Choice</td><td></td></tr></thead><tbody>';
+                        $('#entry-list').append(entryHeader);
+                        $('#mode-info').tooltip({html: true});
                         $.each(data.result.entries, function(i, item){
                             count = i + 1;
                             orderselect = "entryorder"+item.entryId;
@@ -142,12 +183,14 @@ function getTestInfo(){
                             }
                             entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update]</span></td>';
                             entryrow += '<td><select id='+modeselect+'>';
-                            for(num=0;num<=6;num++){
-                                if(num == item.mode)
-                                    selected = '<option selected="selected">';
+                            for(num=0;num<modevalues.length;num++){
+                                if(modevalues[num][0] == item.mode.modeId)
+                                    selected = '<option value="'+modevalues[num][0]+'" selected="selected">';
                                 else
-                                    selected = '<option>';
-                                entryrow += selected+num+'</option>';
+                                    selected = '<option value="'+modevalues[num][0]+'">';
+                                entryrow += selected;
+                                entryrow += modevalues[num][0];
+                                entryrow += '</option>';
                             }
                             entryrow += '</select> &nbsp; <span class="span-action" onclick="updateMode('+item.entryId+');">[Update]</span></td>';
                             entryrow += '<td><span class="glyphicon glyphicon-pencil span-action" onclick="showOptions('+item.entryId+');" title="Update multiple-choice options"></span></td>';
@@ -179,11 +222,15 @@ function getTestInfo(){
                       testintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4>';
                       $("#test-intro").html(testintro);  
                     }
+                    if(data.result.timer != null){
+                      timer = data.result.timer/60;
+                      $('#test-intro').append('<br /><em>You will have '+timer+' minutes to complete this test. Good luck!</em>');
+                    }
                     $("#test-update").hide();
                     $("#search-list").hide();
                     $("#student-sittings").hide();
                     $("#test-entries").hide();
-                    $("#question-block").hide();
+                    $("#question-block").hide();                  
                 }
                 $("#testData").show();
             }		
@@ -235,11 +282,20 @@ function saveUpdate(){
     var desc = $("#testdesc").val();
     var opendate = $("#testopendate").val();
     var closedate = $("#testclosedate").val();
+    var timer = $("#timer").val();
     
 	  if(testname == "" || desc == "" || opendate == "" || closedate == ""){
 		    failureMessage("Please provide test name, instructions, and open/close dates.");	
         $("html, body").animate({scrollTop:0}, "slow"); 
         return;
+    }
+    if(isNaN(timer) || timer == ""){
+		    failureMessage("Please provide a valid number for test timer.");	
+        $("html, body").animate({scrollTop:0}, "slow"); 
+        return;
+    }
+    else{
+        timer = timer * 60;
     }
 
     opendate = Date.parse(opendate)/1000;
@@ -254,7 +310,7 @@ function saveUpdate(){
 	  $("#loader").show();
 	  $("#testData").hide();
     $.post('../../test_update.php', 
-        { test_id: test, name: testname, open: opendate, close: closedate, message: desc } )
+        { test_id: test, name: testname, open: opendate, close: closedate, timer: timer, message: desc } )
         .done(function(data){
           	authorize(data);
             if(data.isError){
@@ -264,13 +320,14 @@ function saveUpdate(){
             else{
                 $("#testname").val(data.result.name);
                 $("#testdesc").val(data.result.message);
+                $("#timer").val(data.result.timer/60);
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open*1000);
+                        opendate = prettyDate(new Date(data.result.timeframe.open*1000));
                         $("#testopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close*1000);
+                        closedate = prettyDate(new Date(data.result.timeframe.close*1000));
                         $("#testclosedate").val(closedate);
                     }
                 }
@@ -341,9 +398,9 @@ function search_entry(page) {
                       else{
                           prevspan = '';
                       }
-                      modeselect = '<select id="deckmode"><option value="">Select a mode</options>';
-                      for(num=0;num<=6;num++)
-                          modeselect += '<option>'+num+'</option>';
+                      modeselect = '<select id="deckmode"><option value="">Select a mode (Question/Answer type)</options>';
+                      for(num=0;num<modevalues.length;num++)
+                          modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
                       modeselect += '</select> &nbsp;';
 			                $('#dictionary').append('<tr><td>'+prevspan+nextspan+'</td><td></td><td></td>' +
                                               '<td>'+modeselect+'<span class="span-action" onclick="addEntries();">[Add Selected Entries]</span></td></tr>');
@@ -461,7 +518,7 @@ function removeEntries(){
 }
 
 function updateMode(entry){
-    var modesel = $('#modeorder'+entry).find(":selected").text();
+    var modesel = $('#modeorder'+entry).find(":selected").val();
 	  $('#failure').hide();
 	  $('#success').hide();
     $("#entry-loader").show();
@@ -538,11 +595,12 @@ function randOrder(){
     return; 
 }
 
-function updateScore(pattern, entry){
+function updateChoice(pattern, entry){
 	  $('#failure').hide();
 	  $('#success').hide();
 
-    var newscore = $("#newscore").val();
+    var newscore = $("#newscore"+pattern).val();
+    var feedback = $("#feedback"+pattern).val();
 	  if(isNaN(newscore)){
 		    failureMessage("Please provide a valid score.");	
         $("html, body").animate({scrollTop:0}, "slow"); 
@@ -553,7 +611,7 @@ function updateScore(pattern, entry){
     $('#multi-choice').hide();
 
     $.post('../../test_entry_pattern_update.php', 
-        { pattern_id: pattern, score: newscore })
+        { pattern_id: pattern, score: newscore, message: feedback })
         .done(function(data){
           	authorize(data);
             if(data.isError){
@@ -649,12 +707,16 @@ function showOptions(id){
                       $("html, body").animate({scrollTop:0}, "slow"); 
                                   } 
                   else {
-                      if(data.result.length == 0)
+                      if(data.result.length <= 1)
                           $('#choice-note').html('This is not currently a multiple-choice question. Add additional choices to make the question multiple-choice.<br />');
-			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Score</td><td></td></tr></thead><tbody>');
+			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Note</td><td>Score</td><td></td></tr></thead><tbody>');
 			                $.each( data.result, function(i,item) {
+                          feedback = '';
+                          if(item.message != null)
+                              feedback = item.message;
 				                  $('#choice-list').append('<tr><td>'+item.contents+'</td>' + 
-                                                   '<td><input id="newscore" type="text" value="'+item.score+'"</input> &nbsp; <span class="span-action" onclick="updateScore('+item.patternId+','+id+');">[Update]</span></td>' +
+                                                   '<td><textarea class="form-control" id="feedback'+item.patternId+'" rows="2">'+feedback+'</textarea></td>' +
+                                                   '<td><input id="newscore'+item.patternId+'" type="text" value="'+item.score+'"</input> &nbsp; <span class="span-action" onclick="updateChoice('+item.patternId+','+id+');">[Update]</span></td>' +
                                                    '<td><span class="glyphicon glyphicon-trash span-action" onclick="deletePattern('+item.patternId+','+id+');" title="Delete this choice"></span></td></tr>');
                       });
 			                $('#choice-list').append('<tr><td></td><td></td><td></td></tr>');
@@ -697,7 +759,14 @@ function refreshEntries(div){
                 }
                 else{
                     $('#entry-list').html('');
-                    $('#entry-list').append('<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td><td>Mode &nbsp; <span id="mode-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="top" title="Mode refers to the Question/Answer type.<br/>0: Unknown Lang./Known Lang.<br/>1: Known Lang./Unknown Lang.<br/>2: Unknown Lang./Pronunciation<br/>3: Pronunciation/Known Lang.<br/>4: Pronunciation/Unknown Lang.<br/>5: Known Lang./Pronunciation<br/>6: Unknown Lang./Pronunciation"></span></td><td>Multiple Choice</td><td></td></tr></thead><tbody>');
+                    entryHeader = '<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td>';
+                    entryHeader += '<td>Mode &nbsp; <span id="mode\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="bottom" title="Mode refers to the Question/Answer type.<br/>';
+                    for(num=0;num<modevalues.length;num++){
+                        entryHeader += modevalues[num][0]+': '+modevalues[num][1]+'<br />';
+                    }
+                    entryHeader += '"></span></td><td>Multiple Choice</td><td></td></tr></thead><tbody>';
+                    $('#entry-list').append(entryHeader);
+                    $('#mode-info').tooltip({html: true});
                     $.each(data.result, function(i, item){
                         count = i + 1;
                         orderselect = "entryorder"+item.entryId;
@@ -717,12 +786,12 @@ function refreshEntries(div){
                         }
                         entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update]</span></td>';
                         entryrow += '<td><select id='+modeselect+'>';
-                        for(num=0;num<=6;num++){
-                            if(num == item.mode)
-                                selected = '<option selected="selected">';
+                        for(num=0;num<modevalues.length;num++){
+                            if(modevalues[num][0] == item.mode.modeId)
+                                selected = '<option value="'+modevalues[num][0]+'" selected="selected">';
                             else
-                                selected = '<option>';
-                            entryrow += selected+num+'</option>';
+                                selected = '<option values="'+modevalues[num][0]+'">';
+                            entryrow += selected+modevalues[num][0]+'</option>';
                         }
                         entryrow += '</select> &nbsp; <span class="span-action" onclick="updateMode('+item.entryId+');">[Update]</span></td>';
                         entryrow += '<td><span class="glyphicon glyphicon-pencil span-action" onclick="showOptions('+item.entryId+');" title="Update multiple-choice options"></span></td>';
@@ -754,9 +823,7 @@ function myDecks() {
 	  $("#deck-loader").show();
     $('#searchHeader').html('');
 	  $('#searchResults').html('');
-	  var user_ids = owner;
-	  $.getJSON( '../../list_find.php', 
-               { user_ids : owner }, 
+	  $.getJSON( '../../user_lists.php', 
                function( data ) {
 		              authorize(data);
 		              if (data.isError === true || data.result == null) {
@@ -775,9 +842,9 @@ function myDecks() {
                                                      '<td>'+item.entriesCount+'</td>' +
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+'>&nbsp; Add</label></td></tr>');
                       });
-                      modeselect = '<select id="deckmode"><option value="">Select a mode</options>';
-                      for(num=0;num<=6;num++)
-                          modeselect += '<option>'+num+'</option>';
+                      modeselect = '<select id="deckmode"><option value="">Select a mode (Question/Answer type)</options>';
+                      for(num=0;num<modevalues.length;num++)
+                          modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
                       modeselect += '</select> &nbsp;';
 			                $('#searchResults').append('<tr><td></td><td></td><td>'+modeselect+'<span class="span-action" onclick="addLists();">[Add Entries From Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
@@ -820,8 +887,8 @@ function searchOwner() {
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+'>&nbsp; Add</label></td></tr>');
                       });
                       modeselect = '<select id="deckmode"><option value="">Select a mode</options>';
-                      for(num=0;num<=6;num++)
-                          modeselect += '<option>'+num+'</option>';
+                      for(num=0;num<modevalues.length;num++)
+                          modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
                       modeselect += '</select> &nbsp;';
 			                $('#searchResults').append('<tr><td></td><td></td><td></td><td>'+modeselect+'<span class="span-action" onclick="addLists();">[Add Entries From Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
@@ -866,8 +933,8 @@ function searchWord() {
                                                      '<td><label class="select-entry-ids"><input type="checkbox" class="add_list_ids" name="add_list_ids" value='+this.listId+'>&nbsp; Add</label></td></tr>');
                       });
                       modeselect = '<select id="deckmode"><option value="">Select a mode</options>';
-                      for(num=0;num<=6;num++)
-                          modeselect += '<option>'+num+'</option>';
+                      for(num=0;num<modevalues.length;num++)
+                          modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
                       modeselect += '</select> &nbsp;';
 			                $('#searchResults').append('<tr><td></td><td></td><td></td><td>'+modeselect+'<span class="span-action" onclick="addLists();">[Add Entries From Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
@@ -1007,6 +1074,16 @@ function startTest(){
                 $("#answer-submit").click(function(){
                     submitAnswer(data.result.testEntryId);
                 });
+                if(data.result.options == null || data.result.options.length == 0){
+                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="Enter the translation"></textarea>');
+                }
+                else{
+                    optsradio = 'Select the answer:<br />';
+                    $.each( data.result.options, function(i,item) {
+                        optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
+                    });
+                    $("#test-answer").append(optsradio);
+                }
                 $("#question-block").show();
             }
             $("#test-loader").hide();
@@ -1019,23 +1096,26 @@ function startTest(){
 
 function submitAnswer(id){
     $("#test-loader").show();
-    answer = $("#test-answer").val().trim();
+    if($('#freeform-answer').length > 0) 
+        answer = $("#freeform-answer").val().trim();
+    else{
+        answer = $('input[name=radio-answer]:checked', '#test-answer').val();
+        if(answer == undefined)
+            answer = "";
+    }
     $('#question-block').hide();
-    $("#test-answer").val('');
+    $("#test-answer").html('');
     $.post('../../test_execute.php', 
         { test_id: test, test_entry_id: id, contents: answer } )
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                console.log(data.errorTitle);
-                console.log(data.errorDescription);
-                if(data.errorDescription == "Session user has already responded to all test entries."){
-                  successMessage("Test is complete and has been submitted.");                  
-                }
-                else{
-                    failureMessage("There was a problem obtaining the test data. Please refresh the page and try again.");
-                    $("html, body").animate({scrollTop:0}, "slow"); 
-                }
+                failureMessage("There was a problem obtaining the test data. Please refresh the page and try again.");
+                $("html, body").animate({scrollTop:0}, "slow"); 
+            }
+            else if(data.result == "Session user has finished the test."){
+                successMessage("Test is complete and has been submitted.");    
+                $("html, body").animate({scrollTop:0}, "slow"); 
             }
             else{
                 $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
@@ -1043,6 +1123,16 @@ function submitAnswer(id){
                 $("#answer-submit").click(function(){
                      submitAnswer(data.result.testEntryId);                   
                 });
+                if(data.result.options == null || data.result.options.length == 0){
+                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="Enter the translation"></textarea>');
+                }
+                else{
+                    optsradio = 'Select the answer:<br />';
+                    $.each( data.result.options, function(i,item) {
+                        optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
+                    });
+                    $("#test-answer").append(optsradio);
+                }
                 $("#question-block").show();
             }
             $("#test-loader").hide();
@@ -1100,8 +1190,7 @@ function clearTest(){
             failureMessage(errorMsg);
         }
         else{
-            rowid = '#sittingrow'+id;
-            $('#sitting-list').html('Sitting has been deleted.');
+            $('#sitting-list').html('All sittings have been deleted.');
             $('#sitting-loader').hide();
             $('#sitting-list').show();
         }

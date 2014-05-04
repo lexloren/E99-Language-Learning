@@ -1,5 +1,4 @@
 var unit;
-var owner;
 
 $(document).ready(function(){
 	pageSetup();
@@ -82,7 +81,6 @@ function getUnitInfo(){
                 failureMessage("Information for this unit could not be retrieved.");
             }
             else{
-                owner = data.result.course.owner.userId;
                 if(data.result.name != null)
                     uname = data.result.name;
                 else
@@ -96,11 +94,11 @@ function getUnitInfo(){
                     }
                     if(data.result.timeframe != null){
                         if(data.result.timeframe.open != null){
-                            opendate = new Date(data.result.timeframe.open*1000);
+                            opendate = prettyDate(new Date(data.result.timeframe.open*1000));
                             $("#unitopendate").val(opendate);
                         }
                         if(data.result.timeframe.close != null){
-                            closedate = new Date(data.result.timeframe.close*1000);
+                            closedate = prettyDate(new Date(data.result.timeframe.close*1000));
                             $("#unitclosedate").val(closedate);
                         }
                     }
@@ -248,11 +246,11 @@ function saveUpdate(){
                 $("#unitdesc").val(data.result.message);
                 if(data.result.timeframe != null){
                     if(data.result.timeframe.open != null){
-                        opendate = new Date(data.result.timeframe.open*1000);
+                        opendate = prettyDate(new Date(data.result.timeframe.open*1000));
                         $("#unitopendate").val(opendate);
                     }
                     if(data.result.timeframe.close != null){
-                        closedate = new Date(data.result.timeframe.close*1000);
+                        closedate = prettyDate(new Date(data.result.timeframe.close*1000));
                         $("#unitclosedate").val(closedate);
                     }
                 }
@@ -278,11 +276,20 @@ function verifyTestForm(){
     var desc = $("#testdesc").val();
     var opendate = $("#testopendate").val();
     var closedate = $("#testclosedate").val();
-    
+    var timer = $("#timer").val();
+  
 	  if(testname == "" || desc == "" || opendate == "" || closedate == ""){
 		    failureMessage("Please provide test name, instructions, and open/close dates.");	
         $("html, body").animate({scrollTop:0}, "slow"); 
         return;
+    }
+    if(isNaN(timer) || timer == ""){
+		    failureMessage("Please provide a valid number for test timer.");	
+        $("html, body").animate({scrollTop:0}, "slow"); 
+        return;
+    }
+    else{
+        timer = timer * 60;
     }
 
     opendate = Date.parse(opendate)/1000;
@@ -294,14 +301,14 @@ function verifyTestForm(){
         return;
     }
 
-    submitCreateTestForm(testname, desc, opendate, closedate);
+    submitCreateTestForm(testname, desc, opendate, closedate, timer);
 }
 
-function submitCreateTestForm(testname, desc, opendate, closedate){
+function submitCreateTestForm(testname, desc, opendate, closedate, timer){
 	  $('#failure').hide();
 	  $('#success').hide();
     $.post('../../test_insert.php', 
-        { unit_id: unit, name: testname, open: opendate, close: closedate, message: desc } )
+        { unit_id: unit, name: testname, open: opendate, close: closedate, timer: timer, message: desc } )
         .done(function(data){
           	authorize(data);
             if(data.isError){
@@ -345,6 +352,7 @@ function refreshTests(){
                     $('#tests').html("<em>This unit currently has no tests.</em>");
                 }
                 else{
+                    $('#tests').append('<tr><th>Name</th><th>Open Date</th><th>Close Date</th></tr>');         
                     $.each(data.result, function(i, item){
                         if(item.timeframe == null){
                             topen = "";
@@ -385,9 +393,7 @@ function myDecks() {
 	  $("#deck-loader").show();
     $('#searchHeader').html('');
 	  $('#searchResults').html('');
-	  var user_ids = owner;
-	  $.getJSON( '../../list_find.php', 
-               { user_ids : owner }, 
+	  $.getJSON( '../../user_lists.php', 
                function( data ) {
 		              authorize(data);
 		              if (data.isError === true || data.result == null) {
