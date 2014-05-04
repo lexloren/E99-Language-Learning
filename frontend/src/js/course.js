@@ -15,7 +15,8 @@ function initIndexPage() {
 	cleanupMessage();
 	$("#progress").show();
 	$("#addcourse").hide();
-	$("#course").show();
+	$("#course").hide();
+	$("#search").hide();
 	
 	$.getJSON("../../user_select.php", function(data){
         if(data.isError){
@@ -25,14 +26,15 @@ function initIndexPage() {
         }
         else{
 			try {
-			/** Begin Populate the Profile*/
-			populateProfileTab(data);
-			/** Write Course Information*/
-			populateMyCourseTab(data,"#course");
-			/** Write My List Information*/
-			populateMyListTab(data,"#list");
-			}
-			
+				$("#course").show();
+				$("#search").show();
+				/** Begin Populate the Profile*/
+				populateProfileTab(data);
+				/** Write Course Information*/
+				populateMyCourseTab(data,"#course");
+				/** Write My List Information*/
+				populateMyListTab(data,"#list");
+			}		
 			finally {
 				$("#progress").hide();
 			}
@@ -51,8 +53,50 @@ function populateProfileTab(data) {
 	$("#inputEmail").val(data.result.email);
 	$("#inputNameGiven").val(data.result.nameGiven);
 	$("#inputFamilyName").val(data.result.nameFamily);
-	$.each( data.result.languages, function() {
-		var langCode = this.code;
+	
+	var langCode ="en";
+	var langYears ="0";
+	for(var x=0; x<data.result.languageYears.length; x++)
+	{
+        if (typeof data.result.languageYears[x].en != "undefined")
+		{
+            langCode ="en";
+			langYears = data.result.languageYears[x].en;
+		} 
+		else if (typeof data.result.languageYears[x].cn != "undefined")
+		{
+            langCode ="cn";
+			langYears = data.result.languageYears[x].cn;
+		} else if (typeof data.result.languageYears[x].jp != "undefined")
+		{
+            langCode ="jp";
+			langYears = data.result.languageYears[x].jp;
+		} 
+		if ($("#lang_" + langCode +"_year")) {
+			$("#lang_" + langCode +"_year").val(langYears);
+		}
+	}
+	var proCourseHTML= "";
+	if (data.result.coursesInstructedCount > 0) 
+	{
+		proCourseHTML = proCourseHTML +"<a href=\"#\">Courses Owned <span class=\"badge\">" + data.result.coursesInstructedCount +"</span></a><br/>";
+	}
+	if (data.result.coursesStudiedCount > 0) 
+	{
+		proCourseHTML = proCourseHTML +"<a href=\"#\">Course Studying<span class=\"badge\">" + data.result.coursesStudiedCount +"</span></a><br/>";
+	}
+	if (data.result.coursesResearchedCount > 0) 
+	{
+		proCourseHTML = proCourseHTML +"<a href=\"#\">Researching Course  <span class=\"badge\">" + data.result.coursesResearchedCount +"</span></a><br/>";
+	}
+	if (data.result.listsCount > 0) 
+	{
+		proCourseHTML = proCourseHTML +"<a href=\"#\">Lists Owned<span class=\"badge\">" + data.result.listsCount +"</span></a><br/>";
+	}
+	$("#profilecourse").html(proCourseHTML);
+ /*
+	$.each( data.result.languageYears, function() {
+		var langCode = this.hasOwnProperty("en");
 		var langDesc = this.names.en;
 		if (this.names.cn) {
 			langDesc = langDesc + " - " + this.names.cn;
@@ -65,7 +109,7 @@ function populateProfileTab(data) {
 			$("#lang_" + langCode +"_init").val("Y");
 			$("#lang_" + langCode +"_desc").html(langDesc);
 		}
-	});
+	});*/
 }
 /**Populate the My Course Tab */
 function populateMyCourseTab(data, divID) {
@@ -73,7 +117,7 @@ function populateMyCourseTab(data, divID) {
 	try
 	{
 		if (data.result.coursesOwned.length >0) {
-			courseHTML = courseHTML + '<div class="panel panel-success"><div class="panel-heading">Courses Owned</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Known Language</th><th>Learning</th></tr></thead>';
+			courseHTML = courseHTML + '<div class="panel panel-success"><div class="panel-heading">Courses Owned</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Dates</th><th>Known Language</th><th>Learning</th></tr></thead>';
 		}
 		$.each( data.result.coursesOwned, function() {
 			courseHTML = courseHTML + '<tr><td>' + this.courseId +'</td><td><a href="course.html?courseid=' + this.courseId +'">' + this.name +'</a>';
@@ -81,6 +125,13 @@ function populateMyCourseTab(data, divID) {
 				courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
 			}
 			courseHTML = courseHTML + '</td>';
+			if (this.timeframe != null) {
+				courseHTML =  courseHTML + '<td>'+ displayDate(this.timeframe.open) + '<br/>-<br/>' + displayDate(this.timeframe.close) + '</td>';
+			}
+			else {
+				courseHTML =  courseHTML + '<td> not set</td>';
+			}
+				
 			courseHTML =  courseHTML + '<td>'+ this.languageKnown.names.en;
 			if (this.languageKnown.names.cn) {
 				courseHTML =  courseHTML + '<br/>' + this.languageKnown.names.cn;
@@ -104,7 +155,7 @@ function populateMyCourseTab(data, divID) {
 			courseHTML =courseHTML + '</table></div></div>';
 		}
 		if ( data.result.coursesStudied.length >0) {
-			courseHTML = courseHTML + '<div class="panel panel-primary"><div class="panel-heading">Courses Enrolled</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Known Language</th><th>Learning</th></tr></thead>';
+			courseHTML = courseHTML + '<div class="panel panel-primary"><div class="panel-heading">Courses Enrolled</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Dates</th><th>Known Language</th><th>Learning</th></tr></thead>';
 		}
 		$.each( data.result.coursesStudied, function() {
 			courseHTML = courseHTML + '<tr><td>' + this.courseId +'</td><td><a href="course.html?courseid=' + this.courseId +'">' + this.name +'</a>';
@@ -113,6 +164,14 @@ function populateMyCourseTab(data, divID) {
 			}
 			
 			courseHTML = courseHTML + '</td>';
+			if (this.timeframe != null) {
+				courseHTML =  courseHTML + '<td>'+ displayDate(this.timeframe.open) + '<br/>-<br/>' + displayDate(this.timeframe.close) + '</td>';
+			}
+			else {
+				courseHTML =  courseHTML + '<td> not set</td>';
+			}
+				
+				
 			courseHTML =  courseHTML + '<td>'+ this.languageKnown.names.en;
 			if (this.languageKnown.names.cn) {
 				courseHTML =  courseHTML + '<br/>' + this.languageKnown.names.cn;
@@ -122,6 +181,7 @@ function populateMyCourseTab(data, divID) {
 			}
 			courseHTML = courseHTML + '</td>';
 			
+					
 			courseHTML =  courseHTML + '<td>'+ this.languageUnknown.names.en;
 			if (this.languageUnknown.names.cn) {
 				courseHTML =  courseHTML + '<br/>' + this.languageUnknown.names.cn;
@@ -149,7 +209,7 @@ function populateCourseSearchResults(data, divID) {
 	try
 	{
 		if (data.result.length >0) {
-			courseHTML ='<div class="panel panel-info"><div class="panel-heading">Search Results</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Known Language</th><th>Learning</th></tr></thead>';
+			courseHTML ='<div class="panel panel-info"><div class="panel-heading">Search Results</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Dates</th><th>Known Language</th><th>Learning</th></tr></thead>';
 		}
 		$.each( data.result, function() {
 			courseHTML = courseHTML + '<tr><td>' + this.courseId +'</td><td>';
@@ -164,6 +224,13 @@ function populateCourseSearchResults(data, divID) {
 			}
 			
 			courseHTML = courseHTML + '</td>';
+			if (this.timeframe != null) {
+				courseHTML =  courseHTML + '<td>'+ displayDate(this.timeframe.open) + '<br/>-<br/>' + displayDate(this.timeframe.close) + '</td>';
+			}
+			else {
+				courseHTML =  courseHTML + '<td> not set</td>';
+			}
+			
 			courseHTML =  courseHTML + '<td>'+ this.languageKnown.names.en;
 			if (this.languageKnown.names.cn) {
 				courseHTML =  courseHTML + '<br/>' + this.languageKnown.names.cn;
@@ -353,14 +420,29 @@ function updateProfile() {
 	var inputEmail = $("#inputEmail").val();
     var nameGiven = $("#inputNameGiven").val();
 	var nameFamily = $("#inputFamilyName").val();
-
+	var langsExp ="";
+	
     if(inputEmail == "" ||  nameGiven == "" || nameFamily ==""){
         $("#failure").html("Please enter email address, desired username, and name.");
         return;
     }
 	
+	if ($("#lang_en_year").val() !="") 
+	{
+		langsExp =langsExp + "en " + $("#lang_en_year").val() + ",";
+	}
+	
+	if ($("#lang_cn_year").val() !="") 
+	{
+		langsExp =langsExp + "cn " + $("#lang_cn_year").val() + ",";
+	}
+	if ($("#lang_jp_year").val() !="") 
+	{
+		langsExp =langsExp + "jp " + $("#lang_jp_year").val() + ",";
+	}
+	
     $.post('../../user_update.php', 
-        { name_given: nameGiven, email: inputEmail, name_family: nameFamily })
+        { name_given: nameGiven, email: inputEmail, name_family: nameFamily, langs:langsExp })
         .done(function(data){
             if(data.isError){
                 $("#failure").html("Your account could not be updated: " + data.errorDescription);
@@ -545,7 +627,7 @@ function displayCourses(sourceDiv, scriptAddress){
 					courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
 				}
 				if (this.timeframe != null) {
-					courseHTML = courseHTML +'</td><td>' + this.timeframe + '</td>';
+					courseHTML = courseHTML +'</td><td>' + displayDate(this.timeframe.open) + ' -' + displayDate(this.timeframe.close) + '</td>';
 				} else {
 					courseHTML = courseHTML +'</td><td> No Dates are set</td>';
 				}
@@ -575,7 +657,7 @@ function displayEditCourseForm() {
          $("#failure").show();
         return;
     }
-
+	
 	$("#progress").show();
 	
 	$.getJSON('../../course_select.php', 
@@ -588,21 +670,37 @@ function displayEditCourseForm() {
             }
             else{
 				try {
-					$("#coursenameH1").val(data.result.name);
-					$("#coursename").val(data.result.name);
-					$("#coursedetails").val(data.result.message);
-					$("#knownLang").val(data.result.languageKnown);
-					$("#unknownLang").val(data.result.languageUnknown);
+					var courseTitle="<h1>" + data.result.name +"</h1>";
+					if (data.result.timeframe != null) {
+						if (data.result.timeframe.isCurrent != null) {
+							if (data.result.timeframe.isCurrent) {
+								courseTitle = courseTitle + '          <div class="alert alert-success">Active <small>' + displayDate(data.result.timeframe.open) + '-' + displayDate(data.result.timeframe.close) +'</small></div>' ; 
+							}
+							else {
+								courseTitle = courseTitle + '          <div class="alert alert-danger">In active</div>' ; 
+							}
+						}
+					}
+					$("#coursenameH1").html(courseTitle);
 					
 					updateCourseInstructor(data);
 					updateCourseStudents(data);
 					var navHTML ='';
 					if (data.result.sessionUserPermissions.write ) {
-						navHTML ='<li ><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>';
+						$("#coursename").val(data.result.name);
+						$("#coursedetails").val(data.result.message);
+						$("#knownLang").val(data.result.languageKnown.code);
+						$("#unknownLang").val(data.result.languageUnknown.code);
+						
+						navHTML ='<li class="active"><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>';
 						$("#studentadmin").show();
+						$("#students").addClass("active in");
+						$("#createUnit").show();
 					} else {
-						navHTML ='<li ><a href="#progress" data-toggle="tab">My Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li>';
+						navHTML ='<li class="active"><a href="#courseprogress" data-toggle="tab">My Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li>						<li class=""><a href="#unit" data-toggle="tab">Units</a></li>	';
 						$("#studentadmin").hide();
+						$("#students").addClass("active");
+						$("#createUnit").hide();
 					}
 					$("#navtabs").html(navHTML);
 					createUnitTable(data,"#units")
@@ -731,22 +829,32 @@ function displayUnits(sourceDiv, courseID){
 function createUnitTable(data,sourceDiv)  {
 	var unitHTML ='';
 	if (data.result.units.length >0) {
-		unitHTML ='<br/><table class="table"><tr><th>Name</th><th>Timeframe</th><th>Lists</th><th>Tests</th><th>Delete</th></tr>';
+		unitHTML ='<br/><table class="table"><tr><th>Name</th><th>Timeframe</th><th>Lists</th><th>Tests</th>';
+		if (data.result.sessionUserPermissions.write) {
+			unitHTML = unitHTML + '<th>Delete</th>';
+		}
+		unitHTML = unitHTML + '</tr>';
 	}
 					
 					
 	$.each( data.result.units, function() {
 		unitHTML = unitHTML + '<tr><td><a href="unit.html?unitid=' + this.unitId + '">'+ this.name +'</a></td>';
 		unitHTML = unitHTML +'<td>' 
-		if (this.timeframe) {
+		if (this.timeframe != null) {
 			if (this.timeframe.isCurrent) {
-				unitHTML = unitHTML +   new Date(this.timeframe.open*1000) + '<br/> to <br/>' + new Date(this.timeframe.close*1000) ;
+				unitHTML = unitHTML +   displayDate(this.timeframe.open) + '<br/> to <br/>' + displayDate(this.timeframe.close);
 			}
 		}
 		unitHTML = unitHTML + '</td>';
-		unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unitid=' + this.unitId + '">Edit Unit</a></td>';
-		unitHTML = unitHTML +'<td>' + this.testsCount + ' tests <br/><a href="createtest.html?unitid=' + this.unitId + '">Add Test</a></td>';
-		unitHTML = unitHTML +'<td><span title="Delete this unit" onclick="removeUnit(' + this.unitId +');" class="glyphicon glyphicon-trash span-action"></span></td>';
+		unitHTML = unitHTML +'<td>' + this.listsCount + ' lists <br/><a href="unit.html?unitid=' + this.unitId + '">View Unit</a></td>';
+		if (this.testsCount) {
+			unitHTML = unitHTML +'<td>' + this.testsCount + ' tests </td>';
+		} else {
+			unitHTML = unitHTML +'<td>&nbsp;</td>';
+		}
+		if (data.result.sessionUserPermissions.write) {
+			unitHTML = unitHTML +'<td><span title="Delete this unit" onclick="removeUnit(' + this.unitId +');" class="glyphicon glyphicon-trash span-action"></span></td>';
+		}
 		unitHTML = unitHTML + '</tr>';
 	});
 	if (data.result.units.length >0) {
