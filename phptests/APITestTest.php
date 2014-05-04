@@ -250,15 +250,39 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$_SESSION["handle"] = $this->db->handles[0];
                 $unit_id = $this->db->course_unit_ids[0];
                 $test_id = $this->db->add_unit_test($unit_id);
-		$this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 5);
                 $_GET["test_id"] = $test_id;
+		$this->obj->entries();
+		$result = Session::get()->get_result_assoc();
+		$result_assoc = $result["result"];
+		$this->assertNull($result_assoc);
 
+		$this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 5);
 		$this->obj->entries();
 		$result = Session::get()->get_result_assoc();
 		$result_assoc = $result["result"];
 		$this->assertCount(5, $result_assoc);
 		$this->assertArrayHasKey("entryId", $result_assoc[0]);
 		$this->assertArrayHasKey("languages", $result_assoc[0]);
+
+		$_SESSION["handle"] = $this->db->handles[1];
+		$this->obj->entries();
+		$this->assertTrue(Session::get()->has_error());
+	}
+
+	public function test_entries_add()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+                $unit_id = $this->db->course_unit_ids[0];
+                $test_id = $this->db->add_unit_test($unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
+                $_POST["test_id"] = $test_id;
+		$_POST["entry_ids"] = implode(",", $entry_ids);
+		$this->obj->entries_add();
+		$this->assertFalse(Session::get()->has_error());
+		$result = Session::get()->get_result_assoc();
+                $result_assoc = $result["result"];
+		$this->assertCount(5, $result_assoc);
+		$this->assertContains($result_assoc[0]["entryId"], $entry_ids);
 	}
 }
 
