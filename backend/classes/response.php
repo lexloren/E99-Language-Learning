@@ -35,24 +35,18 @@ class Response extends CourseComponent
 					return null;
 				}
 				
-				if (count(($reasons = $sitting->user_cannot_respond_reasons())) > 0)
+				if (count(($reasons = $sitting->user_cannot_respond_reasons($session_user))) > 0)
 				{
 					$error_message = "$failure_message: Session user cannot execute test sitting " . implode(" and ", $reasons) . ".";
 					return null;
 				}
 				
-				$current_question = $sitting->next_json_assoc();
+				$entries_remaining = $sitting->entries_remaining();
+				$test_entry = $entries_remaining[0];
 				
-				if ($current_question["testEntryId"] !== $test_entry_id)
+				if ($test->get_test_entry_id_for_entry($test_entry) !== $test_entry_id)
 				{
-					$error_message = "$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because the response is out of order.";
-					return null;
-				}
-				
-				$test_entries = $test->entries();
-				if (!($test_entry = $test_entries[$test_entry_id]))
-				{
-					$error_message = "$failure_message: Test returned no entry for test_entry_id = $test_entry_id.";
+					$error_message = "$failure_message: Session user cannot respond to test_entry_id = $test_entry_id because that test_entry_id mismatches that of the current test entry for this test sitting.";
 					return null;
 				}
 				
@@ -70,7 +64,7 @@ class Response extends CourseComponent
 				
 				if (!!($error = Connection::query_error_clear()))
 				{
-					$error_message = "Failed to insert test sitting response: $error.";
+					$error_message = "$failure_message: $error.";
 					return null;
 				}
 				
@@ -78,7 +72,7 @@ class Response extends CourseComponent
 				
 				$sitting->uncache_entries_remaining();
 				
-				if (!($current_question["entriesRemainingCount"]))
+				if (!$sitting->entries_remaining())
 				{
 					Connection::query(sprintf("UPDATE course_unit_test_sittings SET stop = %d WHERE sitting_id = %d",
 						$now,

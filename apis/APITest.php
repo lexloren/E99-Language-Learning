@@ -347,11 +347,10 @@ class APITest extends APIBase
 						
 						foreach ($options as $option)
 						{
-							if (($pattern = Pattern::insert($test->get_test_id(), $entry->get_entry_id(), $option, true)))
+							if (!Pattern::insert($test->get_test_id(), $entry->get_entry_id(), $option, true))
 							{
-								$errors += !$pattern->set_prompt(true);
+								$errors ++;
 							}
-							else $errors ++;
 						}
 						
 						foreach ($test->entry_options($entry) as $option)
@@ -368,7 +367,7 @@ class APITest extends APIBase
 					return $test;
 				}
 			)) Session::get()->set_result_assoc($test->json_assoc());
-			else Session::get()->set_error_assoc("Test Modification", Test::errors_unset());
+			else Session::get()->set_error_assoc("Test Modification", self::errors_collect(array ("Test", "Pattern")));
 		}
 	}
 	
@@ -509,7 +508,6 @@ class APITest extends APIBase
 						{
 							return null;
 						}
-						else $did_respond = true;
 					}
 					
 					if (!($next_json_assoc = $sitting->next_json_assoc()))
@@ -520,15 +518,7 @@ class APITest extends APIBase
 					return $next_json_assoc;
 				}
 			))) Session::get()->set_result_assoc($result);
-			else
-			{
-				$errors = array ();
-				if (($more = Test::errors_unset())) array_push($errors, $more);
-				if (($more = Sitting::errors_unset())) array_push($errors, $more);
-				if (($more = Response::errors_unset())) array_push($errors, $more);
-				
-				Session::get()->set_error_assoc("Test Execution", implode(" ", $errors));
-			}
+			else Session::get()->set_error_assoc("Test Execution", self::errors_collect(array ("Test", "Sitting", "Response")));
 		}
 	}
 }

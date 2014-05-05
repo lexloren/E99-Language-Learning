@@ -348,7 +348,7 @@ class Test extends CourseComponent
 		return $entries[$test_entry_id];
 	}
 	
-	public function get_test_entry_id($entry)
+	public function get_test_entry_id_for_entry($entry)
 	{
 		return array_search($entry, $this->entries());
 	}
@@ -388,7 +388,7 @@ class Test extends CourseComponent
 			{
 				//  Insert into list_entries for $this->list_id and $entry->entry_id
 				//      If this entry already exists in the list, then ignore the error
-				Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
+				Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE mode = $mode",
 					$test->get_test_id(),
 					$entry->get_user_entry_id(),
 					$test->entries_count() + 1
@@ -528,7 +528,7 @@ class Test extends CourseComponent
 	
 	public function entry_options($entry)
 	{
-		if (($test_entry_id = $this->get_test_entry_id($entry)) < 0)
+		if (($test_entry_id = $this->get_test_entry_id_for_entry($entry)) < 0)
 		{
 			return static::errors_push("Test cannot get options for entry not already in test.");
 		}
@@ -872,7 +872,7 @@ class Test extends CourseComponent
 	public function entry_score_max($entry)
 	{
 		$entry_score_max = 0;
-		foreach (Pattern::select_all_for_test_entry_id($this->get_test_entry_id($entry)) as $pattern)
+		foreach (Pattern::select_all_for_test_entry_id($this->get_test_entry_id_for_entry($entry)) as $pattern)
 		{
 			if ($pattern->get_mode() == $this->get_entry_mode($entry)
 				&& $pattern->get_score() > $entry_score_max)

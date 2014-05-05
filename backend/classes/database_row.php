@@ -170,7 +170,7 @@ class DatabaseRow extends ErrorReporter
 		
 		if (!$instance->session_user_can_write())
 		{
-			return static::errors_push("$failure_message: Session user is not owner.", ErrorReporter::ERRCODE_PERMISSIONS);
+			return static::errors_push("$failure_message: Session user cannot write.", ErrorReporter::ERRCODE_PERMISSIONS);
 		}
 		
 		$id = intval($id, 10);
