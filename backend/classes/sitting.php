@@ -346,7 +346,7 @@ class Sitting extends CourseComponent
 		
 		return array (
 			"testEntryId" => $test_entry_id,
-			"mode" => Mode::select_by_id($mode),
+			"mode" => Mode::select_by_id($mode)->json_assoc(),
 			"entriesRemainingCount" => count($entries_remaining),
 			"prompt" => $mode === 1 ? $entry->get_word_0() : $entry->get_word_1(),
 			"options" => $options
