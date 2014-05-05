@@ -19,8 +19,6 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course($this->db->user_ids[0]);
 		$this->db->add_course_unit($this->db->course_ids[0]);
 		$this->unit_id = $this->db->course_unit_ids[0];
-                $this->test_id = $this->db->add_unit_test($this->unit_id);
-                $this->entry_ids = $this->db->add_dictionary_entries(5);
 
 		$session_mock = $this->getMock('Session', array('session_start', 'session_end', 'session_regenerate_id'));
 
@@ -56,12 +54,13 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$test_assoc = Session::get()->get_result_assoc();
 		$this->assertNotNull($test_assoc["result"]);
 		
-		$this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
+		$entry_ids = $this->db->add_dictionary_entries(5);
+		$this->db->add_list($this->db->user_ids[0], $entry_ids);
 		$list_ids = implode(",", $this->db->list_ids);
 		$_POST["list_ids"] = $list_ids;
 		$this->obj->insert();
-                $this->assertFalse(Session::get()->has_error());
                 $test_assoc = Session::get()->get_result_assoc();
+                $this->assertFalse(Session::get()->has_error());
                 $this->assertNotNull($test_assoc);
 
 		$_POST["list_ids"] = "27,40,95,103,".$list_ids;
@@ -94,7 +93,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_select()
 	{
 		//No handle
-		$test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
                 $_GET["test_id"] = $test_id;
                 $this->obj->select();
                 $this->assertTrue(Session::get()->has_error());
@@ -117,7 +116,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_delete()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
 		$_POST["test_id"] = $test_id;
 		$this->obj->delete();
 		$this->assertFalse(Session::get()->has_error());
@@ -136,7 +135,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_unexecute()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
 		$student_id = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
 		$sitting_id = $this->db->add_unit_test_sittings($test_id, $student_id);
 
@@ -156,7 +155,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_update()
 	{
                 $_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
                 $student_id = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
 
 		$new_name = "updated-name";
@@ -198,7 +197,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function _update_executed()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
                 $student_id = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
 		$this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 5);
 
@@ -215,7 +214,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_sittings_empty()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
 		$_GET["test_id"] = $test_id;
 
 		$this->obj->sittings();
@@ -226,7 +225,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_sittings()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
                 $_GET["test_id"] = $test_id;
                 $student_id = $this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[1]);
                 $sitting_id = $this->db->add_unit_test_sittings($test_id, $student_id);
@@ -240,7 +239,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_entries()
 	{
 		$_SESSION["handle"] = $this->db->handles[1];
-		$test_id = $this->test_id;
+		$test_id = $this->db->add_unit_test($this->unit_id);
 		$test = Test::select_by_id($test_id);
 		$_GET["test_id"] = $test_id;
 		$this->obj->entries();
@@ -268,8 +267,8 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_entries_add_remove()
 	{
 		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
-		$entry_ids = $this->entry_ids;
+		$test_id = $this->db->add_unit_test($this->unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
                 $_POST["test_id"] = $test_id;
 		$_POST["entry_ids"] = implode(",", $entry_ids);
 		$this->obj->entries_add();
@@ -316,8 +315,8 @@ class APITestTest extends PHPUnit_Framework_TestCase
 	public function test_entries_randomize()
 	{
                 $_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
-		$entry_ids = $this->entry_ids;
+		$test_id = $this->db->add_unit_test($this->unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
 		$_POST["test_id"] = $test_id;
 		$_POST["entry_ids"] = implode(",", $entry_ids);
                 $this->obj->entries_add();
@@ -339,8 +338,90 @@ class APITestTest extends PHPUnit_Framework_TestCase
                 $this->assertFalse(Session::get()->has_error());
 	}
 
-	public function test_entry_update()
+	public function test_entry_update_and_options()
 	{
+		$_SESSION["handle"] = $this->db->handles[0];
+                $test_id = $this->db->add_unit_test($this->unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
+                $_POST["test_id"] = $test_id;
+		$_POST["entry_id"] = $entry_ids[0];
+		$_POST["entry_ids"] = implode(",", $entry_ids);
+		$this->obj->entries_add();
+		$_POST["mode"] = 3; //update test.php to expose entry_mode
+		$this->obj->entry_update();
+		$this->assertFalse(Session::get()->has_error());
+		$result = Session::get()->get_result_assoc();
+                $result_assoc = $result["result"];
+		$old_pattern_count = $result_assoc["patternsCount"];
+
+		Session::get()->unset_result_assoc();
+		$_POST["options"] = "test-option,test-option1";
+		$this->obj->entry_update();
+		$result = Session::get()->get_result_assoc();
+                $this->assertFalse(Session::get()->has_error());
+                $result_assoc = $result["result"];
+		$this->assertEquals($old_pattern_count + 2, $result_assoc["patternsCount"]);
+
+		$_POST["number"] = 3; //update test.php to expose entry_number
+		$this->obj->entry_update();
+                $this->assertFalse(Session::get()->has_error());
+
+		$_GET["test_id"] = $test_id;
+		$_GET["entry_id"] = $entry_ids[0];
+		$this->obj->entry_options();
+		$result = Session::get()->get_result_assoc();
+		$this->assertFalse(Session::get()->has_error());
+                $result_assoc = $result["result"];
+		$this->assertCount(2, $result_assoc);
+
+		$_GET["entry_id"] = "847830555";
+		$this->obj->entry_options();
+		$this->assertTrue(Session::get()->has_error());
+	}
+
+	public function test_entry_options_add_remove()
+        {
+		$_SESSION["handle"] = $this->db->handles[0];
+                $test_id = $this->db->add_unit_test($this->unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
+                $_POST["test_id"] = $test_id;
+                $_POST["entry_id"] = $entry_ids[0];
+		$_POST["entry_ids"] = implode(",", $entry_ids);
+		$_POST["contents"] = "test-content";
+		$this->obj->entries_add();
+		$this->obj->entry_options_add();
+		$result = Session::get()->get_result_assoc();
+                $this->assertFalse(Session::get()->has_error());
+                $result_assoc = $result["result"];
+
+		$this->assertEquals($result_assoc["testId"], $test_id);
+		$this->assertEquals($result_assoc["entryId"], $entry_ids[0]);
+		$this->assertEquals($result_assoc["contents"], "test-content");
+
+		$pattern_id = $result_assoc["patternId"];
+		$this->obj->entry_options_remove();
+		$result = Session::get()->get_result_assoc();
+                $this->assertFalse(Session::get()->has_error());
+                $result_assoc = $result["result"];
+		$this->assertEquals($result_assoc["patternId"], $pattern_id);
+	}
+
+	public function _test_entry_pattern_update()
+	{
+		$_SESSION["handle"] = $this->db->handles[0];
+		$test_id = $this->db->add_unit_test($this->unit_id);
+		$entry_ids = $this->db->add_dictionary_entries(5);
+                $_POST["test_id"] = $test_id;
+                $_POST["entry_id"] = $entry_ids[0];
+                $_POST["entry_ids"] = implode(",", $entry_ids);
+                $_POST["contents"] = "test-content";
+                $this->obj->entries_add();
+
+		$_POST["score"] = 10;
+		$_POST["message"] = "test-message";
+		$this->obj->entry_pattern_update();
+                $result_assoc = $result["result"];
+		$this->assertFalse(Session::get()->has_error());
 		
 	}
 }
