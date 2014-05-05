@@ -57,9 +57,9 @@ class Sitting extends CourseComponent
 	
 	public static function select_by_test_id_user_id($test_id, $user_id)
 	{
-		$table = "course_unit_test_sittings";
+		$table = "course_unit_test_sittings CROSS JOIN course_students USING (student_id)";
 		
-		$result = Connection::query(sprintf("SELECT * FROM $table WHERE test_id = %d AND user_id = %d",
+		$result = Connection::query(sprintf("SELECT course_unit_test_sittings.* FROM $table WHERE test_id = %d AND user_id = %d",
 			($test_id = intval($test_id, 10)), ($user_id = intval($user_id, 10))
 		));
 		
