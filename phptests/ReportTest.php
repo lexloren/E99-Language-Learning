@@ -153,12 +153,35 @@ class ReportTest extends PHPUnit_Framework_TestCase
 	
 	public function test_get_course_test_report()
 	{
-		$test_id = $this->db->add_unit_test($this->db->course_unit_ids[0]);
+		//set researcher as session user
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
+		
+		$week = (7 * 24 * 60 * 60);
+		$time_now = time();
+		$open = $time_now - $week  * 2;
+		$close = $time_now - $week;
+
+		
+		$test_id = $this->db->add_unit_test($this->db->course_unit_ids[0], $open, $close);
+		$test_entry_ids = $this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 10);
 		$sitting_id = $this->db->add_unit_test_sittings($test_id, $this->student1);
-		//$this->db->add_unit_test_sitting_responses($sitting_id);
+		$sitting_id2 = $this->db->add_unit_test_sittings($test_id, $this->student2);
+		
+		$scores = array();
+		
+		for($i=0; $i<count($test_entry_ids); $i++)
+		{
+			$test_entry_id = $test_entry_ids[$i];
+			$scores[$test_entry_id] = ($i % 2 ) * 100;
+		}
+		
+		$this->db->add_unit_test_sitting_responses($sitting_id, $scores);
+		$this->db->add_unit_test_sitting_responses($sitting_id2, $scores);
+		
 		$report = Report::get_course_test_report($this->db->course_ids[0]);	
 		$this->assertNotNull($report);
 		//print_r($report);
+		//exit;
 	}
 }
 ?>
