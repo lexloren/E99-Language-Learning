@@ -116,8 +116,8 @@ function getTestInfo(){
         function(data){
 		        authorize(data);
             if(data.isError){
-                // temporary workaround
-                if(data.errorDescription == "Session user cannot read test."){
+                // temporary workaround for permissions
+                if(data.errorDescription == "Session user cannot select test."){
                     $("#test-update").hide();
                     $("#search-list").hide();
                     $("#student-sittings").hide();
@@ -129,6 +129,10 @@ function getTestInfo(){
                 else
                     failureMessage("Information for this test could not be retrieved.");
             }
+            // temporary workaround for permissions
+            else if(data.result.sessionUserPermissions.write != true && data.result.sessionUserPermissions.execute != true){
+                    failureMessage("Information for this test could not be retrieved.");
+            }
             else{
                 if(data.result.name != null)
                     tname = data.result.name;
@@ -136,7 +140,7 @@ function getTestInfo(){
                     tname = '';
                 testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+tname+'</h3>';
                 $("#test-header").html(testheader);
-                if(data.result.sessionUserPermissions.write == true){
+                if(data.result.sessionUserPermissions.read == true){
                     $("#testname").val(data.result.name);
                     if(data.result.message != null){
                         $("#testdesc").val(data.result.message);
@@ -217,7 +221,7 @@ function getTestInfo(){
                     $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
                     $("#test-sitting").hide();
                 }
-                else{
+                else if(data.result.sessionUserPermissions.execute == true){
                     if(data.result.message != null){
                       testintro = '<h4 class="form-signin-heading">'+data.result.message+'</h4>';
                       $("#test-intro").html(testintro);  
@@ -254,13 +258,7 @@ function deleteTest(){
         .done(function(data){
 		    authorize(data);
         if(data.isError){
-            var errorMsg = "Test could not be deleted: ";
-            if(data.errorTitle == "Test Selection"){
-                errorMsg += "Test does not exist.";
-            }
-            else if(data.errorTitle == "Test Deletion"){
-                errorMsg += "Please refresh the page and try again.";
-            }
+            var errorMsg = "Test could not be deleted. Please refresh the page and try again.";
             failureMessage(errorMsg);
         }
         else{
@@ -432,14 +430,7 @@ function addEntries(page){
         .done(function(data){
             authorize(data);
             if(data.isError){
-                var errorMsg = "Entry/Entries could not be added: ";
-
-                if(data.errorTitle == "Test Selection"){
-                    errorMsg += "Test does not exist.";
-                }
-                else{
-                    errorMsg += "Please refresh the page and try again.";
-                }
+                var errorMsg = "Entry/Entries could not be added. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -496,13 +487,7 @@ function removeEntries(){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "Entry/Entries could not be removed: ";
-                if(data.errorTitle == "Test Selection"){
-                    errorMsg += "Test does not exist.";
-                }
-                else{
-                    errorMsg += "Please refresh the page and try again.";
-                }
+                var errorMsg = "Entry/Entries could not be removed. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -615,7 +600,7 @@ function updateChoice(pattern, entry){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "Score could not be updated: Please refresh the page and try again.";
+                var errorMsg = "Choice could not be updated. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -643,7 +628,7 @@ function deletePattern(pattern, entry){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "Choice could not be removed: Please refresh the page and try again.";
+                var errorMsg = "Choice could not be removed. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -669,13 +654,14 @@ function addPattern(entry){
         return;
     }
 
+    $("#choice-loader").show();
     $("#multi-choice").hide();
     $.post('../../test_entry_options_add.php', 
         { test_id: test, entry_id: entry, contents: newchoice })
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "Choice could not be added: Please refresh the page and try again.";
+                var errorMsg = "Choice could not be added. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -1049,6 +1035,45 @@ function addLists(){
 }
 
 <!--- Test Sitting --->
+
+function getFreeformPrompt(mode){
+  switch(mode){
+    case 0:
+      return "Enter the translation";
+    case 1:
+      return "Enter the translation";
+    case 2:
+      return "Enter the pronunciation";
+    case 3:
+      return "Enter the associated word in translation";  
+    case 4:
+      return "Enter the associated word (without translating)";  
+    case 5:
+      return "Enter the pronunciation";  
+    case 6:
+      return "Enter the translation";  
+  }
+}
+
+function getOptionPrompt(mode){
+  switch(mode){
+    case 0:
+      return "Select the translation";
+    case 1:
+      return "Select the translation";
+    case 2:
+      return "Select the pronunciation";
+    case 3:
+      return "Select the associated word";  
+    case 4:
+      return "Select the associated word";  
+    case 5:
+      return "Select the pronunciation";  
+    case 6:
+      return "Select the translation";  
+  }
+}
+
 function startTest(){
     $("#test-loader").show();
     $('#test-start-btn').hide();
@@ -1057,16 +1082,14 @@ function startTest(){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                if(data.errorDescription == "Test Errors:  Response Errors:  Sitting Errors: Error 0: Session user has already responded to all test entries."){
-                  var errorMsg = "You have already taken this test!";                    
-                }
-                else if(data.errorDescription == "Test Errors: Error 0: Session user cannot execute test because test timeframe is not current. Response Errors:  Sitting Errors: "){
-                  var errorMsg = "This test cannot be taken because its timeframe is not current.";                    
-                }
-                else{
-                  var errorMsg = "Test could not be started. Please reload the page and try again.";
-                }
+                var errorMsg = "Test could not be started: " + data.errorDescription;
+                $('#testData').hide();
                 failureMessage(errorMsg);
+            }
+            else if(data.result == "Session user has finished sitting for the test."){
+                var errorMsg = "You have already taken this test!";    
+                $('#testData').hide();
+                failureMessage(errorMsg); 
             }
             else{
                 $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
@@ -1075,10 +1098,12 @@ function startTest(){
                     submitAnswer(data.result.testEntryId);
                 });
                 if(data.result.options == null || data.result.options.length == 0){
-                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="Enter the translation"></textarea>');
+                    prompt = getFreeformPrompt(data.result.mode.modeId);
+                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="'+prompt+'"></textarea>');
                 }
                 else{
-                    optsradio = 'Select the answer:<br />';
+                    prompt = getOptionPrompt(data.result.mode.modeId);                    
+                    optsradio = prompt+':<br />';
                     $.each( data.result.options, function(i,item) {
                         optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
                     });
@@ -1124,10 +1149,12 @@ function submitAnswer(id){
                      submitAnswer(data.result.testEntryId);                   
                 });
                 if(data.result.options == null || data.result.options.length == 0){
-                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="Enter the translation"></textarea>');
+                    prompt = getFreeformPrompt(data.result.mode.modeId);
+                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="'+prompt+'"></textarea>');
                 }
                 else{
-                    optsradio = 'Select the answer:<br />';
+                    prompt = getOptionPrompt(data.result.mode.modeId);                    
+                    optsradio = prompt+':<br />';
                     $.each( data.result.options, function(i,item) {
                         optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
                     });
@@ -1156,7 +1183,7 @@ function deleteSitting(id){
         .done(function(data){
 		    authorize(data);
         if(data.isError){
-            var errorMsg = "Sitting could not be deleted: Please refresh the page and try again.";
+            var errorMsg = "Sitting could not be deleted. Please refresh the page and try again.";
             failureMessage(errorMsg);
         }
         else{
