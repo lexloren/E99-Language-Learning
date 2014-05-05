@@ -102,6 +102,13 @@ class APIUser extends APIBase
 		self::return_array_as_json(Session::get()->get_user()->sittings());
 	}
 	
+	public function sittings_live()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		self::return_array_as_json(Session::get()->get_user()->sittings_live());
+	}
+	
 	public function languages()
 	{
 		if (!Session::get()->reauthenticate()) return;

@@ -485,7 +485,11 @@ class EntryList extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["entries"] = self::json_array($this->entries());
+		$assoc["entries"] = array ();
+		foreach ($this->entries() as $entry)
+		{
+			array_push($assoc["entries"], $entry->json_assoc(null, $this));
+		}
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

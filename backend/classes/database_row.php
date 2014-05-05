@@ -257,7 +257,7 @@ class DatabaseRow extends ErrorReporter
 		}
 		
 		$array["sessionUserPermissions"] = array (
-			"read" => $this->session_user_can_read(),
+			"read" => $privacy === false || $this->session_user_can_read(),
 			"write" => $this->session_user_can_write(),
 			"execute" => $this->session_user_can_execute()
 		);

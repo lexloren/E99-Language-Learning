@@ -400,6 +400,15 @@ class User extends DatabaseRow
 	{
 		return self::cache($this->sittings, "Sitting", "course_students CROSS JOIN course_unit_test_sittings USING (student_id)", "user_id", $this->get_user_id());
 	}
+	public function sittings_live()
+	{
+		$sittings_live = array ();
+		foreach ($this->sittings() as $sitting)
+		{
+			if ($sitting->live()) array_push($sittings_live, $sitting);
+		}
+		return $sittings_live;
+	}
 	
 	private $languages;
 	public function languages()

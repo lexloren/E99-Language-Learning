@@ -71,15 +71,7 @@ function submitLoginForm(){
         { handle: handle, password: password })
         .done(function(data){
             if(data.isError){
-                var errorMsg = "You could not be signed in: ";
-                if(data.errorTitle == "Invalid Handle"){
-                    errorMsg = errorMsg + "Username is invalid.";
-                } else if(data.errorTitle == "Invalid Password"){
-                    errorMsg = errorMsg + "Password is invalid.";
-                } else if(data.errorTitle == "Invalid Credentials"){
-                    errorMsg = errorMsg + "User is unknown.";
-                }
-                $("#failure").html(errorMsg);
+                $("#failure").html("You could not be signed in: " + data.errorDescription);
                 $("#failure").show();
             }
             else{

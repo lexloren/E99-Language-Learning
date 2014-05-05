@@ -431,7 +431,7 @@ class APITest extends APIBase
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test"))
 			&& ($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
 		{
-			if (($test_entry_id = array_search($entry, $test->entries())))
+			if (($test_entry_id = $test->get_test_entry_id_for_entry($entry)) > 0)
 			{
 				if ($test->session_user_can_administer())
 				{
@@ -504,7 +504,7 @@ class APITest extends APIBase
 					
 					if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
 					{
-						if (!Response::insert($_POST["test_entry_id"], $_POST["contents"]))
+						if (!($response = Response::insert($_POST["test_entry_id"], $_POST["contents"])))
 						{
 							return null;
 						}

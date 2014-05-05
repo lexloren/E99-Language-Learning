@@ -189,13 +189,7 @@ function deleteUnit(){
         .done(function(data){
 		    authorize(data);
         if(data.isError){
-            var errorMsg = "Unit could not be deleted: ";
-            if(data.errorTitle == "Unit Selection"){
-                errorMsg += "Unit does not exist.";
-            }
-            else if(data.errorTitle == "Unit Deletion"){
-                errorMsg += "Please refresh the page and try again.";
-            }
+            var errorMsg = "Unit could not be deleted. Please refresh the page and try again.";
             failureMessage(errorMsg);
         }
         else{
@@ -312,13 +306,7 @@ function submitCreateTestForm(testname, desc, opendate, closedate, timer){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "Test could not be created: ";
-                if(data.errorTitle == "Unit Selection"){
-                    errorMsg += "Unit does not exist.";
-                }
-                else if(data.errorTitle == "Test Insertion"){
-                    errorMsg += "Please refresh the page and try again.";
-                }
+                var errorMsg = "Test could not be created. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -592,13 +580,7 @@ function addLists(){
         .done(function(data){
 		        authorize(data);
             if(data.isError){
-                var errorMsg = "List(s) could not be added: ";
-                if(data.errorTitle == "Unit Selection"){
-                    errorMsg += "Unit does not exist.";
-                }
-                else{
-                    errorMsg += "Please refresh the page and try again.";
-                }
+                var errorMsg = "List(s) could not be added. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
@@ -627,13 +609,7 @@ function removeLists(){
         .done(function(data){
           	authorize(data);
             if(data.isError){
-                var errorMsg = "List(s) could not be removed: ";
-                if(data.errorTitle == "Unit Selection"){
-                    errorMsg += "Unit does not exist.";
-                }
-                else{
-                    errorMsg += "Please refresh the page and try again.";
-                }
+                var errorMsg = "List(s) could not be removed. Please refresh the page and try again.";
                 failureMessage(errorMsg);
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
