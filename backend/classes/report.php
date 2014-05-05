@@ -317,6 +317,16 @@ class Report extends ErrorReporter
 		
 		if (1 != $permissions)
 			return static::errors_push("Do not have access to this information.");
+
+		$report = array();
+		
+		$report["course"] = $course->json_assoc();
+		
+		$studentEntryReport = self::creatre_student_test_report($student, $student->get_name_full(), $course);
+		
+		$report["studentTestReports"] = $studentTestReports;
+		
+		return $report;
 	}
 	
 	public static function get_course_test_report($course_id)
@@ -334,69 +344,89 @@ class Report extends ErrorReporter
 			return static::errors_push("Do not have access to this information.");
 
 
-		$tests = $course->tests(false);
 		$students = $course->students();
 		
 		$report = array();
 		
-		$report["courseId"] = $course_id;
+		$report["course"] = $course->json_assoc();
+		
 		$studentTestReports = array();
 
-		
-		self::create_course_test_stat_for_class($course_id);
+		$student_no = 0;
+		foreach($students as $student)
+		{
+			$student_no++;
+
+			$name = ($permissions == 2) ? "Student - $student_no" : $student->get_name_full();
+
+			$studentEntryReport = self::creatre_student_test_report($student, $name, $course);
+			$studentTestReports = array_merge($studentTestReports, $studentEntryReport);
+		}
 		
 		$report["studentTestReports"] = $studentTestReports;
-
 		return $report;
 	}
-	
-	private static function create_course_test_stat_for_class($course_id)
+
+	private static function creatre_student_test_report($student, $name, $course)
 	{
-		$time_now = time();
-		$sql =	"SELECT * FROM course_unit_test_entries ".
-				"WHERE test_id IN (".
-					"SELECT test_id FROM course_unit_tests WHERE unit_id IN (".
-						"SELECT unit_id FROM course_units WHERE course_id = $course_id".
-					")".
-					" AND course_unit_tests.close < $time_now".
-				")";
-		
-		$result = Connection::query($sql);
-		
-		if (!!($error = Connection::query_error_clear()))
+		$tests = $course->tests(false);
+
+		$studentReports = array();
+		foreach($tests as $test)
 		{
-			return static::errors_push("Failed to create course report for student: $error.");
+			$time_frame = $test->get_timeframe();
+			if (null != $time_frame && !$time_frame->is_closed())
+				continue;
+
+			$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
+			if (null == $sitting)
+				continue;
+
+			$responses = $sitting->responses();
+			foreach($responses as $resonse)
+			{
+				$studentEntryReport = array();
+				$studentEntryReport["name"] = $name;
+
+				$pattern = $resonse->get_pattern();
+				$user_entry_id = $pattern->get_entry_id();
+				$test_entry_id = $pattern->get_test_entry_id();
+				$entry = $test->get_entry_by_test_entry_id($test_entry_id);
+				$studentEntryReport["entry"] = !!$entry ? $entry->json_assoc() : "ERROR";
+				$studentEntryReport["score"] = $pattern->get_score();
+				$studentEntryReport["scoreAverage"] = self::get_class_average_score($test_entry_id);
+				$studentEntryReport["mode"] = $pattern->get_mode()->json_assoc();
+				array_push($studentReports, $studentEntryReport);
+			}
 		}
-		
-		while( !!($result_assoc = $result->fetch_assoc()) )
-		{
-			//print_r($result_assoc);			
-			$test_entry_id = $result_assoc["test_entry_id"];
-			self::get_class_average_score($test_entry_id);
-		}
+		return $studentReports;
 	}
-	
+
 	private static function get_class_average_score($test_entry_id)
 	{
-		$sql = "SELECT *, AVG(course_unit_test_entry_patterns.score) ".
+		$sql = "SELECT AVG(course_unit_test_entry_patterns.score) ".
 				"FROM course_unit_test_sitting_responses ".
 				"INNER JOIN course_unit_test_entry_patterns ON course_unit_test_sitting_responses.pattern_id = course_unit_test_entry_patterns.pattern_id ".
 				"WHERE course_unit_test_sitting_responses.pattern_id IN ".
 				"(SELECT pattern_id FROM course_unit_test_entry_patterns WHERE test_entry_id = $test_entry_id) ";
-				
+
 		$result = Connection::query($sql);
-		
+
 		if (!!($error = Connection::query_error_clear()))
 		{
 			return static::errors_push("Failed to create course report for student: $error.");
 		}
-		
-		while( !!($result_assoc = $result->fetch_assoc()) )
+
+		if ($result->num_rows != 1)
 		{
-			//print_r($result_assoc);
-			//$test_entry_id = $result_assoc["test_entry_id"];
+			return static::errors_push("Failed to create course report for student:");
 		}
+		
+		$result_assoc = $result->fetch_assoc();
+		return $result_assoc["AVG(course_unit_test_entry_patterns.score)"];
 	}
-}
+}	
+
+
 
 ?>

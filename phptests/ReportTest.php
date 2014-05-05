@@ -175,8 +175,15 @@ class ReportTest extends PHPUnit_Framework_TestCase
 			$scores[$test_entry_id] = ($i % 2 ) * 100;
 		}
 		
-		$this->db->add_unit_test_sitting_responses($sitting_id, $scores);
-		$this->db->add_unit_test_sitting_responses($sitting_id2, $scores);
+		$this->db->add_unit_test_sitting_responses($sitting_id, $scores, "content X");
+
+		for($i=0; $i<count($test_entry_ids); $i++)
+		{
+			$test_entry_id = $test_entry_ids[$i];
+			$scores[$test_entry_id] = ($i % 3 ) * 100;
+		}
+
+		$this->db->add_unit_test_sitting_responses($sitting_id2, $scores, "content Y");
 		
 		$report = Report::get_course_test_report($this->db->course_ids[0]);	
 		$this->assertNotNull($report);
