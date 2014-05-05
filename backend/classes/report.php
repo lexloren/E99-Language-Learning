@@ -321,70 +321,81 @@ class Report extends ErrorReporter
 	
 	public static function get_course_test_report($course_id)
 	{
+		$session_user = Session::get()->get_user();
+		if (!$session_user)
+			return static::errors_push("Session user has not reauthenticated.");
+
 		$course = Course::select_by_id($course_id);
 		if (!$course)
 			return static::errors_push("Invalid course id.");
 		
-		$tests = $course->tests();
-		
+		$permissions = self::check_permissions($course, $session_user, null);
+		if (0 == $permissions)
+			return static::errors_push("Do not have access to this information.");
+
+
+		$tests = $course->tests(false);
 		$students = $course->students();
 		
-		/*
-		$entries_and_modes = array();
-		
-		foreach($tests as $test)
-		{
-			$time_frame = $test->get_timeframe();
-			if (!$time_frame->is_closed())
-				continue;
-				
-			$entries = $test->entries();
-			foreach($entries as $entry)
-			{
-				$mode = $entry->get_entry_mode();
-				$entry_and_mode = array();
-				$entry_and_mode["entry"] = $entry;
-				$entry_and_mode["mode"] = $mode;
-				$array_push($entries_and_modes, $entry_and_mode);
-			}
-		}*/
-		
 		$report = array();
-		$studentReports = array();
-		foreach($students as $student)
+		
+		$report["courseId"] = $course_id;
+		$studentTestReports = array();
+
+		
+		self::create_course_test_stat_for_class($course_id);
+		
+		$report["studentTestReports"] = $studentTestReports;
+
+		return $report;
+	}
+	
+	private static function create_course_test_stat_for_class($course_id)
+	{
+		$time_now = time();
+		$sql =	"SELECT * FROM course_unit_test_entries ".
+				"WHERE test_id IN (".
+					"SELECT test_id FROM course_unit_tests WHERE unit_id IN (".
+						"SELECT unit_id FROM course_units WHERE course_id = $course_id".
+					")".
+					" AND course_unit_tests.close < $time_now".
+				")";
+		
+		$result = Connection::query($sql);
+		
+		if (!!($error = Connection::query_error_clear()))
 		{
-			$studentReport = array();
-			foreach($tests as $test)
-			{
-				$time_frame = $test->get_timeframe();
-				if (null != $time_frame && !$time_frame->is_closed())
-					continue;
-				
-				$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
-				if (null == $sitting)
-					continue;
-				
-				$responses = $sitting->responses();
-				foreach($responses as $resonse)
-				{
-					$entryReport = array();
-					$pattern = $resonse->get_pattern();
-					$user_entry_id = $pattern->get_entry_id();
-					$entry = UserEntry::select($user_entry_id);
-					$entryReport["entry"] = $entry;
-					$entryReport["score"] = $pattern->get_score();
-					$entryReport["mode"] = $pattern->get_mode();
-				}
-				
-				array_push($studentReport, $entryReport);
-			}
-			
-			array_push($studentReports, $studentReport);
+			return static::errors_push("Failed to create course report for student: $error.");
 		}
 		
-		$report["studentReports"] = $studentReports;
+		while( !!($result_assoc = $result->fetch_assoc()) )
+		{
+			//print_r($result_assoc);			
+			$test_entry_id = $result_assoc["test_entry_id"];
+			self::get_class_average_score($test_entry_id);
+		}
+	}
+	
+	private static function get_class_average_score($test_entry_id)
+	{
+		$sql = "SELECT *, AVG(course_unit_test_entry_patterns.score) ".
+				"FROM course_unit_test_sitting_responses ".
+				"INNER JOIN course_unit_test_entry_patterns ON course_unit_test_sitting_responses.pattern_id = course_unit_test_entry_patterns.pattern_id ".
+				"WHERE course_unit_test_sitting_responses.pattern_id IN ".
+				"(SELECT pattern_id FROM course_unit_test_entry_patterns WHERE test_entry_id = $test_entry_id) ";
+				
+		$result = Connection::query($sql);
 		
-		return $report;
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to create course report for student: $error.");
+		}
+		
+		while( !!($result_assoc = $result->fetch_assoc()) )
+		{
+			//print_r($result_assoc);
+			//$test_entry_id = $result_assoc["test_entry_id"];
+		}
 	}
 }
 

@@ -397,14 +397,22 @@ class TestDB
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
 	}
 	
-	public function add_unit_test($unit_id)
+	public function add_unit_test($unit_id, $open=null, $close=null)
 	{
 		$test_name = "course test ".count($this->course_tests);
 		$link = $this->link;
-		$link->query(sprintf("INSERT INTO course_unit_tests (unit_id, name) VALUES (%d, %d)",
-			$unit_id,
-			$test_name
-		));
+		
+		if (!!$open && !!$close)
+		{
+			$link->query("INSERT INTO course_unit_tests (unit_id, name, open, close) VALUES ($unit_id, '$test_name', $open, $close)");
+		}
+		else
+		{
+			$link->query(sprintf("INSERT INTO course_unit_tests (unit_id, name) VALUES (%d, %d)",
+				$unit_id,
+				$test_name
+			));
+		}
 		
 		if (!$link->insert_id)
 			exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$link->error);
@@ -454,7 +462,7 @@ class TestDB
 		return $sitting_id;
 	}
 	
-	public function add_unit_test_sitting_responses($sitting_id, $student_id, $responses)
+	public function add_unit_test_sitting_responses($sitting_id, $scores)
 	{
 		$result = $this->link->query("SELECT * FROM course_unit_test_sittings WHERE sitting_id = $sitting_id");
 		
@@ -469,9 +477,27 @@ class TestDB
 			{
 				$user_entry_id = $result_assoc["user_entry_id"];
 				$test_entry_id = $result_assoc["test_entry_id"];
-				$response = $responses[$user_entry_id];
-				
-				//TODO: Add response
+				$mode = $result_assoc["mode"];
+				$prompt = 0;
+				$score = $scores[$test_entry_id];
+				$contents = "content x";
+				$this->link->query("INSERT IGNORE INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) VALUES ($test_entry_id, $mode, $prompt, '$contents', $score)" );
+				if (!!$this->link->error)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
+				$pattern_id = $this->link->insert_id;
+				if (!$pattern_id)
+				{
+					$result_pattern = $this->link->query("SELECT pattern_id FROM course_unit_test_entry_patterns WHERE test_entry_id = $test_entry_id AND mode = $mode AND prompt = $prompt AND contents = '$contents' AND score = $score");
+					if (!!$this->link->error)
+						exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+					$assoc = $result_pattern->fetch_assoc();
+					$pattern_id = $assoc["pattern_id"];
+				}
+				$this->link->query("INSERT INTO course_unit_test_sitting_responses (sitting_id, pattern_id) VALUES ($sitting_id, $pattern_id)");
+				if (!!$this->link->error)
+					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
+
 			}
 		}
 		else
