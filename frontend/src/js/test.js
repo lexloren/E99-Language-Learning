@@ -17,6 +17,7 @@ $(document).ready(function(){
     return;
 	} 
   else {
+    $("#test-sitting").hide();
     $("#updateTestForm").hide();
     $("#list-add").hide();
     $("#word-search").hide();
@@ -103,6 +104,26 @@ function getModes(){
     });    
 }
 
+function getSittings(){
+    $.getJSON('../../user_sittings.php')
+        .done(function(data){
+            authorize(data);
+            if(data.isError){
+                failureMessage("Information for this test could not be retrieved.");
+            }
+            else{
+                $.each(data.result, function(i, item){           
+                    if(item.testId == test && item.live == false){
+                        window.location.replace("sitting.html?sittingid="+item.sittingId);
+                    }
+                });
+            }
+    })
+    .fail(function(error) {
+        failureMessage('Something has gone wrong. Please refresh the page and try again.');
+    }); 
+}
+
 function cancelUpdate(frm,tohide){
     $(frm).hide();
     $(tohide).show();
@@ -118,16 +139,18 @@ function getTestInfo(){
             if(data.isError){
                 // temporary workaround for permissions
                 if(data.errorDescription == "Session user cannot select test."){
+                    getSittings();
                     $("#test-update").hide();
                     $("#search-list").hide();
                     $("#student-sittings").hide();
                     $("#test-entries").hide();
-                    $("#question-block").hide();                  
-                    $("#testData").show();
-                    $("#loader").hide();
+                    $("#question-block").hide();
+                    $("#test-sitting").show();                
                 }
-                else
+                else{
                     failureMessage("Information for this test could not be retrieved.");
+                    return;
+                }
             }
             // temporary workaround for permissions
             else if(data.result.sessionUserPermissions.write != true && data.result.sessionUserPermissions.execute != true){
@@ -219,7 +242,6 @@ function getTestInfo(){
                     }
                     getLangs();
                     $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
-                    $("#test-sitting").hide();
                 }
                 else if(data.result.sessionUserPermissions.execute == true){
                     if(data.result.message != null){
@@ -234,10 +256,11 @@ function getTestInfo(){
                     $("#search-list").hide();
                     $("#student-sittings").hide();
                     $("#test-entries").hide();
-                    $("#question-block").hide();                  
+                    $("#question-block").hide();    
+                    $("#test-siting").show();              
                 }
-                $("#testData").show();
             }		
+            $("#testData").show();
             $("#loader").hide();
     })
 	 .fail(function(error) {
