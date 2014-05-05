@@ -139,11 +139,6 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		
 	}
 	
-	public function test_patterns()
-	{
-		
-	}
-	
 	public function test_unexecute()
 	{
 		
