@@ -153,7 +153,7 @@ function getTestInfo(){
                 }
             }
             // temporary workaround for permissions
-            else if(data.result.sessionUserPermissions.write != true && data.result.sessionUserPermissions.execute != true){
+            else if(data.result.sessionUserPermissions.read != true && data.result.sessionUserPermissions.execute != true){
                     failureMessage("Information for this test could not be retrieved.");
             }
             else{
