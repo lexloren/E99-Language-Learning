@@ -520,7 +520,15 @@ class APITest extends APIBase
 					return $next_json_assoc;
 				}
 			))) Session::get()->set_result_assoc($result);
-			else Session::get()->set_error_assoc("Test Execution", "Test Errors: " . Test::errors_unset() . " Response Errors: " . Response::errors_unset() . " Sitting Errors: " . Sitting::errors_unset());
+			else
+			{
+				$errors = array ();
+				if (($more = Test::errors_unset())) array_push($errors, $more);
+				if (($more = Sitting::errors_unset())) array_push($errors, $more);
+				if (($more = Response::errors_unset())) array_push($errors, $more);
+				
+				Session::get()->set_error_assoc("Test Execution", implode(" ", $errors));
+			}
 		}
 	}
 }

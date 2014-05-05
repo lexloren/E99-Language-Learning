@@ -35,9 +35,9 @@ class Response extends CourseComponent
 					return null;
 				}
 				
-				if (!$sitting->session_user_can_execute())
+				if (count(($reasons = $sitting->user_cannot_respond_reasons())) > 0)
 				{
-					$error_message = "$failure_message: Session user cannot execute sitting.";
+					$error_message = "$failure_message: Session user cannot execute test sitting " . implode(" and ", $reasons) . ".";
 					return null;
 				}
 				
