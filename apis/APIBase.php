@@ -13,6 +13,19 @@ class APIBase
 	protected $mysqli = null;
 	protected $user = null;
 	
+	protected static function errors_collect($classes)
+	{
+		array ();
+		$errors = array ();
+		
+		foreach ($classes as $class)
+		{
+			if (($more = $class::errors_unset())) array_push($errors, $more);
+		}
+		
+		return implode(" ", $errors);
+	}
+	
 	protected static function validate_request($array, $keys)
 	{
 		if (is_string($keys)) $keys = array ($keys, $keys);

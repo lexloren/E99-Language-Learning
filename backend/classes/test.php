@@ -388,7 +388,7 @@ class Test extends CourseComponent
 			{
 				//  Insert into list_entries for $this->list_id and $entry->entry_id
 				//      If this entry already exists in the list, then ignore the error
-				Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE test_entry_id = LAST_INSERT_ID(test_entry_id)",
+				Connection::query(sprintf("INSERT INTO course_unit_test_entries (test_id, user_entry_id, num, mode) VALUES (%d, %d, %d, $mode) ON DUPLICATE KEY UPDATE mode = $mode",
 					$test->get_test_id(),
 					$entry->get_user_entry_id(),
 					$test->entries_count() + 1

@@ -23,7 +23,8 @@ class Pattern extends CourseComponent
 			return static::errors_push("$failure_message: " . Test::errors_unset());
 		}
 		
-		if (!$test->session_user_can_write() && !($test->session_user_can_execute() && !$prompt && $score === null))
+		if (!$test->session_user_can_write()
+			&& !($test->session_user_can_execute() && !$prompt && $score === null))
 		{
 			return static::errors_push("$failure_message: Session user cannot edit test.");
 		}
@@ -41,16 +42,14 @@ class Pattern extends CourseComponent
 		
 		$mode = $mode === null ? "mode" : intval($mode, 10);
 		
-		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE pattern_id = LAST_INSERT_ID(pattern_id)", $test->get_test_id(), $entry->get_user_entry_id()));
+		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE prompt = $prompt, score = $score", $test->get_test_id(), $entry->get_user_entry_id()));
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
 			return static::errors_push("$failure_message: $error.");
 		}
 		
-		return Connection::query_insert_id()
-			? self::select_by_id(Connection::query_insert_id())
-			: self::select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, is_string($mode) ? null : $mode);
+		return self::select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, is_string($mode) ? null : $mode);
 	}
 	
 	public static function select_all_for_test_entry_id($test_entry_id, $prompts_only = true)
@@ -118,12 +117,17 @@ class Pattern extends CourseComponent
 			return static::errors_push("$failure_message: $error.");
 		}
 		
+		if ($result->num_rows > 1)
+		{
+			return static::errors_push("$failure_message: Multiple patterns selected!");
+		}
+		
 		if ($result->num_rows > 0 && ($result_assoc = $result->fetch_assoc()))
 		{
 			return self::from_mysql_result_assoc($result_assoc);
 		}
 		
-		return static::errors_push("$failure_message: No pattern found!");
+		return static::errors_push("$failure_message: No pattern selected!");
 	}
 	
 	/***    INSTANCE    ***/
@@ -149,16 +153,7 @@ class Pattern extends CourseComponent
 	{
 		if (!isset($this->test))
 		{
-			$result = Connection::query(sprintf("SELECT course_unit_tests.* FROM course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id) WHERE test_entry_id = %d GROUP BY test_id", $this->get_test_entry_id()));
-			
-			$failure_message = "Test entry pattern failed to get test";
-			
-			if (!!($error = Connection::query_error_clear()))
-			{
-				return static::errors_push("$failure_message: $error.");
-			}
-			
-			if (!($this->test = Test::from_mysql_result_assoc($result->fetch_assoc())))
+			if (!($this->test = Test::select_by_test_entry_id($this->get_test_entry_id())))
 			{
 				unset($this->test);
 				return static::errors_push("$failure_message: " . Test::errors_unset());
@@ -166,6 +161,12 @@ class Pattern extends CourseComponent
 		}
 		
 		return $this->test;
+	}
+	public function get_course()
+	{
+		return $this->get_test()
+			? $this->get_test()->get_course()
+			: null;
 	}
 	public function get_container()
 	{
@@ -276,20 +277,6 @@ class Pattern extends CourseComponent
 		
 		$this->score = $score;
 		return $this;
-	}
-	
-	public function get_course()
-	{
-		$entry_tests = "(course_unit_test_entries CROSS JOIN course_unit_tests USING (test_id))";
-		$test_units = "($entry_tests CROSS JOIN course_units USING (unit_id))";
-		$unit_courses = "($test_units CROSS JOIN courses USING (course_id))";
-		
-		if (!($course = Course::select($unit_courses, "test_entry_id", $this->get_test_entry_id())))
-		{
-			return static::errors_push("Failed to get course for test entry pattern: " . Course::errors_unset());
-		}
-		
-		return $course;
 	}
 	
 	public function set_message($message)
