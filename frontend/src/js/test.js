@@ -1138,13 +1138,14 @@ function submitAnswer(id){
                 failureMessage("There was a problem obtaining the test data. Please refresh the page and try again.");
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
-            else if(data.result == "Session user has finished the test."){
+            else if(data.result == "Session user has finished sitting for the test."){
                 successMessage("Test is complete and has been submitted.");    
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
             else{
                 $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
                 $("#question-body").html(data.result.prompt);
+                $("#answer-submit").unbind('click');
                 $("#answer-submit").click(function(){
                      submitAnswer(data.result.testEntryId);                   
                 });
