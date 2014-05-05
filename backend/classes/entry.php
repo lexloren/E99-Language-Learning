@@ -194,27 +194,12 @@ class Entry extends DatabaseRow
 			: null;
 	}
 	
-	/*public function annotations_add($annotation_contents)
-	{
-		return ($user_entry = $this->copy_for_session_user())
-			? $user_entry->annotations_add($annotation_contents)
-			: null;
-	}
-	
-	public function annotations_remove($annotation)
-	{
-		if (!Session::get() || !($session_user = Session::get()->get_user()))
-		{
-			return self::errors_push("Session user has not reauthenticated.");
-		}
-		
-		return ($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false))
-			? $user_entry->annotations_remove($annotation)
-			: null;
-	}*/
-	
 	public function user_can_read($user)
 	{
+		if (Session::get()
+			&& ($session_user = Session::get()->get_user())
+			&& $session_user->sittings_live()) return false;
+		
 		return true;
 	}
 	
@@ -241,32 +226,30 @@ class Entry extends DatabaseRow
 		return 0;
 	}
 
-	public function json_assoc($privacy = null)
+	public function json_assoc($privacy = null, $hint = null)
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		
 		$entry = !!$privacy ? self::select_by_id($this->get_entry_id(), false) : $this;
-		$privacy = false;
 		
 		$assoc = array (
 			"entryId" => $entry->get_entry_id(),
-			//"owner" => !!$this->get_owner() ? $this->get_owner()->json_assoc_condensed() : null,
 			"languages" => $entry->languages(),
 			"words" => $entry->words(),
 			"pronuncations" => $entry->pronunciations(),
 			"annotationsCount" => $this->annotations_count()
 		);
 		
-		return $this->privacy_mask($assoc, array_keys($assoc), $privacy);
+		return $this->privacy_mask($assoc, array (0 => "entryId"), $privacy);
 	}
 	
-	public function json_assoc_detailed($privacy = null)
+	public function json_assoc_detailed($privacy = null, $hint = null)
 	{
 		if (!!Session::get() && !!($session_user = Session::get()->get_user()))
 		{
 			if (($user_entry = UserEntry::select_by_user_id_entry_id($session_user->get_user_id(), $this->get_entry_id(), false)))
 			{
-				return $user_entry->json_assoc_detailed($privacy);
+				return $user_entry->json_assoc_detailed($privacy, $hint);
 			}
 		}
 		
@@ -426,7 +409,7 @@ class UserEntry extends Entry
 	private $lists;
 	public function lists()
 	{
-		return self::cache($this->lists, "EntryList", "lists", "user_entry_id", $this->get_user_entry_id());
+		return self::cache($this->lists, "EntryList", "lists CROSS JOIN list_entries USING (list_id)", "user_entry_id", $this->get_user_entry_id());
 	}
 
 	private function __construct($user_entry_id, $user_id, $entry_id,
@@ -530,14 +513,19 @@ class UserEntry extends Entry
 	
 	public function user_can_read($user, $hint = null)
 	{
-		return $this->user_can_write($user)
-			|| $this->user_can_read_via($user, $hint);
+		return $hint === true
+			|| (parent::user_can_read($user)
+				&& ($this->user_can_write($user)
+					|| $this->user_can_read_via($user, $hint)
+					|| $this->user_can_read_via_some_list($user)));
 	}
 	
 	public function user_can_write($user, $hint = null)
 	{
-		return parent::user_can_write($user)
-			|| $this->user_can_write_via($user, $hint);
+		return $hint === true
+			|| parent::user_can_write($user)
+			|| $this->user_can_write_via($user, $hint)
+			|| $this->user_can_write_via_some_list($user);
 	}
 	
 	private function user_can_read_via($user, $hint)
@@ -553,6 +541,24 @@ class UserEntry extends Entry
 		if (!$user || !$hint) return false;
 		
 		return $this->hint_relevant($hint) && $hint->user_can_write($user);
+	}
+	
+	private function user_can_read_via_some_list($user)
+	{
+		foreach ($this->lists() as $list)
+		{
+			if ($list->user_can_read($user)) return true;
+		}
+		return false;
+	}
+	
+	private function user_can_write_via_some_list($user)
+	{
+		foreach ($this->lists() as $list)
+		{
+			if ($list->user_can_write($user)) return true;
+		}
+		return false;
 	}
 	
 	public function hint_relevant($hint)
@@ -612,9 +618,22 @@ class UserEntry extends Entry
 		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
-	public function json_assoc_detailed($privacy = null)
+	public function json_assoc($privacy = null, $hint = null)
 	{
-		$assoc = $this->json_assoc($privacy);
+		if ($privacy === null && $hint !== null)
+		{
+			if (Session::get() && ($session_user = Session::get()->get_user()))
+			{
+				$privacy = !$this->user_can_read($session_user, $hint);
+			}
+		}
+		
+		return parent::json_assoc($privacy);
+	}
+	
+	public function json_assoc_detailed($privacy = null, $hint = null)
+	{
+		$assoc = $this->json_assoc($privacy, $hint);
 		
 		$public_keys = array_keys($assoc);
 		

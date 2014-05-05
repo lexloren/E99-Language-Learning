@@ -140,6 +140,23 @@ class Test extends CourseComponent
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
 		return self::collect("UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
 	}
+	public function number_for_entry($entry)
+	{
+		$entries_by_number = $this->entries_by_number();
+		if (($entry_number = array_search($entry, $entries_by_number)) < 0)
+		{
+			foreach ($entries_by_number as $number => $test_entry)
+			{
+				if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+				{
+					$entry_number = $number;
+					break;
+				}
+			}
+		}
+		
+		return $entry_number + 1;
+	}
 	public function uncache_entries()
 	{
 		if (isset($this->entries)) unset($this->entries);
@@ -165,7 +182,7 @@ class Test extends CourseComponent
 				
 				if ($number > ($entries_count = count($test->entries()))) $number = $entries_count;
 				
-				if ($number === ($number_formerly = array_search($entry, $test->entries()) + 1)) return $test;
+				if ($number === ($number_formerly = $this->number_for_entry($entry))) return $test;
 				
 				if ($number_formerly < 1)
 				{
@@ -229,7 +246,7 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
+		if (($test_entry_id = $this->get_test_entry_id_for_entry($entry)) < 0)
 		{
 			return static::errors_push("Test cannot set mode for entry not already in test.");
 		}
@@ -266,7 +283,7 @@ class Test extends CourseComponent
 			}
 		}
 		
-		if (($test_entry_id = array_search($entry, $this->entries())) < 0)
+		if (($test_entry_id = $this->get_test_entry_id_for_entry($entry)) < 0)
 		{
 			return static::errors_push("Test cannot get mode for entry not already in test.");
 		}
@@ -350,7 +367,20 @@ class Test extends CourseComponent
 	
 	public function get_test_entry_id_for_entry($entry)
 	{
-		return array_search($entry, $this->entries());
+		if (($test_entry_id = array_search($entry, $this->entries())) > 0)
+		{
+			return $test_entry_id;
+		}
+		
+		foreach ($this->entries() as $test_entry_id => $test_entry)
+		{
+			if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+			{
+				return $test_entry_id;
+			}
+		}
+		
+		return -1;
 	}
 	
 	public function entries_add($entry, $mode = null)
@@ -488,7 +518,7 @@ class Test extends CourseComponent
 		
 		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		$number = array_search($entry, $this->entries()) + 1;
+		$number = $this->number_for_entry($entry);
 		
 		if ($number < 1) return static::errors_push("Test cannot remove entry not already in test.");
 		
@@ -748,20 +778,21 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
+		$entry = $entry->copy_for_user($this->get_owner(), true);
+		
 		if (!$entry)
 		{
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner(), $this);
-		$test_entry_id = array_search($entry, $this->entries());
+		$test_entry_id = $this->get_test_entry_id_for_entry($entry);
 		
 		if ($test_entry_id < 0)
 		{
 			return static::errors_push("Test cannot get entry JSON for entry not already in test.");
 		}
 		
-		$entry_assoc = $entry->json_assoc();
+		$entry_assoc = $entry->json_assoc(false);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();

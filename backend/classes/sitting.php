@@ -273,6 +273,19 @@ class Sitting extends CourseComponent
 			&& $this->get_test()->get_disclosed();
 	}
 	
+	public function timer_depleted()
+	{
+		return !!$this->get_test()->get_timer()
+			&& time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer();
+	}
+	
+	public function live()
+	{
+		return $this->entries_remaining()
+			&& !$this->timer_depleted()
+			&& $this->get_test()->user_can_execute($this->get_user());
+	}
+	
 	public function user_cannot_respond_reasons($user)
 	{
 		$reasons = array ();
@@ -288,8 +301,7 @@ class Sitting extends CourseComponent
 		{
 			array_push($reasons, "because user has already responded to all test entries");
 		}
-		if (!!$this->get_test()->get_timer()
-			&& time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer())
+		if ($this->timer_depleted())
 		{
 			array_push($reasons, "because test time limit has elapsed");
 		}
@@ -374,6 +386,7 @@ class Sitting extends CourseComponent
 			"student" => $this->get_user()->json_assoc(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
 			"responsesCount" => $this->responses_count(),
+			"live" => $this->live(),
 			"score" => $this->session_user_can_administer() || $this->get_test()->get_disclosed()
 				? $this->get_score_json_assoc()
 				: null,
