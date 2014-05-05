@@ -747,6 +747,7 @@ class Course extends DatabaseRow
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 	
+	/*
 	public static function csv_columns_array()
 	{
 		return array (
@@ -801,6 +802,7 @@ class Course extends DatabaseRow
 			$sittings_mean_performance
 		);
 	}
+	*/
 }
 
 ?>

@@ -482,15 +482,17 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$result = $result_assoc["result"];
 		$this->assertNotNull($result);
 		
-		//Hans, please check this
-		//$this->assertCount(2, $result);
+		//  I've tried everything... can't figure this out.
+		//  Really makes no sense to me
+		//  I think it has something to do with the way the tests set up the database and the caching... not sure this issue will present on the front end
+		$this->assertCount(2, $result);
 
-		//$instructor1 = $result[0];
-		//$instructor2 = $result[1];
+		$instructor1 = $result[0];
+		$instructor2 = $result[1];
 		
-		//$this->assertTrue($instructor1["userId"] != $instructor2["userId"]);
-		//$this->assertTrue($instructor1["userId"] == $this->db->user_ids[0] || $student1["userId"] == $this->db->user_ids[1]);
-		//$this->assertTrue($instructor2["userId"] == $this->db->user_ids[0] || $instructor2["userId"] == $this->db->user_ids[1]);
+		$this->assertTrue($instructor1["userId"] != $instructor2["userId"]);
+		$this->assertTrue($instructor1["userId"] == $this->db->user_ids[0] || $student1["userId"] == $this->db->user_ids[1]);
+		$this->assertTrue($instructor2["userId"] == $this->db->user_ids[0] || $instructor2["userId"] == $this->db->user_ids[1]);
 	}
 	
 	public function test_researchers()

@@ -392,6 +392,7 @@ class Unit extends CourseComponent
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}
 	
+	/*
 	public static function csv_columns_array()
 	{
 		return array (
@@ -446,6 +447,7 @@ class Unit extends CourseComponent
 			$sittings_mean_performance
 		);
 	}
+	*/
 }
 
 ?>

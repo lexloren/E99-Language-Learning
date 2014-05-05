@@ -894,6 +894,7 @@ class Test extends CourseComponent
 		return $test_score_max;
 	}
 	
+	/*
 	public static function csv_columns_array()
 	{
 		return array (
@@ -952,6 +953,7 @@ class Test extends CourseComponent
 			$sittings_mean_performance
 		);
 	}
+	*/
 }
 
 ?>

@@ -133,6 +133,81 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 			$this->assertTrue(in_array($list_entry, $test_entries));
 		}
 	}
+	
+	public function test_entries_randomize()
+	{
+		
+	}
+	
+	public function test_patterns()
+	{
+		
+	}
+	
+	public function test_unexecute()
+	{
+		
+	}
+	
+	public function test_setters()
+	{
+		// message
+		// timer
+		// timeframe
+		// open, close
+	}
+	
+	public function test_execute_for_session_user()
+	{
+		
+	}
+	
+	public function test_delete()
+	{
+		
+	}
+	
+	public function test_entries()
+	{
+		// entries
+		// entries count
+		// entry options
+		// entries add
+		// entries remove
+		// entries randomize
+		// get mode
+		// set mode
+		// set number
+		// entries by number
+	}
+	
+	public function test_sittings()
+	{
+		// sittings count
+		// get sitting for user
+		// sittings
+	}
+	
+	public function test_patterns()
+	{
+		// patterns
+		// count patterns
+	}
+	
+	public function test_seconds_per_entry()
+	{
+		
+	}
+	
+	public function test_entry_score_max()
+	{
+		
+	}
+	
+	public function test_score_max()
+	{
+		
+	}
 }
 
 ?>
