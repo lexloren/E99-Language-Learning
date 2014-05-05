@@ -462,7 +462,7 @@ class TestDB
 		return $sitting_id;
 	}
 	
-	public function add_unit_test_sitting_responses($sitting_id, $scores)
+	public function add_unit_test_sitting_responses($sitting_id, $scores, $contents)
 	{
 		$result = $this->link->query("SELECT * FROM course_unit_test_sittings WHERE sitting_id = $sitting_id");
 		
@@ -480,7 +480,6 @@ class TestDB
 				$mode = $result_assoc["mode"];
 				$prompt = 0;
 				$score = $scores[$test_entry_id];
-				$contents = "content x";
 				$this->link->query("INSERT IGNORE INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) VALUES ($test_entry_id, $mode, $prompt, '$contents', $score)" );
 				if (!!$this->link->error)
 					exit ('Failed to create TestDB: '.__FILE__.' '.__Line__.': '.$this->link->error);
