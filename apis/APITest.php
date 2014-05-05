@@ -509,7 +509,6 @@ class APITest extends APIBase
 						{
 							return null;
 						}
-						else $did_respond = true;
 					}
 					
 					if (!($next_json_assoc = $sitting->next_json_assoc()))

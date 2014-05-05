@@ -306,7 +306,7 @@ class Sitting extends CourseComponent
 		}
 		
 		$entries_remaining = $this->entries_remaining();
-		$entry = array_shift($entries_remaining);
+		$entry = $entries_remaining[0];
 		
 		$result = Connection::query(sprintf("SELECT * FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d",
 			$this->get_test_id(),
@@ -322,7 +322,7 @@ class Sitting extends CourseComponent
 		
 		if (!($result_assoc = $result->fetch_assoc()))
 		{
-			return static::errors_push("Test failed to get mask for next entry for session user.");
+			return static::errors_push("$failure_message!");
 		}
 		
 		$mode = intval($result_assoc["mode"], 10);
