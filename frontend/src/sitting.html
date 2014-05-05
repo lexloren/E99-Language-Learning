@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Xenogloss</title>
+
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link href="css/jquery-ui-timepicker-addon.css" rel="stylesheet">    
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>    
+    <script src="js/jquery-ui-timepicker-addon.js"></script>
+		<script src="js/common.js"></script>
+    <script src="js/sitting.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+
+    <!-- Fixed navbar -->
+    <div id="navbar"></div>
+
+    <div class="container" role="main" id="doc-body">
+	    <br /><div id="loader"><img src="images/ajax-loader.gif"></div>
+      <div id="sittingData">
+			  <div id="sitting-header"><h3 class="form-signin-heading">Sitting Details</h3></div>
+        <div id="sitting-details">
+        </div>
+        <!--- Responses --->
+        <div id="responses">
+          <h4>Responses</h4>
+          <div id="response-loader"><img src="images/ajax-loader.gif"></div>
+          <table id="response-list" class="table container-left">
+            <thead>
+              <tr>
+                <td>Response</td>
+                <td>Score</td>
+                <td>Note</td>
+              </tr>
+            </thead>
+          </table>
+        </div>        
+
+      </div>
+    </div> <!-- /container -->
+
+  </body>
+</html>

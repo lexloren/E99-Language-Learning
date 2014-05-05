@@ -48,6 +48,10 @@
             <textarea class="form-control" id="testdesc" rows="5"></textarea>
           </div>
           <div class="form-group">
+            <label for="timer">Test Timer (in minutes) </label>
+            <input type="text" class="form-control form-control-date" id="timer" placeholder="Enter test length in minutes" required>
+          </div>
+          <div class="form-group">
             <label for="testopendate">Open Date</label>
             <input type="text" class="form-control form-control-date" id="testopendate">
             <script>$('#testopendate').datetimepicker();</script>
@@ -80,18 +84,6 @@
           <h4>Entries</h4>
           <div id="entry-loader"><img src="images/ajax-loader.gif"></div>
           <table id="entry-list" class="table">
-            <thead>
-              <tr>
-                <td>Word</td>
-                <td>Pronunciation</td>
-                <td>Translation</td>
-                <td>Order</td>
-                <td>Mode &nbsp; <span id="mode-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="top" title="Mode refers to the Question/Answer type.<br/>0: Unknown Lang./Known Lang.<br/>1: Known Lang./Unknown Lang.<br/>2: Unknown Lang./Pronunciation<br/>3: Pronunciation/Known Lang.<br/>4: Pronunciation/Unknown Lang.<br/>5: Known Lang./Pronunciation<br/>6: Unknown Lang./Pronunciation"></span></td>
-                <td>Multiple Choice</td>
-                <td></td>
-              </tr>
-            </thead>
-            <script>$('#mode-info').tooltip({html: true});</script>
           </table>
           <div id="choice-loader"><img src="images/ajax-loader.gif"><br /> &nbsp; </div>
           <div id="multi-choice" class="container-left">
@@ -181,7 +173,7 @@
               </div>
             </div><br />
             <div class="form-group test-question">
-              <textarea class="form-control" id="test-answer" rows="2" placeholder="Enter the translation"></textarea>
+              <div id="test-answer"></div>
               <div id="q-remainder" class="help-block-small" align="right"></div>      
               <button id="answer-submit" class="btn btn-primary" type="button">Submit</button>
             </div>
