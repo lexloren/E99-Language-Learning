@@ -1,3 +1,5 @@
+var courseData;
+
 function getCourses(){
 	$.getJSON('../../user_courses.php', function(data){
 		authorize(data);
@@ -5,6 +7,7 @@ function getCourses(){
 			// show error
         }
         else {
+			courseData = data;
             $.each(data.result, function(i, item){
 				courseli = '<li><a href="course.html?courseid='+item.courseId+'">'+item.name+'</a></li>';
                     $('#course-menu').append(courseli);
