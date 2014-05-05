@@ -268,13 +268,25 @@ class EntryList extends DatabaseRow
 	{
 		foreach ($courses as $course)
 		{
-			foreach ($course->lists() as $list)
+			if ($course->user_can_execute($user))
 			{
-				if ($list->list_id === $this->list_id)
-					//  Should now be true for all lists associated with all courses:
-					//  && $list->get_owner()->equals($course->get_owner()))
+				foreach ($course->units() as $unit)
 				{
-					return true;
+					if ($unit->user_can_execute($user))
+					{
+						if (in_array($this, $unit->lists()))
+						{
+							return true;
+						}
+						
+						foreach ($unit->lists() as $list)
+						{
+							if ($list->get_list_id() === $this->get_list_id())
+							{
+								return true;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -285,7 +297,9 @@ class EntryList extends DatabaseRow
 	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
 	private function user_can_read_via_some_course($user)
 	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_studied());
+		return !!$user
+			&& ($this->user_affiliated_via_courses($user, $user->courses_studied())
+				|| $this->user_affiliated_via_courses($user, $user->courses_instructed()));
 	}
 	
 	private function user_can_write_via_some_course($user)
@@ -433,8 +447,15 @@ class EntryList extends DatabaseRow
 					$error_code = ErrorReporter::ERRCODE_DATABASE;
 					return null;
 				}
+				
+				if (!($list_copy_id = Connection::query_insert_id()))
+				{
+					$error_message = "List failed to copy for user: Insertion id is null.";
+					$error_code = ErrorReporter::ERRCODE_DATABASE;
+					return null;
+				}
 
-				if (!($list_copy = EntryList::select_by_id(($list_copy_id = Connection::query_insert_id())))
+				if (!($list_copy = EntryList::select_by_id($list_copy_id))
 					|| !$list_copy->entries_add_from_list($list, true))
 				{
 					$error_message = "List failed to copy for user: $error.";

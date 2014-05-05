@@ -161,6 +161,10 @@ class Response extends CourseComponent
 	{
 		return Sitting::select_by_id($this->get_sitting_id());
 	}
+	public function get_container()
+	{
+		return $this->get_sitting();
+	}
 	public function get_student_id()
 	{
 		return $this->get_sitting()->get_student_id();

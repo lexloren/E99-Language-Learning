@@ -227,9 +227,11 @@ class ListTest extends PHPUnit_Framework_TestCase
 		$this->assertCount(7, $entries);
 
 		//  Copies the list by virtue of its readability in the course
+		//      Question from Hans:  This assertion was true just 6 lines earlier.... why false now?
+		$this->assertTrue($course_list->session_user_can_read());
 		$copied_list = $course_list->copy_for_session_user();
 		$this->assertNotNull($copied_list);
-		$this->assertEquals($user1, $copied_list->get_owner());
+		$this->assertTrue($user1->equals($copied_list->get_owner()));
 		$entries = $copied_list->entries();
 		$this->assertCount(7, $entries);
 	}

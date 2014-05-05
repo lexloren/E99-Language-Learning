@@ -200,10 +200,6 @@ class DatabaseRow extends ErrorReporter
 		return null;
 	}
 	
-	public function user_can_see($user)
-	{
-		return $this->user_can_read($user);
-	}
 	public function user_can_read($user)
 	{
 		return $this->user_can_write($user) ||
@@ -217,13 +213,9 @@ class DatabaseRow extends ErrorReporter
 	}
 	public function user_can_execute($user)
 	{
-		return false;
+		return $this->user_can_read($user);
 	}
 	
-	public function session_user_can_see()
-	{
-		return !!Session::get() && $this->user_can_see(Session::get()->get_user());
-	}
 	public function session_user_can_read()
 	{
 		return !!Session::get() && $this->user_can_read(Session::get()->get_user());
@@ -249,7 +241,7 @@ class DatabaseRow extends ErrorReporter
 	
 	protected function privacy()
 	{
-		return $this->session_user_can_see();
+		return !$this->session_user_can_read();
 	}
 	
 	protected function privacy_mask($array, $exceptions = array (), $privacy = null)
@@ -263,8 +255,6 @@ class DatabaseRow extends ErrorReporter
 				if (!in_array($key, $exceptions)) $array[$key] = null;
 			}
 		}
-		
-		$array["hiddenFromSessionUser"] = $privacy;
 		
 		$array["sessionUserPermissions"] = array (
 			"read" => $this->session_user_can_read(),

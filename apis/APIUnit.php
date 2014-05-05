@@ -48,7 +48,7 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			Session::get()->set_result_assoc($unit->json_assoc_detailed(false));
+			Session::get()->set_result_assoc($unit->json_assoc_detailed());
 		}
 	}
 	
@@ -129,7 +129,14 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->lists());
+			if ($unit->session_user_can_execute())
+			{
+				self::return_array_as_json($unit->lists());
+			}
+			else
+			{
+				;
+			}
 		}
 	}
 	
@@ -191,7 +198,14 @@ class APIUnit extends APIBase
 		
 		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
 		{
-			self::return_array_as_json($unit->tests());
+			if ($unit->session_user_can_execute())
+			{
+				self::return_array_as_json($unit->tests());
+			}
+			else
+			{
+				;
+			}
 		}
 	}
 }

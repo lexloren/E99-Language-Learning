@@ -11,7 +11,7 @@ class APIEntry extends APIBase
 		
 		if (($entry = self::validate_selection_id($_GET, "entry_id", "Entry")))
 		{
-			Session::get()->set_result_assoc($entry->json_assoc_detailed(false));
+			Session::get()->set_result_assoc($entry->json_assoc_detailed());
 		}
 	}
 	

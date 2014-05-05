@@ -23,7 +23,7 @@ class APITest extends APIBase
 					{
 						$errors = 0;
 						
-						$mode = isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+						$mode = isset($_POST["mode_id"]) && strlen($_POST["mode_id"]) > 0 ? intval($_POST["mode_id"], 10) : (isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null);
 						
 						if (isset($_POST["list_ids"]))
 						{
@@ -76,9 +76,9 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
 		{
-			if ($test->session_user_can_read())
+			if ($test->session_user_can_administer())
 			{
-				if (($result_assoc = $test->json_assoc_detailed(false)))
+				if (($result_assoc = $test->json_assoc_detailed()))
 				{
 					Session::get()->set_result_assoc($result_assoc);
 				}
@@ -86,7 +86,7 @@ class APITest extends APIBase
 			}
 			else
 			{
-				Session::get()->set_error_assoc("Test Selection", "Session user cannot read test.");
+				Session::get()->set_error_assoc("Test Selection", "Session user cannot select test.");
 			}
 		}
 	}
@@ -191,7 +191,7 @@ class APITest extends APIBase
 		
 		//  session_user_can_read() here?
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test"))
-				&& $test->session_user_can_read())
+				&& $test->session_user_can_administer())
 		{
 			self::return_array_as_json($test->sittings());
 		}
@@ -203,7 +203,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_GET, "test_id", "Test")))
 		{
-			if ($test->session_user_can_write())
+			if ($test->session_user_can_administer())
 			{
 				if (is_array($entries_json_array = $test->entries_json_array()))
 				{
@@ -227,7 +227,7 @@ class APITest extends APIBase
 		
 		if (($test = self::validate_selection_id($_POST, "test_id", "Test")))
 		{
-			$mode = isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null;
+			$mode = isset($_POST["mode_id"]) && strlen($_POST["mode_id"]) > 0 ? intval($_POST["mode_id"], 10) : (isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null);
 			
 			if (Connection::transact(
 				function () use ($test, $mode)
@@ -335,10 +335,9 @@ class APITest extends APIBase
 						$errors += !$test->set_entry_number($entry, $_POST["number"]);
 					}
 					
-					if (isset($_POST["mode"]))
+					$mode = isset($_POST["mode_id"]) && strlen($_POST["mode_id"]) > 0 ? intval($_POST["mode_id"], 10) : (isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null);
+					if ($mode !== null)
 					{
-						$mode = intval($_POST["mode"], 10);
-						
 						$errors += !$test->set_entry_mode($entry, $mode);
 					}
 					
@@ -435,7 +434,14 @@ class APITest extends APIBase
 		{
 			if (($test_entry_id = array_search($entry, $test->entries())))
 			{
-				self::return_array_as_json(Pattern::select_all_for_test_entry_id($test_entry_id, $prompts_only));
+				if ($test->session_user_can_administer())
+				{
+					self::return_array_as_json(Pattern::select_all_for_test_entry_id($test_entry_id, $prompts_only));
+				}
+				else
+				{
+					;
+				}
 			}
 			else
 			{
@@ -508,10 +514,7 @@ class APITest extends APIBase
 					
 					if (!($next_json_assoc = $sitting->next_json_assoc()))
 					{
-						if ($did_respond)
-						{
-							$next_json_assoc = "Session user has finished the test.";
-						}
+						$next_json_assoc = "Session user has finished sitting for the test.";
 					}
 					
 					return $next_json_assoc;

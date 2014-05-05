@@ -239,16 +239,21 @@ class APITestTest extends PHPUnit_Framework_TestCase
 
 	public function test_entries()
 	{
-		$_SESSION["handle"] = $this->db->handles[0];
-                $test_id = $this->test_id;
-                $_GET["test_id"] = $test_id;
+		$_SESSION["handle"] = $this->db->handles[1];
+		$test_id = $this->test_id;
+		$test = Test::select_by_id($test_id);
+		$_GET["test_id"] = $test_id;
 		$this->obj->entries();
+		$this->assertFalse($test->session_user_can_administer());
 		$result = Session::get()->get_result_assoc();
 		$result_assoc = $result["result"];
 		$this->assertNull($result_assoc);
-
+		
+		$_SESSION["handle"] = $test->get_owner()->get_handle();
+		
 		$this->db->add_unit_test_entries($test_id, $this->db->user_ids[0], 5);
 		$this->obj->entries();
+		$this->assertTrue($test->session_user_can_administer());
 		$result = Session::get()->get_result_assoc();
 		$result_assoc = $result["result"];
 		$this->assertCount(5, $result_assoc);

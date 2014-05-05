@@ -108,9 +108,15 @@ class CourseTest extends PHPUnit_Framework_TestCase
 	public function test_lists()
 	{
 		$course = Course::select_by_id($this->db->course_ids[0]);
-		$lists = $course->lists();
+		
+		$lists = $course->lists(true);
+		$this->assertNotNull($lists);
+		$this->assertCount(0, $lists);
+		
+		$lists = $course->lists(false);
 		$this->assertNotNull($lists);
 		$this->assertCount(1, $lists);
+		
 		$this->assertEquals($lists[0]->get_list_id(), $this->db->list_ids[0]);
 	}
 	

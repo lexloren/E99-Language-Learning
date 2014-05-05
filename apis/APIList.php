@@ -25,7 +25,7 @@ class APIList extends APIBase
 		
 		if (($list = self::validate_selection_id($_GET, "list_id", "EntryList")))
 		{
-			Session::get()->set_result_assoc($list->json_assoc_detailed(false));
+			Session::get()->set_result_assoc($list->json_assoc_detailed());
 		}
 	}
 	

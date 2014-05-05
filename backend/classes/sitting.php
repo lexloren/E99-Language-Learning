@@ -93,6 +93,10 @@ class Sitting extends CourseComponent
 	{
 		return Test::select_by_id($this->get_test_id());
 	}
+	public function get_container()
+	{
+		return $this->get_course();
+	}
 	public function get_course()
 	{
 		return $this->get_test()->get_course();
@@ -257,16 +261,19 @@ class Sitting extends CourseComponent
 		if (isset($this->entries_remaining)) unset($this->entries_remaining);
 	}
 	
-	public function user_can_execute($user)
+	public function user_can_read($user)
 	{
-		return $this->get_test()->user_can_execute($user)
-			&& $this->get_user()->equals($user)
-			&& $this->entries_remaining() > 0
-			&& (!$this->get_test()->get_timer()
-				|| time() - $this->get_timeframe()->get_open() <= $this->get_test()->get_timer());
+		return $this->user_can_administer($user)
+			|| $this->get_user()->equals($user);
 	}
 	
-	public function user_cannot_execute_reasons($user)
+	public function user_can_execute($user)
+	{
+		return $this->user_can_read($user)
+			&& $this->get_test()->get_disclosed();
+	}
+	
+	public function user_cannot_respond_reasons($user)
 	{
 		$reasons = array ();
 		if (!$this->get_test()->user_can_execute($user))
@@ -292,16 +299,13 @@ class Sitting extends CourseComponent
 	
 	public function next_json_assoc()
 	{
-		if (!$this->session_user_can_execute())
+		if (!Session::get()
+			|| count(($reasons = $this->user_cannot_respond_reasons(Session::get()->get_user()))) > 0)
 		{
-			return static::errors_push("Session user cannot execute test " . implode(" and ", $this->user_cannot_execute_reasons(Session::get()->get_user())) . ".");
+			return static::errors_push("Session user cannot execute test " . implode(" and ", $reasons) . ".");
 		}
 		
-		if (!count($entries_remaining = $this->entries_remaining()))
-		{
-			return static::errors_push("Session user has already responded to all test entries.");
-		}
-		
+		$entries_remaining = $this->entries_remaining();
 		$entry = array_shift($entries_remaining);
 		
 		$result = Connection::query(sprintf("SELECT * FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d",
@@ -321,7 +325,7 @@ class Sitting extends CourseComponent
 			return static::errors_push("Test failed to get mask for next entry for session user.");
 		}
 		
-		$mode = $result_assoc["mode"];
+		$mode = intval($result_assoc["mode"], 10);
 		
 		$result = Connection::query(sprintf("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
 			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
@@ -342,25 +346,11 @@ class Sitting extends CourseComponent
 		
 		return array (
 			"testEntryId" => $test_entry_id,
+			"mode" => Mode::select_by_id($mode),
 			"entriesRemainingCount" => count($entries_remaining),
 			"prompt" => $mode === 1 ? $entry->get_word_0() : $entry->get_word_1(),
 			"options" => $options
 		);
-	}
-	
-	public function user_can_read($user)
-	{
-		if (!$user) return false;
-		
-		return $this->user_can_write($user)
-			|| ($this->get_user()->equals($user)
-				&& $this->get_test()->get_disclosed());
-	}
-	
-	public function session_user_can_read()
-	{
-		return !!Session::get()
-			&& $this->user_can_read(Session::get()->get_user());
 	}
 	
 	public function delete()
@@ -375,12 +365,6 @@ class Sitting extends CourseComponent
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
-	protected function privacy()
-	{
-		return !$this->session_user_can_write()
-			&& !$this->session_user_can_read();
-	}
-	
 	public function json_assoc($privacy = null)
 	{
 		return $this->privacy_mask(array (
@@ -390,8 +374,12 @@ class Sitting extends CourseComponent
 			"student" => $this->get_user()->json_assoc(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
 			"responsesCount" => $this->responses_count(),
-			"score" => $this->get_score_json_assoc(),
-			"message" => $this->get_message()
+			"score" => $this->session_user_can_administer() || $this->get_test()->get_disclosed()
+				? $this->get_score_json_assoc()
+				: null,
+			"message" => $this->session_user_can_administer() || $this->get_test()->get_disclosed()
+				? $this->get_message()
+				: null
 		), array (0 => "sittingId"), $privacy);
 	}
 	
@@ -401,7 +389,9 @@ class Sitting extends CourseComponent
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["responses"] = self::json_array($this->responses());
+		$assoc["responses"] = $this->session_user_can_administer() || $this->get_test()->get_disclosed()
+			? self::json_array($this->responses())
+			: null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

@@ -41,7 +41,7 @@ class APICourse extends APIBase
 		
 		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			Session::get()->set_result_assoc($course->json_assoc_detailed(false));
+			Session::get()->set_result_assoc($course->json_assoc_detailed());
 		}
 	}
 	
@@ -139,17 +139,6 @@ class APICourse extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 		
 		$courses = array ();
-		if (isset($_GET["course_ids"]))
-		{
-			foreach (explode(",", $_GET["course_ids"]) as $course_id)
-			{
-				if (($course = Course::select_by_id($course_id))
-					&& ($course->session_user_can_read()))
-				{
-					$courses[$course_id] = $course;
-				}
-			}
-		}
 		
 		if (isset($_GET["user_ids"]))
 		{
@@ -242,6 +231,25 @@ class APICourse extends APIBase
 			$courses = $courses_to_keep;
 		}
 		
+		foreach ($courses as $key => $course)
+		{
+			if (!$course->session_user_can_read())
+			{
+				unset($courses[$key]);
+			}
+		}
+		
+		if (isset($_GET["course_ids"]))
+		{
+			foreach (explode(",", $_GET["course_ids"]) as $course_id)
+			{
+				if (($course = Course::select_by_id($course_id)))
+				{
+					$courses[$course_id] = $course;
+				}
+			}
+		}
+		
 		self::return_array_as_json($courses);
 	}
 
@@ -267,9 +275,16 @@ class APICourse extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 		
 		//  session_user_can_read() here?
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->lists(!$course->session_user_can_write()));
+			if ($course->session_user_can_execute())
+			{
+				self::return_array_as_json($course->lists(!$course->session_user_can_administer()));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Lists Selection", "Session user cannot open course.");
+			}
 		}
 	}
 	
@@ -278,9 +293,17 @@ class APICourse extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 		
 		//  session_user_can_read() here?
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course"))
+			&& $course->session_user_can_read())
 		{
-			self::return_array_as_json($course->tests(!$course->session_user_can_write()));
+			if ($course->session_user_can_execute())
+			{
+				self::return_array_as_json($course->tests(!$course->session_user_can_administer()));
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Tests Selection", "Session user cannot open course.");
+			}
 		}
 	}
 	
@@ -289,9 +312,16 @@ class APICourse extends APIBase
 		if (!Session::get()->reauthenticate()) return;
 		
 		//  session_user_can_read() here?
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_write())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->sittings());
+			if ($course->session_user_can_administer())
+			{
+				self::return_array_as_json($course->sittings());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Sittings Selection", "Session user cannot administer course.");
+			}
 		}
 	}
 	
@@ -299,9 +329,16 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->units());
+			if ($course->session_user_can_execute())
+			{
+				self::return_array_as_json($course->units());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Units Selection", "Session user cannot open course.");
+			}
 		}
 	}
 	
@@ -309,9 +346,16 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->students());
+			if ($course->session_user_can_execute())
+			{
+				self::return_array_as_json($course->students());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Students Selection", "Session user cannot open course.");
+			}
 		}
 	}
 	
@@ -351,9 +395,16 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course")) && $course->session_user_can_read())
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->instructors());
+			if ($course->session_user_can_execute())
+			{
+				self::return_array_as_json($course->instructors());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Instructors Selection", "Session user cannot open course.");
+			}
 		}
 	}
 	
@@ -457,10 +508,18 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (($course = self::validate_selection_id($_GET, "course_id", "Course"))
-			&& ($course->session_user_can_write() || $course->session_user_is_researcher()))
+		if (($course = self::validate_selection_id($_GET, "course_id", "Course")))
 		{
-			self::return_array_as_json($course->researchers());
+			
+			if ($course->session_user_can_administer()
+				|| $course->session_user_is_researcher())
+			{
+				self::return_array_as_json($course->researchers());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Course-Researchers Selection", "Session user cannot read course researchers.");
+			}
 		}
 	}
 	

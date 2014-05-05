@@ -11,7 +11,7 @@ class APIAnnotation extends APIBase
 		
 		if (($annotation = self::validate_selection_id($_GET, "annotation_id", "Annotation")))
 		{
-			Session::get()->set_result_assoc($annotation->json_assoc_detailed(false));
+			Session::get()->set_result_assoc($annotation->json_assoc_detailed());
 		}
 	}
 	

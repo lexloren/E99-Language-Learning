@@ -167,6 +167,10 @@ class Pattern extends CourseComponent
 		
 		return $this->test;
 	}
+	public function get_container()
+	{
+		return $this->get_course();
+	}
 	
 	private $prompt = null;
 	public function get_prompt()

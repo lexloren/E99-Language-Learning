@@ -418,8 +418,7 @@ class Course extends DatabaseRow
 		$lists = array ();
 		foreach ($this->units() as $unit)
 		{
-			if (!$limit_to_open_units
-				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
+			if (!$limit_to_open_units || $unit->session_user_can_execute())
 			{
 				foreach ($unit->lists() as $list)
 				{
@@ -437,8 +436,7 @@ class Course extends DatabaseRow
 		$tests = array ();
 		foreach ($this->units() as $unit)
 		{
-			if (!$limit_to_open_units
-				|| (!$unit->get_timeframe() || $unit->get_timeframe()->is_current()))
+			if (!$limit_to_open_units || $unit->session_user_can_execute())
 			{
 				foreach ($unit->tests() as $test)
 				{
@@ -505,22 +503,31 @@ class Course extends DatabaseRow
 			: null;
 	}
 	
+	public function user_can_administer($user)
+	{
+		return $this->user_is_instructor($user) || $this->user_is_owner($user);
+	}
+	public function session_user_can_administer()
+	{
+		return !!Session::get()
+			&& $this->user_can_administer(Session::get()->get_user());
+	}
+	
 	public function user_can_write($user)
 	{
-		return $this->user_is_instructor($user)
-			|| $this->user_is_owner($user);
+		return $this->user_can_administer($user);
 	}
 	
 	public function user_can_read($user)
 	{
-		return $this->user_can_write($user)
+		return $this->user_can_administer($user)
 			|| $this->user_is_student($user)
 			|| $this->get_public();
 	}
 	
 	public function user_can_execute($user)
 	{
-		return $this->user_can_write($user)
+		return $this->user_can_administer($user)
 			|| ($this->user_is_student($user) && $this->is_current());
 	}
 	
@@ -653,19 +660,6 @@ class Course extends DatabaseRow
 		return $this->users_remove($this->students, "course_students", $user);
 	}
 	
-	protected function privacy()
-	{
-		if (!$this->session_user_can_write()
-				&& ($this->session_user_can_read() && !$this->is_current()))
-		{
-			return true;
-		}
-		else
-		{
-			return parent::privacy();
-		}
-	}
-	
 	public function instructors_count()
 	{
 		if (isset($this->instructors)) return count($this->instructors);
@@ -743,12 +737,12 @@ class Course extends DatabaseRow
 		
 		$public_keys = array_keys($assoc);
 		
-		$assoc["instructors"] = self::json_array($this->instructors());
-		$assoc["students"] = self::json_array($this->students());
+		$assoc["instructors"] = $this->session_user_can_execute() ? self::json_array($this->instructors()) : null;
+		$assoc["students"] = $this->session_user_can_execute() ? self::json_array($this->students()) : null;
 		$assoc["researchers"] = $this->session_user_can_write() ? self::json_array($this->researchers()) : null;
-		$assoc["units"] = self::json_array($this->units());
-		$assoc["lists"] = self::json_array($this->lists(!$this->session_user_can_write()));
-		$assoc["tests"] = self::json_array($this->tests(!$this->session_user_can_write()));
+		$assoc["units"] = $this->session_user_can_execute() ? self::json_array($this->units()) : null;
+		$assoc["lists"] = $this->session_user_can_execute() ? self::json_array($this->lists(!$this->session_user_can_write())) : null;
+		$assoc["tests"] = $this->session_user_can_execute() ? self::json_array($this->tests(!$this->session_user_can_write())) : null;
 		
 		return $this->privacy_mask($assoc, $public_keys, $privacy);
 	}

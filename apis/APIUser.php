@@ -29,9 +29,10 @@ class APIUser extends APIBase
 	
 	public function select()
 	{
-		if (!Session::get()->reauthenticate() || !($user = Session::get()->get_user())) return;
+		if (!Session::get()->reauthenticate()
+			|| !($user = Session::get()->get_user())) return;
 		
-		Session::get()->set_result_assoc($user->json_assoc_detailed(false));
+		Session::get()->set_result_assoc($user->json_assoc_detailed());
 	}
 	
 	public function authenticate()
@@ -74,6 +75,7 @@ class APIUser extends APIBase
 	public function lists()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->lists(isset($_GET["course_ids"]) ? explode(",", $_GET["course_ids"]) : null));
 	}
 	
@@ -96,12 +98,14 @@ class APIUser extends APIBase
 	public function sittings()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->sittings());
 	}
 	
 	public function languages()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->languages());
 	}
 	
@@ -371,18 +375,21 @@ class APIUser extends APIBase
 	public function courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->courses());
 	}
 	
 	public function student_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->courses_studied());
 	}
 	
 	public function instructor_courses()
 	{
 		if (!Session::get()->reauthenticate()) return;
+		
 		self::return_array_as_json(Session::get()->get_user()->courses_instructed());
 	}
 }
