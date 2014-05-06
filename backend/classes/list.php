@@ -422,15 +422,20 @@ class EntryList extends DatabaseRow
 	
 	public function in($array)
 	{
-		foreach ($array as $item)
+		foreach ($array as $key => $item)
 		{
-			if ($item->get_list_id() === $this->get_list_id())
+			if ($this->equals($item))
 			{
-				return true;
+				return $key;
 			}
 		}
 		
-		return false;
+		return null;
+	}
+	
+	public function equals($list)
+	{
+		return !!$list && $list->get_list_id() === $this->get_list_id();
 	}
 	
 	public function copy_for_user($user, $hint = null)
@@ -438,7 +443,7 @@ class EntryList extends DatabaseRow
 		if ($hint !== true)
 		{
 			if (!$this->user_can_read($user)
-				&& (!$hint || !$this->in($hint->lists())))
+				&& (!$hint || ($this->in($hint->lists()) === null)))
 			{
 				return static::errors_push("User cannot read list to copy.");
 			}

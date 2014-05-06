@@ -244,7 +244,7 @@ class APITest extends APIBase
 							{
 								foreach ($list->entries() as $entry)
 								{
-									if (!$entry->in($entries))
+									if ($entry->in($entries) === null)
 									{
 										array_push($entries, $entry);
 									}
@@ -259,7 +259,7 @@ class APITest extends APIBase
 						{
 							if (($entry = Entry::select_by_id($entry_id)))
 							{
-								if (!$entry->in($entries))
+								if ($entry->in($entries) === null)
 								{
 									array_push($entries, $entry);
 								}
@@ -513,20 +513,19 @@ class APITest extends APIBase
 				{
 					if (!($sitting = $test->execute_for_session_user())) return null;
 					
+					$prev_json_assoc = null;
 					if (isset($_POST["test_entry_id"]) && isset($_POST["contents"]))
 					{
 						if (!($response = Response::insert($_POST["test_entry_id"], $_POST["contents"])))
 						{
 							return null;
 						}
+						else $prev_json_assoc = $response->json_assoc();
 					}
 					
-					if (!($next_json_assoc = $sitting->next_json_assoc()))
-					{
-						$next_json_assoc = "Session user has finished sitting for the test.";
-					}
+					$next_json_assoc = $sitting->next_json_assoc();
 					
-					return $next_json_assoc;
+					return array ("prev" => $prev_json_assoc, "next" => $next_json_assoc);
 				}
 			))) Session::get()->set_result_assoc($result);
 			else Session::get()->set_error_assoc("Test Execution", self::errors_collect(array ("Test", "Sitting", "Response")));

@@ -144,7 +144,7 @@ class DatabaseRow extends ErrorReporter
 		return $cache;
 	}
 	
-	protected static function update_this($instance, $table, $assignments, $id_column, $id, $override_safety = false)
+	protected static function update_this($instance, $table, $assignments, $id_column, $id, $override_safety = false, $override_permissions = false)
 	{
 		$assignments_sql = array ();
 		foreach ($assignments as $column => $value)
@@ -168,7 +168,7 @@ class DatabaseRow extends ErrorReporter
 		
 		$failure_message = "Failed to update $table setting $assignments_sql where $id_column = $id";
 		
-		if (!$instance->session_user_can_write())
+		if (!$override_permissions && !$instance->session_user_can_write())
 		{
 			return static::errors_push("$failure_message: Session user cannot write.", ErrorReporter::ERRCODE_PERMISSIONS);
 		}

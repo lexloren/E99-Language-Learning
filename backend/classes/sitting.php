@@ -186,6 +186,31 @@ class Sitting extends CourseComponent
 	{
 		return self::cache($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
+	public function get_response_for_entry($entry)
+	{
+		$entry = $entry->copy_for_user($this->get_test()->get_owner(), $this->get_test());
+		if ($entry->in($test->entries()) === null)
+		{
+			return static::errors_push("Sitting cannot get response for entry not in test.");
+		}
+		foreach ($this->responses() as $response)
+		{
+			if (!($pattern = $response->get_pattern()))
+			{
+				return static::errors_push("Sitting failed to get pattern for response: " . Response::errors_unset());
+			}
+			if (!($pattern_entry = $pattern->get_entry()))
+			{
+				return static::errors_push("Sitting failed to get entry for response pattern: " . Pattern::errors_unset());
+			}
+			if ($pattern_entry->equals($entry))
+			{
+				return $response;
+			}
+		}
+		
+		return null;
+	}
 	
 	private $timeframe = null;
 	public function get_timeframe()

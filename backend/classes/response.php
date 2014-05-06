@@ -281,7 +281,7 @@ class Response extends CourseComponent
 			"testId" => $this->get_test_id(),
 			"student" => $this->get_user()->json_assoc(),
 			"timestamp" => $this->get_timestamp(),
-			"pattern" => $this->get_pattern()->json_assoc()
+			"pattern" => $this->get_pattern()->json_assoc(!$this->get_test()->get_disclosed())
 		), array (0 => "responseId"), $privacy);
 	}
 }

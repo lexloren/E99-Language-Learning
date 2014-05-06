@@ -205,14 +205,19 @@ class Entry extends DatabaseRow
 	
 	public function in($array)
 	{
-		foreach ($array as $item)
+		foreach ($array as $key => $item)
 		{
-			if ($this->get_entry_id() === $item->get_entry_id())
+			if ($this->equals($item))
 			{
-				return true;
+				return $key;
 			}
 		}
-		return false;
+		return null;
+	}
+	
+	public function equals($entry)
+	{
+		return !!$entry && $this->get_entry_id() === $entry->get_entry_id();
 	}
 	
 	//  Returns a copy of $this owned and editable by the Session User

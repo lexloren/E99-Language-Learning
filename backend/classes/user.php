@@ -558,12 +558,12 @@ class User extends DatabaseRow
 	
 	public function in($array)
 	{
-		foreach ($array as $user)
+		foreach ($array as $key => $user)
 		{
-			if ($user->equals($this)) return true;
+			if ($user->equals($this)) return $key;
 		}
 		
-		return false;
+		return null;
 	}
 	
 	public function user_can_read($user)

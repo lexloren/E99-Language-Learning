@@ -86,7 +86,7 @@ class Test extends CourseComponent
 	public function set_disclosed($disclosed)
 	{
 		$disclosed = !!$disclosed ? 1 : 0;
-		if (!self::update_this($this, "course_unit_tests", array ("disclosed" => $disclosed), "test_id", $this->get_test_id()))
+		if (!self::update_this($this, "course_unit_tests", array ("disclosed" => $disclosed), "test_id", $this->get_test_id(), false, $this->session_user_can_administer()))
 		{
 			return null;
 		}
@@ -401,7 +401,7 @@ class Test extends CourseComponent
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
-		$entry = $entry->copy_for_user($this->get_owner());
+		$entry = $entry->copy_for_user($this->get_owner(), $entry->session_user_can_read());
 		
 		if (!$entry)
 		{

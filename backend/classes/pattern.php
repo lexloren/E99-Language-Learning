@@ -151,7 +151,11 @@ class Pattern extends CourseComponent
 	}
 	public function get_entry_id()
 	{
-		return $this->get_test()->get_entry_by_test_entry_id($this->get_test_entry_id())->get_entry_id();
+		return $this->get_entry()->get_entry_id();
+	}
+	public function get_entry()
+	{
+		return $this->get_test()->get_entry_by_test_entry_id($this->get_test_entry_id());
 	}
 	
 	private $test;

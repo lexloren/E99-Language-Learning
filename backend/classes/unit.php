@@ -289,7 +289,7 @@ class Unit extends CourseComponent
 		}
 		
 		if (!$list->get_owner()->equals($this->get_owner())
-			&& !($list = $list->copy_for_user($this->get_owner(), $this)))
+			&& !($list = $list->copy_for_user($this->get_owner(), $list->session_user_can_read())))
 		{
 			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}

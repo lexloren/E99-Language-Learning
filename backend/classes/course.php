@@ -374,7 +374,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_instructor($user)
 	{
-		return !!$user && $user->in($this->instructors());
+		return !!$user && ($user->in($this->instructors()) !== null);
 	}
 	
 	private $researchers;
@@ -389,7 +389,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_researcher($user)
 	{
-		return !!$user && $user->in($this->researchers());
+		return !!$user && ($user->in($this->researchers()) !== null);
 	}
 	
 	private $students;
@@ -404,7 +404,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_student($user)
 	{
-		return !!$user && $user->in($this->students());
+		return !!$user && ($user->in($this->students()) !== null);
 	}
 	
 	private $units;
