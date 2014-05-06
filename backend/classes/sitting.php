@@ -368,10 +368,14 @@ class Sitting extends CourseComponent
 			}
 		}
 		
-		foreach ($options as &$option)
+		if ($options)
 		{
-			$option = $option->get_contents();
+			foreach ($options as &$option)
+			{
+				$option = $option->get_contents();
+			}
 		}
+		else $options = null;
 		
 		return array (
 			"testEntryId" => $this->get_test()->get_test_entry_id_for_entry($entry),
