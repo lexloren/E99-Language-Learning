@@ -424,7 +424,7 @@ class Sitting extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"sittingId" => $this->get_sitting_id(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
@@ -451,7 +451,7 @@ class Sitting extends CourseComponent
 			? self::json_array($this->responses())
 			: null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

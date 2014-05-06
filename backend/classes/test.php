@@ -864,7 +864,7 @@ class Test extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"testId" => $this->get_test_id(),
 			"name" => $this->get_name(),
 			"unitId" => $this->get_unit_id(),
@@ -890,9 +890,24 @@ class Test extends CourseComponent
 		
 		$assoc["entries"] = $this->session_user_can_administer() ? $this->entries_json_array() : null;
 		$assoc["sittings"] = $this->session_user_can_administer() ? self::json_array($this->sittings()) : null;
+		$assoc["studentsMissingSittings"] = null;
+		
+		if ($this->session_user_can_administer())
+		{
+			$students_missing_sittings = $this->get_course()->students();
+			
+			foreach ($this->sittings() as $sitting)
+			{
+				$key = $sitting->get_user()->in($students_missing_sittings);
+				if ($key !== null) unset($students_missing_sittings[$key]);
+			}
+			
+			$assoc["studentsMissingSittings"] = self::json_array($students_missing_sittings);
+		}
+		
 		$assoc["patterns"] = $this->session_user_can_administer() ? self::json_array($this->patterns()) : null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	public function seconds_per_entry()

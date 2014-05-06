@@ -704,7 +704,7 @@ class Course extends DatabaseRow
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_name(),
 			"password" => $this->session_user_can_write() ? $this->get_password() : null,
@@ -737,7 +737,7 @@ class Course extends DatabaseRow
 		$assoc["lists"] = $this->session_user_can_execute() ? self::json_array($this->lists(!$this->session_user_can_write())) : null;
 		$assoc["tests"] = $this->session_user_can_execute() ? self::json_array($this->tests(!$this->session_user_can_write())) : null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	/*

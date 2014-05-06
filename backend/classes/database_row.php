@@ -244,7 +244,7 @@ class DatabaseRow extends ErrorReporter
 		return !$this->session_user_can_read();
 	}
 	
-	protected function privacy_mask($array, $exceptions = array (), $privacy = null)
+	protected function prune($array, $exceptions = array (), $privacy = null, $remove_nested_duplicates = true)
 	{
 		if ($privacy === null) $privacy = $this->privacy();
 		

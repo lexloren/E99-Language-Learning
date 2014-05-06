@@ -257,7 +257,7 @@ class Entry extends DatabaseRow
 			"annotationsCount" => $this->annotations_count()
 		);
 		
-		return $this->privacy_mask($assoc, array (0 => "entryId"), $privacy);
+		return $this->prune($assoc, array (0 => "entryId"), $privacy);
 	}
 	
 	public function json_assoc_detailed($privacy = null, $hint = null)
@@ -652,7 +652,7 @@ class UserEntry extends Entry
 		$assoc["lists"] = self::json_array($this->lists());
 		$assoc["annotations"] = self::json_array($this->annotations());
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

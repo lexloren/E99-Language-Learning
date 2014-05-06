@@ -275,7 +275,7 @@ class Response extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"responseId" => $this->get_response_id(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),

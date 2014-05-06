@@ -208,7 +208,7 @@ class Practice extends DatabaseRow
 
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"practiceEntryId" => $this->get_practice_entry_id(),
 			"userEntryId" => $this->get_user_entry_id(),
 			"mode" => $this->get_mode(),

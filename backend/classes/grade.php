@@ -88,7 +88,7 @@ class Grade extends DatabaseRow
 			"descriptionLong" => $this->get_desc_long()
 		);
 		
-		return $this->privacy_mask($assoc, array_keys($assoc), false);
+		return $this->prune($assoc, array_keys($assoc), false);
 	}
 }
 

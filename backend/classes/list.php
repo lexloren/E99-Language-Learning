@@ -491,7 +491,7 @@ class EntryList extends DatabaseRow
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
 			"owner" => $this->get_owner()->json_assoc_condensed(),
@@ -512,7 +512,7 @@ class EntryList extends DatabaseRow
 			array_push($assoc["entries"], $entry->json_assoc(null, $this));
 		}
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

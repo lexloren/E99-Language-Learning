@@ -333,7 +333,7 @@ class Pattern extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"patternId" => $this->get_pattern_id(),
 			"testId" => $this->get_test()->get_test_id(),
 			"entryId" => $this->get_entry_id(),
