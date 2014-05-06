@@ -19,6 +19,8 @@ $(document).ready(function(){
   else {
     $("#test-sitting").hide();
     $("#updateTestForm").hide();
+    $("#entry-addition").hide();
+    $("#dict-add").hide();
     $("#list-add").hide();
     $("#word-search").hide();
     $("#owner-search").hide();
@@ -164,67 +166,95 @@ function getTestInfo(){
                 testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+tname+'</h3>';
                 $("#test-header").html(testheader);
                 if(data.result.sessionUserPermissions.read == true){
-                    $("#testname").val(data.result.name);
-                    if(data.result.message != null){
-                        $("#testdesc").val(data.result.message);
-                    }
-                    if(data.result.timer != null){
-                        $("#timer").val(data.result.timer/60);
-                    }
-                    if(data.result.timeframe != null){
-                        if(data.result.timeframe.open != null){
-                            opendate = prettyDate(new Date(data.result.timeframe.open*1000));
-                            $("#testopendate").val(opendate);
+                    if(data.result.sessionUserPermissions.write == true){
+                        $("#entry-addition").show();
+                        $("#dict-add").show();
+                        $("#testname").val(data.result.name);
+                        if(data.result.message != null){
+                            $("#testdesc").val(data.result.message);
                         }
-                        if(data.result.timeframe.close != null){
-                            closedate = prettyDate(new Date(data.result.timeframe.close*1000));
-                            $("#testclosedate").val(closedate);
+                        if(data.result.timer != null){
+                            $("#timer").val(data.result.timer/60);
                         }
+                        if(data.result.timeframe != null){
+                            if(data.result.timeframe.open != null){
+                                opendate = prettyDate(new Date(data.result.timeframe.open*1000));
+                                $("#testopendate").val(opendate);
+                            }
+                            if(data.result.timeframe.close != null){
+                                closedate = prettyDate(new Date(data.result.timeframe.close*1000));
+                                $("#testclosedate").val(closedate);
+                            }
+                        }
+                    }
+                    else{
+                        $('#test-update').html('<br />');
                     }
                     if(data.result.entriesCount == 0){
                         $('#entry-list').html("<em>This test currently has no entries.</em>");
                     }
                     else{
-                        entryHeader = '<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td>';
-                        entryHeader += '<td>Mode &nbsp; <span id="mode\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="bottom" title="Mode refers to the Question/Answer type.<br/>';
-                        for(num=0;num<modevalues.length;num++){
-                            entryHeader += modevalues[num][0]+': '+modevalues[num][1]+'<br />';
-                        }
-                        entryHeader += '"></span></td><td>Multiple Choice</td><td></td></tr></thead><tbody>';
-                        $('#entry-list').append(entryHeader);
-                        $('#mode-info').tooltip({html: true});
-                        $.each(data.result.entries, function(i, item){
-                            count = i + 1;
-                            orderselect = "entryorder"+item.entryId;
-                            modeselect = "modeorder"+item.entryId;
-                            entryrow = '<tr><td>'+item.words[item.languages[1]]+'</td>' +
-                                       '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
-                                       '<td>' + item.words[item.languages[0]] + '</td>' +
-                                       '<td><select id='+orderselect+'>';
-                            for(num=1;num<=data.result.entriesCount;num++){
-                                if(num == count)
-                                    selected = '<option selected="selected">'
-                                else
-                                    selected = '<option>';
-                                entryrow += selected+num+'</option>';
-                            }
-                            entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update]</span></td>';
-                            entryrow += '<td><select id='+modeselect+'>';
+                        if(data.result.sessionUserPermissions.write == true){
+                            entryHeader = '<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td>';
+                            entryHeader += '<td>Mode &nbsp; <span id="mode\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="bottom" title="Mode refers to the Question/Answer type.<br/>';
                             for(num=0;num<modevalues.length;num++){
-                                if(modevalues[num][0] == item.mode.modeId)
-                                    selected = '<option value="'+modevalues[num][0]+'" selected="selected">';
-                                else
-                                    selected = '<option value="'+modevalues[num][0]+'">';
-                                entryrow += selected;
-                                entryrow += modevalues[num][0];
-                                entryrow += '</option>';
+                                entryHeader += modevalues[num][0]+': '+modevalues[num][1]+'<br />';
                             }
-                            entryrow += '</select> &nbsp; <span class="span-action" onclick="updateMode('+item.entryId+');">[Update]</span></td>';
-                            entryrow += '<td><span class="glyphicon glyphicon-pencil span-action" onclick="showOptions('+item.entryId+');" title="Update multiple-choice options"></span></td>';
-                            entryrow += '<td><label class="select-entry-ids"><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
-                            $('#entry-list').append(entryrow);
-                        });
-                        $('#entry-list').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="randOrder();">[Randomize Order]</span></td><td><span class="span-action" onclick="randMode();">[Randomize Mode]</span></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
+                            entryHeader += '"></span></td><td>Multiple Choice</td><td></td></tr></thead><tbody>';
+                            $('#entry-list').append(entryHeader);
+                            $('#mode-info').tooltip({html: true});
+                            $.each(data.result.entries, function(i, item){
+                                count = i + 1;
+                                orderselect = "entryorder"+item.entryId;
+                                modeselect = "modeorder"+item.entryId;
+                                entryrow = '<tr><td>'+item.words[item.languages[1]]+'</td>' +
+                                           '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
+                                           '<td>' + item.words[item.languages[0]] + '</td>' +
+                                           '<td><select id='+orderselect+'>';
+                                for(num=1;num<=data.result.entriesCount;num++){
+                                    if(num == count)
+                                        selected = '<option selected="selected">'
+                                    else
+                                        selected = '<option>';
+                                    entryrow += selected+num+'</option>';
+                                }
+                                entryrow += '</select> &nbsp; <span class="span-action" onclick="updateOrder('+item.entryId+');">[Update]</span></td>';
+                                entryrow += '<td><select id='+modeselect+'>';
+                                for(num=0;num<modevalues.length;num++){
+                                    if(modevalues[num][0] == item.mode.modeId)
+                                        selected = '<option value="'+modevalues[num][0]+'" selected="selected">';
+                                    else
+                                        selected = '<option value="'+modevalues[num][0]+'">';
+                                    entryrow += selected;
+                                    entryrow += modevalues[num][0];
+                                    entryrow += '</option>';
+                                }
+                                entryrow += '</select> &nbsp; <span class="span-action" onclick="updateMode('+item.entryId+');">[Update]</span></td>';
+                                entryrow += '<td><span class="glyphicon glyphicon-pencil span-action" onclick="showOptions('+item.entryId+');" title="Update multiple-choice options"></span></td>';
+                                entryrow += '<td><label class="select-entry-ids"><input type="checkbox" class="rem_entry_ids" name="rem_entry_ids" value='+item.entryId+'>&nbsp; Remove</label></td></tr>';
+                                $('#entry-list').append(entryrow);
+                            });
+                            $('#entry-list').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="randOrder();">[Randomize Order]</span></td><td><span class="span-action" onclick="randMode();">[Randomize Mode]</span></td><td></td><td><span class="span-action" onclick="removeEntries();">[Remove Selected Entries]</span></td></tr></tbody>');
+                        }
+                        else{
+                            entryHeader = '<thead><tr><td>Word</td><td>Pronunciation</td><td>Translation</td><td>Order</td>';
+                            entryHeader += '<td>Mode &nbsp; <span id="mode\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="bottom" title="Mode refers to the Question/Answer type.<br/>';
+                            for(num=0;num<modevalues.length;num++){
+                                entryHeader += modevalues[num][0]+': '+modevalues[num][1]+'<br />';
+                            }
+                            entryHeader += '"></span></td></tr></thead><tbody>';
+                            $('#entry-list').append(entryHeader);
+                            $('#mode-info').tooltip({html: true});
+                            $.each(data.result.entries, function(i, item){
+                                count = i + 1;
+                                entryrow = '<tr><td>'+item.words[item.languages[1]]+'</td>' +
+                                           '<td>' + item.pronuncations[item.languages[1]] + '</td>' +
+                                           '<td>' + item.words[item.languages[0]] + '</td>' +
+                                           '<td>' + count + '</td><td>'+item.mode.modeId+'</td></tr>';
+                                $('#entry-list').append(entryrow);
+                            });
+                            $('#entry-list').append('</tbody>');
+                        }
                     }
                     if(data.result.sittingsCount == 0){
                         $('#sitting-list').html("<em>No students have taken this test yet.</em>");
@@ -234,11 +264,11 @@ function getTestInfo(){
                         $.each(data.result.sittings, function(i, item){
                             sittingrow = '<tr id="sittingrow'+item.sittingId+'"><td><a href="sitting.html?sittingid='+item.sittingId+'">'+item.student.handle+'</a></td>' +
                                          '<td>'+item.responsesCount+'</td>' +
-                                         '<td>'+item.score.scoredTotal+'</td>' +
+                                         '<td>'+item.score.scoreScaled+'</td>' +
                                          '<td><span class="glyphicon glyphicon-trash span-action" onclick="deleteSitting('+item.sittingId+');" title="Delete this sitting"></span></tr>';
                             $('#sitting-list').append(sittingrow);
                         });
-                        $('#sitting-list').append('<tr><td></td><td></td><td></td><td><span class="span-action" onclick="clearTest();">[Delete All Sittings]</span></td></tr></tbody>');
+                        $('#sitting-list').append('<tr><td></td><td></td><td id="disclose"><span class="span-action" onclick="discloseScores(1);">[Show Scores to Students]</span></td><td><span class="span-action" onclick="clearTest();">[Delete All Sittings]</span></td></tr></tbody>');
                     }
                     getLangs();
                     $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
@@ -288,6 +318,36 @@ function deleteTest(){
             $("#testData").hide();
             successMessage("Test was successfully deleted.");
         }
+    })
+	 .fail(function(error) {
+		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
+        $("html, body").animate({scrollTop:0}, "slow"); 
+	  });
+    return; 
+}
+
+function discloseScores(flag){
+    if(!confirm("This will allow students to see their scores on this test. Continue?")){
+        return;
+    }
+	  $('#failure').hide();
+	  $('#success').hide();
+
+    $.post('../../test_update.php', 
+        { test_id: test, disclosed: flag } )
+        .done(function(data){
+          	authorize(data);
+            if(data.isError){
+                var errorMsg = "Test could not be updated. Please reload the page and try again.";
+                failureMessage(errorMsg);
+            }
+            else{
+                if(flag == 1)
+                    $("#disclose").html('<span class="span-action" onclick="discloseScores(0);">[Hide Scores from Students]</span>');
+                else
+                    $("#disclose").html('<span class="span-action" onclick="discloseScores(1);">[Show Scores to Students]</span>');
+            }
+            $("html, body").animate({scrollTop:0}, "slow");  
     })
 	 .fail(function(error) {
 		    failureMessage('Something has gone wrong. Please refresh the page and try again.');
@@ -718,7 +778,8 @@ function showOptions(id){
                   else {
                       if(data.result.length <= 1)
                           $('#choice-note').html('This is not currently a multiple-choice question. Add additional choices to make the question multiple-choice.<br />');
-			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Note</td><td>Score</td><td></td></tr></thead><tbody>');
+			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Note &nbsp; <span id="note\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="top" title="Notes are shown in test results to students who selected the choice."</td><td>Score</td><td></td></tr></thead><tbody>');
+                      $('#note-info').tooltip({html: true});
 			                $.each( data.result, function(i,item) {
                           feedback = '';
                           if(item.message != null)

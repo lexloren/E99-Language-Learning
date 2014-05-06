@@ -182,7 +182,7 @@ class Test extends CourseComponent
 				
 				if ($number > ($entries_count = count($test->entries()))) $number = $entries_count;
 				
-				if ($number === ($number_formerly = $this->number_for_entry($entry))) return $test;
+				if ($number === ($number_formerly = $test->number_for_entry($entry))) return $test;
 				
 				if ($number_formerly < 1)
 				{

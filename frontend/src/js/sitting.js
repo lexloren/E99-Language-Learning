@@ -37,7 +37,7 @@ function getSittingInfo(){
                 $('#sitting-details').append('<label for="feedback">Feedback for Student:</label>');
                 if(data.result.owner.isSessionUser == true){
                     $('#sitting-details').append('<textarea class="form-control container-small" id="feedback" rows="3">'+feedback+'</textarea><br />');
-                    $('#sitting-details').append('<button class="btn btn-primary" type="button" onclick="updateFeedback();">Update</button><br /><br />');
+                    $('#sitting-details').append('<button class="btn btn-primary" type="button" onclick="updateFeedback();">Update Feedback</button><br /><br />');
                 }
                 else{
                     $('#sitting-details').append(feedback+'<br />');
