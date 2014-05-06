@@ -564,9 +564,9 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_users(3);
 		$this->db->add_dictionary_entries(10);
 		
-		$course_id = $this->db->add_course($this->db->user_ids[1]);
+		$course_id = $this->db->add_course($this->db->user_ids[0]);
 		$course_unit_id = $this->db->add_course_unit($this->db->course_ids[0]);
-		$list_id = $this->db->add_list($this->db->user_ids[1], $this->db->entry_ids);
+		$list_id = $this->db->add_list($this->db->user_ids[0], $this->db->entry_ids);
 		$this->db->add_unit_list($course_unit_id, $list_id);
 		
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[2]);
@@ -574,8 +574,6 @@ class APICourseTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_student($this->db->course_ids[0], $this->db->user_ids[3]);
 		$this->db->add_practice_data_for_list($list_id, $this->db->user_ids[3], 2, $this->db->mode_ids[0]);
 
-		$this->db->add_course_researcher($this->db->course_ids[0], $this->db->user_ids[0]);
-		
 		$_GET["course_id"] =  $course_id;
 		$_SESSION["handle"] = $this->db->handles[0];
 		

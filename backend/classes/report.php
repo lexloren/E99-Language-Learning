@@ -16,8 +16,8 @@ class Report extends ErrorReporter
 		if (!$course)
 			return static::errors_push("Invalid course id.");
 
-		$permissions = self::check_permissions($course, $session_user, null);
-		if (0 == $permissions)
+		$instructors = $course->instructors();
+		if (!in_array($session_user, $instructors))
 			return static::errors_push("Do not have access to this information.");
 		
 		$students = $course->students();
@@ -34,13 +34,13 @@ class Report extends ErrorReporter
 		{
 			$user_id = $student->get_user_id();
 			$studentReport = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat);
-			$studentReport["name"] = 2 == $permissions? "Student X" : $student->get_name_full();
+			$studentReport["student"] = $student->json_assoc(false);
 			array_push($studentPracticeReports, $studentReport);
 		}
 		
 		$course = Course::select_by_id($course_id);
 		
-		$course_report["courseName"] = $course->get_name();
+		$course_report["course"] = $course->json_assoc();
 		$course_report["studentPracticeReports"] = $studentPracticeReports;
 		$course_report["difficultEntries"] = self::create_difficult_entries_report($progress_stat);
 		
@@ -91,12 +91,10 @@ class Report extends ErrorReporter
 
 			$entryReport = Array();
 
-			$entryReport["entryId"] = $entry_id;
 			$entry = Entry::select_by_id($entry_id);
-			$entryReport["words"] =  $entry->words();
+			$entryReport["entry"] = $entry->json_assoc();
 			$entryReport["practiceCount"] = $num_practiced;
-			$entryReport["gradePointAverage"] = self::get_student_average_point_for_entry($entry_id, $user_id);
-			$entryReport["classGradePointAverage"] = $entry_to_points[$entry_id];
+			$entryReport["averageGradePoint"] = self::get_student_average_point_for_entry($entry_id, $user_id);
 			
 			array_push($entryReports, $entryReport);
 			if ($num_practiced > 0)
@@ -127,9 +125,9 @@ class Report extends ErrorReporter
 		{
 			$result_assoc = $result->fetch_assoc();
 			$unitReport = Array();
-			$unitReport["unitName"] = $result_assoc["name"];
-			$unitReport["progressPercent"] = 0.0;
-			$unitReport["classProgressPercentAverage"] = 0.0;
+			$unit = Unit::select_by_id($result_assoc["unit_id"]);
+			$unitReport["unit"] = $unit->json_assoc();
+			$unitReport["progressPercent"] = 0.0; //TODO
 			array_push($unitsReport, $unitReport);
 		}
 		
@@ -223,31 +221,6 @@ class Report extends ErrorReporter
 		return $progress_stat;
 	}
 	
-	//returns 0 if no permission, 1 if all , 2 if anonymous
-	private static function check_permissions($course, $session_user, $student_user)
-	{
-		if (!$session_user || !$course)
-			return 0;
-		
-		$instructors = $course->instructors();
-
-		if (in_array($session_user, $instructors))
-			return 1;
-			
-		$researchers = $course->researchers();
-		if (in_array($session_user, $researchers))
-			return 2;
-			
-		if ($student_user == $session_user)
-		{
-			$students = $course->students();
-			if (in_array($student_user, $students))
-				return 1;
-		}
-		
-		return 0;
-	}
-	
 	private static function create_difficult_entries_report($progress_stat)
 	{
 		$entry_to_points = $progress_stat["entry_to_points"];
@@ -257,11 +230,11 @@ class Report extends ErrorReporter
 		{
 			foreach($entry_to_points as $k => $a)
 			{
-				$entry = array(
-					"entry_id" => $k,
-					"classGradePointAverage" => $a
-				);
-				array_push($difficult_entries, $entry);
+				$entry = Entry::select_by_id($k);
+				$difficult_entry = array();
+				$difficult_entry["entry"] = $entry->json_assoc();
+				$difficult_entry["averageGradePoint"] = $a;
+				array_push($difficult_entries, $difficult_entry);
 			}
 		}
 		
@@ -278,91 +251,61 @@ class Report extends ErrorReporter
 		if (!$course)
 			return static::errors_push("Invalid course id.");
 		
-		$permissions = self::check_permissions($course, $session_user, null);
-		if (0 == $permissions)
+		$instructors = $course->instructors();
+		if (!in_array($session_user, $instructors))
 			return static::errors_push("Do not have access to this information.");
 
-
 		$students = $course->students();
-		
-		$report = array();
-		
-		$report["course"] = $course->json_assoc();
-		
-		$studentTestReports = array();
-
-		$student_no = 0;
-		foreach($students as $student)
-		{
-			$student_no++;
-
-			$name = ($permissions == 2) ? "Student - $student_no" : $student->get_name_full();
-
-			$studentEntryReport = self::creatre_student_test_report($student, $name, $course);
-			$studentTestReports = array_merge($studentTestReports, $studentEntryReport);
-		}
-		
-		$report["studentTestReports"] = $studentTestReports;
-		return $report;
-	}
-
-	private static function creatre_student_test_report($student, $name, $course)
-	{
 		$tests = $course->tests(false);
+		$testReports = array();
 
-		$studentReports = array();
 		foreach($tests as $test)
 		{
 			$time_frame = $test->get_timeframe();
 			if (null != $time_frame && !$time_frame->is_closed())
 				continue;
 
-			$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
-			if (null == $sitting)
-				continue;
-
-			$responses = $sitting->responses();
-			foreach($responses as $resonse)
+			$studentTestReports = array();
+			$student_no = 0;
+			foreach($students as $student)
 			{
-				$studentEntryReport = array();
-				$studentEntryReport["name"] = $name;
-
-				$pattern = $resonse->get_pattern();
-				$user_entry_id = $pattern->get_entry_id();
-				$test_entry_id = $pattern->get_test_entry_id();
-				$entry = $test->get_entry_by_test_entry_id($test_entry_id);
-				$studentEntryReport["entry"] = !!$entry ? $entry->json_assoc(false) : null;
-				$studentEntryReport["score"] = $pattern->get_score();
-				$studentEntryReport["scoreAverage"] = self::get_class_average_score($test_entry_id);
-				$studentEntryReport["mode"] = $pattern->get_mode()->json_assoc();
-				array_push($studentReports, $studentEntryReport);
+				$student_no++;
+				$studentTestReport = self::creatre_student_test_report($student, $test);
+				array_push($studentTestReports, $studentTestReport);
 			}
-		}
-		return $studentReports;
-	}
-
-	private static function get_class_average_score($test_entry_id)
-	{
-		$sql = "SELECT AVG(course_unit_test_entry_patterns.score) ".
-				"FROM course_unit_test_sitting_responses ".
-				"INNER JOIN course_unit_test_entry_patterns ON course_unit_test_sitting_responses.pattern_id = course_unit_test_entry_patterns.pattern_id ".
-				"WHERE course_unit_test_sitting_responses.pattern_id IN ".
-				"(SELECT pattern_id FROM course_unit_test_entry_patterns WHERE test_entry_id = $test_entry_id) ";
-
-		$result = Connection::query($sql);
-
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("Failed to create course report for student: $error.");
-		}
-
-		if ($result->num_rows != 1)
-		{
-			return static::errors_push("Failed to create course report for student:");
+			
+			$testReport = array();
+			$testReport["test"] = $test->json_assoc(false);
+			$testReport["studentTestReports"] = $studentTestReports;
+			
+			array_push($testReports, $testReport);
 		}
 		
-		$result_assoc = $result->fetch_assoc();
-		return (float)$result_assoc["AVG(course_unit_test_entry_patterns.score)"];
+		$report = array();
+		$report["course"] = $course->json_assoc();
+		$report["testReports"] = $testReports;
+		return $report;
+	}
+
+	private static function creatre_student_test_report($student, $test)
+	{
+		$sitting = Sitting::select_by_test_id_user_id($test->get_test_id(), $student->get_user_id());
+		
+		$entryReports = array();
+
+		$entries = $test->entries();
+		foreach($entries as $entry)
+		{
+			$entryReport = array();
+			$entryReport["entry"] = $entry->json_assoc(false);
+			$entryReport["score"] = 0.0; //TODO
+			array_push($entryReports, $entryReport);
+		}
+		
+		$studentTestReport = array();
+		$studentTestReport["student"] = $student->json_assoc(false);
+		$studentTestReport["entryReports"] = $entryReports;
+		return $studentTestReport;
 	}
 }	
 

@@ -44,7 +44,9 @@ class ReportTest extends PHPUnit_Framework_TestCase
 
 		//set researcher as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
-		$this->verify_course_practice_report();
+		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
+		$this->assertNull($report);
+		$this->assertTrue(Session::get()->has_error());
 
 		//set student as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
@@ -80,7 +82,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		for($i=0; $i<2; $i++)
 		{
 			$studentReport = $studentPracticeReport[$i];
-			$this->assertNotNull($studentReport["name"]);
+			$this->assertNotNull($studentReport["student"]);
 			$this->assertEquals($studentReport["progressPercent"], 0.5);
 		}
 		
@@ -93,17 +95,18 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		for($i=1; $i<10; $i++)
 		{
 			$entry = $difficult_entries[$i];
-			$this->assertTrue($prev_entry["classGradePointAverage"] <= $report["difficultEntries"]);
+			$this->assertTrue($prev_entry["averageGradePoint"] <= $entry["averageGradePoint"]);
 			$prev_entry = $entry;
 		}
 
-		$this->assertEquals($report["courseName"], $this->db->course_names[0]);
+		$course = $report["course"];
+		$this->assertEquals($course["name"], $this->db->course_names[0]);
 	}
 	
 	public function test_get_course_test_report()
 	{
-		//set researcher as session user
-		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
+		//set instructor as session user
+		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
 		
 		$week = (7 * 24 * 60 * 60);
 		$time_now = time();
@@ -136,7 +139,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		
 		$report = Report::get_course_test_report($this->db->course_ids[0]);	
 		$this->assertNotNull($report);
-		//print_r($report);
+		//print_r(json_encode($report));
 		//exit;
 	}
 }

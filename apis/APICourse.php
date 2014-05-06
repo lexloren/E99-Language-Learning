@@ -596,7 +596,7 @@ class APICourse extends APIBase
 			$report = Report::get_course_practice_report($_GET["course_id"]);
 			if (!!$report)
 			{
-				$output = array ("practiceReport" => $report);
+				$output = array ("coursePracticeReport" => $report);
 				Session::get()->set_result_assoc($output);
 			}
 			else
@@ -616,7 +616,7 @@ class APICourse extends APIBase
 		$report = Report::get_course_test_report($_GET["course_id"]);
 		if (!!$report)
 		{
-			$output = array ("testReport" => $report);
+			$output = array ("courseTestsReport" => $report);
 			Session::get()->set_result_assoc($output);
 		}
 		else
