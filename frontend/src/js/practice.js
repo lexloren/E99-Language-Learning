@@ -415,8 +415,7 @@ function flip_card() {
 }
 
 function practice_complete() {
-	$("#success").html('Practice complete!');
-	$("#success").show();
+	successMessage('Practice complete!');
 	$('#deck-selection-container').show();
 	$('#flashcard-container').hide();
 	$('#card-followup-container').hide();
