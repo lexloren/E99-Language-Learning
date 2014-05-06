@@ -157,11 +157,14 @@ function getUnitInfo(){
                             else
                                 tclose = "";
                         }
+                        if(item.timer != null)
+                            time = item.timer/60;
                         if(item.name != null)
                             tname = item.name;
                         else
                             tname = '<em>unnamed</em>';
                         testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+tname+'</a></td>' +
+                                  '<td>' + time + '</td>' +
                                   '<td>' + topen + '</td>' +
                                   '<td>' + tclose + '</td></tr>';
                         $('#tests').append(testrow);
@@ -340,7 +343,7 @@ function refreshTests(){
                     $('#tests').html("<em>This unit currently has no tests.</em>");
                 }
                 else{
-                    $('#tests').append('<tr><th>Name</th><th>Open Date</th><th>Close Date</th></tr>');         
+                    $('#tests').append('<tr><th>Name</th><th>Time (in minutes)</th><th>Open Date</th><th>Close Date</th></tr>');         
                     $.each(data.result, function(i, item){
                         if(item.timeframe == null){
                             topen = "";
@@ -356,7 +359,10 @@ function refreshTests(){
                             else
                                 tclose = "";
                         }
+                        if(item.timer != null)
+                            time = item.timer/60;
                         testrow = '<tr><td><a href="test.html?testid='+item.testId+'">'+item.name+'</a></td>' +
+                                  '<td>' + time + '</td>' +
                                   '<td>' + topen + '</td>' +
                                   '<td>' + tclose + '</td></tr>';
                         $('#tests').append(testrow);
