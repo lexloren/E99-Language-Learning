@@ -16,6 +16,8 @@ var ipronun = false;
 var itrans = false;
 var practice_from = "";
 var practice_to = "";
+var cardCount = 0;
+var totalCards = 0;
 
 /* prepare */
 
@@ -108,40 +110,55 @@ function shiftCards() {
 your decks" form */
 function getLists() {
 	$("#loader-show-lists").show();
-	var lists = [];
 	var currentURL = URL + 'user_lists.php';
 	$.getJSON( currentURL, function( data ) {
 		authorize(data);
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 			return;
-		} else 	if (data.result === 0) {
-			failureMessage("You don't have any lists to practice with.");
 		} else {
-			var i = 1;
-			var colId;
-			$.each( data.result, function( ) {
-				if (i == 1) {
-					colId = "plist1";
-				} else if (i == 2) {
-					colId = "plist2";
-				} else if (i == 3) {
-					colId = "plist3";
-				} else {
-					colId = "plist4";
-					i = 0;
-				}
-				i++;
-				$(document.getElementById(colId)).append('<div class="checkbox"><label>' + 
-					'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');	
-			});
+			popLists(data.result);
 		}
-		$('#deck-selection-container').show();
-		$("#loader-show-lists").hide();
 	})
 	.fail(function(error) {
 		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 		return;
+	});
+	currentURL = URL + 'user_student_courses_lists.php';
+	$.getJSON( currentURL, function( data ) {
+		authorize(data);
+		if (data.isError === true) {
+			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
+			return;
+		} else {
+			popLists(data.result);
+		}
+	})
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+		return;
+	});
+	$('#deck-selection-container').show();
+	$("#loader-show-lists").hide();
+}
+
+function popLists(results) {
+	var i = 1;
+	var colId;
+	$.each(results, function( ) {
+		if (i == 1) {
+			colId = "plist1";
+		} else if (i == 2) {
+			colId = "plist2";
+		} else if (i == 3) {
+			colId = "plist3";
+		} else {
+			colId = "plist4";
+			i = 0;
+		}
+		i++;
+		$(document.getElementById(colId)).append('<div class="checkbox"><label>' + 
+			'<input type="checkbox" name ="wordlist" id="' + this.listId + '"> ' + this.name + ' </label></div>');	
 	});
 }
 
@@ -195,34 +212,39 @@ function readOptions() {
 	
 	var showThird = $('#side3').prop('checked');
 	/* get checked options, removing invalid ones */
-	if ($('#side1-word').prop('checked') === true) {
+	if ($('#side1-word').prop('checked') == true) {
 		$('#side2-word').removeAttr('checked');
 		qword = true;
 		practice_from = 'unknown_language';
 	}
-	else if ($('#side1-pronounce').prop('checked') === true) {
+	else if ($('#side1-pronounce').prop('checked') == true) {
 		$('#side2-pronounce').removeAttr('checked');
 		qpronun = true;
 		practice_from = 'unknown_pronunciation';
 	}
-	else if ($('#side1-trans').prop('checked') === true) {
+	else if ($('#side1-trans').prop('checked') == true) {
 		$('#side2-trans').removeAttr('checked');
 		qtrans = true;
 		practice_from = 'known_language';
-	}	
-	if ($('#side2-word').prop('checked') === true) {
+	}		
+	if ($('#side2-word').prop('checked') == true) {
 		aword = true;
 		practice_to = 'unknown_language';
 	}
-	else if ($('#side2-pronounce').prop('checked') === true) {
+	else if ($('#side2-pronounce').prop('checked') == true) {
 		apronun = true;
 		practice_to = 'unknown_pronunciation';
 	}	
-	else if (($('#side2-trans').prop('checked') === true)) {
+	else if (($('#side2-trans').prop('checked') == true)) {
 		atrans = true;
 		practice_to = 'known_language';
 	}
-	
+	if ((qword == false) && (qpronun  == false) && (qtrans == false)) {
+		return false;
+	}
+	if ((aword == false) && (apronun  == false) && (atrans == false)) {
+		return false;
+	}
 	/* get mode from selection */
 	if (qword) {
 		if (apronun) {
@@ -271,9 +293,13 @@ function readOptions() {
 
 /* send user's selected decks to the backend and receive a list of cards to practice with */
 function getCards() {
+	cardCount = 0;
+	totalCards = 0;
 	
 	if ( readOptions() == false) {
+		console.log("nope");
 		failureMessage('Please select a question and answer.');
+		return;
 	}
 	var requestedDecks = [];
 	$("input[name='wordlist'][type='checkbox']:checked").each(function() {
@@ -309,6 +335,8 @@ function getCards() {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
 			wordList = data.result;
+			totalCards = wordList.length;
+			$('#deck-len').html(totalCards);
 			$('#flashcard-container').show();
 			$('#card-followup-container').hide();
 			nextCard();	
@@ -364,6 +392,10 @@ function nextCard() {
 			$('#flashcard-2b').html(trans);
 		}
 		
+		/* populate counts */
+		cardCount++;
+		$('#card-num').html(cardCount);
+
 		$('#flashcard-side1').show();
 		$('#flashcard-flip').show();
 		$('#flashcard-2a').hide();
