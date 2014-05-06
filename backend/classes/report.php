@@ -423,7 +423,7 @@ class Report extends ErrorReporter
 		}
 		
 		$result_assoc = $result->fetch_assoc();
-		return $result_assoc["AVG(course_unit_test_entry_patterns.score)"];
+		return (float)$result_assoc["AVG(course_unit_test_entry_patterns.score)"];
 	}
 }	
 
