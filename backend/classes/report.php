@@ -6,36 +6,7 @@ require_once "./backend/classes.php";
 class Report extends ErrorReporter
 {
 	protected static $errors = null;
-	public static function get_course_student_practice_report($course_id, $user_id, $mode_id)
-	{
-		$session_user = Session::get()->get_user();
-		if (!$session_user)
-			return static::errors_push("Session user has not reauthenticated.");
-	
-		$course = Course::select_by_id($course_id);
-		if (!$course)
-			return static::errors_push("Invalid course id.");
-
-		$student_user = User::select_by_id($user_id);
-		if (!$student_user)
-			return static::errors_push("Invalid student id.");
-
-		$permissions = self::check_permissions($course, $session_user, $student_user);
-		
-		if (1 != $permissions)
-			return static::errors_push("Do not have access to this information.");
-		
-		$progress_stat = self::generate_class_progress_stat($course_id, $mode_id);
-		if (!$progress_stat)
-			return null;
-
-		$report = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
-		$report["name"] = $student_user->get_name_full();
-		
-		return $report;
-	}
-
-	public static function get_course_practice_report($course_id, $mode_id)
+	public static function get_course_practice_report($course_id)
 	{
 		$session_user = Session::get()->get_user();
 		if (!$session_user)
@@ -51,7 +22,7 @@ class Report extends ErrorReporter
 		
 		$students = $course->students();
 		
-		$progress_stat = self::generate_class_progress_stat($course_id, $mode_id);
+		$progress_stat = self::generate_class_progress_stat($course_id);
 		if (!$progress_stat)
 			return null;
 		
@@ -62,7 +33,7 @@ class Report extends ErrorReporter
 		foreach($students as $student)
 		{
 			$user_id = $student->get_user_id();
-			$studentReport = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id);
+			$studentReport = self::create_course_practice_report_for_student($course_id, $user_id, $progress_stat);
 			$studentReport["name"] = 2 == $permissions? "Student X" : $student->get_name_full();
 			array_push($studentPracticeReports, $studentReport);
 		}
@@ -76,7 +47,7 @@ class Report extends ErrorReporter
 		return $course_report;
 	}
 	
-	private static function create_course_practice_report_for_student($course_id, $user_id, $progress_stat, $mode_id)
+	private static function create_course_practice_report_for_student($course_id, $user_id, $progress_stat)
 	{
 		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course_id);
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
@@ -106,7 +77,7 @@ class Report extends ErrorReporter
 			$entry_id = $result_assoc['entry_id'];
 			
 
-			$sql = sprintf("SELECT * FROM user_entry_results WHERE user_entry_id = %d AND mode = %d", $user_entry_id, $mode_id);
+			$sql = sprintf("SELECT * FROM user_entry_results WHERE user_entry_id = %d", $user_entry_id);
 			$result_practice = Connection::query($sql);
 			
 			if (!!($error = Connection::query_error_clear()))
@@ -124,7 +95,7 @@ class Report extends ErrorReporter
 			$entry = Entry::select_by_id($entry_id);
 			$entryReport["words"] =  $entry->words();
 			$entryReport["practiceCount"] = $num_practiced;
-			$entryReport["gradePointAverage"] = self::get_student_average_point_for_entry($entry_id, $user_id, $mode_id);
+			$entryReport["gradePointAverage"] = self::get_student_average_point_for_entry($entry_id, $user_id);
 			$entryReport["classGradePointAverage"] = $entry_to_points[$entry_id];
 			
 			array_push($entryReports, $entryReport);
@@ -166,16 +137,15 @@ class Report extends ErrorReporter
 	}
 	
 		
-	private static function get_class_average_point_for_entry($entry_id, $course_id, $mode_id)
+	private static function get_class_average_point_for_entry($entry_id, $course_id)
 	{
 		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries ".
-				"WHERE user_entry_results.mode = %d ".
 				"AND grades.grade_id = user_entry_results.grade_id ".
 				"AND user_entry_results.user_entry_id = user_entries.user_entry_id ".
 				"AND user_entries.entry_id = %d ".
 				"AND user_entries.user_id ".
 				"IN (SELECT user_id FROM course_students WHERE course_id = %d)",
-				$mode_id, $entry_id, $course_id
+				$entry_id, $course_id
 		);
 				
 		//print($sql);
@@ -195,15 +165,14 @@ class Report extends ErrorReporter
 			return -1;
 	}
 	
-	private static function get_student_average_point_for_entry($entry_id, $user_id, $mode_id)
+	private static function get_student_average_point_for_entry($entry_id, $user_id)
 	{
 		$sql = sprintf("SELECT AVG(grades.point) FROM grades, user_entry_results, user_entries
-				WHERE user_entry_results.mode = %d
 				AND grades.grade_id = user_entry_results.grade_id 
 				AND user_entry_results.user_entry_id = user_entries.user_entry_id
 				AND user_entries.entry_id = %d
 				AND user_entries.user_id = %d",
-				$mode_id, $entry_id, $user_id);
+				$entry_id, $user_id);
 				
 		//print($sql);
 		
@@ -222,7 +191,7 @@ class Report extends ErrorReporter
 			return 0;
 	}
 	
-	private static function generate_class_progress_stat($course_id, $mode_id)
+	private static function generate_class_progress_stat($course_id)
 	{
 		$sql = sprintf("SELECT unit_id FROM course_units WHERE course_id = %d", $course_id);
 		$sql = sprintf("SELECT list_id FROM course_unit_lists WHERE unit_id IN (%s)", $sql);
@@ -244,7 +213,7 @@ class Report extends ErrorReporter
 		while( !!($result_assoc = $result->fetch_assoc()) )
 		{
 			$entry_id = $result_assoc["entry_id"];
-			$point = self::get_class_average_point_for_entry($entry_id, $course_id, $mode_id);
+			$point = self::get_class_average_point_for_entry($entry_id, $course_id);
 			if ($point >= 0)
 				$entry_to_points[$entry_id] = $point;
 		}
@@ -297,36 +266,6 @@ class Report extends ErrorReporter
 		}
 		
 		return $difficult_entries;
-	}
-	
-	public static function get_course_student_test_report($course_id, $user_id)
-	{
-		$session_user = Session::get()->get_user();
-		if (!$session_user)
-			return static::errors_push("Session user has not reauthenticated.");
-	
-		$course = Course::select_by_id($course_id);
-		if (!$course)
-			return static::errors_push("Invalid course id.");
-
-		$student_user = User::select_by_id($user_id);
-		if (!$student_user)
-			return static::errors_push("Invalid student id.");
-
-		$permissions = self::check_permissions($course, $session_user, $student_user);
-		
-		if (1 != $permissions)
-			return static::errors_push("Do not have access to this information.");
-
-		$report = array();
-		
-		$report["course"] = $course->json_assoc();
-		
-		$studentEntryReport = self::creatre_student_test_report($student, $student->get_name_full(), $course);
-		
-		$report["studentTestReports"] = $studentTestReports;
-		
-		return $report;
 	}
 	
 	public static function get_course_test_report($course_id)
@@ -392,7 +331,7 @@ class Report extends ErrorReporter
 				$user_entry_id = $pattern->get_entry_id();
 				$test_entry_id = $pattern->get_test_entry_id();
 				$entry = $test->get_entry_by_test_entry_id($test_entry_id);
-				$studentEntryReport["entry"] = !!$entry ? $entry->json_assoc() : "ERROR";
+				$studentEntryReport["entry"] = !!$entry ? $entry->json_assoc(false) : null;
 				$studentEntryReport["score"] = $pattern->get_score();
 				$studentEntryReport["scoreAverage"] = self::get_class_average_score($test_entry_id);
 				$studentEntryReport["mode"] = $pattern->get_mode()->json_assoc();

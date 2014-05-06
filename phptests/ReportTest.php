@@ -36,25 +36,6 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		$this->db->add_course_researcher($this->db->course_ids[0], $this->db->user_ids[3]);
 	}
 	
-	public function test_get_course_student_practice_report()
-	{
-		//set instructor as session user
-		Session::get()->set_user(User::select_by_id($this->db->user_ids[0]));
-		$this->verify_course_student_practice_report(1);
-		$this->verify_course_student_practice_report(2);
-		
-		//set researcher as session user
-		Session::get()->set_user(User::select_by_id($this->db->user_ids[3]));
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[1], $this->db->mode_ids[1]);
-		$this->assertNull($report);
-
-		//set student as session user
-		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
-		$this->verify_course_student_practice_report(1);
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[2], $this->db->mode_ids[1]);
-		$this->assertNull($report);
-	}
-
 	public function test_get_course_practice_report()
 	{
 		//set instructor as session user
@@ -67,13 +48,13 @@ class ReportTest extends PHPUnit_Framework_TestCase
 
 		//set student as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[1]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
 		$this->assertNull($report);
 		$this->assertTrue(Session::get()->has_error());
 
 		//set outsider as session user
 		Session::get()->set_user(User::select_by_id($this->db->user_ids[4]));
-		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
 		$this->assertNull($report);
 		$this->assertTrue(Session::get()->has_error());
 	}
@@ -81,13 +62,13 @@ class ReportTest extends PHPUnit_Framework_TestCase
 	private function verify_course_practice_report()
 	{
 		//use a different mode
-		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[0]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
 		$this->assertNotNull($report);
 		$this->assertNotNull($report["studentPracticeReports"]);
 		$this->assertCount(2, $report["studentPracticeReports"]);
 
 		//use correct mode
-		$report = Report::get_course_practice_report($this->db->course_ids[0], $this->db->mode_ids[1]);		
+		$report = Report::get_course_practice_report($this->db->course_ids[0]);		
 		//print json_encode($report);
 		
 		$this->assertNotNull($report);
@@ -105,7 +86,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertNotNull($report["difficultEntries"]);
 		//print_r ($report["difficultEntries"]);
-		$this->assertCount(10, $report["difficultEntries"]);
+		$this->assertCount(20, $report["difficultEntries"]);
 		
 		$difficult_entries = $report["difficultEntries"];
 		$prev_entry = $difficult_entries[0];
@@ -117,38 +98,6 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		}
 
 		$this->assertEquals($report["courseName"], $this->db->course_names[0]);
-	}
-	
-	public function verify_course_student_practice_report($index)
-	{
-		//use a different mode
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[$index], $this->db->mode_ids[0]);
-		$this->assertNotNull($report, "failed for student ".$index);
-		$this->assertCount(0, $report["entryReports"]);
-
-		//Use the correct mode
-		$report = Report::get_course_student_practice_report($this->db->course_ids[0], $this->db->user_ids[$index], $this->db->mode_ids[1]);
-
-		$this->assertNotNull($report, "failed for student ".$index);
-		$this->assertEquals($report["name"], $this->db->names_given[$index].' '.$this->db->names_family[$index]);
-		$this->assertNotNull($report["progressPercent"]);
-		$this->assertNotNull($report["unitReports"]);
-		$this->assertNotNull($report["entryReports"]);
-
-		$this->assertCount(10, $report["entryReports"]);
-		
-		for($i=0; $i<10; $i++)
-		{
-			$entry_report = $report["entryReports"][$i];
-			$this->assertNotNull($entry_report);
-			if ($index == 1)
-				$this->assertEquals(3, $entry_report["practiceCount"]);
-			else
-				$this->assertEquals(2, $entry_report["practiceCount"]);
-		}
-		
-		//if ($s == 1) print json_encode($report);
-		//print_r($report);
 	}
 	
 	public function test_get_course_test_report()
