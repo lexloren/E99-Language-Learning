@@ -273,13 +273,20 @@ class Response extends CourseComponent
 		return self::delete_this($this, "course_unit_test_sitting_responses", "response_id", $this->get_response_id());
 	}
 	
+	public function entry_json_assoc()
+	{
+		$entry = $this->get_pattern()->get_entry();
+		return $this->get_test()->entry_json_assoc($entry, true);
+	}
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
 			"responseId" => $this->get_response_id(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"student" => $this->get_user()->json_assoc(),
+			"entry" => $this->entry_json_assoc(),
+			"student" => $this->get_user()->json_assoc_condensed(),
 			"timestamp" => $this->get_timestamp(),
 			"pattern" => $this->get_pattern()->json_assoc(!$this->get_test()->get_disclosed())
 		), array (0 => "responseId"), $privacy);

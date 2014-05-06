@@ -775,7 +775,7 @@ class Test extends CourseComponent
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
-	public function entry_json_assoc($entry)
+	public function entry_json_assoc($entry, $privacy = false)
 	{
 		if (!$entry)
 		{
@@ -802,28 +802,36 @@ class Test extends CourseComponent
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
-		$entry_assoc["scoreMean"] = 0.0;
-		$responses = Response::select_all_for_test_entry_id($test_entry_id);
-		if ($responses === null)
-		{
-			return static::errors_push("Test failed to get entry responses: " . Response::errors_unset());
-		}
-		
-		foreach ($responses as $response)
-		{
-			$entry_assoc["scoreMean"] += floatval($response->get_score());
-		}
-		if (count($responses)) $entry_assoc["scoreMean"] /= floatval(count($responses));
-		else $entry_assoc["scoreMean"] = null;
-		
-		$entry_assoc["scoreMeanScaled"] =
-			!!$this->entry_score_max($entry)
-				? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
-				: 0.0;
-		
 		foreach ($entry_assoc["options"] as &$option)
 		{
 			unset($option["sessionUserPermissions"]);
+		}
+		
+		if ($privacy && count($entry_assoc["options"]) === 1)
+		{
+			$entry_assoc["options"] = null;
+		}
+		
+		if (!$privacy)
+		{
+			$entry_assoc["scoreMean"] = 0.0;
+			$responses = Response::select_all_for_test_entry_id($test_entry_id);
+			if ($responses === null)
+			{
+				return static::errors_push("Test failed to get entry responses: " . Response::errors_unset());
+			}
+			
+			foreach ($responses as $response)
+			{
+				$entry_assoc["scoreMean"] += floatval($response->get_score());
+			}
+			if (count($responses)) $entry_assoc["scoreMean"] /= floatval(count($responses));
+			else $entry_assoc["scoreMean"] = null;
+			
+			$entry_assoc["scoreMeanScaled"] =
+				!!$this->entry_score_max($entry)
+					? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+					: 0.0;
 		}
 		
 		return $entry_assoc;
