@@ -232,8 +232,7 @@ class APITest extends APIBase
 			if (Connection::transact(
 				function () use ($test, $mode)
 				{
-					$errors = 0;
-					
+					$entries = array ();
 					if (isset($_POST["list_ids"]))
 					{
 						$list_ids = explode(",", $_POST["list_ids"]);
@@ -243,11 +242,13 @@ class APITest extends APIBase
 							if (($list = EntryList::select_by_id($list_id))
 								&& $list->session_user_can_read())
 							{
-								if (!$test->entries_add_from_list($list, $mode)) $errors ++;
-							}
-							else
-							{
-								$errors ++;
+								foreach ($list->entries() as $entry)
+								{
+									if (!$entry->in($entries))
+									{
+										array_push($entries, $entry);
+									}
+								}
 							}
 						}
 					}
@@ -256,12 +257,22 @@ class APITest extends APIBase
 					{
 						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
 						{
-							if (!($entry = Entry::select_by_id($entry_id))) $errors ++;
-							if (!$test->entries_add($entry, $mode)) $errors ++;
+							if (($entry = Entry::select_by_id($entry_id)))
+							{
+								if (!$entry->in($entries))
+								{
+									array_push($entries, $entry);
+								}
+							}
 						}
 					}
 					
-					if ($errors) return null;
+					foreach ($entries as $entry)
+					{
+						$test->entries_add($entry, $mode);
+					}
+					
+					$test->uncache_entries();
 					
 					return $test;
 				}

@@ -294,7 +294,7 @@ class Unit extends CourseComponent
 			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}
 		
-		Connection::query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
+		Connection::query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE unit_id = unit_id",
 			$this->get_unit_id(),
 			$list->get_list_id()
 		));

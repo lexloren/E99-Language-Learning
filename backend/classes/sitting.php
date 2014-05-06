@@ -337,30 +337,47 @@ class Sitting extends CourseComponent
 			return static::errors_push("$failure_message!");
 		}
 		
-		$mode = intval($result_assoc["mode"], 10);
-		
-		$result = Connection::query(sprintf("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
-			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
-		));
-		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("$failure_message: $error.");
-		}
-		
-		$options = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			array_push($options, $result_assoc["contents"]);
-		}
+		$options = $this->get_test()->entry_options($entry);
+		$mode = $this->get_test()->get_entry_mode($entry);
 		
 		if (count($options) == 1) $options = null;
 		
+		$pronunciation = $entry->pronunciations();
+		$pronunciation = array_pop($pronunciation);
+		
+		$prompt = "";
+		switch ($mode->get_mode_id())
+		{
+			case 6:
+			{
+				$prompt .= "\n$pronunciation";
+			} //NO break;
+			case 0:
+			case 2:
+			{
+				$prompt = $entry->get_word_1() . $prompt;
+			} break;
+			case 3:
+			case 4:
+			{
+				$prompt = $pronunciation;
+			} break;
+			default:
+			{
+				$prompt = $entry->get_word_0();
+			}
+		}
+		
+		foreach ($options as &$option)
+		{
+			$option = $option->get_contents();
+		}
+		
 		return array (
-			"testEntryId" => $test_entry_id,
-			"mode" => Mode::select_by_id($mode)->json_assoc(),
+			"testEntryId" => $this->get_test()->get_test_entry_id_for_entry($entry),
+			"mode" => $mode->json_assoc(),
 			"entriesRemainingCount" => count($entries_remaining),
-			"prompt" => $mode === 1 ? $entry->get_word_0() : $entry->get_word_1(),
+			"prompt" => $prompt,
 			"options" => $options
 		);
 	}
@@ -373,7 +390,6 @@ class Sitting extends CourseComponent
 	
 	public function responses_count()
 	{
-		if (isset($this->responses)) return count($this->responses);
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	

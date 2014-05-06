@@ -432,7 +432,7 @@ class Test extends CourseComponent
 				
 				if (isset($test->entries) && Connection::query_insert_id())
 				{
-					$test->entries[Connection::query_insert_id()] = $entry;
+					$test->entries[intval(Connection::query_insert_id(), 10)] = $entry;
 				}
 				
 				$result = Connection::query("SELECT mode_id AS mode FROM modes");
@@ -457,7 +457,7 @@ class Test extends CourseComponent
 					if (!Pattern::insert(
 								$test->get_test_id(),
 								$entry->get_entry_id(),
-								$contents[$mode % 3],
+								$contents[$mode_id % 3],
 								true,
 								null,
 								$mode_id
@@ -478,6 +478,11 @@ class Test extends CourseComponent
 		if (!$this->session_user_can_write())
 		{
 			return static::errors_push("Session user cannot edit test.");
+		}
+		
+		if (!$list->session_user_can_read())
+		{
+			return static::errors_push("Session user cannot read list to add.");
 		}
 		
 		if ($this->executed())
@@ -767,7 +772,6 @@ class Test extends CourseComponent
 	
 	public function entries_count()
 	{
-		if (isset($this->entries)) return count($this->entries);
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
@@ -778,7 +782,7 @@ class Test extends CourseComponent
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner(), true);
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
 		if (!$entry)
 		{
@@ -845,13 +849,11 @@ class Test extends CourseComponent
 	
 	public function sittings_count()
 	{
-		if (isset($this->sittings)) return count($this->sittings);
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function patterns_count()
 	{
-		if (isset($this->patterns)) return count($this->patterns);
 		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	

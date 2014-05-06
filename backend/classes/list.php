@@ -316,7 +316,6 @@ class EntryList extends DatabaseRow
 	
 	public function entries_count()
 	{
-		if (isset($this->entries)) return count($this->entries);
 		return self::count("list_entries", "list_id", $this->get_list_id());
 	}
 	
@@ -341,7 +340,7 @@ class EntryList extends DatabaseRow
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		Connection::query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
+		Connection::query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
 			$this->list_id,
 			$entry_added->get_user_entry_id()
 		));
@@ -421,11 +420,28 @@ class EntryList extends DatabaseRow
 		return $this->copy_for_user($session_user);
 	}
 	
-	public function copy_for_user($user)
+	public function in($array)
 	{
-		if (!$this->user_can_read($user))
+		foreach ($array as $item)
 		{
-			return static::errors_push("User cannot read list to copy.");
+			if ($item->get_list_id() === $this->get_list_id())
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public function copy_for_user($user, $hint = null)
+	{
+		if ($hint !== true)
+		{
+			if (!$this->user_can_read($user)
+				&& (!$hint || !$this->in($hint->lists())))
+			{
+				return static::errors_push("User cannot read list to copy.");
+			}
 		}
 		
 		$list = $this;
