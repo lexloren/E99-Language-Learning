@@ -1,13 +1,16 @@
 var URL = "../../";
 var listnum;
 
+
 $(document).ready(function(){
 	pageSetup();
 	$("#dict-add").hide();
 	$('#list-add').hide();
 	$('#rename-form').hide();
 	$('#loader-dict').hide();
+	$("#list-change").hide();
 	handleClicks();
+	getLangs();
 	listnum = getURLparam('listid');
 	if(listnum === null) {
 		showAllLists();
@@ -17,6 +20,27 @@ $(document).ready(function(){
 	}
 });
 
+function getLangs(){
+    $.getJSON('../../language_enumerate.php')
+        .done(function(data){
+            authorize(data);
+            if(data.isError){
+                failureMessage("Word search could not be initialized.");
+            }
+            else{
+                $.each(data.result, function(i, item){           
+                    $('#entry-lang1').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                    $('#entry-lang2').append('<option value="'+item.code+'">'+item.names.en+'</option>');
+                });
+            }
+    })
+    .fail(function(error) {
+        failureMessage('Something has gone wrong. Please refresh the page and try again.');
+    });    
+}
+
+
+
 function showAllLists() {
 	getLists();
 	var message = 'You can practice with your lists as well as lists from your courses at your ' +
@@ -25,15 +49,14 @@ function showAllLists() {
 }
 
 function handleClicks() {
-	$(document).on('click', '.list-delete', function (event) {
-		event.preventDefault();
-		deleteList($(this).parent().parent().attr("id"));
-		$(this).parent().parent().remove();
-	});
 	$(document).on('click', '.entry-delete', function (event) {
 		event.preventDefault();
 		delete_entry(this.id);
 		$(this).parent().parent().remove();
+	});
+	$('#delete-list').submit(function(event) {
+		event.preventDefault();
+		delete_entry(listnum);
 	});
 	$('#dict-search').submit(function(event) {
 		event.preventDefault();
@@ -78,7 +101,7 @@ function getLists() {
 		} else {
 			$('#lists').append('<tbody>');
 			$.each( data.result, function () {
-				insertListRow(this.name, this.listId);
+				insertListRow(this.name, this.listId, this.entriesCount);
 			});
 			$('#lists').append('</tbody>');
 		}
@@ -88,10 +111,10 @@ function getLists() {
 	});
 }
 
-function insertListRow(listname, listid) {
-	$('#lists').append('<tr class="static-listname" id="'+ listid + '"><td>' + listname + '</td>' + 
-		'<td><a href="list.html?listid='+ listid + '" class="btn btn-primary">View/Edit</a></td>' +
-		'<td><a href="#" class="list-delete btn btn-primary">Delete</a><td>' + 
+function insertListRow(listname, listid, entriescount) {
+	$('#lists').append('<tr class="static-listname" id="'+ listid + '">' + 
+		'<td><a href="list.html?listid='+ listid + '">' + listname + '</a></td>' +
+		'<td><span class="badge pull-right">'+ entriescount + '</span><td>' + 
 		'</tr>');
 }
 
@@ -105,10 +128,10 @@ function viewList(listid) {
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
-			$("#pagetitle").html(data.result.name + ' <button class="btn btn-xs" ' + 
-				'id="rename-show">Rename</button>');
+			$("#pagetitle").html(data.result.name);
 			$("#rename-input").val(data.result.name);	
 			$("#dict-add").show();
+			$("#list-change").show();
 			$('#lists').append('<tbody>');
 			if (data.result.entries.length === 0) {
 				failureMessage("This list doesn't have any entries yet.");
@@ -133,7 +156,8 @@ function insertEntryRow(lang1, lang2, word, pro, trans, id) {
 		'<td>' + lang1 + ' : ' + word + '</td>' + 
 		'<td>' + lang1 + ' : ' + pro + '</td>' + 
 		'<td>' + lang2 + ' : ' + trans + '</td>' + 
-		'<td><a href="#" class="entry-delete" id="' + id + '">[delete]</a></td>' + 
+		'<td><a href="#" class="entry-delete btn btn-default" id="' + id + 
+		'"><span class="glyphicon glyphicon-trash"></span></a></td>' + 
 		'</tr>');
 }
 
@@ -153,7 +177,7 @@ function search_entry(page) {
 	$('#dictionary').html('');
 	var currentURL = URL + 'entry_find.php';
 	var word = $('#entrysearch').val();
-	var langcodes = $('#lang1').val() + ',' + $('#lang2').val();
+	var langcodes = $('#entry-lang1').val() + ',' + $('#entry-lang2').val();
 	$.getJSON( currentURL, {
 		query : word,
 		langs : langcodes,
@@ -210,7 +234,7 @@ function newList(listname) {
 		if (data.isError === true) {
 			failureMessage(data.errorTitle + '<br/>' + data.errorDescription);
 		} else {
-			insertListRow(listname, data.result.listId);
+			insertListRow(listname, data.result.listId, 0);
 		}
 	})
 		.fail(function() {
@@ -222,8 +246,7 @@ function ListRename(newname) {
 	var currentURL = URL + 'list_update.php';
 	
 	$("#rename-form").hide();
-	$("#pagetitle").html(newname + ' <button class="btn btn-xs" ' + 
-					'id="rename-show">Rename</button>');
+	$("#pagetitle").html(newname);
 	$("#pagetitle").show();
 	
 	$.post(currentURL, {
