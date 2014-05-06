@@ -591,12 +591,12 @@ class APICourse extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (self::validate_request($_GET, "course_id") && self::validate_request($_GET, "mode_id"))
+		if (self::validate_request($_GET, "course_id"))
 		{
-			$report = Report::get_course_practice_report($_GET["course_id"], $_GET["mode_id"]);
+			$report = Report::get_course_practice_report($_GET["course_id"]);
 			if (!!$report)
 			{
-				$output = array ("practiceReport" => $report);
+				$output = array ("coursePracticeReport" => $report);
 				Session::get()->set_result_assoc($output);
 			}
 			else
@@ -606,28 +606,22 @@ class APICourse extends APIBase
 		}
 	}
 	
-	public function student_practice_report()
+	public function test_report()
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		if (!self::validate_request($_GET, "course_id") || !self::validate_request($_GET, "mode_id"))
+		if (!self::validate_request($_GET, "course_id"))
 			return;
 		
-		$user_id = 0;
-		if (self::validate_request($_GET, "user_id"))
-			$user_id = $_GET["user_id"];
-		else
-			$user_id = Session::get()->get_user()->get_user_id();
-			
-		$report = Report::get_course_student_practice_report($_GET["course_id"], $user_id, $_GET["mode_id"]);
+		$report = Report::get_course_test_report($_GET["course_id"]);
 		if (!!$report)
 		{
-			$output = array ("studentPracticeReport" => $report);
+			$output = array ("courseTestsReport" => $report);
 			Session::get()->set_result_assoc($output);
 		}
 		else
 		{
-			Session::get()->set_error_assoc("Course-Practice Report", Report::errors_unset());
+			Session::get()->set_error_assoc("Course-Test Report", Report::errors_unset());
 		}
 	}
 }

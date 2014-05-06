@@ -558,12 +558,12 @@ class User extends DatabaseRow
 	
 	public function in($array)
 	{
-		foreach ($array as $user)
+		foreach ($array as $key => $user)
 		{
-			if ($user->equals($this)) return true;
+			if ($user->equals($this)) return $key;
 		}
 		
-		return false;
+		return null;
 	}
 	
 	public function user_can_read($user)
@@ -623,7 +623,7 @@ class User extends DatabaseRow
 	
 	public function json_assoc_condensed($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"userId" => $this->user_id,
 			"isSessionUser" => $this->is_session_user(),
 			"handle" => $this->get_handle(),
@@ -647,7 +647,7 @@ class User extends DatabaseRow
 		$assoc["coursesResearchedCount"] = $this->courses_researched_count();
 		$assoc["listsCount"] = $this->lists_count();
 		
-		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
+		return $this->prune($assoc, $public_keys, !$this->is_session_user());
 	}
 	
 	public function json_assoc_detailed($privacy = null)
@@ -662,7 +662,7 @@ class User extends DatabaseRow
 		$assoc["coursesResearched"] = self::json_array($this->courses_researched());
 		$assoc["lists"] = self::json_array($this->lists());
 		
-		return $this->privacy_mask($assoc, $public_keys, !$this->is_session_user());
+		return $this->prune($assoc, $public_keys, !$this->is_session_user());
 	}
 }
 

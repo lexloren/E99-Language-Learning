@@ -104,7 +104,7 @@ class Annotation extends DatabaseRow
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"annotationId" => $this->annotation_id,
 			"contents" => !$privacy ? $this->contents : null
 		), array (0 => "annotationId"), $privacy);

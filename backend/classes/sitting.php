@@ -186,6 +186,31 @@ class Sitting extends CourseComponent
 	{
 		return self::cache($this->responses, "Response", "course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
+	public function get_response_for_entry($entry)
+	{
+		$entry = $entry->copy_for_user($this->get_test()->get_owner(), $this->get_test());
+		if ($entry->in($test->entries()) === null)
+		{
+			return static::errors_push("Sitting cannot get response for entry not in test.");
+		}
+		foreach ($this->responses() as $response)
+		{
+			if (!($pattern = $response->get_pattern()))
+			{
+				return static::errors_push("Sitting failed to get pattern for response: " . Response::errors_unset());
+			}
+			if (!($pattern_entry = $pattern->get_entry()))
+			{
+				return static::errors_push("Sitting failed to get entry for response pattern: " . Pattern::errors_unset());
+			}
+			if ($pattern_entry->equals($entry))
+			{
+				return $response;
+			}
+		}
+		
+		return null;
+	}
 	
 	private $timeframe = null;
 	public function get_timeframe()
@@ -337,30 +362,51 @@ class Sitting extends CourseComponent
 			return static::errors_push("$failure_message!");
 		}
 		
-		$mode = intval($result_assoc["mode"], 10);
-		
-		$result = Connection::query(sprintf("SELECT course_unit_test_entry_patterns.* FROM course_unit_test_entry_patterns CROSS JOIN course_unit_test_entries USING (test_entry_id, mode) WHERE test_entry_id = %d AND prompt = 1 ORDER BY rand()",
-			($test_entry_id = intval($result_assoc["test_entry_id"], 10))
-		));
-		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("$failure_message: $error.");
-		}
-		
-		$options = array ();
-		while (($result_assoc = $result->fetch_assoc()))
-		{
-			array_push($options, $result_assoc["contents"]);
-		}
+		$options = $this->get_test()->entry_options($entry);
+		$mode = $this->get_test()->get_entry_mode($entry);
 		
 		if (count($options) == 1) $options = null;
 		
+		$pronunciation = $entry->pronunciations();
+		$pronunciation = array_pop($pronunciation);
+		
+		$prompt = "";
+		switch ($mode->get_mode_id())
+		{
+			case 6:
+			{
+				$prompt .= "\n$pronunciation";
+			} //NO break;
+			case 0:
+			case 2:
+			{
+				$prompt = $entry->get_word_1() . $prompt;
+			} break;
+			case 3:
+			case 4:
+			{
+				$prompt = $pronunciation;
+			} break;
+			default:
+			{
+				$prompt = $entry->get_word_0();
+			}
+		}
+		
+		if ($options)
+		{
+			foreach ($options as &$option)
+			{
+				$option = $option->get_contents();
+			}
+		}
+		else $options = null;
+		
 		return array (
-			"testEntryId" => $test_entry_id,
-			"mode" => Mode::select_by_id($mode)->json_assoc(),
+			"testEntryId" => $this->get_test()->get_test_entry_id_for_entry($entry),
+			"mode" => $mode->json_assoc(),
 			"entriesRemainingCount" => count($entries_remaining),
-			"prompt" => $mode === 1 ? $entry->get_word_0() : $entry->get_word_1(),
+			"prompt" => $prompt,
 			"options" => $options
 		);
 	}
@@ -373,13 +419,12 @@ class Sitting extends CourseComponent
 	
 	public function responses_count()
 	{
-		if (isset($this->responses)) return count($this->responses);
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"sittingId" => $this->get_sitting_id(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
@@ -406,7 +451,7 @@ class Sitting extends CourseComponent
 			? self::json_array($this->responses())
 			: null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

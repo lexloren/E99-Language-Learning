@@ -316,7 +316,6 @@ class EntryList extends DatabaseRow
 	
 	public function entries_count()
 	{
-		if (isset($this->entries)) return count($this->entries);
 		return self::count("list_entries", "list_id", $this->get_list_id());
 	}
 	
@@ -341,7 +340,7 @@ class EntryList extends DatabaseRow
 		
 		//  Insert into list_entries for $this->list_id and $entry->entry_id
 		//      If this entry already exists in the list, then ignore the error
-		Connection::query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
+		Connection::query(sprintf("INSERT INTO list_entries (list_id, user_entry_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
 			$this->list_id,
 			$entry_added->get_user_entry_id()
 		));
@@ -421,11 +420,33 @@ class EntryList extends DatabaseRow
 		return $this->copy_for_user($session_user);
 	}
 	
-	public function copy_for_user($user)
+	public function in($array)
 	{
-		if (!$this->user_can_read($user))
+		foreach ($array as $key => $item)
 		{
-			return static::errors_push("User cannot read list to copy.");
+			if ($this->equals($item))
+			{
+				return $key;
+			}
+		}
+		
+		return null;
+	}
+	
+	public function equals($list)
+	{
+		return !!$list && $list->get_list_id() === $this->get_list_id();
+	}
+	
+	public function copy_for_user($user, $hint = null)
+	{
+		if ($hint !== true)
+		{
+			if (!$this->user_can_read($user)
+				&& (!$hint || ($this->in($hint->lists()) === null)))
+			{
+				return static::errors_push("User cannot read list to copy.");
+			}
 		}
 		
 		$list = $this;
@@ -470,7 +491,7 @@ class EntryList extends DatabaseRow
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"listId" => $this->list_id,
 			"name" => $this->name,
 			"owner" => $this->get_owner()->json_assoc_condensed(),
@@ -491,7 +512,7 @@ class EntryList extends DatabaseRow
 			array_push($assoc["entries"], $entry->json_assoc(null, $this));
 		}
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

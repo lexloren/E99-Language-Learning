@@ -203,6 +203,23 @@ class Entry extends DatabaseRow
 		return true;
 	}
 	
+	public function in($array)
+	{
+		foreach ($array as $key => $item)
+		{
+			if ($this->equals($item))
+			{
+				return $key;
+			}
+		}
+		return null;
+	}
+	
+	public function equals($entry)
+	{
+		return !!$entry && $this->get_entry_id() === $entry->get_entry_id();
+	}
+	
 	//  Returns a copy of $this owned and editable by the Session User
 	public function copy_for_session_user()
 	{
@@ -240,7 +257,7 @@ class Entry extends DatabaseRow
 			"annotationsCount" => $this->annotations_count()
 		);
 		
-		return $this->privacy_mask($assoc, array (0 => "entryId"), $privacy);
+		return $this->prune($assoc, array (0 => "entryId"), $privacy);
 	}
 	
 	public function json_assoc_detailed($privacy = null, $hint = null)
@@ -318,11 +335,8 @@ class UserEntry extends Entry
 		{
 			//  Insert into user_entries the dictionary row corresponding to this Entry object
 			//      If such a row already exists in user_entries, ignore the insertion error
-			Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
-					"SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id",
-				$user_id,
-				$entry_id
-			));
+			Connection::query("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) " .
+					"SELECT $user_id, entry_id, word_0, word_1, word_1_pronun FROM dictionary WHERE entry_id = $entry_id ON DUPLICATE KEY UPDATE user_entry_id = user_entry_id");
 			
 			if (!!($error = Connection::query_error_clear()))
 			{
@@ -593,14 +607,13 @@ class UserEntry extends Entry
 		
 		if (!$this->user_can_read($user, $hint))
 		{
-			return static::errors_push("User cannot read user entry to copy.");
+			return $this->get_entry()->copy_for_user($user);
 		}
 		
 		//  Insert into user_entries the dictionary row corresponding to this Entry object
 		//      If such a row already exists in user_entries, ignore the insertion error
-		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries WHERE user_entry_id = %d ON DUPLICATE KEY UPDATE user_entry_id = %d",
+		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries AS source WHERE source.user_entry_id = %d ON DUPLICATE KEY UPDATE user_entries.user_entry_id = user_entries.user_entry_id",
 			$user->get_user_id(),
-			$this->get_user_entry_id(),
 			$this->get_user_entry_id()
 		));
 		
@@ -614,7 +627,6 @@ class UserEntry extends Entry
 	
 	public function annotations_count()
 	{
-		if (isset($this->annotations)) return count($this->annotations);
 		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
@@ -640,7 +652,7 @@ class UserEntry extends Entry
 		$assoc["lists"] = self::json_array($this->lists());
 		$assoc["annotations"] = self::json_array($this->annotations());
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 }
 

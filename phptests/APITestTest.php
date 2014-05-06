@@ -291,7 +291,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$_POST["entry_ids"] = "847830555";
 		$_POST["list_ids"] = "-2";
 		$this->obj->entries_add();
-		$this->assertTrue(Session::get()->has_error());
+		$this->assertEquals($result, Session::get()->get_result_assoc());
 		
 		$remove_entry_ids = array($entry_ids[0], $new_entry_ids[0]);
 		$_POST["entry_ids"] = implode(",", $remove_entry_ids);

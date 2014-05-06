@@ -374,7 +374,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_instructor($user)
 	{
-		return !!$user && $user->in($this->instructors());
+		return !!$user && ($user->in($this->instructors()) !== null);
 	}
 	
 	private $researchers;
@@ -389,7 +389,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_researcher($user)
 	{
-		return !!$user && $user->in($this->researchers());
+		return !!$user && ($user->in($this->researchers()) !== null);
 	}
 	
 	private $students;
@@ -404,7 +404,7 @@ class Course extends DatabaseRow
 	}
 	public function user_is_student($user)
 	{
-		return !!$user && $user->in($this->students());
+		return !!$user && ($user->in($this->students()) !== null);
 	}
 	
 	private $units;
@@ -662,25 +662,21 @@ class Course extends DatabaseRow
 	
 	public function instructors_count()
 	{
-		if (isset($this->instructors)) return count($this->instructors);
 		return self::count("course_instructors", "course_id", $this->get_course_id());
 	}
 	
 	public function students_count()
 	{
-		if (isset($this->students)) return count($this->students);
 		return self::count("course_students", "course_id", $this->get_course_id());
 	}
 	
 	public function units_count()
 	{
-		if (isset($this->units)) return count($this->units);
 		return self::count("course_units", "course_id", $this->get_course_id());
 	}
 	
 	public function lists_count()
 	{
-		if (isset($this->lists)) return count($this->lists);
 		$course_units = "courses CROSS JOIN course_units USING (course_id)";
 		$unit_lists = "($course_units) CROSS JOIN course_unit_lists USING (unit_id)";
 		return self::count($unit_lists, "course_id", $this->get_course_id());
@@ -688,7 +684,6 @@ class Course extends DatabaseRow
 	
 	public function tests_count()
 	{
-		if (isset($this->tests)) return count($this->tests);
 		$course_units = "courses CROSS JOIN course_units USING (course_id)";
 		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
 		return self::count($unit_tests, "course_id", $this->get_course_id());
@@ -696,7 +691,6 @@ class Course extends DatabaseRow
 	
 	public function sittings_count()
 	{
-		if (isset($this->sittings)) return count($this->sittings);
 		$course_units = "courses CROSS JOIN course_units USING (course_id)";
 		$unit_tests = "($course_units) CROSS JOIN course_unit_tests USING (unit_id)";
 		$test_sittings = "($unit_tests) CROSS JOIN course_unit_test_sittings USING (test_id)";
@@ -705,13 +699,12 @@ class Course extends DatabaseRow
 	
 	public function researchers_count()
 	{
-		if (isset($this->researchers)) return count($this->researchers);
 		return self::count("course_researchers", "course_id", $this->get_course_id());
 	}
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"courseId" => $this->get_course_id(),
 			"name" => $this->get_name(),
 			"password" => $this->session_user_can_write() ? $this->get_password() : null,
@@ -744,7 +737,7 @@ class Course extends DatabaseRow
 		$assoc["lists"] = $this->session_user_can_execute() ? self::json_array($this->lists(!$this->session_user_can_write())) : null;
 		$assoc["tests"] = $this->session_user_can_execute() ? self::json_array($this->tests(!$this->session_user_can_write())) : null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	/*

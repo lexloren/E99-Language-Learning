@@ -42,14 +42,17 @@ class Pattern extends CourseComponent
 		
 		$mode = $mode === null ? "mode" : intval($mode, 10);
 		
-		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE prompt = $prompt, score = $score", $test->get_test_id(), $entry->get_user_entry_id()));
+		Connection::query(sprintf("INSERT INTO course_unit_test_entry_patterns (test_entry_id, mode, prompt, contents, score) SELECT test_entry_id, $mode, $prompt, '$contents', $score FROM course_unit_test_entries WHERE test_id = %d AND user_entry_id = %d ON DUPLICATE KEY UPDATE score = $score, prompt = $prompt",
+			$test->get_test_id(), $entry->get_user_entry_id()
+		));
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
 			return static::errors_push("$failure_message: $error.");
 		}
 		
-		return self::select_by_test_id_entry_id_contents_mode($test_id, $entry_id, $contents, is_string($mode) ? null : $mode);
+		//  print_r("insert($test_id, $entry_id, $contents, $prompt, $score, $mode, $default)\n");
+		return self::select_by_test_id_entry_id_contents_mode($test->get_test_id(), $entry->get_entry_id(), $contents, is_string($mode) ? null : $mode);
 	}
 	
 	public static function select_all_for_test_entry_id($test_entry_id, $prompts_only = true)
@@ -61,7 +64,7 @@ class Pattern extends CourseComponent
 		
 		if (!!($error = Connection::query_error_clear()))
 		{
-			return static::errors_push("Failed to select all test entry patterns for test_entry_id = $test_entry_id:$error.");
+			return static::errors_push("Failed to select all test entry patterns for test_entry_id = $test_entry_id: $error.");
 		}
 		
 		$patterns = array ();
@@ -83,7 +86,7 @@ class Pattern extends CourseComponent
 	{
 		$test_id = intval($test_id, 10);
 		
-		$failure_message = "Failed to select test entry pattern by test_id, entry_id, contents, mode";
+		$failure_message = "Failed to select test entry pattern by test_id = $test_id, entry_id = $entry_id, contents = '$contents', mode = " . ($mode !== null ? $mode : "*");
 		
 		if (!($test = Test::select_by_id($test_id)))
 		{
@@ -98,6 +101,9 @@ class Pattern extends CourseComponent
 		}
 		
 		$user_entry_id = $entry->get_user_entry_id();
+		//  print_r("select_by_test_id_entry_id_contents_mode($test_id, $entry_id, [$user_entry_id,] $contents, $mode)\n");
+		
+		$failure_message .= "[, user_entry_id = $user_entry_id]";
 		
 		$contents = Connection::escape($contents);
 		
@@ -145,7 +151,11 @@ class Pattern extends CourseComponent
 	}
 	public function get_entry_id()
 	{
-		return $this->get_test()->get_entry_by_test_entry_id($this->get_test_entry_id())->get_entry_id();
+		return $this->get_entry()->get_entry_id();
+	}
+	public function get_entry()
+	{
+		return $this->get_test()->get_entry_by_test_entry_id($this->get_test_entry_id());
 	}
 	
 	private $test;
@@ -323,7 +333,7 @@ class Pattern extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"patternId" => $this->get_pattern_id(),
 			"testId" => $this->get_test()->get_test_id(),
 			"entryId" => $this->get_entry_id(),

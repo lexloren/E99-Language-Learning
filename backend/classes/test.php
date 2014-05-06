@@ -86,7 +86,7 @@ class Test extends CourseComponent
 	public function set_disclosed($disclosed)
 	{
 		$disclosed = !!$disclosed ? 1 : 0;
-		if (!self::update_this($this, "course_unit_tests", array ("disclosed" => $disclosed), "test_id", $this->get_test_id()))
+		if (!self::update_this($this, "course_unit_tests", array ("disclosed" => $disclosed), "test_id", $this->get_test_id(), false, $this->session_user_can_administer()))
 		{
 			return null;
 		}
@@ -182,7 +182,7 @@ class Test extends CourseComponent
 				
 				if ($number > ($entries_count = count($test->entries()))) $number = $entries_count;
 				
-				if ($number === ($number_formerly = $this->number_for_entry($entry))) return $test;
+				if ($number === ($number_formerly = $test->number_for_entry($entry))) return $test;
 				
 				if ($number_formerly < 1)
 				{
@@ -401,7 +401,7 @@ class Test extends CourseComponent
 		}
 		
 		//  Insert into user_entries from dictionary, if necessary
-		$entry = $entry->copy_for_user($this->get_owner());
+		$entry = $entry->copy_for_user($this->get_owner(), $entry->session_user_can_read());
 		
 		if (!$entry)
 		{
@@ -432,7 +432,7 @@ class Test extends CourseComponent
 				
 				if (isset($test->entries) && Connection::query_insert_id())
 				{
-					$test->entries[Connection::query_insert_id()] = $entry;
+					$test->entries[intval(Connection::query_insert_id(), 10)] = $entry;
 				}
 				
 				$result = Connection::query("SELECT mode_id AS mode FROM modes");
@@ -457,7 +457,7 @@ class Test extends CourseComponent
 					if (!Pattern::insert(
 								$test->get_test_id(),
 								$entry->get_entry_id(),
-								$contents[$mode % 3],
+								$contents[$mode_id % 3],
 								true,
 								null,
 								$mode_id
@@ -478,6 +478,11 @@ class Test extends CourseComponent
 		if (!$this->session_user_can_write())
 		{
 			return static::errors_push("Session user cannot edit test.");
+		}
+		
+		if (!$list->session_user_can_read())
+		{
+			return static::errors_push("Session user cannot read list to add.");
 		}
 		
 		if ($this->executed())
@@ -767,18 +772,17 @@ class Test extends CourseComponent
 	
 	public function entries_count()
 	{
-		if (isset($this->entries)) return count($this->entries);
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
-	public function entry_json_assoc($entry)
+	public function entry_json_assoc($entry, $privacy = false)
 	{
 		if (!$entry)
 		{
 			return static::errors_push("Test cannot get entry JSON for null entry.");
 		}
 		
-		$entry = $entry->copy_for_user($this->get_owner(), true);
+		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
 		if (!$entry)
 		{
@@ -798,28 +802,36 @@ class Test extends CourseComponent
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
 		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
-		$entry_assoc["scoreMean"] = 0.0;
-		$responses = Response::select_all_for_test_entry_id($test_entry_id);
-		if ($responses === null)
-		{
-			return static::errors_push("Test failed to get entry responses: " . Response::errors_unset());
-		}
-		
-		foreach ($responses as $response)
-		{
-			$entry_assoc["scoreMean"] += floatval($response->get_score());
-		}
-		if (count($responses)) $entry_assoc["scoreMean"] /= floatval(count($responses));
-		else $entry_assoc["scoreMean"] = null;
-		
-		$entry_assoc["scoreMeanScaled"] =
-			!!$this->entry_score_max($entry)
-				? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
-				: 0.0;
-		
 		foreach ($entry_assoc["options"] as &$option)
 		{
 			unset($option["sessionUserPermissions"]);
+		}
+		
+		if ($privacy && count($entry_assoc["options"]) === 1)
+		{
+			$entry_assoc["options"] = null;
+		}
+		
+		if (!$privacy)
+		{
+			$entry_assoc["scoreMean"] = 0.0;
+			$responses = Response::select_all_for_test_entry_id($test_entry_id);
+			if ($responses === null)
+			{
+				return static::errors_push("Test failed to get entry responses: " . Response::errors_unset());
+			}
+			
+			foreach ($responses as $response)
+			{
+				$entry_assoc["scoreMean"] += floatval($response->get_score());
+			}
+			if (count($responses)) $entry_assoc["scoreMean"] /= floatval(count($responses));
+			else $entry_assoc["scoreMean"] = null;
+			
+			$entry_assoc["scoreMeanScaled"] =
+				!!$this->entry_score_max($entry)
+					? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+					: 0.0;
 		}
 		
 		return $entry_assoc;
@@ -845,13 +857,11 @@ class Test extends CourseComponent
 	
 	public function sittings_count()
 	{
-		if (isset($this->sittings)) return count($this->sittings);
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_sittings USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
 	public function patterns_count()
 	{
-		if (isset($this->patterns)) return count($this->patterns);
 		return self::count("course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id)", "test_id", $this->get_test_id());
 	}
 	
@@ -862,7 +872,7 @@ class Test extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"testId" => $this->get_test_id(),
 			"name" => $this->get_name(),
 			"unitId" => $this->get_unit_id(),
@@ -888,9 +898,24 @@ class Test extends CourseComponent
 		
 		$assoc["entries"] = $this->session_user_can_administer() ? $this->entries_json_array() : null;
 		$assoc["sittings"] = $this->session_user_can_administer() ? self::json_array($this->sittings()) : null;
+		$assoc["studentsMissingSittings"] = null;
+		
+		if ($this->session_user_can_administer())
+		{
+			$students_missing_sittings = $this->get_course()->students();
+			
+			foreach ($this->sittings() as $sitting)
+			{
+				$key = $sitting->get_user()->in($students_missing_sittings);
+				if ($key !== null) unset($students_missing_sittings[$key]);
+			}
+			
+			$assoc["studentsMissingSittings"] = self::json_array($students_missing_sittings);
+		}
+		
 		$assoc["patterns"] = $this->session_user_can_administer() ? self::json_array($this->patterns()) : null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	public function seconds_per_entry()

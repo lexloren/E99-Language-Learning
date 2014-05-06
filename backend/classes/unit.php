@@ -289,12 +289,12 @@ class Unit extends CourseComponent
 		}
 		
 		if (!$list->get_owner()->equals($this->get_owner())
-			&& !($list = $list->copy_for_user($this->get_owner(), $this)))
+			&& !($list = $list->copy_for_user($this->get_owner(), $list->session_user_can_read())))
 		{
 			return static::errors_push("Failed to add list: " . EntryList::errors_unset());
 		}
 		
-		Connection::query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE list_id = list_id",
+		Connection::query(sprintf("INSERT INTO course_unit_lists (unit_id, list_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE unit_id = unit_id",
 			$this->get_unit_id(),
 			$list->get_list_id()
 		));
@@ -368,7 +368,7 @@ class Unit extends CourseComponent
 	
 	public function json_assoc($privacy = null)
 	{
-		return $this->privacy_mask(array (
+		return $this->prune(array (
 			"unitId" => $this->get_unit_id(),
 			"name" => $this->get_name(),
 			"number" => $this->get_number(),
@@ -389,7 +389,7 @@ class Unit extends CourseComponent
 		$assoc["lists"] = $this->session_user_can_execute() ? self::json_array($this->lists()) : null;
 		$assoc["tests"] = $this->session_user_can_execute() ? self::json_array($this->tests()) : null;
 		
-		return $this->privacy_mask($assoc, $public_keys, $privacy);
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	/*
