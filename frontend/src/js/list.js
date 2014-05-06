@@ -1,6 +1,7 @@
 var URL = "../../";
 var listnum;
 
+
 $(document).ready(function(){
 	pageSetup();
 	$("#dict-add").hide();
