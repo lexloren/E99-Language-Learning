@@ -264,7 +264,8 @@ class Response extends CourseComponent
 	{
 		if (!$user) return false;
 		
-		return $this->user_can_write($user) || $user->equals($this->get_user());
+		return $this->user_can_administer($user)
+			|| $user->equals($this->get_user());
 	}
 	
 	public function delete()
@@ -276,20 +277,23 @@ class Response extends CourseComponent
 	public function entry_json_assoc()
 	{
 		$entry = $this->get_pattern()->get_entry();
-		return $this->get_test()->entry_json_assoc($entry, true);
+		return $this->get_test()->entry_json_assoc($entry, true, true);
 	}
 	
-	public function json_assoc($privacy = null)
+	public function json_assoc($privacy = null, $flatten = false)
 	{
-		return $this->prune(array (
+		$json_assoc = array (
 			"responseId" => $this->get_response_id(),
 			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"entry" => $this->entry_json_assoc(),
 			"student" => $this->get_user()->json_assoc_condensed(),
 			"timestamp" => $this->get_timestamp(),
-			"pattern" => $this->get_pattern()->json_assoc(!$this->get_test()->get_disclosed())
-		), array (0 => "responseId"), $privacy);
+			"pattern" => $this->get_pattern()->json_assoc(!$this->get_test()->session_user_can_administer() && !$this->get_test()->get_disclosed())
+		);
+		
+		if (!$flatten) $json_assoc["entry"] = $this->entry_json_assoc();
+		
+		return $this->prune($json_assoc, array (0 => "responseId"), $privacy);
 	}
 }
 

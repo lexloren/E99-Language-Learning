@@ -775,7 +775,7 @@ class Test extends CourseComponent
 		return self::count("course_unit_tests CROSS JOIN course_unit_test_entries USING (test_id)", "test_id", $this->get_test_id());
 	}
 	
-	public function entry_json_assoc($entry, $privacy = false)
+	public function entry_json_assoc($entry, $privacy = false, $flatten = false)
 	{
 		if (!$entry)
 		{
@@ -832,6 +832,15 @@ class Test extends CourseComponent
 				!!$this->entry_score_max($entry)
 					? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
 					: 0.0;
+			
+			if (!$flatten)
+			{
+				$entry_assoc["responses"] = array ();
+				foreach ($responses as $response)
+				{
+					array_push($entry_assoc["responses"], $response->json_assoc(false, true));
+				}
+			}
 		}
 		
 		return $entry_assoc;
