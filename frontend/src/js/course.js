@@ -8,7 +8,6 @@ function resetForm(frm){
   $("#createnew").hide();
 	$("#coursesOwned").show();
 }
-
 /** This function is used by Index Page to init the Tabs etc.*/
 function initIndexPage() {
 
@@ -17,37 +16,46 @@ function initIndexPage() {
 	$("#addcourse").hide();
 	$("#course").hide();
 	$("#search").hide();
-	
-	$.getJSON("../../user_select.php", function(data){
-        if(data.isError){
-            $("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
-            $("#failure").show();
-			$("#progress").hide();
-        }
-        else{
-			try {
-				$("#course").show();
-				$("#search").show();
-				/** Begin Populate the Profile*/
-				populateProfileTab(data);
-				/** Write Course Information*/
-				populateMyCourseTab(data,"#course");
-				/** Write My List Information*/
-				populateMyListTab(data,"#list");
-			}		
-			finally {
+	var userData = getUserData(); 
+	if (userData != null) {
+		populateIndexPageUserData(userData);
+	} else {
+		$.getJSON("../../user_select.php", function(data){
+			if(data.isError){
+				$("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
+				$("#failure").show();
 				$("#progress").hide();
 			}
-		}
-	})
-	.fail(function(error) {
-		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
-		$("#progress").hide();
-	});;  
+			else{
+				populateIndexPageUserData(data);
+				setUserData(data);
+			
+			}
+		})
+		.fail(function(error) {
+			failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+			$("#progress").hide();
+		});;  
+	}
 
 	
 }
 
+function populateIndexPageUserData(data) {
+	try {
+		$("#course").show();
+		$("#search").show();
+		/** Begin Populate the Profile*/
+		populateProfileTab(data);
+		/** Write Course Information*/
+		populateMyCourseTab(data,"#course");
+		/** Write My List Information*/
+		populateMyListTab(data,"#list");
+	}		
+	finally {
+		$("#progress").hide();
+	}
+}
 function populateProfileTab(data) {
 	$("#inputLoginHandle").val(data.result.handle);
 	$("#inputEmail").val(data.result.email);
@@ -276,6 +284,7 @@ function showAddCourse() {
 }
 function insertNew() {
 	cleanupMessage();
+	resetUserData();
     var courseName = $("#coursename").val();
 	var courseMessage = $("#coursedetails").val();
     var startDate = $("#opendate").val();
