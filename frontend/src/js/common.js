@@ -48,7 +48,7 @@ function getCourses(){
 			// show error
         }
         else {
-			
+			var courseli;
             $.each(data.result, function(i, item){
 				courseli = '<li><a href="course.html?courseid='+item.courseId+'">'+item.name+'</a></li>';
                     $('#course-menu').append(courseli);
