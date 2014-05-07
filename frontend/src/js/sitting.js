@@ -29,21 +29,21 @@ function getSittingInfo(){
                 feedback = '';
                 if(data.result.message != null)
                     feedback = data.result.message;
-                $('#sitting-details').append('<br /><strong>Student:</strong> '+data.result.student.handle+'<br />');
+                $('#sitting-details').append('<strong>Student:</strong> '+data.result.student.handle+'<br />');
                 $('#sitting-details').append('<strong>Test Number: </strong>'+data.result.testId+'<br />');
                 if(data.result.score != null){
                     $('#sitting-details').append('<strong>Score: </strong>'+data.result.score.scoreScaled+'<br />');
                 }    
                 $('#sitting-details').append('<label for="feedback">Feedback for Student:</label>');
                 if(data.result.owner.isSessionUser == true){
-                    $('#sitting-details').append('<textarea class="form-control container-small" id="feedback" rows="3">'+feedback+'</textarea><br />');
+                    $('#sitting-details').append('<textarea class="form-control" id="feedback" rows="5">'+feedback+'</textarea><br />');
                     $('#sitting-details').append('<button class="btn btn-primary" type="button" onclick="updateFeedback();">Update Feedback</button><br /><br />');
                 }
                 else{
                     $('#sitting-details').append(feedback+'<br />');
                 }
                 if(data.result.responses == null){
-                    $('#response-list').html("<em>Cannot access response data.</em>");                    
+                    $('#response-list').html("<em>Scores are not yet disclosed.</em>");                    
                 }
                 else if(data.result.responsesCount == 0){
                     $('#response-list').html("<em>This sitting currently has no responses.</em>");
@@ -51,14 +51,33 @@ function getSittingInfo(){
                 else{
                     $('#response-list').append('<tbody>');
                     $.each(data.result.responses, function(i, item){
-                        resp = '<em>None</em>';
+                        resp = '<em>Undisclosed</em>';
                         if(item.pattern.contents != null)
                             resp = item.pattern.contents;
+                        score = '<em>Undisclosed</em>';
+                        if(item.pattern.score != null)
+                            score = item.pattern.score;
                         note = '';
-                        if(item.pattern.message != null)
+                        if(item.pattern.message != null){
                             note = item.pattern.message;
-                        responserow = '<tr id="responserow'+item.responseId+'"><td>'+resp+'</td>' +
-                                      '<td>'+item.pattern.score+'</td><td>'+note+'</td>';
+                        }
+                        if(item.entry.mode.modeId == 0 || item.entry.mode.modeId == 2){
+                            lang = item.entry.languages[1];
+                            prompt = item.entry.words[lang];
+                        }
+                        else if(item.entry.mode.modeId == 1 || item.entry.mode.modeId == 5){
+                            lang = item.entry.languages[0];
+                            prompt = item.entry.words[lang];
+                        }                        
+                        else if(item.entry.mode.modeId == 3 || item.entry.mode.modeId == 4){
+                            prompt = item.entry.pronunciations[0];
+                        }
+                        else if(item.entry.mode.modeId == 6){
+                            lang = item.entry.languages[1];
+                            prompt = item.entry.words[lang] + '/' + item.entry.pronunciations[0];
+                        }
+                        responserow = '<tr id="responserow'+item.responseId+'"><td>'+item.entry.mode.directionFrom+'/'+item.entry.mode.directionTo+'</td><td>'+prompt+'</td><td>'+resp+'</td>' +
+                                      '<td>'+score+'</td><td>'+note+'</td>';
                         $('#response-list').append(responserow);
                     });
                     $('#response-list').append('</tbody>');

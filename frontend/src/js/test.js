@@ -18,6 +18,7 @@ $(document).ready(function(){
 	} 
   else {
     $("#test-sitting").hide();
+    $("#prev-question").hide();
     $("#updateTestForm").hide();
     $("#entry-addition").hide();
     $("#dict-add").hide();
@@ -256,10 +257,13 @@ function getTestInfo(){
                             $('#entry-list').append('</tbody>');
                         }
                     }
-                    if(data.result.sittingsCount == 0){
-                        $('#sitting-list').html("<em>No students have taken this test yet.</em>");
+                    if(data.result.gradesDisclosed == false){
+                        spanDisclose = '<span class="span-action" onclick="discloseScores(1);">[Show Scores to Students]</span>';
                     }
                     else{
+                        spanDisclose = '<span class="span-action" onclick="discloseScores(0);">[Hide Scores from Students]</span>'
+                    }
+                    if(data.result.sittingsCount > 0){
                         $('#sitting-list').append('<tbody>');
                         $.each(data.result.sittings, function(i, item){
                             sittingrow = '<tr id="sittingrow'+item.sittingId+'"><td><a href="sitting.html?sittingid='+item.sittingId+'">'+item.student.handle+'</a></td>' +
@@ -268,7 +272,17 @@ function getTestInfo(){
                                          '<td><span class="glyphicon glyphicon-trash span-action" onclick="deleteSitting('+item.sittingId+');" title="Delete this sitting"></span></tr>';
                             $('#sitting-list').append(sittingrow);
                         });
-                        $('#sitting-list').append('<tr><td></td><td></td><td id="disclose"><span class="span-action" onclick="discloseScores(1);">[Show Scores to Students]</span></td><td><span class="span-action" onclick="clearTest();">[Delete All Sittings]</span></td></tr></tbody>');
+                        $('#sitting-list').append('<tr><td></td><td></td><td id="disclose">'+spanDisclose+'</td><td><span class="span-action" onclick="clearTest();">[Delete All Sittings]</span></td></tr></tbody>');
+                    }
+                    else{
+                        $('#sitting-list').html('<div id="disclose">'+spanDisclose+'</div><br />');
+                    }
+                    if(data.result.studentsMissingSittings.length > 0){
+                        $('#sitting-list').append('<div id="nonsitting" class="help-block-small container-small alert alert-warning"><strong>These students have not yet taken the test:</strong><br />');
+                        $.each(data.result.studentsMissingSittings, function(i, item){
+                            $('#nonsitting').append(item.handle+'<br />');
+                        });
+                        $('#nonsitting').append('</div>');
                     }
                     getLangs();
                     $("#doc-body").append('<a href="unit.html?unitid='+data.result.unitId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to unit"></span>&nbsp; Return to unit</a><br />&nbsp; ');
@@ -327,7 +341,13 @@ function deleteTest(){
 }
 
 function discloseScores(flag){
-    if(!confirm("This will allow students to see their scores on this test. Continue?")){
+    if(flag == 0){
+        msg = "This will hide scores for this test from students. Continue?";
+    }
+    else{
+        msg = "This will allow students to see their scores on this test. Continue?";
+    }
+    if(!confirm(msg)){
         return;
     }
 	  $('#failure').hide();
@@ -778,6 +798,8 @@ function showOptions(id){
                   else {
                       if(data.result.length <= 1)
                           $('#choice-note').html('This is not currently a multiple-choice question. Add additional choices to make the question multiple-choice.<br />');
+                      else
+                          $('#choice-note').html('This is currently a multiple-choice question. Remove extra choices to make the question free-form.<br />');
 			                $('#choice-list').append('<thead><tr><td>Choice</td><td>Note &nbsp; <span id="note\-info" class="glyphicon glyphicon-comment span-action" data-toggle="tooltip" data-placement="top" title="Notes are shown in test results to students who selected the choice."</td><td>Score</td><td></td></tr></thead><tbody>');
                       $('#note-info').tooltip({html: true});
 			                $.each( data.result, function(i,item) {
@@ -1176,19 +1198,19 @@ function startTest(){
                 failureMessage(errorMsg); 
             }
             else{
-                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
-                $("#question-body").html(data.result.prompt);
+                $("#q-remainder").html('Questions Remaining: '+data.result.next.entriesRemainingCount);
+                $("#question-body").html(data.result.next.prompt);
                 $("#answer-submit").click(function(){
-                    submitAnswer(data.result.testEntryId);
+                    submitAnswer(data.result.next.testEntryId);
                 });
-                if(data.result.options == null || data.result.options.length == 0){
-                    prompt = getFreeformPrompt(data.result.mode.modeId);
+                if(data.result.next.options == null || data.result.next.options.length == 0){
+                    prompt = getFreeformPrompt(data.result.next.mode.modeId);
                     $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="'+prompt+'"></textarea>');
                 }
                 else{
-                    prompt = getOptionPrompt(data.result.mode.modeId);                    
+                    prompt = getOptionPrompt(data.result.next.mode.modeId);                    
                     optsradio = prompt+':<br />';
-                    $.each( data.result.options, function(i,item) {
+                    $.each( data.result.next.options, function(i,item) {
                         optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
                     });
                     $("#test-answer").append(optsradio);
@@ -1204,6 +1226,8 @@ function startTest(){
 }
 
 function submitAnswer(id){
+    $("#prev-question").html('');
+    $("#prev-question").hide();
     $("#test-loader").show();
     if($('#freeform-answer').length > 0) 
         answer = $("#freeform-answer").val().trim();
@@ -1227,25 +1251,47 @@ function submitAnswer(id){
                 $("html, body").animate({scrollTop:0}, "slow"); 
             }
             else{
-                $("#q-remainder").html('Questions Remaining: '+data.result.entriesRemainingCount);
-                $("#question-body").html(data.result.prompt);
-                $("#answer-submit").unbind('click');
-                $("#answer-submit").click(function(){
-                     submitAnswer(data.result.testEntryId);                   
-                });
-                if(data.result.options == null || data.result.options.length == 0){
-                    prompt = getFreeformPrompt(data.result.mode.modeId);
-                    $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="'+prompt+'"></textarea>');
+                if(data.result.prev.pattern.testId != null){
+                    answer = data.result.prev.pattern.contents;
+                    if(data.result.prev.entry.mode.modeId == 0 || data.result.prev.entry.mode.modeId == 3 || data.result.prev.entry.mode.modeId == 6){
+                        lang = data.result.prev.entry.languages[0];
+                        correct = data.result.prev.entry.words[lang];
+                    }
+                    else if(data.result.prev.entry.mode.modeId == 1 || data.result.prev.entry.mode.modeId == 4){
+                        lang = data.result.prev.entry.languages[1];
+                        correct = data.result.prev.entry.words[lang];
+                    }
+                    else if(data.result.prev.entry.mode.modeId == 2 || data.result.prev.entry.mode.modeId == 5){
+                        correct = data.result.prev.entry.pronunciations[0];
+                    }
+                    $('#prev-question').html('<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>The correct answer was: '+'<strong>'+correct+'</strong><br />You answered: '+'<strong>'+answer+'</strong>');
+                    $('#prev-question').show();
+                }
+                if(data.result.next != null){
+                    $("#q-remainder").html('Questions Remaining: '+data.result.next.entriesRemainingCount);
+                    $("#question-body").html(data.result.next.prompt);
+                    $("#answer-submit").unbind('click');
+                    $("#answer-submit").click(function(){
+                        submitAnswer(data.result.next.testEntryId);                   
+                    });
+                    if(data.result.next.options == null || data.result.next.options.length == 0){
+                        prompt = getFreeformPrompt(data.result.next.mode.modeId);
+                        $("#test-answer").append('<textarea class="form-control" id="freeform-answer" rows="2" placeholder="'+prompt+'"></textarea>');
+                    }
+                    else{
+                        prompt = getOptionPrompt(data.result.next.mode.modeId);                    
+                        optsradio = prompt+':<br />';
+                        $.each( data.result.next.options, function(i,item) {
+                            optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
+                        });
+                        $("#test-answer").append(optsradio);
+                    }
+                    $("#question-block").show();
                 }
                 else{
-                    prompt = getOptionPrompt(data.result.mode.modeId);                    
-                    optsradio = prompt+':<br />';
-                    $.each( data.result.options, function(i,item) {
-                        optsradio += '<label><input type="radio" name="radio-answer" value="'+item+'">&nbsp; '+item+'</label><br />';
-                    });
-                    $("#test-answer").append(optsradio);
+                    successMessage("Test is complete and has been submitted.");    
+                    $("html, body").animate({scrollTop:0}, "slow"); 
                 }
-                $("#question-block").show();
             }
             $("#test-loader").hide();
     })
