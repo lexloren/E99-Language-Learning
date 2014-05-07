@@ -406,6 +406,9 @@ class Sitting extends CourseComponent
 			"testEntryId" => $this->get_test()->get_test_entry_id_for_entry($entry),
 			"mode" => $mode->json_assoc(),
 			"entriesRemainingCount" => count($entries_remaining),
+			"timeRemaining" => $this->get_test()->get_timer()
+				? $this->get_test()->get_timer() - (time() - $this->get_timeframe()->get_open())
+				: null,
 			"prompt" => $prompt,
 			"options" => $options
 		);
@@ -425,13 +428,12 @@ class Sitting extends CourseComponent
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
-			"sittingId" => $this->get_sitting_id(),
-			"owner" => $this->get_owner()->json_assoc_condensed(),
 			"testId" => $this->get_test_id(),
-			"student" => $this->get_user()->json_assoc(),
+			"sittingId" => $this->get_sitting_id(),
+			"student" => $this->get_user()->json_assoc_condensed(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
 			"responsesCount" => $this->responses_count(),
-			"live" => $this->live(),
+			"isLive" => $this->live(),
 			"score" => $this->session_user_can_administer() || $this->get_test()->get_disclosed()
 				? $this->get_score_json_assoc()
 				: null,

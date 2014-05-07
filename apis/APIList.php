@@ -192,31 +192,10 @@ class APIList extends APIBase
 			if (Connection::transact(
 				function () use ($list)
 				{
-					$errors = 0;
-					
-					if (isset($_POST["list_ids"]))
+					foreach (self::collect_entries() as $entry)
 					{
-						$list_ids = explode(",", $_POST["list_ids"]);
-						
-						foreach ($list_ids as $list_id)
-						{
-							if (($other = EntryList::select_by_id($list_id)))
-							{
-								$errors += !$list->entries_add_from_list($other);
-							}
-							else $errors ++;
-						}
+						if (!$list->entries_add($entry)) return null;
 					}
-					
-					if (isset($_POST["entry_ids"]))
-					{
-						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-						{
-							$errors += !$list->entries_add(Entry::select_by_id($entry_id));
-						}
-					}
-					
-					if ($errors) return null;
 					
 					return $list;
 				}
@@ -236,17 +215,10 @@ class APIList extends APIBase
 				if (Connection::transact(
 					function () use ($list)
 					{
-						$errors = 0;
-						
-						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+						foreach (self::collect_entries() as $entry)
 						{
-							if (!$list->entries_remove(Entry::select_by_id($entry_id)))
-							{
-								$errors ++;
-							}
+							if (!$list->entries_remove($entry)) return null;
 						}
-						
-						if ($errors) return null;
 						
 						return $list;
 					}

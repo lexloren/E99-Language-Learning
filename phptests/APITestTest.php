@@ -65,7 +65,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		
 		$_POST["list_ids"] = "27,40,95,103,".$list_ids;
 		$this->obj->insert();
-		$this->assertTrue(Session::get()->has_error());
+		$this->assertFalse(Session::get()->has_error());
 		$test_assoc = Session::get()->get_result_assoc();
 		$this->assertNotNull($test_assoc);
 		
@@ -85,7 +85,7 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		
 		$_POST["entry_ids"] = "122,255,968";
 		$this->obj->insert();
-		$this->assertTrue(Session::get()->has_error());
+		$this->assertFalse(Session::get()->has_error());
 		$test_assoc = Session::get()->get_result_assoc();
 		$this->assertNotNull($test_assoc);
 	}
@@ -309,7 +309,10 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		
 		$_POST["entry_ids"] = "847830555";
 		$this->obj->entries_remove();
-		$this->assertTrue(Session::get()->has_error());
+		$this->assertFalse(Session::get()->has_error());
+		$result = Session::get()->get_result_assoc();
+		$result_assoc = $result["result"];
+		$this->assertCount(8, $result_assoc);
 	}
 	
 	public function test_entries_randomize()

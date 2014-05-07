@@ -546,6 +546,8 @@ class Course extends DatabaseRow
 	
 	private function users_add(&$array, $table, $user, $password = null)
 	{
+		if (!$user) return $this;
+		
 		if (!$this->session_user_can_write()
 			&& !$this->check_password($password)
 			&& !$this->get_public())

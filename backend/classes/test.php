@@ -797,6 +797,8 @@ class Test extends CourseComponent
 		}
 		
 		$entry_assoc = $entry->json_assoc(false);
+		unset($entry_assoc["annotations"]);
+		unset($entry_assoc["lists"]);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
@@ -830,7 +832,7 @@ class Test extends CourseComponent
 			
 			$entry_assoc["scoreMeanScaled"] =
 				!!$this->entry_score_max($entry)
-					? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+					? 100.0 * $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
 					: 0.0;
 			
 			if (!$flatten)
@@ -882,10 +884,10 @@ class Test extends CourseComponent
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
+			"courseId" => $this->get_course_id(),
+			"unitId" => $this->get_unit_id(),
 			"testId" => $this->get_test_id(),
 			"name" => $this->get_name(),
-			"unitId" => $this->get_unit_id(),
-			"courseId" => $this->get_course_id(),
 			"timeframe" => !!$this->get_timeframe()
 								&& $this->session_user_can_read()
 					? $this->get_timeframe()->json_assoc()

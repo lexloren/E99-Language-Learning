@@ -21,46 +21,14 @@ class APITest extends APIBase
 					
 					if (($test = Test::insert($unit->get_unit_id(), $name, $timeframe, $timer, $message)))
 					{
-						$errors = 0;
-						
 						$mode = isset($_POST["mode_id"]) && strlen($_POST["mode_id"]) > 0 ? intval($_POST["mode_id"], 10) : (isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null);
 						
-						if (isset($_POST["list_ids"]))
+						foreach (self::collect_entries() as $entry)
 						{
-							$list_ids = explode(",", $_POST["list_ids"]);
-							
-							foreach ($list_ids as $list_id)
-							{
-								if (($list = EntryList::select_by_id($list_id))
-									&& $list->session_user_can_read())
-								{
-									$errors += !$test->entries_add_from_list($list, $mode);
-								}
-								else 
-								{
-									$errors ++;
-								}
-							}
+							if (!$test->entries_add($entry, $mode)) return null;
 						}
 						
-						if (isset($_POST["entry_ids"]))
-						{
-							$entry_ids = explode(",", $_POST["entry_ids"]);
-							
-							foreach ($entry_ids as $entry_id)
-							{
-								if (($entry = Entry::select_by_id($entry_id)))
-								{
-									$errors += !$test->entries_add($entry, $mode);
-								}
-								else 
-								{
-									$errors ++;
-								}
-							}
-						}
-						
-						if (!$errors) return $test;
+						return $test;
 					}
 					
 					return null;
@@ -232,47 +200,10 @@ class APITest extends APIBase
 			if (Connection::transact(
 				function () use ($test, $mode)
 				{
-					$entries = array ();
-					if (isset($_POST["list_ids"]))
+					foreach (self::collect_entries() as $entry)
 					{
-						$list_ids = explode(",", $_POST["list_ids"]);
-						
-						foreach ($list_ids as $list_id)
-						{
-							if (($list = EntryList::select_by_id($list_id))
-								&& $list->session_user_can_read())
-							{
-								foreach ($list->entries() as $entry)
-								{
-									if ($entry->in($entries) === null)
-									{
-										array_push($entries, $entry);
-									}
-								}
-							}
-						}
+						if (!$test->entries_add($entry, $mode)) return null;
 					}
-					
-					if (isset($_POST["entry_ids"]))
-					{
-						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
-						{
-							if (($entry = Entry::select_by_id($entry_id)))
-							{
-								if ($entry->in($entries) === null)
-								{
-									array_push($entries, $entry);
-								}
-							}
-						}
-					}
-					
-					foreach ($entries as $entry)
-					{
-						$test->entries_add($entry, $mode);
-					}
-					
-					$test->uncache_entries();
 					
 					return $test;
 				}
@@ -292,17 +223,10 @@ class APITest extends APIBase
 				if (Connection::transact(
 					function () use ($test)
 					{
-						$errors = 0;
-						
-						foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+						foreach (self::collect_entries() as $entry)
 						{
-							if (!$test->entries_remove(Entry::select_by_id($entry_id)))
-							{
-								$errors ++;
-							}
+							if (!$test->entries_remove($entry)) return null;
 						}
-						
-						if ($errors) return null;
 						
 						return $test;
 					}

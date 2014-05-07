@@ -29,10 +29,13 @@ class APIUser extends APIBase
 	
 	public function select()
 	{
-		if (!Session::get()->reauthenticate()
-			|| !($user = Session::get()->get_user())) return;
+		if (!Session::get()->reauthenticate()) return;
 		
-		Session::get()->set_result_assoc($user->json_assoc_detailed());
+		if (($user = self::validate_selection_id($_POST, "user_id", "User"))
+			|| ($user = Session::get()->get_user()))
+		{
+			Session::get()->set_result_assoc($user->json_assoc_detailed());
+		}
 	}
 	
 	public function authenticate()
@@ -99,14 +102,23 @@ class APIUser extends APIBase
 	{
 		if (!Session::get()->reauthenticate()) return;
 		
-		self::return_array_as_json(Session::get()->get_user()->sittings());
-	}
-	
-	public function sittings_live()
-	{
-		if (!Session::get()->reauthenticate()) return;
-		
-		self::return_array_as_json(Session::get()->get_user()->sittings_live());
+		if (!($sittings = Session::get()->get_user()->sittings()))
+		{
+			Session::get()->set_error_assoc("User-Sittings Selection", User::errors_unset());
+		}
+		else
+		{
+			if (isset($_GET["live"]))
+			{
+				$live = !!intval($_GET["live"], 10);
+				foreach ($sittings as $s => $sitting)
+				{
+					if ($sitting->live() != $live) unset($sittings[$s]);
+				}
+			}
+			
+			self::return_array_as_json($sittings);
+		}
 	}
 	
 	public function languages()

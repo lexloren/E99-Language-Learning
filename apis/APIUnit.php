@@ -208,6 +208,23 @@ class APIUnit extends APIBase
 			}
 		}
 	}
+	
+	public function sittings()
+	{
+		if (!Session::get()->reauthenticate()) return;
+		
+		if (($unit = self::validate_selection_id($_GET, "unit_id", "Unit")))
+		{
+			if ($unit->session_user_can_administer())
+			{
+				self::return_array_as_json($unit->sittings());
+			}
+			else
+			{
+				Session::get()->set_error_assoc("Unit-Sittings Selection", "Session user cannot administer course.");
+			}
+		}
+	}
 }
 
 ?>
