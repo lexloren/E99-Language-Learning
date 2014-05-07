@@ -86,7 +86,8 @@ class Session
 
 	public function echo_csv()
 	{
-		if(!$this->result_assoc || !!$this->result_assoc["result"])
+		if(!!$this->result_assoc["result"] && is_array($this->result_assoc["result"])
+			&& array_filter($this->result_assoc["result"], 'is_array') > 0)
 		{
 			$output = fopen("php://output", "w");
 			foreach($this->result_assoc["result"] as $row)
@@ -97,7 +98,7 @@ class Session
 		}
 		else
 		{
-			$this->error_assoc("csv output", "No csv reports present");
+			$this->error_assoc("csv output", "No csv reports generated");
 			echo json_encode($this->result_assoc);
 		}
 	}
