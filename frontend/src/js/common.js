@@ -1,13 +1,54 @@
-var courseData;
 
+function getUserData()
+{
+	if(typeof(Storage)!=="undefined")
+	{
+		// Code for localStorage/sessionStorage.
+		var data = localStorage.getItem("USER_COURSE_CACHE");
+		if (data !== "undefined" && data != null ) {
+			return JSON.parse(data);
+		}
+	}
+	return null;
+}
+
+function setUserData(data)
+{
+	if(typeof(Storage)!=="undefined")
+	{
+		// Code for localStorage/sessionStorage.
+		localStorage.setItem("USER_COURSE_CACHE", JSON.stringify(data));
+	}
+	
+}
+
+function resetUserData()
+{
+	if(typeof(Storage)!=="undefined")
+	{
+		// Code for localStorage/sessionStorage.
+		localStorage.removeItem("USER_COURSE_CACHE");
+	}
+	
+}
 function getCourses(){
+	if(typeof(Storage)!=="undefined")
+	{
+		// Code for localStorage/sessionStorage.
+		var data = localStorage.getItem("USER_COURSE_CACHE");
+		if (data !== "undefined" && data != null ) {
+			populateCourseDropDown(JSON.parse(data));
+			return;
+		}
+	}
+	
 	$.getJSON('../../user_courses.php', function(data){
 		authorize(data);
 		if(data.isError){
 			// show error
         }
         else {
-			courseData = data;
+			
             $.each(data.result, function(i, item){
 				courseli = '<li><a href="course.html?courseid='+item.courseId+'">'+item.name+'</a></li>';
                     $('#course-menu').append(courseli);
@@ -15,6 +56,19 @@ function getCourses(){
         }
         $('#course-menu').append('<li class="dropdown-header">Other</li><li><a href="#">Search for Courses</a></li>');
     });
+}
+
+function populateCourseDropDown (data) {
+	var courseli;
+	if (data.result.coursesOwned.length >0) {
+
+		$.each( data.result.coursesOwned, function() {
+			courseli = '<li><a href="course.html?courseid='+this.courseId+'">'+this.name+'</a></li>';
+            $('#course-menu').append(courseli);
+		});
+		
+	}
+	
 }
 
 function navbar() {
@@ -27,6 +81,7 @@ function navbar() {
 }
 
 function signout(){
+	resetUserData();
     $.getJSON('../../user_deauthenticate.php', 
         function(data){
             if(data.isError){
