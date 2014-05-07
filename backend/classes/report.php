@@ -102,13 +102,13 @@ class Report extends ErrorReporter
 		}
 		
 		$report = Array();
-		$report["progressPercent"] = $progress_stat["num_entries"] > 0 ? $num_user_entries_practiced / $progress_stat["num_entries"] : 0;
-		$report["unitReports"] = self::create_units_report($course_id);
+		$report["progressPercent"] = intval(0.5 + 100 * ($progress_stat["num_entries"] > 0 ? $num_user_entries_practiced / $progress_stat["num_entries"] : 0));
+		$report["unitReports"] = self::create_units_report($course_id, $user_id);
 		$report["entryReports"] = $entryReports;
 		return $report;
 	}
 	
-	private static function create_units_report($course_id)
+	private static function create_units_report($course_id, $user_id)
 	{
 		$sql = "SELECT * FROM course_units WHERE course_id = ".$course_id;
 		$result = Connection::query($sql);
@@ -127,13 +127,52 @@ class Report extends ErrorReporter
 			$unitReport = Array();
 			$unit = Unit::select_by_id($result_assoc["unit_id"]);
 			$unitReport["unit"] = $unit->json_assoc();
-			$unitReport["progressPercent"] = 0.0; //TODO
+			$unitReport["progressPercent"] = self::get_student_practice_percent($result_assoc["unit_id"], $user_id);
 			array_push($unitsReport, $unitReport);
 		}
 		
 		return $unitsReport;
 	}
 	
+	private static function get_student_practice_percent($unit_id, $user_id)
+	{
+		$sql_unit_list_entries_count = "SELECT COUNT(*) FROM list_entries WHERE list_id IN
+			(SELECT list_id FROM course_unit_lists WHERE unit_id = $unit_id)";
+
+		$result = Connection::query($sql_unit_list_entries_count);
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to create units report: $error.");
+		}
+		
+		$result_assoc = $result->fetch_assoc();
+		$unit_list_entries_count = $result_assoc["COUNT(*)"];
+		
+		if (0 == $unit_list_entries_count)
+			return 0;
+		
+		$sql_practiced_count = "SELECT COUNT(DISTINCT user_entry_id) FROM user_entry_results WHERE user_entry_id IN
+			(SELECT user_entry_id FROM user_entries WHERE user_id = $user_id and entry_id IN
+			(SELECT entry_id FROM user_entries WHERE user_entry_id IN
+			(SELECT user_entry_id FROM list_entries WHERE list_id IN
+			(SELECT list_id FROM course_unit_lists WHERE unit_id = $unit_id))))";
+		$result = Connection::query($sql_practiced_count);
+
+		if (!!($error = Connection::query_error_clear()))
+		{
+			echo $error;
+			exit;
+			return static::errors_push("Failed to create units report: $error.");
+		}
+		
+		$result_assoc = $result->fetch_assoc();
+		$practiced_entries_count = $result_assoc["COUNT(DISTINCT user_entry_id)"];
+		
+		$percent = intval(0.5 + 100.0 * $practiced_entries_count / $unit_list_entries_count);
+		
+		return $percent;
+	}
 		
 	private static function get_class_average_point_for_entry($entry_id, $course_id)
 	{
@@ -184,7 +223,7 @@ class Report extends ErrorReporter
 		$result_assoc = $result->fetch_assoc();
 		
 		if (!!$result_assoc)
-			return (float)$result_assoc['AVG(grades.point)'];
+			return intval($result_assoc['AVG(grades.point)']);
 		else
 			return 0;
 	}
@@ -233,7 +272,7 @@ class Report extends ErrorReporter
 				$entry = Entry::select_by_id($k);
 				$difficult_entry = array();
 				$difficult_entry["entry"] = $entry->json_assoc();
-				$difficult_entry["averageGradePoint"] = $a;
+				$difficult_entry["averageGradePoint"] = intval($a);
 				array_push($difficult_entries, $difficult_entry);
 			}
 		}
@@ -298,7 +337,7 @@ class Report extends ErrorReporter
 		{
 			$entryReport = array();
 			$entryReport["entry"] = $entry->json_assoc(false);
-			$entryReport["score"] = 0.0; //TODO
+			$entryReport["score"] = !!$sitting ? $sitting->get_response_for_entry($entry) : 0;
 			array_push($entryReports, $entryReport);
 		}
 		
@@ -306,6 +345,20 @@ class Report extends ErrorReporter
 		$studentTestReport["student"] = $student->json_assoc(false);
 		$studentTestReport["entryReports"] = $entryReports;
 		return $studentTestReport;
+	}
+
+	private static function get_student_data()
+	{
+		$sql = "SELECT user_id, IF(u.status_id IS NULL, '', (SELECT s.desc FROM user_statuses s WHERE s.status_id = u.status_id)) AS status " +
+		       "users u";
+	}
+
+	public static function get_data_dump()
+	{
+		return array(
+			array("name 1", "age 1", "city 1"),
+			array("name 2", "age 2", "city 2"),
+			array("name 3", "age 3", "city 3"));
 	}
 }	
 

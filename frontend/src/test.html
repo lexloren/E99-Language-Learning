@@ -87,7 +87,7 @@
           </table>
           <div id="choice-loader"><img src="images/ajax-loader.gif"><br /> &nbsp; </div>
           <div id="multi-choice" class="container-left">
-            <div id="choice-note"></div>
+            <div id="choice-note" class="alert alert-info"></div>
             <table id="choice-list" class="table">
             </table>
             <div id="choiceform" class="form-group form-inline">
@@ -114,7 +114,7 @@
                 <label>Language 2: </label>
                 <select class="form-control" id="entry-lang2">
                 </select>
-              </div>
+              </div><br /><br />
               <button type="button" class="btn btn-primary" onclick="search_entry(1);">Search</button><br /> &nbsp;
             </form>
             <div id="dict-loader"><img src="images/ajax-loader.gif"></div>
@@ -123,32 +123,31 @@
           <!--- List Search Form --->
           <div id="list-add">
             <form class="form-inline" id="searchListForm" role="form">
-              <div class="form-group">
+              <div class="form-group alert alert-info">
                 <span class="span-action" onclick="myDecks();">[View My Decks]</span> &nbsp; 
                 <span class="span-action" onclick="showSearch('#word-search');">[Search by Word]</span> &nbsp; 
                 <span class="span-action" onclick="showSearch('#owner-search');">[Search by Owner]</span> &nbsp;
-                <br /> &nbsp;
                 <div id="word-search">
-                  <div class="form-group">
+                  <div class="form-group"><br /> &nbsp;
                     <label class="sr-only" for="wordsearch">Enter search text</label>
                     <input type="text" class="form-control" id="wordsearch" placeholder="search word">
                   </div>
-                  <div class="form-group">
+                  <div class="form-group"><br /> &nbsp;
                     <label>Language 1: </label>
                     <select class="form-control" id="deck-lang1">
                     </select>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group"><br /> &nbsp;
                     <label>Language 2: </label>
                     <select class="form-control" id="deck-lang2">
                     </select>
-                  </div>
+                  </div><br /><br /> &nbsp;
                   <button type="button" class="btn btn-primary" onclick="search_entry_deck(1);">Search</button><br />&nbsp;
                 </div>
                 <div id="owner-search">
-                  <div class="form-group">
+                  <div class="form-group"><br /> &nbsp;
                     <input type="text" class="form-control" id="ownerCriteria" placeholder="username or email" required autofocus>
-                  </div>
+                  </div><br /><br /> &nbsp;
                   <button type="button" class="btn btn-primary" onclick="searchOwner();">Search</button><br />&nbsp;
                 </div>
               </div> 
@@ -165,6 +164,7 @@
           <button id="test-start-btn" class="btn btn-primary" type="button" onclick="startTest();">Start Test</button>
           <div id="test-loader"><img src="images/ajax-loader.gif"></div>
           <div id="question-block">
+            <div id="prev-question" class="alert alert-warning alert-dismissable test-question"></div><br />
             <div id="test-question" class="panel panel-info test-question">
               <div class="panel-heading">
                 <h3 id="question-number" class="panel-title">Question</h3>

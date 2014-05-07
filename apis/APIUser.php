@@ -399,6 +399,33 @@ class APIUser extends APIBase
 		
 		self::return_array_as_json(Session::get()->get_user()->courses_instructed());
 	}
+
+	public function researcher_data_dump()
+	{
+		if (!Session::get()->reauthenticate()) return;
+
+		$user = Session::get()->get_user();
+		if($user->session_user_can_research())
+		{
+			if(!($data = Report::get_data_dump()))
+			{
+				Session::get()->set_error_assoc("Data Dump", Report::errors_unset());
+			}
+			return Session::get()->set_result_assoc($data);
+		}
+	}
+
+	public function method_output_type($method)
+	{
+		$csv_output_methods = array(
+			"researcher_data_dump"
+		);
+		if (in_array($method, $csv_output_methods))
+		{
+			return "csv";
+		}
+		return "json";
+	}
 }
 
 

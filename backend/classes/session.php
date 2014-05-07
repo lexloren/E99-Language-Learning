@@ -2,6 +2,7 @@
 
 require_once "./backend/connection.php";
 require_once "./backend/classes.php";
+require_once "./backend/headers.php";
 
 class Session
 {
@@ -77,17 +78,44 @@ class Session
 	{
 		$this->result_assoc = self::result_assoc($result, $result_information);
 	}
-	
+
 	public function get_result_assoc()
 	{
 		return $this->result_assoc;
 	}
 
-	//This will be called from router.php
-	public function echo_json()
+	public function echo_csv()
 	{
-		require_once "./backend/headers.php";
-		echo json_encode($this->result_assoc);
+		if(!$this->result_assoc || !!$this->result_assoc["result"])
+		{
+			$output = fopen("php://output", "w");
+			foreach($this->result_assoc["result"] as $row)
+			{
+				fputcsv($output, $row);
+			}
+			fclose($output);
+		}
+		else
+		{
+			$this->error_assoc("csv output", "No csv reports present");
+			echo json_encode($this->result_assoc);
+		}
+	}
+
+	//This will be called from router.php
+	public function echo_output($output_type)
+	{
+		$header_strings = Header::get_header_strings($output_type);
+                foreach($header_strings as $header_string)
+		{
+			header($header_string);
+		}
+
+		switch ($output_type)
+		{
+			case "csv": $this->echo_csv(); break;
+			default: echo json_encode($this->result_assoc);
+		}
 	}
 	
 	//  Opens a session.

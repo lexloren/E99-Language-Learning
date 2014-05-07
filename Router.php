@@ -67,7 +67,7 @@ class Router
 		
 		$uri = trim($uri, '/');
 		$uri = trim($uri, ' ');
-		$uri = trim($uri, '.php');
+		$uri = trim(trim($uri, 'php'), '.');
 		
 		if (empty($uri)) return;
 		
@@ -114,7 +114,8 @@ class Router
 			self::__404();
 		}
 		$method->invoke($instance);
-		Session::get()->echo_json();
+		$output_type = $instance->method_output_type($methodName);
+		Session::get()->echo_output($output_type);
 	}
 	
 	private static function __404()
