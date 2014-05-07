@@ -189,7 +189,7 @@ class Sitting extends CourseComponent
 	public function get_response_for_entry($entry)
 	{
 		$entry = $entry->copy_for_user($this->get_test()->get_owner(), $this->get_test());
-		if ($entry->in($test->entries()) === null)
+		if ($entry->in($this->get_test()->entries()) === null)
 		{
 			return static::errors_push("Sitting cannot get response for entry not in test.");
 		}
