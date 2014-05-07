@@ -99,7 +99,7 @@ class APIBase
 		}
 	}
 	
-	protected static function collect_entries($use_list_ids = true)
+	public static function collect_entries($use_list_ids = true)
 	{
 		$entries = array ();
 		

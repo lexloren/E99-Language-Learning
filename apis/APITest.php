@@ -23,7 +23,7 @@ class APITest extends APIBase
 					{
 						$mode = isset($_POST["mode_id"]) && strlen($_POST["mode_id"]) > 0 ? intval($_POST["mode_id"], 10) : (isset($_POST["mode"]) && strlen($_POST["mode"]) > 0 ? intval($_POST["mode"], 10) : null);
 						
-						foreach (self::collect_entries() as $entry)
+						foreach (APIBase::collect_entries() as $entry)
 						{
 							if (!$test->entries_add($entry, $mode)) return null;
 						}
@@ -200,7 +200,7 @@ class APITest extends APIBase
 			if (Connection::transact(
 				function () use ($test, $mode)
 				{
-					foreach (self::collect_entries() as $entry)
+					foreach (APIBase::collect_entries() as $entry)
 					{
 						if (!$test->entries_add($entry, $mode)) return null;
 					}
@@ -223,7 +223,7 @@ class APITest extends APIBase
 				if (Connection::transact(
 					function () use ($test)
 					{
-						foreach (self::collect_entries() as $entry)
+						foreach (APIBase::collect_entries() as $entry)
 						{
 							if (!$test->entries_remove($entry)) return null;
 						}

@@ -192,7 +192,7 @@ class APIList extends APIBase
 			if (Connection::transact(
 				function () use ($list)
 				{
-					foreach (self::collect_entries() as $entry)
+					foreach (APIBase::collect_entries() as $entry)
 					{
 						if (!$list->entries_add($entry)) return null;
 					}
@@ -215,7 +215,7 @@ class APIList extends APIBase
 				if (Connection::transact(
 					function () use ($list)
 					{
-						foreach (self::collect_entries() as $entry)
+						foreach (APIBase::collect_entries() as $entry)
 						{
 							if (!$list->entries_remove($entry)) return null;
 						}
