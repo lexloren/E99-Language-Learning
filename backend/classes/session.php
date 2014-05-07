@@ -88,7 +88,7 @@ class Session
 	{
 		if(!$this->result_assoc || !!$this->result_assoc["result"])
 		{
-			$output = fopen("pho://output", "w");
+			$output = fopen("php://output", "w");
 			foreach($this->result_assoc["result"] as $row)
 			{
 				fputcsv($output, $row);

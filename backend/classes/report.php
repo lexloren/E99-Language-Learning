@@ -347,9 +347,18 @@ class Report extends ErrorReporter
 		return $studentTestReport;
 	}
 
+	private static function get_student_data()
+	{
+		$sql = "SELECT user_id, IF(u.status_id IS NULL, '', (SELECT s.desc FROM user_statuses s WHERE s.status_id = u.status_id)) AS status " +
+		       "users u";
+	}
+
 	public static function get_data_dump()
 	{
-		return array(array("abc", "efg"));
+		return array(
+			array("name 1", "age 1", "city 1"),
+			array("name 2", "age 2", "city 2"),
+			array("name 3", "age 3", "city 3"));
 	}
 }	
 

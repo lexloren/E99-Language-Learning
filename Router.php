@@ -67,7 +67,7 @@ class Router
 		
 		$uri = trim($uri, '/');
 		$uri = trim($uri, ' ');
-		$uri = trim($uri, '.php');
+		$uri = trim(trim($uri, 'php'), '.');
 		
 		if (empty($uri)) return;
 		
