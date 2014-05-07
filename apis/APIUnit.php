@@ -135,7 +135,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
-				;
+				Session::get()->set_error_assoc("Unit-Lists Selection", "Session user cannot execute unit.");
 			}
 		}
 	}
@@ -204,7 +204,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
-				;
+				Session::get()->set_error_assoc("Unit-Tests Selection", "Session user cannot execute unit.");
 			}
 		}
 	}

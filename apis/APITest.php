@@ -374,7 +374,7 @@ class APITest extends APIBase
 				}
 				else
 				{
-					;
+					Session::get()->set_error_assoc("Test-Entry–Patterns Selection", "Session user cannot administer test.");
 				}
 			}
 			else
