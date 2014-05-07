@@ -147,7 +147,7 @@ class Test extends CourseComponent
 		{
 			foreach ($entries_by_number as $number => $test_entry)
 			{
-				if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+				if ($test_entry->get_entry_id() === $entry->get_entry_id())
 				{
 					$entry_number = $number;
 					break;
@@ -374,7 +374,7 @@ class Test extends CourseComponent
 		
 		foreach ($this->entries() as $test_entry_id => $test_entry)
 		{
-			if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+			if ($test_entry->get_entry_id() === $entry->get_entry_id())
 			{
 				return $test_entry_id;
 			}
@@ -449,8 +449,8 @@ class Test extends CourseComponent
 					array_push($mode_ids, intval($result_assoc["mode"], 10));
 				}
 				
-				$pronoun = $entry->pronunciations();
-				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($pronoun));
+				$pronun = $entry->pronunciations();
+				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($pronun));
 				
 				foreach ($mode_ids as $mode_id)
 				{
