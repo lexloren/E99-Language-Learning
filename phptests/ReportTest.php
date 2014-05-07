@@ -83,7 +83,7 @@ class ReportTest extends PHPUnit_Framework_TestCase
 		{
 			$studentReport = $studentPracticeReport[$i];
 			$this->assertNotNull($studentReport["student"]);
-			$this->assertEquals($studentReport["progressPercent"], 0.5);
+			$this->assertEquals($studentReport["progressPercent"], 50);
 		}
 		
 		$this->assertNotNull($report["difficultEntries"]);
@@ -101,6 +101,9 @@ class ReportTest extends PHPUnit_Framework_TestCase
 
 		$course = $report["course"];
 		$this->assertEquals($course["name"], $this->db->course_names[0]);
+		
+		//print_r($report);
+		//print_r(json_encode($report));
 	}
 	
 	public function test_get_course_test_report()
