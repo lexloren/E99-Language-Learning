@@ -346,6 +346,11 @@ class Report extends ErrorReporter
 		$studentTestReport["entryReports"] = $entryReports;
 		return $studentTestReport;
 	}
+
+	public static function get_data_dump()
+	{
+		return array(array("abc", "efg"));
+	}
 }	
 
 

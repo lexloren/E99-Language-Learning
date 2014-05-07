@@ -98,6 +98,11 @@ class APIBase
 			Session::get()->set_result_assoc($returnable, $result_information);
 		}
 	}
+
+	public function method_output_type($method)
+        {
+                return "json";
+        }
 }
 
 ?>

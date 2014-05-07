@@ -228,6 +228,12 @@ class DatabaseRow extends ErrorReporter
 	{
 		return !!Session::get() && $this->user_can_execute(Session::get()->get_user());
 	}
+	public function session_user_can_research()
+	{
+		// For now if the user is a researcher for any course then s/he can get the whole data dump.
+	        // This is a last minute project assumption, We might want to revisit this later.
+		return !!Session::get() && $this->user_can_research_via_some_course(Session::get()->get_user());
+	}
 	
 	public function json_assoc($privacy = null)
 	{

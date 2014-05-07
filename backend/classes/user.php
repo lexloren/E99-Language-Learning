@@ -580,6 +580,20 @@ class User extends DatabaseRow
 		}
 		return false;
 	}
+
+	// For now if the user is a researcher in any course then s/he can get the whole data dump.
+	// This is a last minute project assumption, We might want to revisit this later.
+	public function user_can_research_via_some_course($user)
+	{
+		$result = Connection::query(sprintf("SELECT researcher_id from course_researchers where user_id = %d",
+				$user->get_user_id()));
+
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to get researcher data.");
+		}
+		return !!$result->num_rows;
+	}
 	
 	public function equals($user)
 	{
