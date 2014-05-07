@@ -75,7 +75,11 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($test->get_owner());
 		$this->assertCount(0, $test->entries());
 		$this->assertTrue($test->session_user_can_write());
-		$this->assertNotNull($test->entries_add($entry, ($mode = 4)));
+			Test::errors_unset();
+		$result = $test->entries_add($entry, ($mode = 4));
+			print_r($result);
+			print_r(Test::errors_unset());
+		$this->assertNotNull($result);
 		$this->assertCount(1, $test->entries());
 		$this->assertEquals($mode, $test->get_entry_mode($entry)->get_mode_id());
 		$test_entries = $test->entries();

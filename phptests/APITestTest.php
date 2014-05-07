@@ -271,10 +271,13 @@ class APITestTest extends PHPUnit_Framework_TestCase
 		$entry_ids = $this->db->add_dictionary_entries(5);
 		$_POST["test_id"] = $test_id;
 		$_POST["entry_ids"] = implode(",", $entry_ids);
+			Test::errors_unset();
 		$this->obj->entries_add();
 		$this->assertFalse(Session::get()->has_error());
 		$result = Session::get()->get_result_assoc();
 		$result_assoc = $result["result"];
+			print_r($result);
+			print_r(Test::errors_unset());
 		$this->assertCount(5, $result_assoc);
 		$this->assertContains($result_assoc[0]["entryId"], $entry_ids);
 		
