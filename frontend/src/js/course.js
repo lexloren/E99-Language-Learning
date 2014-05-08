@@ -731,15 +731,17 @@ function displayEditCourseForm() {
 						$("#knownLang").val(data.result.languageKnown.code);
 						$("#unknownLang").val(data.result.languageUnknown.code);
 						
-						navHTML ='<li class="active"><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>';
+						navHTML ='<li class="active"><a href="#courseprogress" data-toggle="tab">Class Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li><li class=""><a href="#instructor" data-toggle="tab">Instructors</a></li>					<li class=""><a href="#unit" data-toggle="tab">Units</a></li>					<li class=""><a href="#updatecourse" data-toggle="tab">Update Course</a></li>';
 						$("#studentadmin").show();
-						$("#students").addClass("active in");
+						
 						$("#createUnit").show();
+						courseProgressReport(courseID, '', true);
 					} else {
 						navHTML ='<li class="active"><a href="#courseprogress" data-toggle="tab">My Progress</a></li><li ><a href="#students" data-toggle="tab">Students</a></li>						<li class=""><a href="#unit" data-toggle="tab">Units</a></li>	';
 						$("#studentadmin").hide();
-						$("#students").addClass("active");
+						
 						$("#createUnit").hide();
+						courseProgressStudentReport(data);
 					}
 					$("#navtabs").html(navHTML);
 					createUnitTable(data,"#units")
@@ -756,44 +758,129 @@ function displayEditCourseForm() {
 	});	
 }
 
+function courseProgressStudentReport(data)  {
+	var unitHTML ='';
+	var rowHTML ='';
+	if (data.result.units.length >0) {
+		unitHTML ='<table class="table"><tr>';
+		rowHTML = '<tr>';
+		$.each( data.result.units, function() {
+			unitHTML = unitHTML + '<th>'+ this.name + '</th>';
+			rowHTML = rowHTML + '<td>';
+			if (this.timeframe != null) {
+				if (this.timeframe.isCurrent) {
+					rowHTML = rowHTML + '<a href="unit.html?unitid=' + this.unitId + '">Learn</a>';
+				}
+			}
+			rowHTML = rowHTML + '</td>';
+		});
+		rowHTML = rowHTML + '</tr>';
+		unitHTML = unitHTML + '</tr>' + rowHTML +'</table>';
+	} else {
+		unitHTML ='Sorry no units configured';
+	}
+					
+					
+	$("#courseprogress").html(unitHTML);
+}
+
+
+function courseProgressReport ( courseId, handle,isOwner) 
+{
+	var url ='../../course_practice_report.php';
+	$("#progress").show();
+	$.getJSON(url, {course_id: courseId},
+        function(data){
+            if(data== null || data.isError){
+                $("#failure").html("Sorry unable to get the Courses please try again.");
+                 $("#failure").show();
+				 $("#progress").hide();
+            }
+            else{
+				try {
+					var tableData ='';
+					if (data.result.coursePracticeReport.studentPracticeReports.length > 0) {
+						tableData ='<table id="reporttable"  class="table table-striped table-hover"><tr><th>Student</th>';
+						$.each( data.result.coursePracticeReport.studentPracticeReports[0].unitReports, function() {
+							tableData = tableData + '<th>' + this.unit.name + '</th>';
+						});
+						tableData = tableData + '</tr>';
+						$.each( data.result.coursePracticeReport.studentPracticeReports, function() {
+							if (isOwner || handle ==this.student.handle) {
+								tableData = tableData + '<tr><td>' + this.student.email + '<br/>' + this.student.handle + '</td>';
+							
+								$.each( this.unitReports, function() {
+									tableData = tableData + '<td>' + this.progressPercent + '</td>';
+								});
+								tableData = tableData + '</tr>';
+							}
+						});
+						tableData =tableData + '</table>';
+						
+					}
+					else {
+						tableData ='Sorry Report returned no data';
+					}
+					$("#courseprogress").html(tableData);
+				}
+				finally {
+					$("#progress").hide();
+				}
+            }		
+    })
+	.fail(function(error) {
+		failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+		$("#progress").hide();
+	});
+	
+	return;
+}
+
+
 function updateCourseInstructor(data) {
 	var listHTML ='';
-	if (data.result.instructors.length >0) {
-		listHTML ='<ul class="list-group">';
-	}
-	$.each( data.result.instructors, function() {
-		listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesInstructedCount  + '</span>' + this.handle  + '(' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
-	});
-	if (data.result.instructors.length >0) {
-		listHTML =listHTML + '</ul>';
+	if (data.result.instructors!= null) {
+		if (data.result.instructors.length >0) {
+			listHTML ='<ul class="list-group">';
+		}
+		$.each( data.result.instructors, function() {
+			listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesInstructedCount  + '</span>' + this.handle  + '(' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
+		});
+		if (data.result.instructors.length >0) {
+			listHTML =listHTML + '</ul>';
+		}
 	}
 	$("#courseInstructor").html(listHTML);
 }
 
 function updateCourseResearcher(data) {
 	var listHTML ='';
-	if (data.result.researchers.length >0) {
-		listHTML ='<ul class="list-group">';
-	}
-	$.each( data.result.researchers, function() {
-		listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesResearcherCount  + '</span>' + this.handle  + '( ' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
-	});
-	if (data.result.researchers.length >0) {
-		listHTML =listHTML + '</ul>';
+	if (data.result.researchers!= null) {
+		if (data.result.researchers.length >0) {
+			listHTML ='<ul class="list-group">';
+		}
+		$.each( data.result.researchers, function() {
+			listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesResearcherCount  + '</span>' + this.handle  + '( ' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
+		});
+		if (data.result.researchers.length >0) {
+			listHTML =listHTML + '</ul>';
+		}
 	}
 	$("#researcher").html(listHTML);
 }
 
 function updateCourseStudents(data) {
 	var listHTML ='';
-	if (data.result.students.length >0) {
-		listHTML ='<ul class="list-group">';
-	}
-	$.each( data.result.students, function() {
-		listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesStudiedCount  + '</span>' + this.handle  + '(' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
-	});
-	if (data.result.students.length >0) {
-		listHTML =listHTML + '</ul>';
+	if (data.result.students!= null) {
+		if (data.result.students.length >0) {
+			listHTML ='<ul class="list-group">';
+		}
+		$.each( data.result.students, function() {
+			listHTML = listHTML + '<li class="list-group-item"><span class="badge">'+ this.coursesStudiedCount  + '</span>' + this.handle  + '(' + this.email + ' ) ' + this.nameGiven + ' ' + this.nameFamily +'</li>';
+		});
+		if (data.result.students.length >0) {
+			listHTML =listHTML + '</ul>';
+		}
 	}
 	$("#enrolledstudents").html(listHTML);
 }
