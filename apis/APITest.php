@@ -454,7 +454,7 @@ class APITest extends APIBase
 						{
 							return null;
 						}
-						else $prev_json_assoc = $response->json_assoc();
+						else $prev_json_assoc = $response->json_assoc(false);
 					}
 					
 					$next_json_assoc = $sitting->next_json_assoc();
