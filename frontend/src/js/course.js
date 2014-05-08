@@ -145,10 +145,10 @@ function populateMyCourseTab(data, divID) {
 	var courseHTML ='';
 	try
 	{
-		if (data.result.coursesOwned.length >0) {
-			courseHTML = courseHTML + '<div class="panel panel-success"><div class="panel-heading">Courses Owned</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Dates</th><th>Known Language</th><th>Learning</th></tr></thead>';
+		if (data.result.coursesInstructed.length >0) {
+			courseHTML = courseHTML + '<div class="panel panel-success"><div class="panel-heading">Courses Instructed</div><table class="table table-striped table-hover"><thead><tr><th>#</th><th>Course</th><th>Dates</th><th>Known Language</th><th>Learning</th></tr></thead>';
 		}
-		$.each( data.result.coursesOwned, function() {
+		$.each( data.result.coursesInstructed, function() {
 			courseHTML = courseHTML + '<tr><td>' + this.courseId +'</td><td><a href="course.html?courseid=' + this.courseId +'">' + this.name +'</a>';
 			if (this.message != null) {
 				courseHTML = courseHTML +'<br/><small>' + this.message + '</small>';
@@ -180,7 +180,7 @@ function populateMyCourseTab(data, divID) {
 			courseHTML = courseHTML + '</td></tr>';
 				
 		});
-		if (data.result.coursesOwned.length >0 ) {
+		if (data.result.coursesInstructed.length >0 ) {
 			courseHTML =courseHTML + '</table></div></div>';
 		}
 		if ( data.result.coursesStudied.length >0) {
