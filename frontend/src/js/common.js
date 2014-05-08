@@ -36,8 +36,8 @@ function getCourses(){
 	{
 		// Code for localStorage/sessionStorage.
 		var data = localStorage.getItem("USER_COURSE_CACHE");
-		if (data !== "undefined" && data != null ) {
-			populateCourseDropDown(JSON.parse(data));
+		if (data !== "undefined" && data !== null ) {
+			populateCourseDropDownMenu(JSON.parse(data));
 			return;
 		}
 	}
@@ -53,12 +53,13 @@ function getCourses(){
 				courseli = '<li><a href="course.html?courseid='+item.courseId+'">'+item.name+'</a></li>';
                     $('#course-menu').append(courseli);
             });
+			$('#course-menu').append('<li class="dropdown-header">Other</li><li><a href="#">Search for Courses</a></li>');
         }
-        $('#course-menu').append('<li class="dropdown-header">Other</li><li><a href="#">Search for Courses</a></li>');
+        
     });
 }
 
-function populateCourseDropDown (data) {
+function populateCourseDropDownMenu (data) {
 	var courseli;
 	if (data.result.coursesOwned.length >0) {
 

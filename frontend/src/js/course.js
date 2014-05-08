@@ -62,6 +62,27 @@ function populateProfileTab(data) {
 	$("#inputNameGiven").val(data.result.nameGiven);
 	$("#inputFamilyName").val(data.result.nameFamily);
 	
+	$.getJSON("../../status_enumerate.php", function(data){
+			if(data.isError){
+				$("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
+				$("#failure").show();
+				$("#education").hide();
+			}
+			else{
+				var reportOptions ='<select id="seleducation" class="form-control"><option value=\"0\">Please select</option>';
+				$.each( data.result, function() {
+					reportOptions = reportOptions + '<option value=\"' + this.statusId +'\">' + this.description +'</option>';
+				});
+				reportOptions = reportOptions + '</select>';
+				$("#education").html	(reportOptions);
+			
+			}
+		})
+		.fail(function(error) {
+			failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
+			$("#progress").hide();
+		});;
+		
 	var langCode ="en";
 	var langYears ="0";
 	for(var x=0; x<data.result.languageYears.length; x++)
@@ -429,6 +450,7 @@ function updateProfile() {
 	var inputEmail = $("#inputEmail").val();
     var nameGiven = $("#inputNameGiven").val();
 	var nameFamily = $("#inputFamilyName").val();
+	var statusID = "";
 	var langsExp ="";
 	
     if(inputEmail == "" ||  nameGiven == "" || nameFamily ==""){
@@ -438,20 +460,28 @@ function updateProfile() {
 	
 	if ($("#lang_en_year").val() !="") 
 	{
-		langsExp =langsExp + "en " + $("#lang_en_year").val() + ",";
+		langsExp =langsExp + "en " + $("#lang_en_year").val() ;
 	}
 	
 	if ($("#lang_cn_year").val() !="") 
 	{
-		langsExp =langsExp + "cn " + $("#lang_cn_year").val() + ",";
+		if (langsExp != '') { 
+			langsExp = langsExp + ',';
+		}
+		langsExp =langsExp + "cn " + $("#lang_cn_year").val();
 	}
 	if ($("#lang_jp_year").val() !="") 
 	{
-		langsExp =langsExp + "jp " + $("#lang_jp_year").val() + ",";
+		if (langsExp != '') { 
+			langsExp = langsExp + ',';
+		}
+		langsExp =langsExp + "jp " + $("#lang_jp_year").val() ;
 	}
-	
+	if ($("#seleducation").val() != "0") {
+		statusID= $("#seleducation").val();
+	} 
     $.post('../../user_update.php', 
-        { name_given: nameGiven, email: inputEmail, name_family: nameFamily, langs:langsExp })
+        { name_given: nameGiven, email: inputEmail, name_family: nameFamily, langs:langsExp,status_id:statusID})
         .done(function(data){
             if(data.isError){
                 $("#failure").html("Your account could not be updated: " + data.errorDescription);

@@ -48,7 +48,7 @@ function populateCourseData (data)
 		$.each( data.result.coursesInstructed, function() {
 			courseHTML = courseHTML + '<option value=\"' + this.courseId +'\">' + this.name +'</option>';
 		});
-		if (data.result.length >0 ) {
+		if (data.result.coursesInstructed.length >0 ) {
 			courseHTML = courseHTML + '</select>';
 			reportOptions = reportOptions + '<option value="CP">Course Practice</option><option value="CT">Course Test Report</option>';
 		}
