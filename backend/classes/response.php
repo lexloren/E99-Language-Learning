@@ -294,7 +294,7 @@ class Response extends CourseComponent
 			"responseId" => $this->get_response_id(),
 			"student" => $this->get_user()->json_assoc_condensed(),
 			"timestamp" => $this->get_timestamp(),
-			"pattern" => $this->get_pattern()->json_assoc($this->session_user_can_execute())
+			"pattern" => $this->get_pattern()->json_assoc(!$this->session_user_can_execute())
 		);
 		
 		if (!$flatten)
