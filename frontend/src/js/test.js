@@ -973,7 +973,7 @@ function myDecks() {
                       modeselect = '<select id="deckmode"><option value="">Select a mode (Question/Answer type)</options>';
                       for(num=0;num<modevalues.length;num++)
                           modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
-                      modeselect += '</select> &nbsp;';
+                      modeselect += '</select><br /><br />';
 			                $('#searchResults').append('<tr><td></td><td></td><td>'+modeselect+'<span class="span-action" onclick="addLists();">[Add Entries From Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
@@ -1017,7 +1017,7 @@ function searchOwner() {
                       modeselect = '<select id="deckmode"><option value="">Select a mode</options>';
                       for(num=0;num<modevalues.length;num++)
                           modeselect += '<option value="'+modevalues[num][0]+'">'+modevalues[num][1]+'</option>';
-                      modeselect += '</select> &nbsp;';
+                      modeselect += '</select><br /><br />';
 			                $('#searchResults').append('<tr><td></td><td></td><td></td><td>'+modeselect+'<span class="span-action" onclick="addLists();">[Add Entries From Selected Decks]</span></td></tr>');
 			                $('#searchResults').append('</tbody>');
 		              }
