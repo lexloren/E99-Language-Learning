@@ -26,6 +26,8 @@ $(document).ready(function(){
     $("#word-search").hide();
     $("#owner-search").hide();
     $("#multi-choice").hide();
+    $("#response-list").hide();
+    $("#response-button").hide();
     getModes();
     getTestInfo();
 	}
@@ -43,6 +45,10 @@ function showSearch(search){
 function showForm(frm,tohide){
     $(tohide).hide();
     $(frm).show();
+    if(tohide == '#response-list')
+        $('#response-button').show();
+    else if(tohide == '#entry-list')
+        $('#response-button').hide();
     $('html, body').animate({scrollTop: $(frm).offset().top}, "slow");
 }
 
@@ -116,7 +122,7 @@ function getSittings(){
             }
             else{
                 $.each(data.result, function(i, item){           
-                    if(item.testId == test && item.live == false){
+                    if(item.testId == test && item.isLive == false){
                         window.location.replace("sitting.html?sittingid="+item.sittingId);
                     }
                 });
@@ -246,6 +252,9 @@ function getTestInfo(){
                             entryHeader += '"></span></td></tr></thead><tbody>';
                             $('#entry-list').append(entryHeader);
                             $('#mode-info').tooltip({html: true});
+
+                            respHeader = '<thead><tr><td>Mode</td><td>Prompt</td><td>Responses</td></tr></thead><tbody>';
+                            $('#class-responses').append(respHeader);
                             $.each(data.result.entries, function(i, item){
                                 count = i + 1;
                                 entryrow = '<tr><td>'+item.words[item.languages[1]]+'</td>' +
@@ -253,8 +262,35 @@ function getTestInfo(){
                                            '<td>' + item.words[item.languages[0]] + '</td>' +
                                            '<td>' + count + '</td><td>'+item.mode.modeId+'</td></tr>';
                                 $('#entry-list').append(entryrow);
+
+                                if(item.mode.modeId == 0 || item.mode.modeId == 2){
+                                    lang = item.languages[1];
+                                    prompt = item.words[lang];
+                                }
+                                else if(item.mode.modeId == 1 || item.mode.modeId == 5){
+                                    lang = item.languages[0];
+                                    prompt = item.words[lang];
+                                }                        
+                                else if(item.mode.modeId == 3 || item.mode.modeId == 4){
+                                    prompt = item.pronunciations[0];
+                                }
+                                else if(item.mode.modeId == 6){
+                                    lang = item.languages[1];
+                                    prompt = item.words[lang] + '/' + item.pronunciations[0];
+                                }
+                                classResponses = '';
+                                $.each(item.responses, function(i, item2){
+                                    if(item2.pattern.contents != null)
+                                        classResponses += item2.pattern.contents + '<br />';
+                                });
+                                resprow = '<tr><td>'+item.mode.directionFrom+'/'+item.mode.directionTo+'</td>' +
+                                          '<td>' + prompt + '</td>' +
+                                          '<td>' + classResponses + '</td></tr>';
+                                $('#class-responses').append(resprow);
                             });
                             $('#entry-list').append('</tbody>');
+                            $('#class-responses').append('</tbody>');
+                            $('#response-button').show();
                         }
                     }
                     if(data.result.gradesDisclosed == false){

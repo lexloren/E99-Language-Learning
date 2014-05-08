@@ -16,7 +16,7 @@
     <script src="js/bootstrap.min.js"></script>
 	<script src="js/common.js"></script>
 	<script src="js/reports.js"></script>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+	   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
@@ -34,7 +34,6 @@
      <!-- Fixed navbar -->
     <div id="navbar"></div>
 	<br/>
-      
 
     <div div id="doc-body" class="container theme-showcase" role="main">
 		<h1>Xenogloss Reporting</h1>
@@ -44,25 +43,47 @@
 			</div>
 		</div>
 		
+		
 		<div class="row">
-			<div class="col-md-6" id="reportmodes">
+			<div class="col-md-6">
+				Select Course
+			</div>
+			
+			<div class="col-md-4" >
+				Select Report
+			</div>
+			<div class="col-md-2" >
+				&nbsp;
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-6" id="courses">
 				
 			</div>
-			<div class="col-md-4">
-				<select id="reporttype" class="form-control">
-					<option value="SP">Student Practice</option>
-					<option value="ST">Student Test</option>
-					<option value="CP">Course Practice</option>
-					<option value="CT">Course Test</option>
-				</select>
+			
+			<div class="col-md-4" id="reportoptions" >
+				
 			</div>
 			<div class="col-md-2">
 				<button class="btn btn-primary" type="button" onclick="runReport();">Run Report</button> 
 			</div>
 		</div>
 		
+		<div class="row" id="exportdiv">
+			<div class="col-md-6">
+				&nbsp;
+			</div>
+			
+			<div class="col-md-4" >
+				&nbsp;
+			</div>
+			<div class="col-md-2" >
+				<button class="btn btn-primary" type="button" onclick="exportToExcel();">Export To Excel</button> 
+			</div>
+		</div>
 		<div class="row">
-			<div class="col-md-12" id="courses">
+			<div class="col-md-12" id="results">
 				
 			</div>
 		</div>

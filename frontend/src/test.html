@@ -85,6 +85,7 @@
           <div id="entry-loader"><img src="images/ajax-loader.gif"></div>
           <table id="entry-list" class="table">
           </table>
+          <button id="response-button" type="button" class="btn btn-primary" onclick="showForm('#response\-list','#entry\-list');">View Class Responses</button><br /> &nbsp;
           <div id="choice-loader"><img src="images/ajax-loader.gif"><br /> &nbsp; </div>
           <div id="multi-choice" class="container-left">
             <div id="choice-note" class="alert alert-info"></div>
@@ -97,6 +98,13 @@
           <div id="entry-addition">
             <strong>[Add entries from dictionary]</strong> &nbsp; 
             <span class="span-action" onclick="toggleSearch('#list\-add')">[Add entries from flashcard decks]</span><br /> &nbsp;
+          </div>
+          <!--- Class Responses --->
+          <div id="response-list">
+            <h5>Class Responses</h5>
+            <table id="class-responses" class="table">
+            </table>
+            <button id="response-button" type="button" class="btn btn-primary" onclick="showForm('#entry\-list','#response\-list');">View Entries</button><br /> &nbsp;
           </div>
           <!--- Entry Search Form --->
           <div id="dict-add">
