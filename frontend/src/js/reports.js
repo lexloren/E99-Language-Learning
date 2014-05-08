@@ -40,6 +40,8 @@ function populateCourseData (data)
 	try {
 		$("#progress").show();
 		var courseHTML ="";
+		var reportOptions ='<select id="reporttype" class="form-control">';
+		
 		if (data.result.coursesInstructed.length >0) {
 			courseHTML = courseHTML + '<select id="reportcourse" class="form-control">';
 		}
@@ -48,10 +50,21 @@ function populateCourseData (data)
 		});
 		if (data.result.length >0 ) {
 			courseHTML = courseHTML + '</select>';
+			reportOptions = reportOptions + '<option value="CP">Course Practice</option><option value="CT">Course Test Report</option>';
 		}
-		$("#courses").html(courseHTML);
-				
+		if (data.result.coursesResearched.length >0) {
+			reportOptions = reportOptions + '<option value="RES">Complete Data -Researcher</option>';
+		}
 		
+		reportOptions = reportOptions + '</select>';
+		
+		$("#courses").html(courseHTML);
+		$("#reportoptions").html	(reportOptions);
+		
+					
+					
+					
+				
 	}		
 	finally {
 		$("#progress").hide();
@@ -200,15 +213,15 @@ function executeCourseTestReport ( courseId)
 						var tr2Row = "<tr><td></td><td></td>";
 						tableData ='<table id="reporttable"  class="table table-striped table-hover"><tr><th>Student Email</th><th>Handle</th>';
 						$.each( data.result.courseTestsReport.testReports.studentTestReports[0].entryReports, function() {
-							tableData = tableData + '<th>' + this.entry.words.en +  this.entry.words.jp '</th>';
+							tableData = tableData + '<th>' + this.entry.words.en +  this.entry.words.jp + '</th>';
 							if (typeof this.entry.words.en != "undefined")	{
-								tableData = tableData + '  en:' + this.entry.words.en
+								tableData = tableData + '  en:' + this.entry.words.en;
 							} 
 							if (typeof this.entry.words.jp != "undefined")	{
-								tableData = tableData + '  jp:' + this.entry.words.jp
+								tableData = tableData + '  jp:' + this.entry.words.jp;
 							}
 							if (typeof this.entry.words.cn != "undefined")	{
-								tableData = tableData + '  cn:' + this.entry.words.cn
+								tableData = tableData + '  cn:' + this.entry.words.cn;
 							}
 							if (typeof this.entry.pronuncations.en != "undefined")	{
 								tr2Row = tr2Row + '<td>' + this.entry.pronuncations.en + '</td>';
