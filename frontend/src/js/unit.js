@@ -113,7 +113,7 @@ function getUnitInfo(){
                     $("#search-list").hide();
                     $("#add-test").hide();
                 }
-                if(data.result.lists.length == null || data.result.lists == 0){
+                if(data.result.lists == null || data.result.lists == 0){
                     $('#lists').html("<em>This unit currently has no decks.</em>");
                 }
                 else{
