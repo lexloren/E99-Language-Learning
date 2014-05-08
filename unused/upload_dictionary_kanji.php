@@ -57,7 +57,7 @@ if (file_exists("kanji.txt"))
 		
 		foreach ($definitions as $definition)
 		{
-			$query = sprintf("INSERT INTO dictionary (lang_id_known, lang_id_unknw, lang_known, lang_unknw, pronunciation) VALUES %s",
+			$query = sprintf("INSERT INTO dictionary (lang_id_0, lang_id_1, word_0, word_1, word_1_pronun) VALUES %s",
 					sprintf("(%d, %d, '%s', '%s', '%s')",
 						intval($language_known["lang_id"], 10),
 						intval($language_unknw["lang_id"], 10),
