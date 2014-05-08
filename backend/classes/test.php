@@ -383,6 +383,14 @@ class Test extends CourseComponent
 		return -1;
 	}
 	
+	public function entry_cache_php53_workaround($entry, $test_entry_id)
+	{
+		if (isset($this->entries))
+		{
+			$this->entries[intval($test_entry_id, 10)] = $entry;
+		}
+	}
+	
 	public function entries_add($entry, $mode = null)
 	{
 		if (!$entry)
@@ -430,9 +438,9 @@ class Test extends CourseComponent
 					return null;
 				}
 				
-				if (isset($test->entries) && Connection::query_insert_id())
+				if (($test_entry_id = Connection::query_insert_id()))
 				{
-					$test->entries[intval(Connection::query_insert_id(), 10)] = $entry;
+					$test->entry_cache_php53_workaround($entry, $test_entry_id);
 				}
 				
 				$result = Connection::query("SELECT mode_id AS mode FROM modes");
