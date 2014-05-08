@@ -22,7 +22,7 @@ function getSittingInfo(){
         {sitting_id: sitting},
         function(data){
 		        authorize(data);
-            if(data.isError || data.result.owner == null){
+            if(data.isError || data.result.student == null){
                 failureMessage("Information for this sitting could not be retrieved.");
             }
             else{
@@ -35,7 +35,7 @@ function getSittingInfo(){
                     $('#sitting-details').append('<strong>Score: </strong>'+data.result.score.scoreScaled+'<br />');
                 }    
                 $('#sitting-details').append('<label for="feedback">Feedback for Student:</label>');
-                if(data.result.owner.isSessionUser == true){
+                if(data.result.student.isSessionUser == false){
                     $('#sitting-details').append('<textarea class="form-control" id="feedback" rows="5">'+feedback+'</textarea><br />');
                     $('#sitting-details').append('<button class="btn btn-primary" type="button" onclick="updateFeedback();">Update Feedback</button><br /><br />');
                 }
@@ -82,7 +82,7 @@ function getSittingInfo(){
                     });
                     $('#response-list').append('</tbody>');
                 }
-                if(data.result.owner.isSessionUser == true){  
+                if(data.result.student.isSessionUser == false){  
                     $("#doc-body").append('<a href="test.html?testid='+data.result.testId+'" style="text-decoration:none;"><span class="glyphicon glyphicon-arrow-left span-action" title="Return to test"></span>&nbsp; Return to test</a><br />&nbsp; ');
                 }   
                 $("#sittingData").show();
