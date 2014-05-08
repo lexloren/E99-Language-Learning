@@ -28,6 +28,8 @@ class APITest extends APIBase
 							if (!$test->entries_add($entry, $mode)) return null;
 						}
 						
+						$test->get_course()->students_notify("Test Inserted", "An instructor has inserted a test into this course.");
+						
 						return $test;
 					}
 					
@@ -71,6 +73,7 @@ class APITest extends APIBase
 			}
 			else
 			{
+				$test->get_course()->students_notify("Test Deleted", "An instructor has deleted a test from this course.");
 				Session::get()->set_result_assoc($test->json_assoc());
 			}
 		}
@@ -123,28 +126,35 @@ class APITest extends APIBase
 						$errors += !$test->set_timer($_POST["timer"]);
 					}
 					
+					$should_notify = false;
 					if (isset($_POST["disclosed"]))
 					{
 						$errors += !$test->set_disclosed(intval($_POST["disclosed"], 10));
+						$should_notify = true;
 					}
 					
 					if (isset($_POST["open"]) && isset($_POST["close"]))
 					{
 						$errors += !$test->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
+						$should_notify = true;
 					}
 					else
 					{
 						if (isset($_POST["open"]))
 						{
 							$errors += !$test->set_open($_POST["open"]);
+							$should_notify = true;
 						}
 						if (isset($_POST["close"]))
 						{
 							$errors += !$test->set_close($_POST["close"]);
+							$should_notify = true;
 						}
 					}
 					
 					if ($errors) return null;
+					
+					if ($should_notify) $test->get_course()->students_notify("Test Updated", "An instructor has updated important details about a test associated with this course.");
 					
 					return $test;
 				}

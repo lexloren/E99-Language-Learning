@@ -286,18 +286,6 @@ class Sitting extends CourseComponent
 		if (isset($this->entries_remaining)) unset($this->entries_remaining);
 	}
 	
-	public function user_can_read($user)
-	{
-		return $this->user_can_administer($user)
-			|| $this->get_user()->equals($user);
-	}
-	
-	public function user_can_execute($user)
-	{
-		return $this->user_can_read($user)
-			&& $this->get_test()->get_disclosed();
-	}
-	
 	public function timer_depleted()
 	{
 		return !!$this->get_test()->get_timer()
@@ -423,6 +411,19 @@ class Sitting extends CourseComponent
 	public function responses_count()
 	{
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
+	}
+	
+	public function user_can_read($user)
+	{
+		return $this->user_can_administer($user)
+			|| $this->get_user()->equals($user);
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->user_can_read($user)
+			&& ($this->get_test()->user_can_administer($user)
+				|| $this->get_test()->get_disclosed());
 	}
 	
 	public function json_assoc($privacy = null)

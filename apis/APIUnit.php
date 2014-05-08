@@ -35,6 +35,8 @@ class APIUnit extends APIBase
 						}
 					}
 					
+					$unit->get_course()->students_notify("Unit Inserted", "An instructor has inserted a unit into this course.");
+					
 					return $unit;
 				}
 			))) Session::get()->set_result_assoc($unit->json_assoc());
@@ -64,6 +66,7 @@ class APIUnit extends APIBase
 			}
 			else
 			{
+				$unit->get_course()->students_notify("Unit Deleted", "An instructor has deleted a unit from this course.");
 				Session::get()->set_result_assoc($unit->json_assoc());
 			}
 		}
@@ -98,23 +101,29 @@ class APIUnit extends APIBase
 						$errors += !$unit->set_message($_POST["message"]);
 					}
 					
+					$should_notify = false;
 					if (isset($_POST["open"]) && isset($_POST["close"]))
 					{
 						$errors += !$unit->set_timeframe(!!$_POST["open"] || !!$_POST["close"] ? new Timeframe($_POST["open"], $_POST["close"]) : null);
+						$should_notify = true;
 					}
 					else
 					{
 						if (isset($_POST["open"]))
 						{
 							$errors += !$unit->set_open($_POST["open"]);
+							$should_notify = true;
 						}
 						if (isset($_POST["close"]))
 						{
 							$errors += !$unit->set_close($_POST["close"]);
+							$should_notify = true;
 						}
 					}
 					
 					if ($errors) return null;
+					
+					if ($should_notify) $unit->get_course()->students_notify("Unit Updated", "An instructor has updated important details about a unit associated with this course.");
 					
 					return $unit;
 				}

@@ -86,10 +86,6 @@ class CourseComponent extends DatabaseRow
 	{
 		return $this->user_is_instructor($user) || $this->user_is_owner($user);
 	}
-	public function session_user_can_administer()
-	{
-		return !!Session::get() && $this->user_can_administer(Session::get()->get_user());
-	}
 	
 	/*public function user_can_read($user)
 	{

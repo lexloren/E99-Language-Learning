@@ -566,35 +566,6 @@ class User extends DatabaseRow
 		return null;
 	}
 	
-	public function user_can_read($user)
-	{
-		return parent::user_can_read($user)
-			|| $this->user_can_read_via_some_course($user);
-	}
-	
-	public function user_can_read_via_some_course($user)
-	{
-		foreach (array_merge($this->courses(), $this->courses_instructed(), $this->courses_studied()) as $course)
-		{
-			if ($course->user_can_read($user)) return true;
-		}
-		return false;
-	}
-
-	// For now if the user is a researcher in any course then s/he can get the whole data dump.
-	// This is a last minute project assumption, We might want to revisit this later.
-	public function user_can_research_via_some_course($user)
-	{
-		$result = Connection::query(sprintf("SELECT researcher_id from course_researchers where user_id = %d",
-				$user->get_user_id()));
-
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("Failed to get researcher data.");
-		}
-		return !!$result->num_rows;
-	}
-	
 	public function equals($user)
 	{
 		return $this === $user || (!!$user && $user->get_user_id() === $this->get_user_id());
@@ -633,6 +604,40 @@ class User extends DatabaseRow
 	{
 		if (isset($this->lists)) return count($this->lists);
 		return self::count("lists", "user_id", $this->get_user_id());
+	}
+	
+	public function user_can_read($user)
+	{
+		return parent::user_can_read($user)
+			|| $this->user_can_read_via_some_course($user);
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->equals($user);
+	}
+	
+	public function user_can_read_via_some_course($user)
+	{
+		foreach (array_merge($this->courses(), $this->courses_instructed(), $this->courses_studied()) as $course)
+		{
+			if ($course->user_can_read($user)) return true;
+		}
+		return false;
+	}
+
+	// For now if the user is a researcher in any course then s/he can get the whole data dump.
+	// This is a last minute project assumption, We might want to revisit this later.
+	public function user_can_research_via_some_course($user)
+	{
+		$result = Connection::query(sprintf("SELECT researcher_id from course_researchers where user_id = %d",
+				$user->get_user_id()));
+
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to get researcher data.");
+		}
+		return !!$result->num_rows;
 	}
 	
 	public function json_assoc_condensed($privacy = null)

@@ -78,6 +78,21 @@ class Grade extends DatabaseRow
 	{
 		return static::errors_push("Grade deletion forbidden.");
 	}
+	
+	public function user_can_read($user)
+	{
+		return true;
+	}
+	
+	public function user_can_write($user)
+	{
+		return false;
+	}
+	
+	public function user_can_execute($user)
+	{
+		return false;
+	}
 
 	public function json_assoc($privacy = null)
 	{

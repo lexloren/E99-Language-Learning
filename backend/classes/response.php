@@ -260,14 +260,6 @@ class Response extends CourseComponent
 			: null;
 	}
 	
-	public function user_can_read($user)
-	{
-		if (!$user) return false;
-		
-		return $this->user_can_administer($user)
-			|| $user->equals($this->get_user());
-	}
-	
 	public function delete()
 	{
 		$this->get_sitting()->uncache_responses();
@@ -280,6 +272,21 @@ class Response extends CourseComponent
 		return $this->get_test()->entry_json_assoc($entry, true, true);
 	}
 	
+	public function user_can_read($user)
+	{
+		if (!$user) return false;
+		
+		return $this->user_can_administer($user)
+			|| $user->equals($this->get_user());
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->user_can_read($user)
+			&& ($this->get_test()->user_can_administer($user)
+				|| $this->get_test()->get_disclosed());
+	}
+	
 	public function json_assoc($privacy = null, $flatten = false)
 	{
 		if (!$flatten) return $this->json_assoc_detailed($privacy);
@@ -289,7 +296,7 @@ class Response extends CourseComponent
 			"responseId" => $this->get_response_id(),
 			"student" => $this->get_user()->json_assoc_condensed(),
 			"timestamp" => $this->get_timestamp(),
-			"pattern" => $this->get_pattern()->json_assoc(!$this->get_test()->session_user_can_administer() && !$this->get_test()->get_disclosed())
+			"pattern" => $this->get_pattern()->json_assoc($this->session_user_can_execute())
 		), array (0 => "responseId"), $privacy);
 	}
 	

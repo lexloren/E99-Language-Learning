@@ -72,6 +72,21 @@ class Status extends DatabaseRow
 			)
 			: null;
 	}
+	
+	public function user_can_read($user)
+	{
+		return true;
+	}
+	
+	public function user_can_write($user)
+	{
+		return false;
+	}
+	
+	public function user_can_execute($user)
+	{
+		return false;
+	}
 
 	public function json_assoc($privacy = null)
 	{

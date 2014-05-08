@@ -238,75 +238,6 @@ class EntryList extends DatabaseRow
 			: null;
 	}
 	
-	//  Returns true iff Session::get()->get_user() can read this list for any reason
-	public function session_user_can_read()
-	{
-		return !!Session::get()
-			&& !!($session_user = Session::get()->get_user())
-			&& $this->user_can_read($session_user);
-	}
-	
-	public function user_can_read($user)
-	{
-		return $this->user_can_write($user)
-			|| $this->user_can_read_via_some_course($user)
-			|| $this->get_public();
-	}
-	
-	public function user_can_write($user)
-	{
-		return parent::user_can_write($user)
-			|| $this->user_can_write_via_some_course($user);
-	}
-	
-	public function session_user_can_write()
-	{
-		return !!Session::get() && $this->user_can_write(Session::get()->get_user());
-	}
-	
-	private function user_affiliated_via_courses($user, $courses)
-	{
-		foreach ($courses as $course)
-		{
-			if ($course->user_can_execute($user))
-			{
-				foreach ($course->units() as $unit)
-				{
-					if ($unit->user_can_execute($user))
-					{
-						if (in_array($this, $unit->lists()))
-						{
-							return true;
-						}
-						
-						foreach ($unit->lists() as $list)
-						{
-							if ($list->get_list_id() === $this->get_list_id())
-							{
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		return false;
-	}
-	
-	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
-	private function user_can_read_via_some_course($user)
-	{
-		return !!$user
-			&& ($this->user_affiliated_via_courses($user, $user->courses_studied())
-				|| $this->user_affiliated_via_courses($user, $user->courses_instructed()));
-	}
-	
-	private function user_can_write_via_some_course($user)
-	{
-		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_instructed());
-	}
-	
 	public function delete()
 	{
 		$this->get_owner()->uncache_lists();
@@ -489,7 +420,61 @@ class EntryList extends DatabaseRow
 		)) ? $result : static::errors_push($error_message, $error_code);
 	}
 	
-	public function json_assoc($privacy = null)
+	public function user_can_read($user)
+	{
+		return $this->user_can_write($user)
+			|| $this->user_can_read_via_some_course($user)
+			|| $this->get_public();
+	}
+	
+	public function user_can_write($user)
+	{
+		return parent::user_can_write($user)
+			|| $this->user_can_write_via_some_course($user);
+	}
+	
+	private function user_affiliated_via_courses($user, $courses)
+	{
+		foreach ($courses as $course)
+		{
+			if ($course->user_can_execute($user))
+			{
+				foreach ($course->units() as $unit)
+				{
+					if ($unit->user_can_execute($user))
+					{
+						if (in_array($this, $unit->lists()))
+						{
+							return true;
+						}
+						
+						foreach ($unit->lists() as $list)
+						{
+							if ($list->get_list_id() === $this->get_list_id())
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	//  Returns true iff Session::get()->get_user() is in any course in which this list is shared
+	private function user_can_read_via_some_course($user)
+	{
+		return !!$user
+			&& ($this->user_affiliated_via_courses($user, $user->courses_studied())
+				|| $this->user_affiliated_via_courses($user, $user->courses_instructed()));
+	}
+	
+	private function user_can_write_via_some_course($user)
+	{
+		return !!$user && $this->user_affiliated_via_courses($user, $user->courses_instructed());
+	}public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
 			"listId" => $this->list_id,

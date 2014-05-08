@@ -195,6 +195,16 @@ class DatabaseRow extends ErrorReporter
 		return !!Session::get() && $this->user_is_owner(Session::get()->get_user());
 	}
 	
+	
+	public function user_can_administer($user)
+	{
+		return $this->user_is_owner($user);
+	}
+	public function session_user_can_administer()
+	{
+		return !!Session::get() && $this->user_can_administer(Session::get()->get_user());
+	}
+	
 	protected function get_container()
 	{
 		return null;
@@ -263,6 +273,8 @@ class DatabaseRow extends ErrorReporter
 		}
 		
 		$array["sessionUserPermissions"] = array (
+			"own" => $this->session_user_is_owner(),
+			"administer" => $this->session_user_can_administer(),
 			"read" => $privacy === false || $this->session_user_can_read(),
 			"write" => $this->session_user_can_write(),
 			"execute" => $this->session_user_can_execute()

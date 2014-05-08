@@ -194,15 +194,6 @@ class Entry extends DatabaseRow
 			: null;
 	}
 	
-	public function user_can_read($user)
-	{
-		if (Session::get()
-			&& ($session_user = Session::get()->get_user())
-			&& $session_user->sittings_live()) return false;
-		
-		return true;
-	}
-	
 	public function in($array)
 	{
 		foreach ($array as $key => $item)
@@ -243,6 +234,15 @@ class Entry extends DatabaseRow
 		return 0;
 	}
 
+	public function user_can_read($user)
+	{
+		if (Session::get()
+			&& ($session_user = Session::get()->get_user())
+			&& $session_user->sittings_live()) return false;
+		
+		return true;
+	}
+	
 	public function json_assoc($privacy = null, $hint = null)
 	{
 		if ($privacy === null) $privacy = $this->privacy();
@@ -525,6 +525,40 @@ class UserEntry extends Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
+	public function copy_for_user($user, $hint = null)
+	{
+		if (!$user)
+		{
+			return static::errors_push("Failed to copy entry for null user.");
+		}
+		
+		if ($this->user_is_owner($user)) return $this;
+		
+		if (!$this->user_can_read($user, $hint))
+		{
+			return $this->get_entry()->copy_for_user($user);
+		}
+		
+		//  Insert into user_entries the dictionary row corresponding to this Entry object
+		//      If such a row already exists in user_entries, ignore the insertion error
+		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries AS source WHERE source.user_entry_id = %d ON DUPLICATE KEY UPDATE user_entries.user_entry_id = user_entries.user_entry_id",
+			$user->get_user_id(),
+			$this->get_user_entry_id()
+		));
+		
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Entry failed to copy for user: $error.");
+		}
+		
+		return self::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id(), false);
+	}
+	
+	public function annotations_count()
+	{
+		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
+	}
+	
 	public function user_can_read($user, $hint = null)
 	{
 		return $hint === true
@@ -594,40 +628,6 @@ class UserEntry extends Entry
 		}
 		
 		return false;
-	}
-	
-	public function copy_for_user($user, $hint = null)
-	{
-		if (!$user)
-		{
-			return static::errors_push("Failed to copy entry for null user.");
-		}
-		
-		if ($this->user_is_owner($user)) return $this;
-		
-		if (!$this->user_can_read($user, $hint))
-		{
-			return $this->get_entry()->copy_for_user($user);
-		}
-		
-		//  Insert into user_entries the dictionary row corresponding to this Entry object
-		//      If such a row already exists in user_entries, ignore the insertion error
-		Connection::query(sprintf("INSERT INTO user_entries (user_id, entry_id, word_0, word_1, word_1_pronun) SELECT %d, entry_id, word_0, word_1, word_1_pronun FROM user_entries AS source WHERE source.user_entry_id = %d ON DUPLICATE KEY UPDATE user_entries.user_entry_id = user_entries.user_entry_id",
-			$user->get_user_id(),
-			$this->get_user_entry_id()
-		));
-		
-		if (!!($error = Connection::query_error_clear()))
-		{
-			return static::errors_push("Entry failed to copy for user: $error.");
-		}
-		
-		return self::select_by_user_id_entry_id($user->get_user_id(), $this->get_entry_id(), false);
-	}
-	
-	public function annotations_count()
-	{
-		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
 	public function json_assoc($privacy = null, $hint = null)

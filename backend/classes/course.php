@@ -406,6 +406,13 @@ class Course extends DatabaseRow
 	{
 		return !!$user && ($user->in($this->students()) !== null);
 	}
+	public function students_notify($subject, $message)
+	{
+		foreach ($this->students() as $student)
+		{
+			Outbox::send($this, $student->get_email(), "Xenogloss: " . $this->get_name() . ": $subject", "Dear " . $student->get_handle() . ",\n\n$message.\n\nYours,\nThe Xenogloss Team");
+		}
+	}
 	
 	private $units;
 	public function units()
@@ -501,34 +508,6 @@ class Course extends DatabaseRow
 				$result_assoc["message"]
 			)
 			: null;
-	}
-	
-	public function user_can_administer($user)
-	{
-		return $this->user_is_instructor($user) || $this->user_is_owner($user);
-	}
-	public function session_user_can_administer()
-	{
-		return !!Session::get()
-			&& $this->user_can_administer(Session::get()->get_user());
-	}
-	
-	public function user_can_write($user)
-	{
-		return $this->user_can_administer($user);
-	}
-	
-	public function user_can_read($user)
-	{
-		return $this->user_can_administer($user)
-			|| $this->user_is_student($user)
-			|| $this->get_public();
-	}
-	
-	public function user_can_execute($user)
-	{
-		return $this->user_can_administer($user)
-			|| ($this->user_is_student($user) && $this->is_current());
 	}
 	
 	public function delete()
@@ -702,6 +681,29 @@ class Course extends DatabaseRow
 	public function researchers_count()
 	{
 		return self::count("course_researchers", "course_id", $this->get_course_id());
+	}
+	
+	public function user_can_administer($user)
+	{
+		return $this->user_is_instructor($user) || $this->user_is_owner($user);
+	}
+	
+	public function user_can_read($user)
+	{
+		return $this->user_can_administer($user)
+			|| $this->user_is_student($user)
+			|| $this->get_public();
+	}
+	
+	public function user_can_write($user)
+	{
+		return $this->user_can_administer($user);
+	}
+	
+	public function user_can_execute($user)
+	{
+		return $this->user_can_administer($user)
+			|| ($this->user_is_student($user) && $this->is_current());
 	}
 	
 	public function json_assoc($privacy = null)
