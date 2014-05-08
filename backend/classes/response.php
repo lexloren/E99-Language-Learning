@@ -289,26 +289,25 @@ class Response extends CourseComponent
 	
 	public function json_assoc($privacy = null, $flatten = false)
 	{
-		if (!$flatten) return $this->json_assoc_detailed($privacy);
-		
-		return $this->prune(array (
+		$assoc = array (
 			"testId" => $this->get_test_id(),
 			"responseId" => $this->get_response_id(),
 			"student" => $this->get_user()->json_assoc_condensed(),
 			"timestamp" => $this->get_timestamp(),
 			"pattern" => $this->get_pattern()->json_assoc($this->session_user_can_execute())
-		), array (0 => "responseId"), $privacy);
+		);
+		
+		if (!$flatten)
+		{
+			$assoc["entry"] = $this->entry_json_assoc();
+		}
+		
+		return $this->prune($assoc, array (0 => "responseId"), $privacy);
 	}
 	
 	public function json_assoc_detailed($privacy = null)
 	{
-		$assoc = $this->json_assoc($privacy, false);
-		
-		$public_keys = array_keys($assoc);
-		
-		$assoc["entry"] = $this->entry_json_assoc();
-		
-		return $this->prune($assoc, $public_keys, $privacy);
+		return $this->json_assoc($privacy, false);
 	}
 }
 
