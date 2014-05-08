@@ -117,8 +117,8 @@ function runReport()
     }
 	if  (repType =='CP') {
 		return executeCoursePracticeReport ( courseID);
-	} else if  (repType =='CW') {
-		return executeCourseWordsReport ( courseID);
+	} else if  (repType =='CT') {
+		return executeCourseTestReport ( courseID);
 	} else if  (repType =='RES') {
 		return researcherData ( );
 	}
@@ -181,9 +181,9 @@ function executeCoursePracticeReport ( courseId)
 	return;
 }
 
-function executeCourseWordsReport ( courseId) 
+function executeCourseTestReport ( courseId) 
 {
-	var url ='../../course_practice_report.php';
+	var url ='../../course_test_report.php';
 	$("#progress").show();
 	$.getJSON(url, {course_id: courseId},
         function(data){
@@ -195,17 +195,38 @@ function executeCourseWordsReport ( courseId)
             else{
 				try {
 					var tableData ='';
-					if (data.result.coursePracticeReport.studentPracticeReports.length > 0) {
-						tableData ='<table id="reporttable"  class="table table-striped table-hover"><tr><th>Student</th>';
-						$.each( data.result.coursePracticeReport.studentPracticeReports[0].unitReports, function() {
-							tableData = tableData + '<th>' + this.unit.name + '</th>';
-						});
-						tableData = tableData + '</tr>';
-						$.each( data.result.coursePracticeReport.studentPracticeReports, function() {
-							tableData = tableData + '<tr><td>' + this.student.email + '<br/>' + this.student.handle + '</td>';
+					if (data.result.courseTestsReport.testReports.studentTestReports.length > 0) {
+						/*store the prononciation*/
+						var tr2Row = "<tr><td></td><td></td>";
+						tableData ='<table id="reporttable"  class="table table-striped table-hover"><tr><th>Student Email</th><th>Handle</th>';
+						$.each( data.result.courseTestsReport.testReports.studentTestReports[0].entryReports, function() {
+							tableData = tableData + '<th>' + this.entry.words.en +  this.entry.words.jp '</th>';
+							if (typeof this.entry.words.en != "undefined")	{
+								tableData = tableData + '  en:' + this.entry.words.en
+							} 
+							if (typeof this.entry.words.jp != "undefined")	{
+								tableData = tableData + '  jp:' + this.entry.words.jp
+							}
+							if (typeof this.entry.words.cn != "undefined")	{
+								tableData = tableData + '  cn:' + this.entry.words.cn
+							}
+							if (typeof this.entry.pronuncations.en != "undefined")	{
+								tr2Row = tr2Row + '<td>' + this.entry.pronuncations.en + '</td>';
+							} else if (typeof this.entry.pronuncations.jp != "undefined")	{
+								tr2Row = tr2Row + '<td>' + this.entry.pronuncations.jp + '</td>';
+							} else if (typeof this.entry.pronuncations.cn != "undefined")	{
+								tr2Row = tr2Row + '<td>' + this.entry.pronuncations.cn + '</td>';
+							} else {
+								tr2Row = tr2Row + '<td></td>';
+							}
 							
-							$.each( this.unitReports, function() {
-								tableData = tableData + '<td>' + this.progressPercent + '</td>';
+						});
+						tableData = tableData + '</tr>' +tr2Row;
+						$.each( data.result.courseTestsReport.testReports.studentTestReports, function() {
+							tableData = tableData + '<tr><td>' + this.student.email + '</td><td>' + this.student.handle + '</td>';
+							
+							$.each( this.entryReports, function() {
+								tableData = tableData + '<td>' + this.score + '</td>';
 							});
 							tableData = tableData + '</tr>';
 						});
