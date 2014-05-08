@@ -98,11 +98,54 @@ class APIBase
 			Session::get()->set_result_assoc($returnable, $result_information);
 		}
 	}
+	
+	public static function collect_entries($use_list_ids = true)
+	{
+		$entries = array ();
+		
+		if ($use_list_ids && isset($_POST["list_ids"]))
+		{
+			$list_ids = explode(",", $_POST["list_ids"]);
+			
+			foreach ($list_ids as $list_id)
+			{
+				if (($list = EntryList::select_by_id($list_id))
+					&& $list->session_user_can_read()
+					&& $list->session_user_can_execute())
+				{
+					foreach ($list->entries() as $entry)
+					{
+						if ($entry->in($entries) === null)
+						{
+							array_push($entries, $entry);
+						}
+					}
+				}
+			}
+		}
+		
+		if (isset($_POST["entry_ids"]))
+		{
+			foreach (explode(",", $_POST["entry_ids"]) as $entry_id)
+			{
+				if (($entry = Entry::select_by_id($entry_id))
+					&& ($entry = $entry->copy_for_session_user()))
+				{
+					if ($entry->in($entries) === null)
+					{
+						array_push($entries, $entry);
+					}
+				}
+			}
+		}
+		
+		return $entries;
+	}
 
 	public function method_output_type($method)
-        {
-                return "json";
-        }
+	{
+		return "json";
+	}
 }
 
 ?>

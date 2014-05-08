@@ -640,19 +640,26 @@ class UserEntry extends Entry
 			}
 		}
 		
-		return parent::json_assoc($privacy);
+		$assoc = parent::json_assoc($privacy);
+		$public_keys = array_keys($assoc);
+		
+		$lists = $this->lists();
+		foreach ($lists as $l => $list)
+		{
+			if (!$list->session_user_can_read())
+			{
+				unset($lists[$l]);
+			}
+		}
+		$assoc["lists"] = self::json_array($lists);
+		$assoc["annotations"] = self::json_array($this->annotations());
+		
+		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
 	public function json_assoc_detailed($privacy = null, $hint = null)
 	{
-		$assoc = $this->json_assoc($privacy, $hint);
-		
-		$public_keys = array_keys($assoc);
-		
-		$assoc["lists"] = self::json_array($this->lists());
-		$assoc["annotations"] = self::json_array($this->annotations());
-		
-		return $this->prune($assoc, $public_keys, $privacy);
+		return $this->json_assoc($privacy, $hint);
 	}
 }
 

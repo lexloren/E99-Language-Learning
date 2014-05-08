@@ -147,7 +147,7 @@ class Test extends CourseComponent
 		{
 			foreach ($entries_by_number as $number => $test_entry)
 			{
-				if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+				if ($test_entry->get_entry_id() === $entry->get_entry_id())
 				{
 					$entry_number = $number;
 					break;
@@ -374,13 +374,21 @@ class Test extends CourseComponent
 		
 		foreach ($this->entries() as $test_entry_id => $test_entry)
 		{
-			if ($test_entry->get_user_entry_id() === $entry->get_user_entry_id())
+			if ($test_entry->get_entry_id() === $entry->get_entry_id())
 			{
 				return $test_entry_id;
 			}
 		}
 		
 		return -1;
+	}
+	
+	public function entry_cache_php53_workaround($entry, $test_entry_id)
+	{
+		if (isset($this->entries))
+		{
+			$this->entries[intval($test_entry_id, 10)] = $entry;
+		}
 	}
 	
 	public function entries_add($entry, $mode = null)
@@ -430,9 +438,9 @@ class Test extends CourseComponent
 					return null;
 				}
 				
-				if (isset($test->entries) && Connection::query_insert_id())
+				if (($test_entry_id = Connection::query_insert_id()))
 				{
-					$test->entries[intval(Connection::query_insert_id(), 10)] = $entry;
+					$test->entry_cache_php53_workaround($entry, $test_entry_id);
 				}
 				
 				$result = Connection::query("SELECT mode_id AS mode FROM modes");
@@ -449,8 +457,8 @@ class Test extends CourseComponent
 					array_push($mode_ids, intval($result_assoc["mode"], 10));
 				}
 				
-				$pronoun = $entry->pronunciations();
-				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($pronoun));
+				$pronun = $entry->pronunciations();
+				$contents = array ($entry->get_word_0(), $entry->get_word_1(), array_pop($pronun));
 				
 				foreach ($mode_ids as $mode_id)
 				{
@@ -797,6 +805,8 @@ class Test extends CourseComponent
 		}
 		
 		$entry_assoc = $entry->json_assoc(false);
+		unset($entry_assoc["annotations"]);
+		unset($entry_assoc["lists"]);
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
@@ -830,7 +840,7 @@ class Test extends CourseComponent
 			
 			$entry_assoc["scoreMeanScaled"] =
 				!!$this->entry_score_max($entry)
-					? $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+					? 100.0 * $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
 					: 0.0;
 			
 			if (!$flatten)
@@ -882,10 +892,10 @@ class Test extends CourseComponent
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
+			"courseId" => $this->get_course_id(),
+			"unitId" => $this->get_unit_id(),
 			"testId" => $this->get_test_id(),
 			"name" => $this->get_name(),
-			"unitId" => $this->get_unit_id(),
-			"courseId" => $this->get_course_id(),
 			"timeframe" => !!$this->get_timeframe()
 								&& $this->session_user_can_read()
 					? $this->get_timeframe()->json_assoc()

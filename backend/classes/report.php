@@ -347,21 +347,130 @@ class Report extends ErrorReporter
 		return $studentTestReport;
 	}
 
-	private static function get_student_data()
+	private static function get_student_details()
 	{
-		$sql = "SELECT user_id, IF(u.status_id IS NULL, '', (SELECT s.desc FROM user_statuses s WHERE s.status_id = u.status_id)) AS status " +
-		       "users u";
+		$sql =  "SELECT user_id, " .
+			"IF(u.status_id IS NULL, '', (SELECT s.desc FROM user_statuses s WHERE s.status_id = u.status_id)) AS status, " .
+			"(SELECT GROUP_CONCAT(name) as languages FROM language_names WHERE lang_id_name = (SELECT lang_id FROM languages " .
+				"WHERE lang_code = 'en')) AS interested_languages, " .
+			"(SELECT GROUP_CONCAT(user_id) FROM course_instructors WHERE course_id IN (SELECT course_id FROM course_students cs " .
+				"WHERE cs.user_id = u.user_id)) AS instructors, " .
+			"(SELECT IF(name IS NULL, '', GROUP_CONCAT(course_id, ':', name)) FROM courses WHERE course_id in (SELECT course_id FROM course_students cs " .
+				"WHERE cs.user_id = u.user_id)) AS courses " .
+			"FROM users u";
+		$result = Connection::query($sql);
+
+		if (!!($error = Connection::query_error_clear()))
+		{
+			return static::errors_push("Failed to get data dump: $error.");
+		}
+
+		$student_details = array(
+			array("Student Details"),
+			array("UserId", "Status", "Interested-Languages", "Instructors", "Student-Courses"),
+		);
+		while (($result_assoc = $result->fetch_assoc()))
+		{
+			array_push($student_details, $result_assoc);
+		}
+		return $student_details;
+	}
+
+	private static function get_student_course_unit_details()
+	{
+		$student_course_unit_list_details = array(
+			array("Student Course Unit List Details"),
+			array("UserId", "CourseId", "CourseName", 
+				"UnitId", "UnitName", "ListId", "UserEntryIds")
+		);
+		$sql =  "SELECT cs.user_id, cu.course_id, (SELECT c.name FROM courses c WHERE c.course_id = cu.course_id) AS course_name, ".
+			"cu.unit_id, cu.name as unit_name, IF(cul.list_id IS NULL, '', cul.list_id) AS list_id, ".
+			"(SELECT GROUP_CONCAT(le.user_entry_id) FROM list_entries le WHERE le.list_id = cul.list_id) AS user_entry_ids ".
+			"FROM course_students cs, course_units cu LEFT JOIN course_unit_lists cul ON cu.unit_id = cul.unit_id WHERE cu.course_id = cs.course_id";
+		$unit_list_details = Connection::query($sql);
+		if (!!($error = Connection::query_error_clear()))
+                {
+                        return static::errors_push("Failed to get data dump: $error.");
+                }
+
+		$student_course_unit_test_details = array(
+			array("Student Course Unit Test Details"),
+			array("UserId", "CourseId", "CourseName", 
+				"UnitId", "UnitName", "TestId", "TestName", 
+				"TestDiscolsed?", "TestEntryIds")
+		);
+		$sql =  "SELECT cs.user_id, cs.course_id, (SELECT c.name FROM courses c WHERE c.course_id = cu.course_id) AS course_name, ".
+			"cu.unit_id, cu.name AS unit_name, t.test_id, t.name AS test_name, t.disclosed, (SELECT GROUP_CONCAT(te.test_entry_id) ".
+			"FROM course_unit_test_entries te WHERE te.test_id = t.test_id) AS test_entry_ids FROM course_students cs LEFT JOIN ".
+			"course_units cu ON (cs.course_id = cu.course_id) LEFT JOIN course_unit_tests t ON (cu.unit_id = t.unit_id)";
+		$unit_test_details = Connection::query($sql);
+                if (!!($error = Connection::query_error_clear()))
+                {
+                        return static::errors_push("Failed to get data dump: $error.");
+                }
+
+                while (($result_assoc = $unit_list_details->fetch_assoc()))
+                {
+                        array_push($student_course_unit_list_details, $result_assoc);
+                }
+		while (($result_assoc = $unit_test_details->fetch_assoc()))
+                {
+                        array_push($student_course_unit_test_details, $result_assoc);
+                }
+
+                return array_merge($student_course_unit_list_details, $student_course_unit_test_details);
+	}
+
+	private static function get_student_practice_test_details()
+	{
+		$student_practice_details = array(
+                        array("Student Practice Details"),
+                        array("UserId", "UserEntryId", "PracticeId", "Entry-word", "Entry-translation",
+				"Entry-pronunciation", "Practice-timestamp", "Practice-Direction", "Practice-Response"),
+                );
+		$sql =  "SELECT UE.user_id, UER.user_entry_id, UER.result_id, UE.word_0, UE.word_1, UE.word_1_pronun, UER.timestamp, ".
+			"(SELECT GROUP_CONCAT(`from`,'=>', `to`) AS Direction FROM modes m WHERE m.mode_id = UER.mode), ".
+			"(SELECT desc_short from grades g where g.grade_id = UER.grade_id) ".
+			"FROM user_entry_results UER LEFT JOIN user_entries UE ON (UE.user_entry_id = UER.user_entry_id)";
+		$practice_details = Connection::query($sql);
+                if (!!($error = Connection::query_error_clear()))
+                {
+                        return static::errors_push("Failed to get data dump: $error.");
+                }
+
+		$student_test_details = array(
+                        array("Student Test Details"),
+                        array("UserId", "TestEntryId", "ResponseId", "Entry-word", "Entry-translation",
+                                "Entry-pronunciation", "Test-timestamp", "Test-Direction", "Test-Contents",
+				"TestScore"),
+                );
+                $sql =  "SELECT UE.user_id, TE.test_entry_id, TEP.pattern_id, UE.word_0, UE.word_1, UE.word_1_pronun, ".
+			"(SELECT TSR.timestamp FROM course_unit_test_sitting_responses TSR WHERE TSR.pattern_id = TEP.pattern_id), ".
+                        "(SELECT GROUP_CONCAT(`from`,'=>', `to`) AS Direction FROM modes m WHERE m.mode_id = TEP.mode), ".
+                        "TEP.contents, TEP.score FROM course_unit_test_entries TE LEFT JOIN user_entries UE ".
+			"ON (TE.user_entry_id = UE.user_entry_id) LEFT JOIN course_unit_test_entry_patterns TEP ".
+			"ON (TE.test_entry_id = TE.test_entry_id)";
+                $test_details = Connection::query($sql);
+                if (!!($error = Connection::query_error_clear()))
+                {
+                        return static::errors_push("Failed to get data dump: $error.");
+                }
+
+                while (($result_assoc = $test_details->fetch_assoc()))
+                {
+                        array_push($student_test_details, $result_assoc);
+                }
+                return array_merge($student_practice_details, $student_test_details);
 	}
 
 	public static function get_data_dump()
 	{
-		return array(
-			array("name 1", "age 1", "city 1"),
-			array("name 2", "age 2", "city 2"),
-			array("name 3", "age 3", "city 3"));
+		$student_details = self::get_student_details();
+		$student_course_unit_details = self::get_student_course_unit_details();
+		$result = array_merge($student_details, $student_course_unit_details);
+		$student_practice_test_details = self::get_student_practice_test_details();
+		return array_merge($result, $student_practice_test_details);
 	}
 }	
-
-
 
 ?>

@@ -369,10 +369,10 @@ class Unit extends CourseComponent
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
+			"courseId" => $this->get_course_id(),
 			"unitId" => $this->get_unit_id(),
 			"name" => $this->get_name(),
 			"number" => $this->get_number(),
-			"courseId" => $this->get_course_id(),
 			"timeframe" => !!$this->get_timeframe() ? $this->get_timeframe()->json_assoc() : null,
 			"listsCount" => $this->lists_count(),
 			"testsCount" => $this->tests_count(),
