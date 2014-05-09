@@ -39,7 +39,7 @@ class Dictionary extends ErrorReporter
 		return "dictionary.*, " . self::language_code_columns();
 	}
 	
-	public static function query($query, $lang_codes, $pagination = null, $exact_matches_only = false)
+	public static function query($query, $lang_codes, $pagination = null, $exact_matches_only = false, $user = null)
 	{
 		//  Make sure the language codes are safe
 		foreach ($lang_codes as &$lang_code)
@@ -63,17 +63,35 @@ class Dictionary extends ErrorReporter
 		//      For BOTH the PHP sprintf() and the SQL query
 		$query = str_replace("%", "%%", Connection::escape($query));
 		
+		if ($user)
+		{
+			Connection::query(sprintf("INSERT INTO dictionary_queries (user_id, timestamp, contents) VALUES (%d, %d, '%s')",
+				$user->get_user_id(),
+				time(),
+				$query
+			));
+			
+			if (!Connection::query_error_clear() && ($query_id = Connection::query_insert_id()))
+			{
+				foreach ($lang_codes as &$lang_code)
+				{
+					Connection::query("INSERT INTO dictionary_query_languages (query_id, lang_code) VALUES ($query_id, '$lang_code')");
+					if (!!Connection::query_error_clear()) unset($lang_code);
+				}
+			}
+		}
+		
 		//      Second, take all the pieces created above and run the SQL query
-		$query = sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 $op '$wc%s$wc' OR word_1 $op '$wc%s$wc') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
+		$result = Connection::query(sprintf("SELECT %s, CHAR_LENGTH(word_0) AS lang_0_length, CHAR_LENGTH(word_1) AS lang_1_length, (word_0 != '$query' AND word_1 != '$query') AS inexact FROM %s WHERE (word_0 $op '$wc%s$wc' OR word_1 $op '$wc%s$wc') AND (languages_0.lang_code IN ('%s') AND languages_1.lang_code IN ('%s')) ORDER BY inexact, lang_1_length, lang_0_length LIMIT 500",
 			self::default_columns(),
 			self::join(),
 			$query,
 			$query,
 			implode("','", $lang_codes),
 			implode("','", $lang_codes)
-		);
+		));
 		
-		if (!($result = Connection::query($query)) || !!($error = Connection::query_error_clear()))
+		if (!!($error = Connection::query_error_clear()))
 		{
 			return static::errors_push("Failed to find entry: $error.");
 		}

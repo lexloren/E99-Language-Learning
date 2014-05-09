@@ -133,12 +133,12 @@ class APIEntryTest extends PHPUnit_Framework_TestCase
 		$entries = $this->db->add_dictionary_entries(3);
 		$this->db->add_list($this->db->user_ids[0], $entries);
 
+		$_SESSION["handle"] = $this->db->handles[0];
 		$_GET["query"] = $this->db->word_0s[0];
 		$_GET["langs"] = implode(',', array(TestDB::$lang_code_0, TestDB::$lang_code_1));
 		$_GET["exact"] = 1;
 		
 		$this->obj->find();
-		
 		$this->assertFalse(Session::get()->has_error());
 		$result_assoc = Session::get()->get_result_assoc();		
 		$this->assertNotNull($result_assoc);
@@ -156,12 +156,14 @@ class APIEntryTest extends PHPUnit_Framework_TestCase
 		$entries = $this->db->add_dictionary_entries(30);
 		$this->db->add_list($this->db->user_ids[0], $entries);
 
+		$_SESSION["handle"] = $this->db->handles[0];
 		$_GET["query"] = TestDB::$word_0;
 		$_GET["langs"] = implode(',', array(TestDB::$lang_code_0, TestDB::$lang_code_1));
 		$_GET["exact"] = 0;
 		
 		$_GET["page_size"] = 17;
 		$_GET["page_num"] = 1;
+		$_GET["record"] = 1;
 		
 		$this->obj->find();
 		

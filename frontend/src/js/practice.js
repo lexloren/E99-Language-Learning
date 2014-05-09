@@ -175,7 +175,8 @@ function get_dictionary(word, page) {
 		query : word,
 		langs : langcodes,
 		page_size : 15,
-		page_num : page
+		page_num : page,
+		record : page === 1 ? 1 : 0
 	}, function( data ) {
 		authorize(data);
 		if (data.isError === true) {

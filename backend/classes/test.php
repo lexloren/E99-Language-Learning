@@ -810,20 +810,21 @@ class Test extends CourseComponent
 		unset($entry_assoc["sessionUserPermissions"]);
 		$entry_assoc["testEntryId"] = $test_entry_id;
 		$entry_assoc["mode"] = $this->get_entry_mode($entry)->json_assoc();
-		$entry_assoc["options"] = self::json_array($this->entry_options($entry));
 		
-		foreach ($entry_assoc["options"] as &$option)
+		if (!$flatten && !$privacy)
 		{
-			unset($option["sessionUserPermissions"]);
-		}
+			$entry_assoc["options"] = self::json_array($this->entry_options($entry));
+			
+			foreach ($entry_assoc["options"] as &$option)
+			{
+				unset($option["sessionUserPermissions"]);
+			}
+			
+			if (count($entry_assoc["options"]) === 1)
+			{
+				$entry_assoc["options"] = null;
+			}
 		
-		if ($privacy && count($entry_assoc["options"]) === 1)
-		{
-			$entry_assoc["options"] = null;
-		}
-		
-		if (!$privacy)
-		{
 			$entry_assoc["scoreMean"] = 0.0;
 			$responses = Response::select_all_for_test_entry_id($test_entry_id);
 			if ($responses === null)
@@ -843,13 +844,10 @@ class Test extends CourseComponent
 					? 100.0 * $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
 					: 0.0;
 			
-			if (!$flatten)
+			$entry_assoc["responses"] = array ();
+			foreach ($responses as $response)
 			{
-				$entry_assoc["responses"] = array ();
-				foreach ($responses as $response)
-				{
-					array_push($entry_assoc["responses"], $response->json_assoc(false, true));
-				}
+				array_push($entry_assoc["responses"], $response->json_assoc(false, true));
 			}
 		}
 		

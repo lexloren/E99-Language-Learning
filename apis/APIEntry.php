@@ -54,6 +54,8 @@ class APIEntry extends APIBase
 	
 	public function find()
 	{
+		if (!Session::get()->reauthenticate()) return;
+		
 		if (self::validate_request($_GET, array ("query", "langs")))
 		{
 			$pagination = null;
@@ -65,9 +67,12 @@ class APIEntry extends APIBase
 				);
 			}
 			
+			if (isset($_GET["record"])) $record = !!intval($_GET["record"], 10);
+			else $record = false;
+			
 			$exact_matches_only = isset($_GET["exact"]) ? !!intval($_GET["exact"], 10) : false;
 
-			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination, $exact_matches_only)))
+			if (($entries = Dictionary::query($_GET["query"], explode(",", $_GET["langs"]), $pagination, $exact_matches_only, $record ? Session::get()->get_user() : null)))
 			{
 				self::return_array_as_json($entries, null, array ("pageSize" => Dictionary::$page_size, "pageNumber" => Dictionary::$page_num, "pagesCount" => Dictionary::$pages_count, "entriesFoundCount" => Dictionary::$find_last_count));
 			}
