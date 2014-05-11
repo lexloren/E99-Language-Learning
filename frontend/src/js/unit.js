@@ -84,8 +84,8 @@ function getUnitInfo(){
                 if(data.result.name != null)
                     uname = data.result.name;
                 else
-                    uname = '';
-                unitheader = '<h3 class="form-signin-heading">Unit '+data.result.unitId+': '+uname+'</h3>';
+                    uname = 'Unnamed Unit';
+                unitheader = '<h3 class="form-signin-heading">'+uname+'</h3>';
                 $("#unit-header").html(unitheader);
                 if(data.result.sessionUserPermissions.write == true){
                     $("#unitname").val(uname);

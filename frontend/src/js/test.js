@@ -117,10 +117,7 @@ function getSittings(){
     $.getJSON('../../user_sittings.php')
         .done(function(data){
             authorize(data);
-            if(data.isError){
-                failureMessage("Information for this test could not be retrieved.");
-            }
-            else{
+            if(!data.isError){
                 $.each(data.result, function(i, item){           
                     if(item.testId == test && item.isLive == false){
                         window.location.replace("sitting.html?sittingid="+item.sittingId);
@@ -169,8 +166,8 @@ function getTestInfo(){
                 if(data.result.name != null)
                     tname = data.result.name;
                 else
-                    tname = '';
-                testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+tname+'</h3>';
+                    tname = 'Unnamed Test';
+                testheader = '<h3 class="form-signin-heading">'+tname+'</h3>';
                 $("#test-header").html(testheader);
                 if(data.result.sessionUserPermissions.read == true){
                     if(data.result.sessionUserPermissions.write == true){
