@@ -117,10 +117,7 @@ function getSittings(){
     $.getJSON('../../user_sittings.php')
         .done(function(data){
             authorize(data);
-            if(data.isError){
-                failureMessage("Information for this test could not be retrieved.");
-            }
-            else{
+            if(!data.isError){
                 $.each(data.result, function(i, item){           
                     if(item.testId == test && item.isLive == false){
                         window.location.replace("sitting.html?sittingid="+item.sittingId);
