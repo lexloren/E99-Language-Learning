@@ -10,9 +10,16 @@ class CourseComponent extends DatabaseRow
 		return null;
 	}
 	
-	public function get_owner()
+	public function get_course()
 	{
-		return !!($container = $this->get_container()) ? $container->get_owner() : null;
+		return $this->get_container()
+			? $this->get_container()->get_course()
+			: null;
+	}
+	
+	public function get_course_id()
+	{
+		return !!($course = $this->get_course()) ? $course->get_course_id() : null;
 	}
 	
 	public function get_timeframe()
@@ -26,16 +33,30 @@ class CourseComponent extends DatabaseRow
 			&& (!$this->get_container() || $this->get_container()->is_current());
 	}
 	
-	public function get_course()
+	protected $message;
+	public function get_message()
 	{
-		return $this->get_container()
-			? $this->get_container()->get_course()
-			: null;
+		return $this->message;
+	}
+	public function set_message($message)
+	{
+		return static::errors_push("CourseComponent subclass failed to override default implementation of set_message.");
+	}
+	protected static function set_this_message($instance, $message, $table, $column, $id)
+	{
+		if (strlen($message) === 0) $message = null;
+		if (!self::update_this($instance, $table, array ("message" => $message), $column, $id))
+		{
+			return null;
+		}
+		$instance->message = $message;
+		return $instance;
 	}
 	
-	public function get_course_id()
+	/*** PERMISSIONS ***/
+	public function get_owner()
 	{
-		return !!($course = $this->get_course()) ? $course->get_course_id() : null;
+		return !!($container = $this->get_container()) ? $container->get_owner() : null;
 	}
 	
 	public function instructors()
@@ -87,13 +108,6 @@ class CourseComponent extends DatabaseRow
 		return $this->user_is_instructor($user) || $this->user_is_owner($user);
 	}
 	
-	/*public function user_can_read($user)
-	{
-		return !!($container = $this->get_container())
-			? $container->user_can_read($user) && $container->user_can_execute($user)
-			: false;
-	}*/
-	
 	public function user_can_execute($user)
 	{
 		return !!($container = $this->get_container())
@@ -101,26 +115,6 @@ class CourseComponent extends DatabaseRow
 				&& $container->user_can_execute($user)
 				&& $this->is_current())
 			: false;
-	}
-	
-	protected $message;
-	public function get_message()
-	{
-		return $this->message;
-	}
-	public function set_message($message)
-	{
-		return static::errors_push("CourseComponent subclass failed to override default implementation of set_message.");
-	}
-	protected static function set_this_message($instance, $message, $table, $column, $id)
-	{
-		if (strlen($message) === 0) $message = null;
-		if (!self::update_this($instance, $table, array ("message" => $message), $column, $id))
-		{
-			return null;
-		}
-		$instance->message = $message;
-		return $instance;
 	}
 }
 

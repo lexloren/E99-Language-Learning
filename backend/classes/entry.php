@@ -481,14 +481,20 @@ class UserEntry extends Entry
 			return static::errors_push("$failure_message: No dictionary entry associated with user entry where user_entry_id = " . $this->get_user_entry_id());
 		}
 		
-		$succeeded = true;
+		$user_entry = $this;
 		
-		$succeeded = !!$this->set_word_0($this->get_entry()->get_word_0()) && $succeeded;
-		$succeeded = !!$this->set_word_1($this->get_entry()->get_word_1()) && $succeeded;
-		$pronunciations = $this->get_entry()->pronunciations();
-		$succeeded = !!$this->set_word_1_pronunciation($pronunciations[$this->get_entry()->get_lang_code_1()]) && $succeeded;
-		
-		return $succeeded ? $this : static::errors_push("$failure_message: " . static::errors_unset());
+		return Connection::transact(
+			function () use ($user_entry)
+			{
+				if (!$user_entry->set_word_0($user_entry->get_entry()->get_word_0())) return null;
+				if (!$user_entry->set_word_1($user_entry->get_entry()->get_word_1())) return null;
+				
+				$pronunciations = $user_entry->get_entry()->pronunciations();
+				if (!$user_entry->set_word_1_pronunciation($pronunciations[$user_entry->get_entry()->get_lang_code_1()])) return null;
+				
+				return $user_entry;
+			}
+		);
 	}
 	
 	//  Sets both some object property and the corresponding spot in the database
@@ -525,6 +531,8 @@ class UserEntry extends Entry
 		return $this->set($this->word_1_pronun, "word_1_pronun", $word_1_pronun);
 	}
 	
+	//  providing a $hint, either a list or a test, reduces the amount of work
+	//      to verify that $user has permission to read this UserEntry for copying
 	public function copy_for_user($user, $hint = null)
 	{
 		if (!$user)
@@ -559,6 +567,7 @@ class UserEntry extends Entry
 		return self::count("user_entry_annotations", "user_entry_id", $this->get_user_entry_id());
 	}
 	
+	/*** PERMISSIONS ***/
 	public function user_can_read($user, $hint = null)
 	{
 		return $hint === true
@@ -629,6 +638,8 @@ class UserEntry extends Entry
 		
 		return false;
 	}
+	
+	/*** OUTPUT ***/
 	
 	public function json_assoc($privacy = null, $hint = null)
 	{

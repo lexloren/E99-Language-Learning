@@ -112,13 +112,13 @@ class TestClassTest extends PHPUnit_Framework_TestCase
 		Session::get()->set_user($user0);
 		$course = $test->get_course();
 		$this->assertNotNull($course->students_add($user1));
-		$this->assertFalse($test->executed());
+		$this->assertFalse($test->is_executed());
 		Session::get()->set_user($user1);
 		$this->assertNotNull($test->execute_for_session_user());
 		$this->assertNull($test->entries_add_from_list($list));
 		Session::get()->set_user($test->get_owner());
 		$test->unexecute();
-		$this->assertFalse($test->executed());
+		$this->assertFalse($test->is_executed());
 		
 		//  right user, and test has not already started
 		$this->assertCount(1, $test->entries());

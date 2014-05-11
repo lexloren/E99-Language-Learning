@@ -73,6 +73,8 @@ class Status extends DatabaseRow
 			: null;
 	}
 	
+	/*** PERMISSIONS ***/
+	
 	public function user_can_read($user)
 	{
 		return true;
@@ -87,6 +89,8 @@ class Status extends DatabaseRow
 	{
 		return false;
 	}
+	
+	/*** OUTPUT ***/
 
 	public function json_assoc($privacy = null)
 	{

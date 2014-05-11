@@ -37,7 +37,7 @@ class Practice extends DatabaseRow
 		return $user_practice_set;
 	}
 
-        /***    INSTANCE    ***/
+	/***    INSTANCE    ***/
 
 	private $practice_entry_id = null;
         public function get_practice_entry_id()

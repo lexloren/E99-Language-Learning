@@ -405,7 +405,7 @@ class User extends DatabaseRow
 		$sittings_live = array ();
 		foreach ($this->sittings() as $sitting)
 		{
-			if ($sitting->live()) array_push($sittings_live, $sitting);
+			if ($sitting->is_live()) array_push($sittings_live, $sitting);
 		}
 		return $sittings_live;
 	}

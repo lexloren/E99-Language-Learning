@@ -33,7 +33,7 @@ class APIAnnotation extends APIBase
 				}
 				else
 				{
-					Session::get()->set_result_assoc($entry->json_assoc());//, Session::get()->database_result_assoc(array ("didInsert" => true)));
+					Session::get()->set_result_assoc($entry->json_assoc());
 				}
 			}
 		}

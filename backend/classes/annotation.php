@@ -5,6 +5,7 @@ require_once "./backend/classes.php";
 
 class Annotation extends DatabaseRow
 {
+	/***    CLASS/STATIC    ***/
 	protected static $errors = null;
 	protected static $instances_by_id = array ();
 	
@@ -12,6 +13,8 @@ class Annotation extends DatabaseRow
 	{
 		return parent::select("user_entry_annotations LEFT JOIN user_entries USING (user_entry_id)", "annotation_id", $annotation_id);
 	}
+	
+	/***    INSTANCE    ***/
 
 	private $contents;
 	public function get_contents()
@@ -101,6 +104,8 @@ class Annotation extends DatabaseRow
 		
 		return self::delete_this($this, "user_entry_annotations", "annotation_id", $this->get_annotation_id());
 	}
+	
+	/*** OUTPUT ***/
 	
 	public function json_assoc($privacy = null)
 	{

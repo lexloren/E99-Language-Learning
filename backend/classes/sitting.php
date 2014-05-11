@@ -124,8 +124,8 @@ class Sitting extends CourseComponent
 		}
 		
 		$result_assoc["scoreScaled"] =
-			$this->get_test()->score_max() > 0
-			? 100.0 * floatval($result_assoc["scoredTotal"]) / floatval($this->get_test()->score_max())
+			$this->get_test()->get_score_max() > 0
+			? 100.0 * floatval($result_assoc["scoredTotal"]) / floatval($this->get_test()->get_score_max())
 			: 0.0;
 		
 		return $result_assoc;
@@ -286,16 +286,16 @@ class Sitting extends CourseComponent
 		if (isset($this->entries_remaining)) unset($this->entries_remaining);
 	}
 	
-	public function timer_depleted()
+	public function is_timer_depleted()
 	{
 		return !!$this->get_test()->get_timer()
 			&& time() - $this->get_timeframe()->get_open() > $this->get_test()->get_timer();
 	}
 	
-	public function live()
+	public function is_live()
 	{
 		return $this->entries_remaining()
-			&& !$this->timer_depleted()
+			&& !$this->is_timer_depleted()
 			&& $this->get_test()->user_can_execute($this->get_user());
 	}
 	
@@ -314,7 +314,7 @@ class Sitting extends CourseComponent
 		{
 			array_push($reasons, "because user has already responded to all test entries");
 		}
-		if ($this->timer_depleted())
+		if ($this->is_timer_depleted())
 		{
 			array_push($reasons, "because test time limit has elapsed");
 		}
@@ -413,6 +413,8 @@ class Sitting extends CourseComponent
 		return self::count("course_unit_test_sitting_responses", "sitting_id", $this->get_sitting_id());
 	}
 	
+	/*** PERMISSIONS ***/
+	
 	public function user_can_read($user)
 	{
 		return $this->user_can_administer($user)
@@ -426,6 +428,8 @@ class Sitting extends CourseComponent
 				|| $this->get_test()->get_disclosed());
 	}
 	
+	/*** OUTPUT ***/
+	
 	public function json_assoc($privacy = null)
 	{
 		return $this->prune(array (
@@ -434,7 +438,7 @@ class Sitting extends CourseComponent
 			"student" => $this->get_user()->json_assoc_condensed(),
 			"timeframe" => $this->get_timeframe()->json_assoc(),
 			"responsesCount" => $this->responses_count(),
-			"isLive" => $this->live(),
+			"isLive" => $this->is_live(),
 			"score" => $this->session_user_can_administer() || $this->get_test()->get_disclosed()
 				? $this->get_score_json_assoc()
 				: null,

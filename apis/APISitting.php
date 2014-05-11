@@ -40,14 +40,15 @@ class APISitting extends APIBase
 		
 		if (($sitting = self::validate_selection_id($_POST, "sitting_id", "Sitting")))
 		{
-			$updates = 0;
-				
 			if (isset($_POST["message"]))
 			{
-				$updates += !!$sitting->set_message($_POST["message"]);
+				if (!$sitting->set_message($_POST["message"]))
+				{
+					Session::get()->set_error_assoc("Sitting Modification", Sitting::errors_unset());
+					return;
+				}
 			}
-			
-			self::return_updates_as_json("Sitting", Sitting::errors_unset(), $updates ? $sitting->json_assoc() : null);
+			Session::get()->set_result_assoc($sitting->json_assoc());
 		}
 	}
 }

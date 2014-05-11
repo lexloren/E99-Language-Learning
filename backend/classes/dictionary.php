@@ -5,6 +5,7 @@ require_once "./backend/classes.php";
 
 class Dictionary extends ErrorReporter
 {
+	/***    STATIC/CLASS    ***/
 	protected static $errors = null;
 
 	private static $entries_by_id = array ();

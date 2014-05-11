@@ -140,7 +140,7 @@ class Test extends CourseComponent
 		$table = "$user_entries LEFT JOIN $language_codes USING (entry_id)";
 		return self::collect("UserEntry", $table, "test_id", $this->get_test_id(), "*", "ORDER BY num");
 	}
-	public function number_for_entry($entry)
+	public function get_number_for_entry($entry)
 	{
 		$entries_by_number = $this->entries_by_number();
 		if (($entry_number = array_search($entry, $entries_by_number)) < 0)
@@ -170,7 +170,7 @@ class Test extends CourseComponent
 		return ($result = Connection::transact(
 			function () use ($test, $entry, $number, &$error_message)
 			{
-				if ($test->executed())
+				if ($test->is_executed())
 				{
 					$error_message = "Test failed to update because some student has already begun executing the test.";
 					return null;
@@ -182,7 +182,7 @@ class Test extends CourseComponent
 				
 				if ($number > ($entries_count = count($test->entries()))) $number = $entries_count;
 				
-				if ($number === ($number_formerly = $test->number_for_entry($entry))) return $test;
+				if ($number === ($number_formerly = $test->get_number_for_entry($entry))) return $test;
 				
 				if ($number_formerly < 1)
 				{
@@ -232,7 +232,7 @@ class Test extends CourseComponent
 	{
 		if (!$this->session_user_can_write()) return static::errors_push("Session user cannot edit test.");
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -295,7 +295,7 @@ class Test extends CourseComponent
 	{
 		if (!$this->session_user_can_write()) return static::errors_push("Session user cannot edit test.");
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -403,7 +403,7 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit test.");
 		}
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -493,7 +493,7 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot read list to add.");
 		}
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -524,14 +524,14 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit test.");
 		}
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
 		
 		$entry = $entry->copy_for_user($this->get_owner(), $this);
 		
-		$number = $this->number_for_entry($entry);
+		$number = $this->get_number_for_entry($entry);
 		
 		if ($number < 1) return static::errors_push("Test cannot remove entry not already in test.");
 		
@@ -609,7 +609,7 @@ class Test extends CourseComponent
 		return self::cache($this->patterns, "Pattern", "course_unit_test_entries CROSS JOIN course_unit_test_entry_patterns USING (test_entry_id, mode)", "test_id", $this->get_test_id());
 	}
 	
-	public function executed()
+	public function is_executed()
 	{
 		return count($this->sittings()) > 0;
 	}
@@ -647,7 +647,7 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit test.");
 		}
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -687,7 +687,7 @@ class Test extends CourseComponent
 			return static::errors_push("Session user cannot edit test.");
 		}
 		
-		if ($this->executed())
+		if ($this->is_executed())
 		{
 			return static::errors_push("Test failed to update because some student has already begun executing the test.");
 		}
@@ -840,8 +840,8 @@ class Test extends CourseComponent
 			else $entry_assoc["scoreMean"] = null;
 			
 			$entry_assoc["scoreMeanScaled"] =
-				!!$this->entry_score_max($entry)
-					? 100.0 * $entry_assoc["scoreMean"] / floatval($this->entry_score_max($entry))
+				!!$this->get_entry_score_max($entry)
+					? 100.0 * $entry_assoc["scoreMean"] / floatval($this->get_entry_score_max($entry))
 					: 0.0;
 			
 			$entry_assoc["responses"] = array ();
@@ -884,7 +884,7 @@ class Test extends CourseComponent
 	
 	public function user_can_write($user)
 	{
-		return $this->user_can_administer($user) && !$this->executed();
+		return $this->user_can_administer($user) && !$this->is_executed();
 	}
 	
 	public function json_assoc($privacy = null)
@@ -935,14 +935,14 @@ class Test extends CourseComponent
 		return $this->prune($assoc, $public_keys, $privacy);
 	}
 	
-	public function seconds_per_entry()
+	public function get_seconds_per_entry()
 	{
 		return $this->get_timer() && $this->count_entries()
 			? floatval($this->get_timer()) / floatval($this->count_entries())
 			: null;
 	}
 	
-	public function entry_score_max($entry)
+	public function get_entry_score_max($entry)
 	{
 		$entry_score_max = 0;
 		foreach (Pattern::select_all_for_test_entry_id($this->get_test_entry_id_for_entry($entry)) as $pattern)
@@ -957,76 +957,15 @@ class Test extends CourseComponent
 		return $entry_score_max;
 	}
 	
-	public function score_max()
+	public function get_score_max()
 	{
 		$test_score_max = 0;
 		foreach ($this->entries() as $entry)
 		{
-			$test_score_max += $this->entry_score_max($entry);
+			$test_score_max += $this->get_entry_score_max($entry);
 		}
 		return $test_score_max;
 	}
-	
-	/*
-	public static function csv_columns_array()
-	{
-		return array (
-			"courseId",
-			"unitId",
-			"testId",
-			"languageKnown",
-			"languageUnknown",
-			"instructorsCount",
-			"studentsCount",
-			"researchersCount",
-			"entriesCount",
-			"optionsCount",
-			"patternsCount",
-			"testsMeanSecondsPerEntry",
-			"sittingsMeanPerformance"
-		);
-	}
-	
-	public function csv_row_array()
-	{
-		$tests_mean_seconds_per_entry = 0.0;
-		$tests_total_entries_count = 0;
-		foreach ($this->tests() as $test)
-		{
-			$entries_count = $test->entries_count();
-			$tests_total_entries_count += $entries_count;
-			
-			$tests_mean_seconds_per_entry +=
-				floatval($entries_count) * $test->seconds_per_entry();
-		}
-		if (!$tests_total_entries_count) $tests_mean_seconds_per_entry = null;
-		else $tests_mean_seconds_per_entry /= floatval($tests_total_entries_count);
-		
-		$sittings_mean_performance = 0.0;
-		foreach ($this->sittings() as $sitting)
-		{
-			$score_json_assoc = $sitting->score_json_assoc();
-			$sittings_mean_performance += $score_json_assoc["scoreScaled"];
-		}
-		$sittings_mean_performance /= floatval($this->sittings_count());
-		
-		return array (
-			$this->get_course_id(),
-			$this->get_unit_id(),
-			$this->get_test_id(),
-			Language::select_by_id($this->get_course()->get_lang_id_0())->get_lang_code(),
-			Language::select_by_id($this->get_course()->get_lang_id_1())->get_lang_code(),
-			$this->get_course()->instructors_count(),
-			$this->get_course()->students_count(),
-			$this->get_course()->researchers_count(),
-			$this->entries_count(),
-			$this->options_count(),
-			$this->patterns_count(),
-			$this->seconds_per_entry(),
-			$sittings_mean_performance
-		);
-	}
-	*/
 }
 
 ?>

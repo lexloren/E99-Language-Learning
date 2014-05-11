@@ -49,17 +49,28 @@ class Session
 		return !$this->result_assoc || !!$this->result_assoc["isError"];
 	}
 	
-	public function set_mixed_assoc($error_title, $errors, $result, $result_information = null)
+	//  Returns new PHP associative array for returning to front end.
+	private static function new_return_template()
 	{
-		$this->result_assoc = self::result_assoc($result, $result_information);
+		return array (
+			"isError" => false,
+			"errorTitle" => NULL,
+			"errorDescription" => NULL,
+			"result" => NULL,
+			"resultInformation" => NULL
+		);
+	}
+
+	//  Formats an error as a PHP associative array.
+	private static function error_assoc($title, $description)
+	{
+		$return = self::new_return_template();
 		
-		foreach (self::error_assoc($error_title, $errors) as $key => $value)
-		{
-			if (!!$value && !$this->result_assoc[$key])
-			{
-				$this->result_assoc[$key] = $value;
-			}
-		}
+		$return["isError"] = true;
+		$return["errorTitle"] = $title;
+		$return["errorDescription"] = $description;
+		
+		return $return;
 	}
 	
 	// Sets result_assoc
@@ -71,6 +82,17 @@ class Session
 	public function unset_result_assoc()
 	{
 		return ($this->result_assoc = null);
+	}
+
+	//  Formats a result as a PHP associative array.
+	private static function result_assoc($result, $result_information = NULL)
+	{
+		$return = self::new_return_template();
+		
+		$return["result"] = $result;
+		$return["resultInformation"] = $result_information;
+		
+		return $return;
 	}
 
 	//  Sets result_assoc
@@ -167,8 +189,6 @@ class Session
 	}
 	
 	//  Reauthenticates the current session and refreshes the timestamp.
-	//!!!!  If authentication fails, exits the script with an error.
-	//!!!!  Must be called before starting into any script that requires a session.
 	public function reauthenticate()
 	{
 		if (!!($session_id_old = $this->session_start()) && isset($_SESSION["handle"]))
@@ -229,63 +249,6 @@ class Session
 
 			$this->session_end();
 		}
-	}
-	
-	//  Returns new PHP associative array for returning to front end.
-	private function new_return_template()
-	{
-		return array (
-			"isError" => false,
-			"errorTitle" => NULL,
-			"errorDescription" => NULL,
-			"result" => NULL,
-			"resultInformation" => NULL
-		);
-	}
-	
-	private function new_database_result_template()
-	{
-		return array (
-			"didInsert" => false,
-			"didDelete" => false,
-			"didUpdate" => false
-		);
-	}
-
-	//  Formats an error as a PHP associative array.
-	private function error_assoc($title, $description)
-	{
-		$return = self::new_return_template();
-		
-		$return["isError"] = true;
-		$return["errorTitle"] = $title;
-		$return["errorDescription"] = $description;
-		
-		return $return;
-	}
-
-	//  Formats a result as a PHP associative array.
-	private function result_assoc($result, $result_information = NULL)
-	{
-		$return = self::new_return_template();
-		
-		$return["result"] = $result;
-		$return["resultInformation"] = $result_information;
-		
-		return $return;
-	}
-	
-	private function database_result_assoc($database_result_assoc)
-	{
-		foreach (array_keys(($return = self::new_database_result_template())) as $key)
-		{
-			if (isset($database_result_assoc[$key]) && $database_result_assoc[$key] !== null)
-			{
-				$return[$key] = !!$database_result_assoc[$key];
-			}
-		}
-		
-		return $return;
 	}
 	
 	public function session_regenerate_id()

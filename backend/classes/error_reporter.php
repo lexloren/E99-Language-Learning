@@ -36,6 +36,8 @@ class ErrorReporter
 	const ERRCODE_PERMISSIONS = 2;
 	const ERRCODE_DATABASE = 4;
 	
+	/***    CLASS/STATIC    ***/
+	
 	protected static function errors_push($description, $code = self::ERRCODE_UNKNOWN)
 	{
 		if (!static::$errors) static::$errors = array ();

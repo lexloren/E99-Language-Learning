@@ -266,11 +266,7 @@ class Response extends CourseComponent
 		return self::delete_this($this, "course_unit_test_sitting_responses", "response_id", $this->get_response_id());
 	}
 	
-	public function entry_json_assoc()
-	{
-		$entry = $this->get_pattern()->get_entry();
-		return $this->get_test()->entry_json_assoc($entry, true, true);
-	}
+	/*** PERMISSIONS ***/
 	
 	public function user_can_read($user)
 	{
@@ -285,6 +281,14 @@ class Response extends CourseComponent
 		return $this->user_can_read($user)
 			&& ($this->get_test()->user_can_administer($user)
 				|| $this->get_test()->get_disclosed());
+	}
+	
+	/*** OUTPUT ***/
+	
+	public function entry_json_assoc()
+	{
+		$entry = $this->get_pattern()->get_entry();
+		return $this->get_test()->entry_json_assoc($entry, true, true);
 	}
 	
 	public function json_assoc($privacy = null, $flatten = false)

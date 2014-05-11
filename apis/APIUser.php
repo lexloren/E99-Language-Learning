@@ -113,7 +113,7 @@ class APIUser extends APIBase
 				$live = !!intval($_GET["live"], 10);
 				foreach ($sittings as $s => $sitting)
 				{
-					if ($sitting->live() != $live) unset($sittings[$s]);
+					if ($sitting->is_live() != $live) unset($sittings[$s]);
 				}
 			}
 			

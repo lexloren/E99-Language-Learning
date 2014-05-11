@@ -228,44 +228,6 @@ class Pattern extends CourseComponent
 		return $this->user_entry;
 	}
 	
-	public function get_contents_json_assoc()
-	{
-		if (!($user_entry = $this->get_user_entry())) return null;
-		
-		$from = array ();
-		switch ($this->get_mode_id())
-		{
-			case 0:
-			case 2:
-			{
-				array_push($from, $user_entry->words(1));
-			} break;
-			
-			case 1:
-			case 5:
-			{
-				array_push($from, $user_entry->words(0));
-			} break;
-			
-			case 3:
-			case 4:
-			{
-				array_push($from, array_pop($user_entry->pronunciations()));
-			} break;
-			
-			default:
-			{
-				array_push($from, $user_entry->words(1));
-				array_push($from, array_pop($user_entry->pronunciations()));
-			}
-		}
-		
-		return array (
-			"from" => $from,
-			"to" => $this->get_contents()
-		);
-	}
-	
 	private $mode_id = null;
 	public function get_mode_id()
 	{

@@ -5,6 +5,8 @@ require_once "./backend/classes.php";
 
 class DatabaseRow extends ErrorReporter
 {
+	/***    CLASS/STATIC    ***/
+	
 	public static function from_mysql_result_assoc($result_assoc)
 	{
 		return null;
@@ -104,10 +106,6 @@ class DatabaseRow extends ErrorReporter
 		return true;
 	}
 	
-	public function uncache_all()
-	{
-	}
-	
 	protected static function collect($member_class, $table, $anchor_column, $anchor_id, $columns = "*", $order_by = null, $key_by = null)
 	{
 		$cache = array ();
@@ -180,10 +178,19 @@ class DatabaseRow extends ErrorReporter
 		return !($error = Connection::query_error_clear()) ? $instance : static::errors_push("$failure_message: $error.", ErrorReporter::ERRCODE_DATABASE);
 	}
 	
+	/***    INSTANCE    ***/
+	
+	public function uncache_all()
+	{
+		//  Stub
+	}
+	
 	protected function get_owner()
 	{
 		return null;
 	}
+	
+	/*** PERMISSIONS ***/
 	
 	public function user_is_owner($user)
 	{
@@ -238,12 +245,13 @@ class DatabaseRow extends ErrorReporter
 	{
 		return !!Session::get() && $this->user_can_execute(Session::get()->get_user());
 	}
-	public function session_user_can_research()
+	
+	protected function privacy()
 	{
-		// For now if the user is a researcher for any course then s/he can get the whole data dump.
-	        // This is a last minute project assumption, We might want to revisit this later.
-		return !!Session::get() && $this->user_can_research_via_some_course(Session::get()->get_user());
+		return !$this->session_user_can_read();
 	}
+	
+	/*** OUTPUT ***/
 	
 	public function json_assoc($privacy = null)
 	{
@@ -253,11 +261,6 @@ class DatabaseRow extends ErrorReporter
 	public function json_assoc_detailed($privacy = null)
 	{
 		return $this->json_assoc($privacy);
-	}
-	
-	protected function privacy()
-	{
-		return !$this->session_user_can_read();
 	}
 	
 	protected function prune($array, $exceptions = array (), $privacy = null, $remove_nested_duplicates = true)
@@ -283,6 +286,8 @@ class DatabaseRow extends ErrorReporter
 		return $array;
 	}
 	
+	/*** CONVENIENCE ***/
+	
 	protected static function json_array($array)
 	{
 		if (!is_array($array))
@@ -301,6 +306,14 @@ class DatabaseRow extends ErrorReporter
 		}
 		
 		return $assocs;
+	}
+	
+	//  Method added last-minute for researcher data-dump
+	public function session_user_can_research()
+	{
+		// For now if the user is a researcher for any course then s/he can get the whole data dump.
+	        // This is a last minute project assumption, We might want to revisit this later.
+		return !!Session::get() && $this->user_can_research_via_some_course(Session::get()->get_user());
 	}
 }
 

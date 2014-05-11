@@ -391,63 +391,6 @@ class Unit extends CourseComponent
 		
 		return $this->prune($assoc, $public_keys, $privacy);
 	}
-	
-	/*
-	public static function csv_columns_array()
-	{
-		return array (
-			"courseId",
-			"unitId",
-			"languageKnown",
-			"languageUnknown",
-			"instructorsCount",
-			"studentsCount",
-			"researchersCount",
-			"listsCount",
-			"testsCount",
-			"testsMeanSecondsPerEntry",
-			"sittingsMeanPerformance"
-		);
-	}
-	
-	public function csv_row_array()
-	{
-		$tests_mean_seconds_per_entry = 0.0;
-		$tests_total_entries_count = 0;
-		foreach ($this->tests() as $test)
-		{
-			$entries_count = $test->entries_count();
-			$tests_total_entries_count += $entries_count;
-			
-			$tests_mean_seconds_per_entry +=
-				floatval($entries_count) * $test->seconds_per_entry();
-		}
-		if (!$tests_total_entries_count) $tests_mean_seconds_per_entry = null;
-		else $tests_mean_seconds_per_entry /= floatval($tests_total_entries_count);
-		
-		$sittings_mean_performance = 0.0;
-		foreach ($this->sittings() as $sitting)
-		{
-			$score_json_assoc = $sitting->score_json_assoc();
-			$sittings_mean_performance += $score_json_assoc["scoreScaled"];
-		}
-		$sittings_mean_performance /= floatval($this->sittings_count());
-		
-		return array (
-			$this->get_course_id(),
-			$this->get_unit_id(),
-			Language::select_by_id($this->get_course()->get_lang_id_0())->get_lang_code(),
-			Language::select_by_id($this->get_course()->get_lang_id_1())->get_lang_code(),
-			$this->get_course()->instructors_count(),
-			$this->get_course()->students_count(),
-			$this->get_course()->researchers_count(),
-			$this->lists_count(),
-			$this->tests_count(),
-			$tests_mean_seconds_per_entry,
-			$sittings_mean_performance
-		);
-	}
-	*/
 }
 
 ?>
