@@ -166,8 +166,8 @@ function getTestInfo(){
                 if(data.result.name != null)
                     tname = data.result.name;
                 else
-                    tname = '';
-                testheader = '<h3 class="form-signin-heading">Test '+data.result.testId+': '+tname+'</h3>';
+                    tname = 'Unnamed Test';
+                testheader = '<h3 class="form-signin-heading">'+tname+'</h3>';
                 $("#test-header").html(testheader);
                 if(data.result.sessionUserPermissions.read == true){
                     if(data.result.sessionUserPermissions.write == true){
