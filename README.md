@@ -8,12 +8,13 @@ Xenogloss offers new and useful features to both students and instructors. Stude
 
 The application also includes scripts to prepopulate MySQL database with Japanese and Chinese language dictionaries to bootstrap the setup process for learning those languages.
 
-Application code is placed in the following 
+Application code is organized as below -
+ 
 1. apis		- Backend RESTful API invocation scripts written in PHP.
-2. backend	- All the backend PHP code with relevant classes invoked from API scripts.
-3. frontend	- Frontend html/css and Javascript codes.
-4. phptests	- Unit-test scripts for both apis & backend php scripts.
-5. tools	- DB setup php and sql scripts.
-6. Router.php	- Entry point to the backend that routes the http request to appropriate API script.
-7. *.php	- Open APIs exposed to the frontend for invocation.
-8. dictionary_upload - Scripts and raw datafiles to upload Japanese and Chinese language dictionaries.
+1. backend	- All the backend PHP code with relevant classes invoked from API scripts.
+1. frontend	- Frontend html/css and Javascript codes.
+1. phptests	- Unit-test scripts for both apis & backend php scripts.
+1. tools	- DB setup php and sql scripts.
+1. Router.php	- Entry point to the backend that routes the http request to appropriate API script.
+1. *.php	- Open APIs exposed to the frontend for invocation.
+1. dictionary_upload - Scripts and raw datafiles to upload Japanese and Chinese language dictionaries.
