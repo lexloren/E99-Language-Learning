@@ -9,7 +9,7 @@ class Connection
 		if (!!self::$mysqli) return self::$mysqli;
 
 		//  Global variable for getting access to the database.
-		self::$mysqli = new mysqli("68.178.216.146", "cscie99", "Ina28@Waffle", "cscie99");
+		self::$mysqli = new mysqli("localhost", "root", "", "Xenogloss");
 
 		/* check connection */
 		if (self::$mysqli->connect_errno)
