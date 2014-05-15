@@ -18,3 +18,5 @@ Application code is organized as below -
 1. Router.php	- Entry point to the backend that routes the http request to appropriate API script.
 1. *.php	- Open APIs exposed to the frontend for invocation.
 1. dictionary_upload - Scripts and raw datafiles to upload Japanese and Chinese language dictionaries.
+
+N.B. Administrators must change server credentials in backend/connection.php to reflect the hostname, username, password, and database in which the user has run the createdb.sql script.
