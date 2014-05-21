@@ -8,7 +8,7 @@ function resetForm(frm){
   $("#createnew").hide();
 	$("#coursesOwned").show();
 }
-/** This function is used by Index Page to init the Tabs etc.*/
+/* This function is used by Index Page to init the Tabs etc.*/
 function initIndexPage() {
 
 	cleanupMessage();
@@ -16,13 +16,9 @@ function initIndexPage() {
 	$("#addcourse").hide();
 	$("#course").hide();
 	$("#search").hide();
-	var userData = getUserData(); 
-	if (userData != null) {
-		populateIndexPageUserData(userData);
-	} else {
-		$.getJSON("../../user_select.php", function(data){
-			if(data.isError){
-				$("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
+	$.getJSON("../../user_select.php", function(data){
+		if(data.isError){
+			$("#failure").html('Sorry unable to get the user info, Please try again.<br/>The session could have timed out...please login <a href="login.html">Login</a>');
 				$("#failure").show();
 				$("#progress").hide();
 			}
@@ -36,7 +32,7 @@ function initIndexPage() {
 			failureMessage('Something has gone wrong. Please hit the back button on your browser and try again.');
 			$("#progress").hide();
 		});;  
-	}
+	
 
 	
 }
@@ -305,7 +301,6 @@ function showAddCourse() {
 }
 function insertNew() {
 	cleanupMessage();
-	resetUserData();
     var courseName = $("#coursename").val();
 	var courseMessage = $("#coursedetails").val();
     var startDate = $("#opendate").val();

@@ -1,47 +1,6 @@
 
-function getUserData()
-{
-	if(typeof(Storage)!=="undefined")
-	{
-		// Code for localStorage/sessionStorage.
-		var data = localStorage.getItem("USER_COURSE_CACHE");
-		if (data !== "undefined" && data != null ) {
-			return JSON.parse(data);
-		}
-	}
-	return null;
-}
-
-function setUserData(data)
-{
-	if(typeof(Storage)!=="undefined")
-	{
-		// Code for localStorage/sessionStorage.
-		localStorage.setItem("USER_COURSE_CACHE", JSON.stringify(data));
-	}
-	
-}
-
-function resetUserData()
-{
-	if(typeof(Storage)!=="undefined")
-	{
-		// Code for localStorage/sessionStorage.
-		localStorage.removeItem("USER_COURSE_CACHE");
-	}
-	
-}
 function getCourses(){
-	if(typeof(Storage)!=="undefined")
-	{
-		// Code for localStorage/sessionStorage.
-		var data = localStorage.getItem("USER_COURSE_CACHE");
-		if (data !== "undefined" && data !== null ) {
-			populateCourseDropDownMenu(JSON.parse(data));
-			return;
-		}
-	}
-	
+		
 	$.getJSON('../../user_courses.php', function(data){
 		authorize(data);
 		if(data.isError){
@@ -82,7 +41,6 @@ function navbar() {
 }
 
 function signout(){
-	resetUserData();
     $.getJSON('../../user_deauthenticate.php', 
         function(data){
             if(data.isError){
