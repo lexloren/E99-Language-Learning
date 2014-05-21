@@ -62,6 +62,10 @@ class Router
 	{
 		$uri = $_SERVER["REQUEST_URI"];
 		
+		//remove leading directory tree
+		$apistart = strripos($uri, '/');
+		if ($apistart !== FALSE) $uri = substr ($uri , $apistart + 1);
+		
 		// remove query string from URI
 		if (strpos($uri, '?') != false) $uri = strtok($uri,'?');
 		
