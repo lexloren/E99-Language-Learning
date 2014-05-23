@@ -28,11 +28,6 @@ class Practice extends DatabaseRow
 			Connection::query("INSERT IGNORE INTO user_practice (user_entry_id, mode) values($user_entry_id, $mode)");
 			if (!!($error = Connection::query_error_clear()))
 	                        return static::errors_push("Failed to insert user_practice: " . $error . ".");
-                
-	                if (($user_practice = self::select_by_id(Connection::query_insert_id())))
-        	        {
-				array_push($user_practice_set, $user_practice);
-                	}
 		}
 		return $user_practice_set;
 	}
@@ -105,8 +100,8 @@ class Practice extends DatabaseRow
 	                $list_ids_str = join(', ', $list_ids);
 
 			$new_entries = Connection::query(sprintf(
-                	        "SELECT entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) ".
-				"AND entry_id NOT IN (SELECT entry_id from user_entries where user_id = %d)",
+                	        "SELECT user_entry_id FROM list_entries LEFT JOIN user_entries USING (user_entry_id) WHERE list_id IN (%s) ".
+				"AND user_entry_id NOT IN (SELECT user_entry_id from user_practice where user_id = %d)",
 	                        $list_ids_str,
         	                Session::get()->get_user()->get_user_id()
 			));
@@ -115,9 +110,8 @@ class Practice extends DatabaseRow
 
 			while (($new_entry_assoc = $new_entries->fetch_assoc()))
         	        {
-				$entry_id = intval($new_entry_assoc["entry_id"], 10);
-				$user_entry = Entry::select_by_id($entry_id)->copy_for_session_user();
-				self::insert($user_entry->get_user_entry_id());
+				$entry_id = intval($new_entry_assoc["user_entry_id"], 10);
+				self::insert($entry_id);
 			}
 
                 	$result = Connection::query(sprintf(
