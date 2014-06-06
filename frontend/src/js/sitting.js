@@ -70,11 +70,11 @@ function getSittingInfo(){
                             prompt = item.entry.words[lang];
                         }                        
                         else if(item.entry.mode.modeId == 3 || item.entry.mode.modeId == 4){
-                            prompt = item.entry.pronunciations[0];
+                            prompt = item.entry.pronuncations[item.entry.languages[1]];
                         }
                         else if(item.entry.mode.modeId == 6){
                             lang = item.entry.languages[1];
-                            prompt = item.entry.words[lang] + '/' + item.entry.pronunciations[0];
+                            prompt = item.entry.words[lang] + '/' + item.entry.pronuncations[item.entry.languages[1]];
                         }
                         responserow = '<tr id="responserow'+item.responseId+'"><td>'+item.entry.mode.directionFrom+'/'+item.entry.mode.directionTo+'</td><td>'+prompt+'</td><td>'+resp+'</td>' +
                                       '<td>'+score+'</td><td>'+note+'</td>';

@@ -269,11 +269,11 @@ function getTestInfo(){
                                     prompt = item.words[lang];
                                 }                        
                                 else if(item.mode.modeId == 3 || item.mode.modeId == 4){
-                                    prompt = item.pronunciations[0];
+                                    prompt = item.pronuncations[item.languages[1]];
                                 }
                                 else if(item.mode.modeId == 6){
                                     lang = item.languages[1];
-                                    prompt = item.words[lang] + '/' + item.pronunciations[0];
+                                    prompt = item.words[lang] + '/' + item.pronuncations[item.languages[1]];
                                 }
                                 classResponses = '';
                                 $.each(item.responses, function(i, item2){
